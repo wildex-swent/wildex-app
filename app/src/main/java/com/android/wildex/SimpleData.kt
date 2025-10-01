@@ -1,4 +1,4 @@
-package com.android.sample
+package com.android.wildex
 
 import kotlin.math.sqrt
 

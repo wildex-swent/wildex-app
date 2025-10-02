@@ -1,4 +1,4 @@
-package com.android.sample.ui.theme
+package com.android.wildex.ui.theme
 
 import android.app.Activity
 import android.os.Build

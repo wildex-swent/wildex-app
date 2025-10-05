@@ -33,66 +33,62 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun AnimalDetectionTestScreen(repository: AnimalDetectRepository) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope({ Dispatchers.IO })
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope({ Dispatchers.IO })
 
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
-    var detectionResult by remember { mutableStateOf<AnimalDetectResponse?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+  var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+  var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+  var detectionResult by remember { mutableStateOf<AnimalDetectResponse?>(null) }
+  var isLoading by remember { mutableStateOf(false) }
 
-    // Launcher to select image from gallery
-    val launcher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
-            ->
-            selectedImageUri = uri
-            uri?.let {
-                val stream = context.contentResolver.openInputStream(it)
-                bitmap = BitmapFactory.decodeStream(stream)
-            }
+  // Launcher to select image from gallery
+  val launcher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
+        ->
+        selectedImageUri = uri
+        uri?.let {
+          val stream = context.contentResolver.openInputStream(it)
+          bitmap = BitmapFactory.decodeStream(stream)
         }
+      }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceAround,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Button(onClick = { launcher.launch("image/*") }) { Text("Select Image") }
+  Column(
+      modifier = Modifier.fillMaxSize().padding(16.dp),
+      verticalArrangement = Arrangement.SpaceAround,
+      horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Button(onClick = { launcher.launch("image/*") }) { Text("Select Image") }
 
-        bitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = "Selected image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
-                contentScale = ContentScale.Fit,
-            )
-        }
-
-        Button(
-            onClick = {
-                selectedImageUri?.let { uri ->
-                    scope.launch {
-                        isLoading = true
-                        detectionResult = repository.detectAnimal(context, uri)
-                        isLoading = false
-                    }
-                }
-            },
-            enabled = selectedImageUri != null && !isLoading,
-        ) {
-            Text(if (isLoading) "Detecting..." else "Detect Animal")
-        }
-
-        detectionResult?.let { result ->
-            Text(
-                text =
-                    "Animal: ${result.animalType}\nConfidence: ${"%.2f".format(result.confidence * 100)}%",
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
+    bitmap?.let {
+      Image(
+          bitmap = it.asImageBitmap(),
+          contentDescription = "Selected image",
+          modifier = Modifier.fillMaxWidth().height(250.dp),
+          contentScale = ContentScale.Fit,
+      )
     }
+
+    Button(
+        onClick = {
+          selectedImageUri?.let { uri ->
+            scope.launch {
+              isLoading = true
+              detectionResult = repository.detectAnimal(context, uri)
+              isLoading = false
+            }
+          }
+        },
+        enabled = selectedImageUri != null && !isLoading,
+    ) {
+      Text(if (isLoading) "Detecting..." else "Detect Animal")
+    }
+
+    detectionResult?.let { result ->
+      Text(
+          text =
+              "Animal: ${result.animalType}\nConfidence: ${"%.2f".format(result.confidence * 100)}%",
+          style = MaterialTheme.typography.bodyLarge,
+      )
+    }
+  }
 }

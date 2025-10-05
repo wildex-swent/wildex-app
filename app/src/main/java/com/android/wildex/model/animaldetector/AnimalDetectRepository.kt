@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.android.wildex.BuildConfig
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
@@ -14,9 +17,6 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 /**
  * Repository class for interacting with the AnimalDetect API.
@@ -27,9 +27,8 @@ import java.io.IOException
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
 class AnimalDetectRepository(val client: OkHttpClient) {
-
-  /** Your AnimalDetect API key. Replace with a secure method in production. */
   private val apiKey = BuildConfig.ANIMALDETECT_API_KEY
+  private val baseUrl = "https://www.animaldetect.com/api/v1/detect"
 
   /**
    * Detects an animal in the provided image URI.
@@ -58,15 +57,9 @@ class AnimalDetectRepository(val client: OkHttpClient) {
     return try {
       // Detect MIME type and map to file extension
       val mimeType = context.contentResolver.getType(imageUri) ?: "image/jpeg"
-      val extension =
-          when (mimeType) {
-            "image/png" -> ".png"
-            "image/webp" -> ".webp"
-            else -> ".jpg"
-          }
 
       // Create temporary file
-      tempFile = File.createTempFile("upload", extension, context.cacheDir)
+      tempFile = File.createTempFile("upload", ".jpg", context.cacheDir)
       context.contentResolver.openInputStream(imageUri)?.use { input ->
         FileOutputStream(tempFile).use { output -> input.copyTo(output) }
       } ?: throw IOException("Failed to open image URI")
@@ -86,7 +79,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
 
       val request =
           Request.Builder()
-              .url("https://www.animaldetect.com/api/v1/detect")
+              .url(baseUrl)
               .addHeader("Authorization", "Bearer $apiKey")
               .post(requestBody)
               .build()
@@ -112,17 +105,17 @@ class AnimalDetectRepository(val client: OkHttpClient) {
           return null
         }
 
-        val label = result.jsonObject["label"]?.jsonPrimitive?.content
-          val confidence = result.jsonObject["score"]?.jsonPrimitive?.float
+        val label = result.jsonObject["label"]?.jsonPrimitive?.takeIf { it.isString }?.content
+        val confidence = result.jsonObject["score"]?.jsonPrimitive?.float
 
         if (label == null || confidence == null) {
           Log.e("AnimalDetectRepository", "Invalid response body structure")
           return null
         }
 
-        AnimalDetectResponse(label, confidence)
+        return AnimalDetectResponse(label, confidence)
       }
-    } catch (e: IOException) {
+    } catch (e: Exception) {
       Log.e("AnimalDetectRepository", "Error detecting animal: ${e.message}", e)
       null
     } finally {

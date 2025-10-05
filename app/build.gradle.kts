@@ -174,6 +174,11 @@ dependencies {
 
     // Networking with OkHttp
     implementation(libs.okhttp)
+
+    // Mock testing
+    testImplementation(libs.mockito)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockwebserver)
 }
 
 tasks.withType<Test> {

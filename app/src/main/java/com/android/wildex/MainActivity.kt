@@ -12,8 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import com.android.wildex.model.animaldetector.AnimalDetectRepository
 import com.android.wildex.resources.C
+import com.android.wildex.ui.example.AnimalDetectionTestScreen
 import com.android.wildex.ui.theme.WildexTheme
+import okhttp3.OkHttpClient
+
+/** Provide an OkHttpClient client for network requests. */
+object HttpClientProvider {
+  val client: OkHttpClient = OkHttpClient()
+}
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,10 +30,14 @@ class MainActivity : ComponentActivity() {
       WildexTheme {
         // A surface container using the 'background' color from the theme
         Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background) {
-              Greeting("Android")
-            }
+            modifier = Modifier
+              .fillMaxSize()
+              .semantics { testTag = C.Tag.main_screen_container },
+          color = MaterialTheme.colorScheme.background,
+        ) {
+          // Greeting("Android")
+          AnimalDetectionTestScreen(AnimalDetectRepository(HttpClientProvider.client))
+        }
       }
     }
   }

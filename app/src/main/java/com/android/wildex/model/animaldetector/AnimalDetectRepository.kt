@@ -3,9 +3,7 @@ package com.android.wildex.model.animaldetector
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import com.android.wildex.BuildConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
@@ -16,6 +14,9 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 /**
  * Repository class for interacting with the AnimalDetect API.
@@ -28,7 +29,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 class AnimalDetectRepository(val client: OkHttpClient) {
 
   /** Your AnimalDetect API key. Replace with a secure method in production. */
-  private val apiKey = ""
+  private val apiKey = BuildConfig.ANIMALDETECT_API_KEY
 
   /**
    * Detects an animal in the provided image URI.
@@ -112,7 +113,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
         }
 
         val label = result.jsonObject["label"]?.jsonPrimitive?.content
-        val confidence = result.jsonObject["confidence"]?.jsonPrimitive?.float
+          val confidence = result.jsonObject["score"]?.jsonPrimitive?.float
 
         if (label == null || confidence == null) {
           Log.e("AnimalDetectRepository", "Invalid response body structure")

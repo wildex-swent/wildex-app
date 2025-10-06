@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -11,6 +14,15 @@ android {
     namespace = "com.android.wildex"
     compileSdk = 34
 
+    // Load the API key from local.properties
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    }
+
+    val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
+
     defaultConfig {
         applicationId = "com.android.wildex"
         minSdk = 28
@@ -22,6 +34,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
     }
 
     buildTypes {
@@ -45,6 +58,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -122,6 +136,7 @@ dependencies {
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.kotlinx.serialization.json)
 
     // ------------- Jetpack Compose ------------------
     val composeBom = platform(libs.compose.bom)
@@ -156,6 +171,14 @@ dependencies {
 
     // ----------       Robolectric     ------------
     testImplementation(libs.robolectric)
+
+    // Networking with OkHttp
+    implementation(libs.okhttp)
+
+    // Mock testing
+    testImplementation(libs.mockito)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockwebserver)
 }
 
 tasks.withType<Test> {

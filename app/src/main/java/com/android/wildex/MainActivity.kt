@@ -4,15 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
-import com.android.wildex.resources.C
 import com.android.wildex.ui.theme.WildexTheme
 import okhttp3.OkHttpClient
 
@@ -24,28 +20,17 @@ object HttpClientProvider {
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
-      WildexTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background,
-        ) {
-          Greeting("Android")
-          // AnimalDetectionTestScreen(AnimalDetectRepository(HttpClientProvider.client))
-        }
-      }
-    }
+    setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
   }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier.semantics { testTag = C.Tag.greeting })
+fun WildexApp() {
+  Text(text = "Welcome to Wildex!")
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-  WildexTheme { Greeting("Android") }
+  WildexTheme { WildexApp() }
 }

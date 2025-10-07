@@ -1,5 +1,6 @@
 package com.android.wildex.model.social
 
+import com.android.wildex.model.utils.Id
 import com.google.firebase.Timestamp
 
 /**
@@ -12,9 +13,9 @@ import com.google.firebase.Timestamp
  * @property date The date and time when the comment was made.
  */
 data class Comment(
-    val commentId: String,
-    val postId: String,
-    val authorId: String,
+    val commentId: Id,
+    val postId: Id,
+    val authorId: Id,
     val text: String,
     val date: Timestamp,
 )

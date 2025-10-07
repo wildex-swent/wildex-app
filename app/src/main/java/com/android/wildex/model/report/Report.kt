@@ -1,13 +1,15 @@
 package com.android.wildex.model.report
 
+import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
+import com.android.wildex.model.utils.URL
 import com.google.firebase.Timestamp
 
 /**
  * Represents a report made by a user regarding an animal or post.
  *
  * @property reportId The unique identifier for the report.
- * @property image The URL/URI of the image being reported.
+ * @property imageURL The URL of the image being reported.
  * @property location The location where the report was made.
  * @property date The date and time when the report was created.
  * @property description A description of why the report was made.
@@ -16,13 +18,13 @@ import com.google.firebase.Timestamp
  * @property status The status of the report, defined by the ReportStatus enum.
  */
 data class Report(
-    val reportId: String,
-    val image: String,
+    val reportId: Id,
+    val imageURL: URL,
     val location: Location,
     val date: Timestamp,
     val description: String,
-    val authorId: String,
-    val assigneeId: String,
+    val authorId: Id,
+    val assigneeId: Id,
     val status: ReportStatus,
 )
 

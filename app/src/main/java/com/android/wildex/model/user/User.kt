@@ -1,5 +1,7 @@
 package com.android.wildex.model.user
 
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
 import com.google.firebase.Timestamp
 
 /**
@@ -10,7 +12,7 @@ import com.google.firebase.Timestamp
  * @property name The first name of the user.
  * @property surname The last name of the user.
  * @property bio A short biography or description of the user.
- * @property profilePicture The URL/URI of the user's profile picture.
+ * @property profilePictureURL The URL of the user's profile picture.
  * @property userType The type of user, defined by the UserType enum.
  * @property creationDate The date the user's account was created.
  * @property country The country the user is from.
@@ -21,19 +23,19 @@ import com.google.firebase.Timestamp
  * @property achievementsCount The number of achievements the user has earned.
  */
 data class User(
-    val userId: String,
+    val userId: Id,
     val username: String,
     val name: String,
     val surname: String,
     val bio: String,
-    val profilePicture: String,
+    val profilePictureURL: URL,
     val userType: UserType,
     val creationDate: Timestamp,
     val country: String,
     val friendsCount: Int,
-    val animalsId: List<String>,
+    val animalsId: List<Id>,
     val animalsCount: Int,
-    val achievementsId: List<String>,
+    val achievementsId: List<Id>,
     val achievementsCount: Int,
 )
 

@@ -34,7 +34,7 @@ class HomeScreenViewModelTest {
         viewModel.refreshUIState()
         val updatedState = viewModel.uiState.value
         assertEquals(emptyList<com.android.wildex.model.social.Post>(), updatedState.posts)
-        assertNull(updatedState.user)
+        assertNotNull(updatedState.user)
         assertEquals(false, updatedState.notif)
         assertNull(updatedState.errorMsg)
         assertEquals(false, updatedState.signedOut)

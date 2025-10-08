@@ -5,6 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +27,22 @@ class HomeScreenViewModel(
     //private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUIState())
+    private val defaultUser: User = User(
+        userId = "defaultUserId",
+        username = "defaultUsername",
+        name = "Default",
+        surname = "User",
+        bio = "This is...",
+        profilePictureURL = "https://example.com/default-profile-pic.png",
+        userType = UserType.REGULAR,
+        creationDate = Timestamp.now(),
+        country = "Nowhere",
+        friendsCount = 0,
+        animalsId = emptyList(),
+        animalsCount = 0,
+        achievementsId = emptyList(),
+        achievementsCount = 0,
+    )
     val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
     /** Refreshes the UI state by fetching all Post items from the repository. */
@@ -41,7 +61,7 @@ class HomeScreenViewModel(
                 //setErrorMsg("Failed to load user: ${e.message}")
             }
         //}
-        return user
+        return defaultUser
     }
     /** Fetches all Posts from the repository and updates the UI state. */
     private fun getAllPosts() {

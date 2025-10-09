@@ -8,6 +8,5 @@
 .cxx
 local.properties
 *.log
-firebase.json
 .firebaserc
 google-services.json

@@ -63,3 +63,4 @@ Wildex is designed for:
 
 The UI/UX design for Wildex is available on Figma:
 https://www.figma.com/design/1JJDxqvf0pTM0Jg3E8u0oX/Wildex-App-Desgin?node-id=0-1&t=xND19ky1WJj4gFU2-1
+(Last updated 09/10/2025)

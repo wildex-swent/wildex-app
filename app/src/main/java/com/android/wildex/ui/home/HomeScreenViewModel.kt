@@ -8,7 +8,9 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,6 +58,7 @@ class HomeScreenViewModel(
             try {
                 //TODO: implement fetching user
                 /** _uiState.user = "fetchUserFromUserId(...)" */
+                //user = "to User."Firebase.auth.currentUser
             } catch (e: Exception) {
                 Log.e("HomeScreenViewModel", "Error fetching user", e)
                 //setErrorMsg("Failed to load user: ${e.message}")
@@ -72,7 +75,7 @@ class HomeScreenViewModel(
                 //val posts = postRepository.getAllPosts()
                 //_uiState.value = OverviewUIState(todos = todos)
                 _uiState.value = HomeUIState(
-                    posts = emptyList(),
+                    posts = emptyList(), //posts = getAllPostsByAuthor()
                     user = fetchUser(),
                     notif = hasNotif()
                 )

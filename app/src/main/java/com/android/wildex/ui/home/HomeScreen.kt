@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,10 +46,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
+import com.android.wildex.ui.home.HomeScreenTestTags.POST_AUTHOR_PICTURE
+import com.android.wildex.ui.home.HomeScreenTestTags.POST_COMMENT
+import com.android.wildex.ui.home.HomeScreenTestTags.POST_LIKE
+import com.android.wildex.ui.home.HomeScreenTestTags.POST_MORE_INFO
+import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -59,7 +67,7 @@ val Crimson = Color(112, 38, 50)
 val WildexGreen = Color(0xFF082C0B)
 val user =
     User(
-        userId = "",
+        userId = "<user>",
         username = "<username>",
         name = "<name>",
         surname = "<surname>",
@@ -77,9 +85,9 @@ val user =
         achievementsCount = 0,
     )
 val posts =
-    List(0) {
+    List(1) {
       Post(
-          postId = "",
+          postId = "<post>",
           authorId = "<name>",
           pictureURL =
               "https://hips.hearstapps.com/hmg-prod/images/" +
@@ -109,6 +117,24 @@ val postAuthor =
         achievementsId = emptyList(),
         achievementsCount = 0,
     )
+val animal =
+    Animal(
+        animalId = "<animal>",
+        pictureURL = "https://cdn.britannica.com/16/234216-050-C66F8665/beagle-hound-dog.jpg",
+        name = "<name>",
+        species = "<species>",
+        description = "<description>",
+    )
+// TODO: End
+
+object HomeScreenTestTags {
+  const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
+  const val PROFILE_PICTURE = "HomeScreenProfilePicture"
+  const val POST_AUTHOR_PICTURE = "HomeScreenPostAuthorPicture"
+  const val POST_MORE_INFO = "HomeScreenPostMoreInfo"
+  const val POST_LIKE = "HomeScreenPostLike"
+  const val POST_COMMENT = "HomeScreenPostComment"
+}
 
 @Composable
 fun HomeScreen() {
@@ -142,22 +168,26 @@ fun WildexTopAppBar() {
       },
       modifier = Modifier.border(1.dp, WildexGreen).shadow(5.dp),
       navigationIcon = {
-        IconButton(onClick = { /* TODO: Navigate to Notifications */}) {
-          Icon(
-              painter = painterResource(R.drawable.notification_bell),
-              contentDescription = "Notifications",
-              modifier = Modifier.size(30.dp))
-        }
+        IconButton(
+            onClick = { /* TODO: Navigate to Notifications */},
+            modifier = Modifier.testTag(NOTIFICATION_BELL)) {
+              Icon(
+                  painter = painterResource(R.drawable.notification_bell),
+                  contentDescription = "Notifications",
+                  modifier = Modifier.size(30.dp))
+            }
       },
       actions = {
-        IconButton(onClick = { /* TODO: Navigate to Profile */}) {
-          AsyncImage(
-              model = user.profilePictureURL,
-              contentDescription = "Profile picture",
-              modifier =
-                  Modifier.size(40.dp).clip(CircleShape).border(1.dp, WildexGreen, CircleShape),
-              contentScale = ContentScale.Crop)
-        }
+        IconButton(
+            onClick = { /* TODO: Navigate to Profile */},
+            modifier = Modifier.testTag(PROFILE_PICTURE)) {
+              AsyncImage(
+                  model = user.profilePictureURL,
+                  contentDescription = "Profile picture",
+                  modifier =
+                      Modifier.size(40.dp).clip(CircleShape).border(1.dp, WildexGreen, CircleShape),
+                  contentScale = ContentScale.Crop)
+            }
       },
       colors =
           TopAppBarDefaults.topAppBarColors(
@@ -176,7 +206,7 @@ fun NoPostsView() {
             tint = WildexGreen,
             modifier = Modifier.size(100.dp))
         Text(
-            text = "No nearby posts.\nStart posting...",
+            text = "No nearby posts.\n Start posting...",
             color = WildexGreen,
             fontWeight = FontWeight.Bold,
             fontSize = 25.sp)
@@ -224,13 +254,13 @@ fun PostHeader(post: Post) {
         AsyncImage(
             model = postAuthor.profilePictureURL,
             contentDescription = "Author profile picture",
-            modifier = Modifier.size(50.dp).clip(CircleShape))
+            modifier = Modifier.size(50.dp).clip(CircleShape).testTag(POST_AUTHOR_PICTURE))
 
         Spacer(modifier = Modifier.width(15.dp))
 
         Column {
           Text(
-              text = "${postAuthor.name} saw ${post.animalId}",
+              text = "${postAuthor.name} saw ${animal.name}",
               fontWeight = FontWeight.Bold,
               fontSize = 20.sp)
           Text(
@@ -244,13 +274,15 @@ fun PostHeader(post: Post) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        IconButton(onClick = { /* TODO: Navigate to Post Details */}) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-              contentDescription = "More Info",
-              tint = Crimson,
-              modifier = Modifier.size(40.dp))
-        }
+        IconButton(
+            onClick = { /* TODO: Navigate to Post Details */},
+            modifier = Modifier.testTag(POST_MORE_INFO)) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                  contentDescription = "More Info",
+                  tint = Crimson,
+                  modifier = Modifier.size(40.dp))
+            }
       }
 }
 
@@ -274,7 +306,7 @@ fun PostActions(post: Post) {
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-          IconButton(onClick = { /* TODO: Like */}) {
+          IconButton(onClick = { /* TODO: Like */}, modifier = Modifier.testTag(POST_LIKE)) {
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = "Likes",
@@ -289,7 +321,7 @@ fun PostActions(post: Post) {
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-          IconButton(onClick = { /* TODO: Comments */}) {
+          IconButton(onClick = { /* TODO: Comments */}, modifier = Modifier.testTag(POST_COMMENT)) {
             Icon(
                 painter = painterResource(R.drawable.comment_icon),
                 contentDescription = "Comments",

@@ -21,7 +21,7 @@ object HttpClientProvider {
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen() } } }
+    setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen(0) } } }
   }
 }
 

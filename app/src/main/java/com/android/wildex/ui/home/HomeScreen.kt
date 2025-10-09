@@ -52,6 +52,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
+import com.android.wildex.ui.home.HomeScreenTestTags.NO_POST
 import com.android.wildex.ui.home.HomeScreenTestTags.POST_AUTHOR_PICTURE
 import com.android.wildex.ui.home.HomeScreenTestTags.POST_COMMENT
 import com.android.wildex.ui.home.HomeScreenTestTags.POST_LIKE
@@ -84,20 +85,18 @@ val user =
         achievementsId = emptyList(),
         achievementsCount = 0,
     )
-val posts =
-    List(1) {
-      Post(
-          postId = "<post>",
-          authorId = "<name>",
-          pictureURL =
-              "https://hips.hearstapps.com/hmg-prod/images/" +
-                  "cute-baby-animals-1558535060.jpg?crop=0.752xw:1.00xh;0.125xw,0&resize=640:*",
-          location = Location(0.0, 0.0),
-          date = Timestamp.now(),
-          animalId = "<animal>",
-          likesCount = 0,
-          commentsCount = 0)
-    }
+val mockPost =
+    Post(
+        postId = "<post>",
+        authorId = "<name>",
+        pictureURL =
+            "https://hips.hearstapps.com/hmg-prod/images/" +
+                "cute-baby-animals-1558535060.jpg?crop=0.752xw:1.00xh;0.125xw,0&resize=640:*",
+        location = Location(0.0, 0.0),
+        date = Timestamp.now(),
+        animalId = "<animal>",
+        likesCount = 0,
+        commentsCount = 0)
 val postAuthor =
     User(
         userId = "",
@@ -125,9 +124,14 @@ val animal =
         species = "<species>",
         description = "<description>",
     )
+
+fun createMockPosts(size: Int): List<Post> {
+  return List(size) { mockPost }
+}
 // TODO: End
 
 object HomeScreenTestTags {
+  const val NO_POST = "HomeScreenNoPost"
   const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
   const val PROFILE_PICTURE = "HomeScreenProfilePicture"
   const val POST_AUTHOR_PICTURE = "HomeScreenPostAuthorPicture"
@@ -137,9 +141,10 @@ object HomeScreenTestTags {
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(size: Int) {
   // TODO: import user
   // TODO: import posts
+  val posts = createMockPosts(size)
 
   Scaffold(
       topBar = { WildexTopAppBar() },
@@ -204,7 +209,7 @@ fun NoPostsView() {
             painter = painterResource(R.drawable.nothing_found),
             contentDescription = "Nothing Found",
             tint = WildexGreen,
-            modifier = Modifier.size(100.dp))
+            modifier = Modifier.size(100.dp).testTag(NO_POST))
         Text(
             text = "No nearby posts.\n Start posting...",
             color = WildexGreen,
@@ -340,5 +345,5 @@ fun PostActions(post: Post) {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen() } }
+  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen(3) } }
 }

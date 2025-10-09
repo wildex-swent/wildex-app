@@ -14,6 +14,12 @@ import org.junit.Before
 
 open class FirestoreTest(val collectionPath: String) {
 
+  init {
+    assert(FirebaseEmulator.isRunning) {
+      "FirebaseEmulator must be running before using FirestoreTest"
+    }
+  }
+
   @Before
   open fun setUp() {
     runTest {

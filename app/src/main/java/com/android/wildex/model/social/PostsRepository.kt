@@ -14,6 +14,9 @@ interface PostsRepository {
   /** Retrieves all Post items made by a specific author. */
   suspend fun getAllPostsByAuthor(): List<Post>
 
+  /** Retrieves all Post items made by a given author. */
+  suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>
+
   /** Retrieves a specific Post item by its unique identifier. */
   suspend fun getPost(postId: Id): Post
 

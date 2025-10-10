@@ -74,7 +74,7 @@ class HomeScreenViewModel(
     }
     /** Fetches all Posts from the repository and updates the UI state. */
     private fun getAllPosts() {
-        viewModelScope.launch {
+        //viewModelScope.launch {
             try {
                 //TODO: implement fetching posts
                 /** Pull posts from repository and update UI state */
@@ -88,7 +88,7 @@ class HomeScreenViewModel(
                 Log.e("HomeScreenViewModel", "Error fetching posts", e)
                 //setErrorMsg("Failed to load todos: ${e.message}")
             }
-        }
+        //}
     }
     private fun hasNotif() : Boolean {
         //TODO: implement notification check

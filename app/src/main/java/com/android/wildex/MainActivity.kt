@@ -20,8 +20,8 @@ import com.android.wildex.ui.collection.AnimalDetailsScreen
 import com.android.wildex.ui.navigation.NavigationActions
 import com.android.wildex.ui.navigation.Screen
 import com.android.wildex.ui.post.PostDetailsScreen
+import com.android.wildex.ui.profile.AchievementsScreen
 import com.android.wildex.ui.profile.ProfileScreen
-import com.android.wildex.ui.profile.TrophiesScreen
 import com.android.wildex.ui.report.ReportDetailsScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -44,7 +44,7 @@ fun WildexApp(context: Context = LocalContext.current) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name else Screen.Home.route
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name else Screen.Home.name
 
   NavHost(navController = navController, startDestination = startDestination) {
     navigation(
@@ -145,7 +145,9 @@ fun WildexApp(context: Context = LocalContext.current) {
         ProfileScreen(
             onGoBack = { navigationActions.goBack() },
             userId = it,
-            onTrophiesClick = { userUid -> navigationActions.navigateTo(Screen.Trophies(userUid)) },
+            onAchievementsClick = { userUid ->
+              navigationActions.navigateTo(Screen.Achievements(userUid))
+            },
             onSettingsClick = { navigationActions.navigateTo(Screen.Settings) })
       }
           ?: run {
@@ -154,14 +156,14 @@ fun WildexApp(context: Context = LocalContext.current) {
           }
     }
 
-    composable(Screen.Trophies.route) { navBackStackEntry ->
+    composable(Screen.Achievements.route) { navBackStackEntry ->
       // Get the User UID from the arguments
       val uid = navBackStackEntry.arguments?.getString("userUid")
 
-      // Create the TrophiesScreen with the User UID
-      uid?.let { TrophiesScreen(userId = it, onGoBack = { navigationActions.goBack() }) }
+      // Create the AchievementsScreen with the User UID
+      uid?.let { AchievementsScreen(userId = it, onGoBack = { navigationActions.goBack() }) }
           ?: run {
-            Log.e("TrophiesScreen", "User UID is null")
+            Log.e("AchievementsScreen", "User UID is null")
             Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
           }
     }
@@ -170,6 +172,6 @@ fun WildexApp(context: Context = LocalContext.current) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun HomePreview() {
   WildexTheme { WildexApp() }
 }

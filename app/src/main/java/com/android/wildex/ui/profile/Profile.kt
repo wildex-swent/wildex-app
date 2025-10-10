@@ -7,5 +7,5 @@ fun ProfileScreen(
     userId: String,
     onGoBack: () -> Unit,
     onSettingsClick: () -> Unit,
-    onTrophiesClick: (String) -> Unit
+    onAchievementsClick: (userId: String) -> Unit
 ) {}

@@ -24,10 +24,10 @@ sealed class Screen(
     }
   }
 
-  data class Trophies(val userUid: String) :
-      Screen(route = "trophies/${userUid}", name = "Trophies") {
+  data class Achievements(val userUid: String) :
+      Screen(route = "achievements/${userUid}", name = "Achievements") {
     companion object {
-      const val route = "trophies/{userUid}"
+      const val route = "achievements/{userUid}"
     }
   }
 

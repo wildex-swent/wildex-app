@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -23,15 +26,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Home : Tab("Home", Icons.Outlined.Menu, Screen.Home)
+  object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
 
-  object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
+  object Map : Tab("Map", Icons.Filled.LocationOn, Screen.Map)
 
-  object NewPost : Tab("New Post", Icons.Outlined.Place, Screen.NewPost)
+  object NewPost : Tab("New Post", Icons.Filled.AddCircle, Screen.NewPost)
 
-  object Collection : Tab("Collection", Icons.Outlined.Place, Screen.Collection)
+  object Collection : Tab("Collection", Icons.Filled.Search, Screen.Collection)
 
-  object Report : Tab("Report", Icons.Outlined.Place, Screen.Report)
+  object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }
 
 private val tabs = listOf(Tab.Home, Tab.Map, Tab.NewPost, Tab.Collection, Tab.Report)

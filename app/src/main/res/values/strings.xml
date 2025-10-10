@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Wildex</string>
+    <string name="cancel_sign_in">Sign-in cancelled</string>
+    <string name="default_web_client_id">55923703889-g4po1sphfo9peea096muat5e44rr5l90.apps.googleusercontent.com</string>
+    <string name="google_logo">Google Logo</string>
+    <string name="sign_in">Sign in with Google</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 </resources>

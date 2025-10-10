@@ -17,26 +17,49 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override suspend fun getUser(userId: Id): User {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
+    if (!document.exists()) {
+      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
+    }
     return documentToUser(document)
         ?: throw Exception("UserRepositoryFirestore: User $userId not found")
   }
 
   override suspend fun getSimpleUser(userId: Id): SimpleUser {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
+    if (!document.exists()) {
+      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
+    }
     return documentToSimpleUser(document)
-        ?: throw Exception("UserRepositoryFirestore: SimpleUser $userId not found")
+        ?: throw Exception("UserRepositoryFirestore: User $userId not found")
   }
 
-  override suspend fun createUser(user: User) {
-    db.collection(USERS_COLLECTION_PATH).document(user.userId).set(user).await()
+  override suspend fun addUser(user: User) {
+    val documentId = db.collection(USERS_COLLECTION_PATH).document(user.userId)
+    val document = documentId.get().await()
+    if (document.exists()) {
+      throw IllegalArgumentException(
+          "UserRepositoryFirestore: A User with userId '${user.userId}' already exists.")
+    }
+    documentId.set(user).await()
   }
 
   override suspend fun editUser(userId: Id, newUser: User) {
-    db.collection(USERS_COLLECTION_PATH).document(userId).set(newUser).await()
+    val documentId = db.collection(USERS_COLLECTION_PATH).document(userId)
+    val document = documentId.get().await()
+    if (!document.exists()) {
+      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
+    }
+    documentId.set(newUser).await()
   }
 
   override suspend fun deleteUser(userId: Id) {
-    db.collection(USERS_COLLECTION_PATH).document(userId).delete().await()
+    val documentId = db.collection(USERS_COLLECTION_PATH).document(userId)
+    val document = documentId.get().await()
+
+    if (!document.exists()) {
+      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
+    }
+    documentId.delete().await()
   }
 
   /**

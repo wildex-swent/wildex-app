@@ -32,7 +32,7 @@ interface UserRepository {
    * @param user The User object containing the details of the user to create.
    * @return `true` if the user was successfully created, `false` otherwise.
    */
-  suspend fun createUser(user: User)
+  suspend fun addUser(user: User)
 
   /**
    * Updates an existing user in the repository.

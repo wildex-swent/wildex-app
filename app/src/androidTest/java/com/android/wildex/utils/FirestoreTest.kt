@@ -2,6 +2,8 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
@@ -103,4 +105,55 @@ open class FirestoreTest(val collectionPath: String) {
           likesCount = 10,
           commentsCount = 5,
       )
+
+  open val user1 =
+      User(
+          userId = "user1",
+          username = "user_one",
+          name = "First",
+          surname = "User",
+          bio = "Bio 1",
+          profilePictureURL = "url1",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
+          country = "Country1",
+          friendsCount = 2,
+          animalsId = listOf("a1", "a2"),
+          animalsCount = 2,
+          achievementsId = listOf("ach1"),
+          achievementsCount = 1)
+
+  open val user2 =
+      User(
+          userId = "user2",
+          username = "user_two",
+          name = "Second",
+          surname = "User",
+          bio = "Bio 2",
+          profilePictureURL = "url2",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
+          country = "Country2",
+          friendsCount = 3,
+          animalsId = listOf("a3"),
+          animalsCount = 1,
+          achievementsId = emptyList(),
+          achievementsCount = 0)
+
+  open val user3 =
+      User(
+          userId = "user3",
+          username = "user_three",
+          name = "Third",
+          surname = "User",
+          bio = "Bio 3",
+          profilePictureURL = "url3",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
+          country = "Country3",
+          friendsCount = 0,
+          animalsId = emptyList(),
+          animalsCount = 0,
+          achievementsId = emptyList(),
+          achievementsCount = 0)
 }

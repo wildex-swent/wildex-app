@@ -1,11 +1,15 @@
 package com.android.wildex.model.user
 
 import android.util.Log
+import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.util.Calendar
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -199,5 +203,49 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
       assertEquals("UserRepositoryFirestore: User nonExistentId not found", e.message)
     }
     assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
+  }
+
+  @Test
+  fun getUser_whenDocumentMalformed_throwsGenericException() = runTest {
+    val badId = "malformedUser"
+    FirebaseEmulator.firestore
+        .collection(USERS_COLLECTION_PATH)
+        .document(badId)
+        .set(mapOf("name" to "no-username"))
+        .await()
+
+    val exception = runCatching { repository.getUser(badId) }.exceptionOrNull()
+    assertTrue(exception is Exception && exception !is IllegalArgumentException)
+    assertEquals("UserRepositoryFirestore: User $badId not found", exception?.message)
+  }
+
+  @Test
+  fun getSimpleUser_whenDocumentMalformed_throwsGenericException() = runTest {
+    val badId = "malformedSimpleUser"
+    FirebaseEmulator.firestore
+        .collection(USERS_COLLECTION_PATH)
+        .document(badId)
+        .set(mapOf("profilePictureURL" to "no-username"))
+        .await()
+
+    val exception = runCatching { repository.getSimpleUser(badId) }.exceptionOrNull()
+    assertTrue(exception is Exception && exception !is IllegalArgumentException)
+    assertEquals("UserRepositoryFirestore: User $badId not found", exception?.message)
+  }
+
+  @Test
+  fun getUser_withInvalidUserType_fallsBackToRegular() = runTest {
+    val id = "invalidUserType"
+    val creationTs = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1)
+    FirebaseEmulator.firestore
+        .collection(USERS_COLLECTION_PATH)
+        .document(id)
+        .set(
+            mapOf(
+                "username" to "u", "creationDate" to creationTs, "userType" to "NOT_A_VALID_TYPE"))
+        .await()
+
+    val u = repository.getUser(id)
+    assertEquals(UserType.REGULAR, u.userType)
   }
 }

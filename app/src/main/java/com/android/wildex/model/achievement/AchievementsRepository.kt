@@ -9,6 +9,12 @@ interface AchievementsRepository {
   /** Retrieves all Achievement items from the repository. */
   suspend fun getAllAchievements(): List<Achievement>
 
+  /** Retrieves all Achievement items associated with a specific user. */
+  suspend fun getAllAchievementsByUser(userId: String): List<Achievement>
+
+  /** Retrieves all Achievement items associated with the currently authenticated user. */
+  suspend fun getAllAchievementsByCurrentUser(): List<Achievement>
+
   /** Retrieves a specific Achievement item by its unique identifier. */
   suspend fun getAchievement(achievementId: String): Achievement
 

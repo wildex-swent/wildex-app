@@ -79,8 +79,8 @@ class HomeScreenViewModel(
                 //TODO: implement fetching posts
                 /** Pull posts from repository and update UI state */
                 _uiState.value = HomeUIState(
-                    //posts = emptyList(),
-                    posts = postRepository.getAllPostsByAuthor(),
+                    posts = emptyList(),
+                    //posts = postRepository.getAllPostsByAuthor(),
                     user = fetchUser(),
                     notif = hasNotif()
                 )

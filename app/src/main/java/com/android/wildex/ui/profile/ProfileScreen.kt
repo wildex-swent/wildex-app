@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,7 +40,8 @@ import com.android.wildex.R
 
 @Composable
 fun ProfileScreen(
-    profileScreenViewModel: ProfileScreenViewModel = viewModel()
+    profileScreenViewModel: ProfileScreenViewModel = viewModel(),
+    onGoBack: () -> Unit = {},
 ) {
     val uiState by profileScreenViewModel.uiState.collectAsState()
     val user = uiState.user
@@ -48,7 +50,11 @@ fun ProfileScreen(
     LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState() }
 
     Scaffold(
-        topBar = { /* TODO: Implement TopAppBar */ },
+        topBar = { /* TODO: Implement TopAppBar */
+            Button(onClick = {}) {
+                Text(text = "Go Back")
+            }
+        },
         content = { pd ->
             Column(
                 modifier = Modifier.fillMaxSize().padding(pd)

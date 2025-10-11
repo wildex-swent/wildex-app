@@ -2,24 +2,19 @@ package com.android.wildex.ui.home
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
-import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
-import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
+import kotlin.String
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlin.String
 
 data class HomeUIState(
     val posts: List<Post> = emptyList(),
@@ -28,70 +23,72 @@ data class HomeUIState(
     val errorMsg: String? = null,
     val signedOut: Boolean = false
 )
+
 class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
-    //private val authRepository: AuthRepository = AuthRepositoryFirebase(),
+    // private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(HomeUIState())
-    private val defaultUser: User = User(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        name = "Default",
-        surname = "User",
-        bio = "This is...",
-        profilePictureURL = "https://example.com/default-profile-pic.png",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "Nowhere",
-        friendsCount = 0,
-        animalsId = emptyList(),
-        animalsCount = 0,
-        achievementsId = emptyList(),
-        achievementsCount = 0,
-    )
-    val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
+  private val _uiState = MutableStateFlow(HomeUIState())
+  private val defaultUser: User =
+      User(
+          userId = "defaultUserId",
+          username = "defaultUsername",
+          name = "Default",
+          surname = "User",
+          bio = "This is...",
+          profilePictureURL = "https://example.com/default-profile-pic.png",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.now(),
+          country = "Nowhere",
+          friendsCount = 0,
+          animalsId = emptyList(),
+          animalsCount = 0,
+          achievementsId = emptyList(),
+          achievementsCount = 0,
+      )
+  val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-    /** Refreshes the UI state by fetching all Post items from the repository. */
-    fun refreshUIState() {
-        getAllPosts()
+  /** Refreshes the UI state by fetching all Post items from the repository. */
+  fun refreshUIState() {
+    getAllPosts()
+  }
+  /** Fetches user based on login */
+  private fun fetchUser(): User? {
+    var user: User? = null
+    val authorId = com.google.firebase.ktx.Firebase.auth.currentUser?.uid
+    // viewModelScope.launch {
+    try {
+      // TODO: implement fetching user
+      /** _uiState.user = "fetchUserFromUserId(...)" */
+      // user = "to User."Firebase.auth.currentUser
+    } catch (e: Exception) {
+      Log.e("HomeScreenViewModel", "Error fetching user", e)
+      // setErrorMsg("Failed to load user: ${e.message}")
     }
-    /** Fetches user based on login */
-    private fun fetchUser(): User? {
-        var user: User? = null
-        val authorId =
-            com.google.firebase.ktx.Firebase.auth.currentUser?.uid
-        //viewModelScope.launch {
-            try {
-                //TODO: implement fetching user
-                /** _uiState.user = "fetchUserFromUserId(...)" */
-                //user = "to User."Firebase.auth.currentUser
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Error fetching user", e)
-                //setErrorMsg("Failed to load user: ${e.message}")
-            }
-        //}
-        return defaultUser
+    // }
+    return defaultUser
+  }
+  /** Fetches all Posts from the repository and updates the UI state. */
+  private fun getAllPosts() {
+    // viewModelScope.launch {
+    try {
+      // TODO: implement fetching posts
+      /** Pull posts from repository and update UI state */
+      _uiState.value =
+          HomeUIState(
+              posts = emptyList(),
+              // posts = postRepository.getAllPostsByAuthor(),
+              user = fetchUser(),
+              notif = hasNotif())
+    } catch (e: Exception) {
+      Log.e("HomeScreenViewModel", "Error fetching posts", e)
+      // setErrorMsg("Failed to load todos: ${e.message}")
     }
-    /** Fetches all Posts from the repository and updates the UI state. */
-    private fun getAllPosts() {
-        //viewModelScope.launch {
-            try {
-                //TODO: implement fetching posts
-                /** Pull posts from repository and update UI state */
-                _uiState.value = HomeUIState(
-                    posts = emptyList(),
-                    //posts = postRepository.getAllPostsByAuthor(),
-                    user = fetchUser(),
-                    notif = hasNotif()
-                )
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Error fetching posts", e)
-                //setErrorMsg("Failed to load todos: ${e.message}")
-            }
-        //}
-    }
-    private fun hasNotif() : Boolean {
-        //TODO: implement notification check
-        return false
-    }
+    // }
+  }
+
+  private fun hasNotif(): Boolean {
+    // TODO: implement notification check
+    return false
+  }
 }

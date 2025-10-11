@@ -35,7 +35,10 @@ import com.android.wildex.ui.theme.WildexTheme
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    onSettings: () -> Unit = {},
+    onCollection: () -> Unit = {},
+    onAchievements: () -> Unit = {},
+    onMap: () -> Unit = {},
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val user = uiState.user
@@ -50,7 +53,10 @@ fun ProfileScreen(
       content = { pd ->
         Column(modifier = Modifier.fillMaxSize().padding(pd)) {
           Text(text = "Profile Screen Content")
-          Button(onClick = {}) { Text(text = "Settings") }
+          Button(onClick = { onSettings() }) { Text(text = "Settings") }
+          Button(onClick = { onAchievements() }) { Text(text = "Achievements") }
+          Button(onClick = { onCollection() }) { Text(text = "Collection") }
+          Button(onClick = { onMap() }) { Text(text = "Map") }
         }
       })
 }

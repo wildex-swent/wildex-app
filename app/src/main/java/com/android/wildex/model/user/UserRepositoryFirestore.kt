@@ -90,14 +90,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       val country = document.getString("country") ?: ""
       val friendsCount = (document.getLong("friendsCount") ?: 0).toInt()
 
-      val animalsId =
-          (document.get("animalsId") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-      val animalsCount = (document.getLong("animalsCount") ?: animalsId.size).toInt()
-
-      val achievementsId =
-          (document.get("achievementsId") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-      val achievementsCount = (document.getLong("achievementsCount") ?: achievementsId.size).toInt()
-
       User(
           userId = userId,
           username = username,
@@ -108,11 +100,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           userType = userType,
           creationDate = creationDate,
           country = country,
-          friendsCount = friendsCount,
-          animalsId = animalsId,
-          animalsCount = animalsCount,
-          achievementsId = achievementsId,
-          achievementsCount = achievementsCount)
+          friendsCount = friendsCount)
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null

@@ -54,7 +54,8 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
       exceptionThrown = true
       assertEquals(
           "UserRepositoryFirestore: A User with userId '${user1.userId}' already exists.",
-          e.message)
+          e.message,
+      )
     }
     assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
   }
@@ -87,7 +88,8 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
     assertTrue(exception is IllegalArgumentException)
     assertEquals(
         "UserRepositoryFirestore: A User with userId '${duplicateId}' already exists.",
-        exception?.message)
+        exception?.message,
+    )
 
     assertEquals(1, getUsersCount())
     val stored = repository.getUser(duplicateId)
@@ -137,10 +139,7 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
             profilePictureURL = "modifiedUrl",
             country = "ModifiedCountry",
             friendsCount = 42,
-            animalsId = listOf("x", "y"),
-            animalsCount = 2,
-            achievementsId = listOf("achX"),
-            achievementsCount = 1)
+        )
 
     repository.editUser(user1.userId, modified)
     assertEquals(1, getUsersCount())
@@ -188,7 +187,8 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
         SimpleUser(
             userId = user1.userId,
             username = user1.username,
-            profilePictureURL = user1.profilePictureURL)
+            profilePictureURL = user1.profilePictureURL,
+        )
     assertEquals(expectedSimple, simple)
   }
 

@@ -48,7 +48,7 @@ data class UserAchievements(
 /**
  * Represents a summary of a user's animals.
  *
- * @property uid Unique identifier for this UserAnimals record.
+ * @property userId Unique identifier for this UserAnimals record.
  * @property userId The unique identifier of the user to whom these animals belong.
  * @property animalsId A list of unique identifiers for the animals associated with the user.
  * @property animalsCount The total number of animals associated with the user.

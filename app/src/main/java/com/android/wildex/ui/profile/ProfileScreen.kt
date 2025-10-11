@@ -42,6 +42,7 @@ import com.android.wildex.R
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     val uiState by profileScreenViewModel.uiState.collectAsState()
     val user = uiState.user
@@ -51,7 +52,7 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = { /* TODO: Implement TopAppBar */
-            Button(onClick = {}) {
+            Button(onClick = {onGoBack()}) {
                 Text(text = "Go Back")
             }
         },
@@ -60,6 +61,9 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxSize().padding(pd)
             ) {
                 Text(text = "Profile Screen Content")
+                Button(onClick = {}) {
+                    Text(text = "Settings")
+                }
             }
         }
     )

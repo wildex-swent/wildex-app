@@ -29,6 +29,7 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+          KEYSTORE: ${{ secrets.KEYSTORE }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
@@ -40,6 +41,12 @@ jobs:
             echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
           else
             echo "::warning::LOCAL_PROPERTIES secret not set."
+          fi
+          
+          if [ -n "$KEYSTORE" ]; then
+            echo "$KEYSTORE" | base64 --decode > ./app/upload-keystore.jks
+          else
+            echo "::warning::KEYSTORE secret not set."
           fi
 
       # Grant execute permission for gradlew

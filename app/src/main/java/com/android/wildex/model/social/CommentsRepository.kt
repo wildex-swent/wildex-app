@@ -6,14 +6,8 @@ interface CommentsRepository {
   /** Generates and returns a new unique identifier for a Comment item. */
   fun getNewCommentId(): String
 
-  /** Retrieves all Comment items from the repository. */
-  suspend fun getAllComments(): List<Comment>
-
   /** Retrieves all Comment items associated with a specific post. */
   suspend fun getAllCommentsByPost(postId: String): List<Comment>
-
-  /** Retrieves a specific Comment item by its unique identifier. */
-  suspend fun getComment(commentId: String): Comment
 
   /** Adds a new Comment item to the repository. */
   suspend fun addComment(comment: Comment)

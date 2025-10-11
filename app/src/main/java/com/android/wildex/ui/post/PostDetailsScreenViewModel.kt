@@ -6,14 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class PostDetailsUIState(
-    val post: Post? = null,
-    val errorMsg: String? = null
-)
+data class PostDetailsUIState(val post: Post? = null, val errorMsg: String? = null)
 
 class PostDetailsScreenViewModel() : ViewModel() {
-    private val _uiState = MutableStateFlow(PostDetailsUIState())
-    val uiState: StateFlow<PostDetailsUIState> = _uiState.asStateFlow()
-
-
+  private val _uiState = MutableStateFlow(PostDetailsUIState())
+  val uiState: StateFlow<PostDetailsUIState> = _uiState.asStateFlow()
 }

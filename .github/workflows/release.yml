@@ -5,14 +5,19 @@ on:
     branches:
       - 'release/*'
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Set up JDK
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -28,42 +33,73 @@ jobs:
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
           else
-            echo "::warning::GOOGLE_SERVICES secret is not set. google-services.json will not be created."
+            echo "::warning::GOOGLE_SERVICES secret not set."
           fi
 
           if [ -n "$LOCAL_PROPERTIES" ]; then
             echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
           else
-            echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
+            echo "::warning::LOCAL_PROPERTIES secret not set."
           fi
 
+      # Grant execute permission for gradlew
       - name: Grant execute permission for gradlew
-        run: |
-          chmod +x ./gradlew
+        run: chmod +x ./gradlew
 
-      - name: Build APK
-        run: ./gradlew assembleRelease
+      # Clean and build release APK(s)
+      - name: Build Release APK
+        run: ./gradlew clean assembleRelease
 
-      - name: Upload APK as artifact
+      # Upload all APKs in release folder as artifact
+      - name: Upload APKs as artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/*.apk
 
+      # Extract release name and tag from branch
       - name: Extract release name and tag
         id: extract
         run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/release/}   
-          RELEASE_NAME=${BRANCH_NAME%%-*}                 
-          TAG_NAME=${BRANCH_NAME#*-}                      
-          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          BRANCH_NAME=${GITHUB_REF#refs/heads/release/}
+          if [[ "$BRANCH_NAME" =~ ^(.+)-(.+)$ ]]; then
+            RELEASE_NAME=${BASH_REMATCH[1]}
+            TAG_NAME=${BASH_REMATCH[2]}
+            echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+            echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          else
+            echo "Error: Branch name format should be 'release/NAME-TAG'"
+            echo "Received: $BRANCH_NAME"
+            exit 1
+          fi
 
+      # Create and push tag only if it doesn't exist
+      - name: Create and push tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check if tag exists locally or remotely
+          if git ls-remote --tags origin "refs/tags/$TAG_NAME" | grep -q "$TAG_NAME"; then
+            echo "Tag $TAG_NAME already exists on remote, skipping"
+          elif git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists locally, pushing to remote"
+            git push origin "$TAG_NAME"
+          else
+            echo "Creating new tag: $TAG_NAME"
+            git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Create GitHub release and attach APK(s)
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: ${{ env.RELEASE_NAME }}
-          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

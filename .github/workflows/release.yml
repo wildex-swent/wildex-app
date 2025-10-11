@@ -50,15 +50,20 @@ jobs:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk
 
-      - name: Extract release name
+      - name: Extract release name and tag
         id: extract
-        run: echo "RELEASE_NAME=${GITHUB_REF#refs/heads/release/}" >> $GITHUB_ENV
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/release/}   
+          RELEASE_NAME=${BRANCH_NAME%%-*}                 
+          TAG_NAME=${BRANCH_NAME#*-}                      
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ env.TAG_NAME }}
           name: ${{ env.RELEASE_NAME }}
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/app-release-unsigned.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

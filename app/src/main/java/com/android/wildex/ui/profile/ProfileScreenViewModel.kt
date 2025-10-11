@@ -37,7 +37,6 @@ class ProfileScreenViewModel() : ViewModel() {
       )
 
   fun refreshUIState() {
-    // TODO: fetch user from repository
     _uiState.value = ProfileUIState(user = fetchUser())
   }
 

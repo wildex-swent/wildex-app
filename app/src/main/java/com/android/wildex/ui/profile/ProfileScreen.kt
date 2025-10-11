@@ -63,12 +63,12 @@ fun ProfileScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WildexTopAppBar() {
+fun ProfileTopAppBar() {
   TopAppBar(
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
           Text(
-              text = "Wildex",
+              text = "Profile",
               style =
                   MaterialTheme.typography.titleLarge.copy(
                       fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 30.sp))

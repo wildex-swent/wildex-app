@@ -22,6 +22,7 @@ android {
   }
 
   val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
+  val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
 
   defaultConfig {
     applicationId = "com.android.wildex"
@@ -33,6 +34,7 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
     buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
+    buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
   }
 
   buildTypes {

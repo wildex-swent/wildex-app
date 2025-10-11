@@ -5,10 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.android.wildex.model.animaldetector.AnimalDetectRepository
+import com.android.wildex.ui.example.AnimalDetectionTestScreen
 import com.android.wildex.ui.theme.WildexTheme
 import okhttp3.OkHttpClient
 
@@ -26,7 +27,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WildexApp() {
-  Text(text = "Welcome to Wildex!")
+  // Text(text = "Welcome to Wildex!")
+  AnimalDetectionTestScreen(repository = AnimalDetectRepository(HttpClientProvider.client))
 }
 
 @Preview(showBackground = true)

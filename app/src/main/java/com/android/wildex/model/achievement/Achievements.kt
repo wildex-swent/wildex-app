@@ -4,7 +4,6 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
-import kotlinx.coroutines.runBlocking
 
 object Achievements {
   val postsRepository: PostsRepository = RepositoryProvider.postRepository
@@ -27,10 +26,8 @@ object Achievements {
           description = "Like 50 posts",
           name = "Social Butterfly",
           condition = { postIds ->
-            runBlocking {
-              val likedPosts = postsRepository.getLikedPosts(postIds)
-              likedPosts.size >= 50
-            }
+            val likedPosts = postsRepository.getLikedPosts(postIds)
+            likedPosts.size >= 50
           },
       )
   // Achievement 3: "Commentator" - Achieved when user has commented on 20 different posts
@@ -41,10 +38,8 @@ object Achievements {
           description = "Comment on 20 different posts",
           name = "Commentator",
           condition = { postIds ->
-            runBlocking {
-              val commentedPosts = postsRepository.getCommentedPosts(postIds)
-              commentedPosts.size >= 20
-            }
+            val commentedPosts = postsRepository.getCommentedPosts(postIds)
+            commentedPosts.size >= 20
           },
       )
 
@@ -56,10 +51,8 @@ object Achievements {
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
           condition = { postIds ->
-            runBlocking {
-              val totalLikes = postsRepository.getLikesCount(postIds)
-              totalLikes >= 1000
-            }
+            val totalLikes = postsRepository.getLikesCount(postIds)
+            totalLikes >= 1000
           },
       )
 

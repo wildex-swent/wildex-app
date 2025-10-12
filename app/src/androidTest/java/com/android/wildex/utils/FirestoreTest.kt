@@ -118,10 +118,7 @@ open class FirestoreTest(val collectionPath: String) {
           creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
           friendsCount = 2,
-          animalsId = listOf("a1", "a2"),
-          animalsCount = 2,
-          achievementsId = listOf("ach1"),
-          achievementsCount = 1)
+      )
 
   open val user2 =
       User(
@@ -135,10 +132,7 @@ open class FirestoreTest(val collectionPath: String) {
           creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
           friendsCount = 3,
-          animalsId = listOf("a3"),
-          animalsCount = 1,
-          achievementsId = emptyList(),
-          achievementsCount = 0)
+      )
 
   open val user3 =
       User(
@@ -152,8 +146,5 @@ open class FirestoreTest(val collectionPath: String) {
           creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
           friendsCount = 0,
-          animalsId = emptyList(),
-          animalsCount = 0,
-          achievementsId = emptyList(),
-          achievementsCount = 0)
+      )
 }

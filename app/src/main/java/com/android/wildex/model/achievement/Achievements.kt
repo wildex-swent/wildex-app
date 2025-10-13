@@ -6,7 +6,7 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
 
 object Achievements {
-  val postsRepository: PostsRepository = RepositoryProvider.postRepository
+  private val postsRepository: PostsRepository = RepositoryProvider.postRepository
 
   // Achievement 1: "Post Master" - Achieved when user has 10 or more posts
   val postMaster =
@@ -18,7 +18,7 @@ object Achievements {
           condition = { postIds -> postIds.size >= 10 },
       )
 
-  // Achievement 2: "Social Butterfly" - Achieved when user has liked 50 posts
+  // Achievement 2: "Social Butterfly" - Achieved when user has 50 liked posts
   val socialButterfly =
       Achievement(
           achievementId = "achievement_2",
@@ -30,13 +30,14 @@ object Achievements {
             likedPosts.size >= 50
           },
       )
-  // Achievement 3: "Commentator" - Achieved when user has commented on 20 different posts
-  val commentator =
+
+  // Achievement 3: "Community Builder" - Achieved when user has 20 commented Posts
+  val communityBuilder =
       Achievement(
           achievementId = "achievement_3",
           pictureURL = "image_placeholder", // Replace with actual image URL
           description = "Comment on 20 different posts",
-          name = "Commentator",
+          name = "Community Builder",
           condition = { postIds ->
             val commentedPosts = postsRepository.getCommentedPosts(postIds)
             commentedPosts.size >= 20
@@ -57,7 +58,7 @@ object Achievements {
       )
 
   // List of all achievements
-  val ALL = listOf(postMaster, socialButterfly, commentator, influencer)
+  val ALL = listOf(postMaster, socialButterfly, communityBuilder, influencer)
 
   // ----------- Helpers ----------------
   private suspend fun PostsRepository.getLikedPosts(postIds: List<Id>): List<Post> {

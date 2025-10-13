@@ -40,7 +40,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
   override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> {
     val userId =
         Firebase.auth.currentUser?.uid
-            ?: throw Exception("PostsRepositoryFirestore: User not logged in.")
+            ?: throw Exception("UserAchievementsRepositoryFirestore: User not logged in.")
     return getAllAchievementsByUser(userId)
   }
 

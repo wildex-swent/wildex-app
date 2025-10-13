@@ -2,12 +2,14 @@ package com.android.wildex.model.achievement
 
 import com.android.wildex.model.utils.Id
 import com.android.wildex.utils.FirestoreTest
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -117,6 +119,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
         runCatching { repository.updateUserAchievements(userId, listIds) }.exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
+    assertEquals("UserAchievements with given userId not found", exception?.message)
   }
 
   @Test
@@ -152,5 +155,31 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val userId = ""
     val exception = runCatching { repository.initializeUserAchievements(userId) }.exceptionOrNull()
     assertTrue(exception is IllegalArgumentException)
+  }
+
+  @Test
+  fun getAchievementsCountWhenUserNotInitializedThrowsException() = runTest {
+    val userId = "nonExistentUser"
+
+    val exception = runCatching { repository.getAchievementsCountOfUser(userId) }.exceptionOrNull()
+
+    assertTrue(exception is IllegalArgumentException)
+    assertEquals("UserAchievements of the given userId was not initialized", exception?.message)
+  }
+
+  @Test
+  fun getAllAchievementsByCurrentUserWhenNotLoggedInThrowsException() = runTest {
+    val exception = runCatching { repository.getAllAchievementsByCurrentUser() }.exceptionOrNull()
+
+    assertTrue(exception is Exception)
+    assertEquals("UserAchievementsRepositoryFirestore: User not logged in.", exception?.message)
+  }
+
+  @Test
+  fun getAllAchievementsByCurrentUserWhenLoggedIn() = runTest {
+    Firebase.auth.signInAnonymously().await()
+    repository.initializeUserAchievements(Firebase.auth.currentUser!!.uid)
+    val achievements = repository.getAllAchievementsByCurrentUser()
+    assertTrue(achievements.isEmpty())
   }
 }

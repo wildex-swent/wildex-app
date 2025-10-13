@@ -306,4 +306,16 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
     assertTrue(exception is IllegalArgumentException)
     assertEquals("Post with given Id not found", exception?.message)
   }
+
+  @Test
+  fun getAllPostsByAuthorWhenUserIsNotLoggedInThrowsException() = runTest {
+    var exceptionThrown = false
+    try {
+      repository.getAllPostsByAuthor()
+    } catch (e: Exception) {
+      exceptionThrown = true
+      assertEquals("PostsRepositoryFirestore: User not logged in.", e.message)
+    }
+    assertTrue(exceptionThrown)
+  }
 }

@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +37,12 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+
+object SignInScreeTestTags {
+  const val APP_LOGO = "appLogo"
+  const val LOGIN_BUTTON = "loginButton"
+  const val WELCOME = "welcome"
+}
 
 @Composable
 fun SignInScreen(
@@ -47,17 +54,16 @@ fun SignInScreen(
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
 
-  // Show error message if login fails
-  LaunchedEffect(uiState.errorMsg) {
+  LaunchedEffect(uiState.errorMsg, uiState.user) {
+    // Show error message if login fails
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       authViewModel.clearErrorMsg()
     }
-  }
-  // Show error message if login fails
-  LaunchedEffect(uiState.errorMsg) {
-    uiState.errorMsg?.let {
-      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+
+    // Navigate to home screen on successful login
+    uiState.user?.let {
+      Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
       onSignedIn()
     }
   }
@@ -69,22 +75,29 @@ fun SignInScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
-              // Welcome text
-              Text(
-                  text = context.getString(R.string.app_name),
-                  style = MaterialTheme.typography.headlineLarge,
-                  fontWeight = FontWeight.Bold,
-                  textAlign = TextAlign.Center)
+              Image(
+                  painter = painterResource(id = R.drawable.app_logo_name),
+                  contentDescription = "App logo",
+                  modifier = Modifier.size(200.dp).testTag(SignInScreeTestTags.APP_LOGO))
 
               Spacer(modifier = Modifier.height(48.dp))
 
               // Authenticate With Google Button
-              if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+              if (uiState.user == null) {
+                if (uiState.isLoading) {
+                  CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                } else {
+                  GoogleSignInButton(
+                      context = context,
+                      onSignInClick = { authViewModel.signIn(context, credentialManager) })
+                }
               } else {
-                GoogleSignInButton(
-                    context = context,
-                    onSignInClick = { authViewModel.signIn(context, credentialManager) })
+                Text(
+                    text = context.getString(R.string.welcome),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag(SignInScreeTestTags.WELCOME))
               }
             }
       })
@@ -92,12 +105,16 @@ fun SignInScreen(
 
 @Composable
 fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
-  Button(
+  OutlinedButton(
       onClick = onSignInClick,
       colors = ButtonDefaults.buttonColors(containerColor = Color.White),
       shape = RoundedCornerShape(50),
       border = BorderStroke(1.dp, Color.LightGray),
-      modifier = Modifier.padding(8.dp).height(48.dp)) {
+      modifier =
+          Modifier.padding(8.dp)
+              .fillMaxWidth(0.8f)
+              .height(48.dp)
+              .testTag(SignInScreeTestTags.LOGIN_BUTTON)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

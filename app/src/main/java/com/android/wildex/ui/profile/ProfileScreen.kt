@@ -31,7 +31,6 @@ import com.android.wildex.ui.theme.WildexTheme
 
 // import coil.compose.AsyncImage
 
-
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
@@ -40,6 +39,7 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onCollection: () -> Unit = {},
     onAchievements: () -> Unit = {},
+    onFriends: () -> Unit = {},
     onMap: () -> Unit = {},
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
@@ -59,6 +59,7 @@ fun ProfileScreen(
           Button(onClick = { onAchievements() }) { Text(text = "Achievements") }
           Button(onClick = { onCollection() }) { Text(text = "Collection") }
           Button(onClick = { onMap() }) { Text(text = "Map") }
+          Button(onClick = { onFriends() }) { Text(text = "Friends") }
         }
       })
 }

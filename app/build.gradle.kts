@@ -57,11 +57,11 @@ android {
   composeOptions { kotlinCompilerExtensionVersion = "1.4.2" }
 
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
-  kotlinOptions { jvmTarget = "1.8" }
+  kotlinOptions { jvmTarget = "11" }
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -169,27 +169,27 @@ dependencies {
   implementation(libs.firebase.auth.ktx)
   implementation(libs.firebase.auth)
 
-    // Credential Manager (for Google Sign-In)
-    implementation(libs.credentials)
-    implementation(libs.credentials.play.services.auth)
-    implementation(libs.googleid)
+  // Credential Manager (for Google Sign-In)
+  implementation(libs.credentials)
+  implementation(libs.credentials.play.services.auth)
+  implementation(libs.googleid)
 
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
+  // Navigation
+  implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.navigation.fragment.ktx)
+  implementation(libs.androidx.navigation.ui.ktx)
 
-    // Testing Unit
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.mockk)
-    androidTestImplementation(libs.mockk.android)
-    androidTestImplementation(libs.mockk.agent)
-    testImplementation(libs.mockk)
-    testImplementation(libs.json)
+  // Testing Unit
+  testImplementation(libs.junit)
+  androidTestImplementation(libs.mockk)
+  androidTestImplementation(libs.mockk.android)
+  androidTestImplementation(libs.mockk.agent)
+  testImplementation(libs.mockk)
+  testImplementation(libs.json)
 
-    // UI Tests
-    globalTestImplementation(libs.compose.test.junit)
-    debugImplementation(libs.compose.test.manifest)
+  // UI Tests
+  globalTestImplementation(libs.compose.test.junit)
+  debugImplementation(libs.compose.test.manifest)
 
   // --------- Kaspresso test framework ----------
   globalTestImplementation(libs.kaspresso)
@@ -203,12 +203,15 @@ dependencies {
 
   // Mock testing
   testImplementation(libs.mockito)
-  testImplementation(libs.mockito.kotlin)
   testImplementation(libs.mockwebserver)
+  testImplementation(libs.mockk)
+  testImplementation(libs.mockito.core)
+  testImplementation(libs.mockito.kotlin)
   androidTestImplementation(libs.mockk)
   androidTestImplementation(libs.mockk.android)
   androidTestImplementation(libs.mockk.agent)
-  testImplementation(libs.mockk)
+  androidTestImplementation(libs.mockito.android)
+  androidTestImplementation(libs.mockito.kotlin)
 }
 
 tasks.withType<Test> {

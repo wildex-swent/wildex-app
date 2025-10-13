@@ -35,14 +35,16 @@ kotlinxSerializationJson = "1.6.2"
 
 # Testing
 mockito = "5.6.0"
-mockitoKotlin = "5.1.0"
+mockitoAndroid = "5.13.0"
+mockitoCore = "5.13.0"
+mockitoKotlin = "5.4.0"
 mockwebserver = "4.11.0"
-navigationCompose = "2.7.7"
 mockk = "1.13.7"
 
 # Testing UI
 mockkAgent = "1.13.7"
 mockkAndroid = "1.13.7"
+navigationCompose = "2.7.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -92,6 +94,8 @@ mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockkAgent" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkAndroid" }
 mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 
 [plugins]

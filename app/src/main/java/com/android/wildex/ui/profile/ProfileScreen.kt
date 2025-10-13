@@ -46,7 +46,7 @@ fun ProfileScreen(
   val user = uiState.user
 
   // Fetch todos when the screen is recomposed
-  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState() }
+  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
 
   Scaffold(
       topBar = { /* TODO: Implement TopAppBar */

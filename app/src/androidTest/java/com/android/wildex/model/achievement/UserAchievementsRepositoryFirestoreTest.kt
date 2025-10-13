@@ -131,7 +131,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.updateUserAchievements(userId, listIds)
 
     val achievements = repository.getAllAchievementsByUser(userId)
-    assertTrue(achievements.isNotEmpty()) // The list should be updated
+    assertTrue(achievements.isNotEmpty())
     assertEquals(Achievements.ALL.find { it.achievementId == "mockPostId" }, achievements[0])
     val newListIds = listOf<Id>("mockPostId", "RandomId")
     repository.updateUserAchievements(userId, newListIds)
@@ -181,5 +181,17 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(Firebase.auth.currentUser!!.uid)
     val achievements = repository.getAllAchievementsByCurrentUser()
     assertTrue(achievements.isEmpty())
+  }
+
+  @Test
+  fun updateUserAchievementsWhenUserNotFoundThrowsIllegalArgumentException() = runTest {
+    val userId = "nonExistentUser"
+
+    val exception =
+        runCatching { repository.updateUserAchievements(userId, listOf("mockPostId")) }
+            .exceptionOrNull()
+
+    assertTrue(exception is IllegalArgumentException)
+    assertEquals("UserAchievements with given userId not found", exception?.message)
   }
 }

@@ -23,7 +23,7 @@ object Achievements {
       Achievement(
           achievementId = "achievement_2",
           pictureURL = "image_placeholder", // Replace with actual image URL
-          description = "Like 50 posts",
+          description = "Reach 50 liked posts",
           name = "Social Butterfly",
           condition = { postIds ->
             val likedPosts = postsRepository.getLikedPosts(postIds)
@@ -36,7 +36,7 @@ object Achievements {
       Achievement(
           achievementId = "achievement_3",
           pictureURL = "image_placeholder", // Replace with actual image URL
-          description = "Comment on 20 different posts",
+          description = "Reach 20 commented posts",
           name = "Community Builder",
           condition = { postIds ->
             val commentedPosts = postsRepository.getCommentedPosts(postIds)
@@ -57,8 +57,37 @@ object Achievements {
           },
       )
 
+  // Mock Achievement for testing purposes, DO NOT DELETE OTHERWISE THE TESTS WILL FAIL
+  val mockAchievement1 =
+      Achievement(
+          achievementId = "mockPostId",
+          pictureURL = "image_placeholder",
+          description = "This is a mock achievement for testing purposes",
+          name = "Mock Achievement",
+          condition = { postIds -> postIds.size == 1 && postIds[0] == "mockPostId" },
+      )
+
+  val mockAchievement2 =
+      Achievement(
+          achievementId = "mockPostId2",
+          pictureURL = "image_placeholder",
+          description = "This is another mock achievement for testing purposes",
+          name = "Mock Achievement 2",
+          condition = { postIds -> postIds.size == 2 },
+      )
+
+  // ------------------------------------------------------------
+
   // List of all achievements
-  val ALL = listOf(postMaster, socialButterfly, communityBuilder, influencer)
+  val ALL =
+      listOf(
+          mockAchievement1,
+          mockAchievement2,
+          postMaster,
+          socialButterfly,
+          communityBuilder,
+          influencer,
+      )
 
   // ----------- Helpers ----------------
   private suspend fun PostsRepository.getLikedPosts(postIds: List<Id>): List<Post> {

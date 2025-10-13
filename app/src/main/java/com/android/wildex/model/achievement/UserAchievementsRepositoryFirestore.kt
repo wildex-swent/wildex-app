@@ -16,7 +16,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
     if (!doc.exists()) {
-      val userAchievements = UserAchievements(userId, emptyList(), 0)
+      val userAchievements = UserAchievements(userId = userId)
       docRef.set(userAchievements).await()
     }
   }

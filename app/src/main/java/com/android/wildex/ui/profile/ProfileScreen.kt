@@ -31,9 +31,11 @@ import com.android.wildex.ui.theme.WildexTheme
 
 // import coil.compose.AsyncImage
 
+
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
+    userUid: String,
     onGoBack: () -> Unit = {},
     onSettings: () -> Unit = {},
     onCollection: () -> Unit = {},
@@ -101,5 +103,5 @@ fun ProfileTopAppBar() {
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { ProfileScreen() } }
+  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { ProfileScreen(userUid = "0") } }
 }

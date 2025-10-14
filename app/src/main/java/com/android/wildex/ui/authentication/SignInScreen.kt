@@ -38,10 +38,11 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 
-object SignInScreeTestTags {
+object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_BUTTON = "loginButton"
   const val WELCOME = "welcome"
+  const val LOADING_INDICATOR = "loadingIndicator"
 }
 
 @Composable
@@ -78,14 +79,16 @@ fun SignInScreen(
               Image(
                   painter = painterResource(id = R.drawable.app_logo_name),
                   contentDescription = "App logo",
-                  modifier = Modifier.size(200.dp).testTag(SignInScreeTestTags.APP_LOGO))
+                  modifier = Modifier.size(200.dp).testTag(SignInScreenTestTags.APP_LOGO))
 
               Spacer(modifier = Modifier.height(48.dp))
 
               // Authenticate With Google Button
               if (uiState.user == null) {
                 if (uiState.isLoading) {
-                  CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                  CircularProgressIndicator(
+                      modifier =
+                          Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
                 } else {
                   GoogleSignInButton(
                       context = context,
@@ -97,7 +100,7 @@ fun SignInScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.testTag(SignInScreeTestTags.WELCOME))
+                    modifier = Modifier.testTag(SignInScreenTestTags.WELCOME))
               }
             }
       })
@@ -114,7 +117,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
           Modifier.padding(8.dp)
               .fillMaxWidth(0.8f)
               .height(48.dp)
-              .testTag(SignInScreeTestTags.LOGIN_BUTTON)) {
+              .testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

@@ -1,4 +1,4 @@
-package com.android.wildex.ui.authentication
+package com.android.wildex.model.authentication
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,7 +11,8 @@ import androidx.credentials.CustomCredential
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.WildexApp
-import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.ui.authentication.SignInScreen
+import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
@@ -83,12 +84,12 @@ class AuthRepositoryFirebaseTest {
 
     composeTestRule.setContent { WildexApp(credentialManager = fakeCredentialManager) }
     composeTestRule
-        .onNodeWithTag(SignInScreeTestTags.LOGIN_BUTTON)
+        .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)
         .assertIsDisplayed()
         .performClick()
 
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule.onNodeWithTag(SignInScreeTestTags.WELCOME).isDisplayed()
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).isDisplayed()
     }
   }
 
@@ -96,8 +97,8 @@ class AuthRepositoryFirebaseTest {
   fun signInScreenIsCorrectlyDisplayed() {
     composeTestRule.setContent { SignInScreen() }
 
-    composeTestRule.onNodeWithTag(SignInScreeTestTags.APP_LOGO).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SignInScreeTestTags.LOGIN_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.APP_LOGO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertIsDisplayed()
   }
 
   @Test
@@ -120,7 +121,7 @@ class AuthRepositoryFirebaseTest {
     }
 
     composeTestRule
-        .onNodeWithTag(SignInScreeTestTags.LOGIN_BUTTON)
+        .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)
         .assertIsDisplayed()
         .performClick()
 
@@ -129,7 +130,7 @@ class AuthRepositoryFirebaseTest {
     assertEquals(email, FirebaseEmulator.auth.currentUser!!.email)
 
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule.onNodeWithTag(SignInScreeTestTags.WELCOME).isDisplayed()
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).isDisplayed()
     }
   }
 

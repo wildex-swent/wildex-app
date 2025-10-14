@@ -3,12 +3,15 @@ package com.android.wildex.utils
 import android.content.Context
 import android.util.Base64
 import androidx.core.os.bundleOf
+import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import com.android.wildex.model.authentication.AuthRepository
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -69,5 +72,17 @@ class FakeCredentialManager private constructor(private val context: Context) :
 
       return fakeCredentialManager
     }
+  }
+}
+
+class FakeAuthRepository : AuthRepository {
+  var signInResult: Result<FirebaseUser>? = null
+
+  override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
+    return signInResult ?: Result.failure(RuntimeException("No result set"))
+  }
+
+  override fun signOut(): Result<Unit> {
+    return Result.success(Unit)
   }
 }

@@ -36,11 +36,15 @@ class ProfileScreenViewModel() : ViewModel() {
           achievementsCount = 0,
       )
 
-  fun refreshUIState(userUid: String,) {
+  fun refreshUIState(
+      userUid: String,
+  ) {
     _uiState.value = ProfileUIState(user = fetchUser(userUid))
   }
 
-  private fun fetchUser(userUid: String,): User? {
+  private fun fetchUser(
+      userUid: String,
+  ): User? {
     var user: User? = null
     // viewModelScope.launch {
     try {

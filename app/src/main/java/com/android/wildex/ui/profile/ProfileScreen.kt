@@ -45,8 +45,9 @@ fun ProfileScreen(
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val user = uiState.user
+  val achievements = uiState.achievements
 
-  // Fetch todos when the screen is recomposed
+  // Fetch user infos when the screen is recomposed
   LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
 
   Scaffold(

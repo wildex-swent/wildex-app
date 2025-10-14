@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.theme.WildexTheme
 
 // import coil.compose.AsyncImage
@@ -37,10 +38,10 @@ fun ProfileScreen(
     userUid: String,
     onGoBack: () -> Unit = {},
     onSettings: () -> Unit = {},
-    onCollection: () -> Unit = {},
-    onAchievements: () -> Unit = {},
-    onFriends: () -> Unit = {},
-    onMap: () -> Unit = {},
+    onCollection: (Id) -> Unit = {},
+    onAchievements: (Id) -> Unit = {},
+    onFriends: (Id) -> Unit = {},
+    onMap: (Id) -> Unit = {},
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val user = uiState.user
@@ -56,10 +57,10 @@ fun ProfileScreen(
         Column(modifier = Modifier.fillMaxSize().padding(pd)) {
           Text(text = "Profile Screen Content")
           Button(onClick = { onSettings() }) { Text(text = "Settings") }
-          Button(onClick = { onAchievements() }) { Text(text = "Achievements") }
-          Button(onClick = { onCollection() }) { Text(text = "Collection") }
-          Button(onClick = { onMap() }) { Text(text = "Map") }
-          Button(onClick = { onFriends() }) { Text(text = "Friends") }
+          Button(onClick = { onAchievements(user?.userId ?: "") }) { Text(text = "Achievements") }
+          Button(onClick = { onCollection(user?.userId ?: "") }) { Text(text = "Collection") }
+          Button(onClick = { onMap(user?.userId ?: "") }) { Text(text = "Map") }
+          Button(onClick = { onFriends(user?.userId ?: "") }) { Text(text = "Friends") }
         }
       })
 }

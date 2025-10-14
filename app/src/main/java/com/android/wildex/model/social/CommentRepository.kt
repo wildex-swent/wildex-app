@@ -13,7 +13,7 @@ interface CommentsRepository {
   suspend fun addComment(comment: Comment)
 
   /** Edits an existing Comment item in the repository. */
-  suspend fun editComment(commentID: String, newValue: Comment)
+  suspend fun editComment(commentId: String, newValue: Comment)
 
   /** Deletes a Comment item from the repository. */
   suspend fun deleteComment(commentId: String)

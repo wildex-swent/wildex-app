@@ -24,6 +24,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,11 +38,25 @@ class AuthRepositoryFirebaseTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
+  init {
+    assert(FirebaseEmulator.isRunning) {
+      "FirebaseEmulator must be running before using FirestoreTest"
+    }
+  }
+
   @Before
   fun setUp() {
     auth = FirebaseEmulator.auth
     auth.signOut()
     repository = AuthRepositoryFirebase(auth)
+  }
+
+  @After
+  fun tearDown() {
+    if (FirebaseEmulator.isRunning) {
+      FirebaseEmulator.auth.signOut()
+      FirebaseEmulator.clearAuthEmulator()
+    }
   }
 
   @Test

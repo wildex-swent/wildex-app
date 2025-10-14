@@ -274,3 +274,9 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       }
   )
 }
+
+configurations.forEach { configuration ->
+  // Exclude protobuf-lite from all configurations
+  // This fixes a fatal exception for tests interacting with Cloud Firestore
+  configuration.exclude("com.google.protobuf", "protobuf-lite")
+}

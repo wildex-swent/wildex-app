@@ -34,64 +34,64 @@ class HomeScreenViewModel(
     // private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUIState())
+  private val _uiState = MutableStateFlow(HomeUIState())
 
-    private val defaultUser: User =
-        User(
-            userId = "defaultUserId",
-            username = "defaultUsername",
-            name = "Default",
-            surname = "User",
-            bio = "This is...",
-            profilePictureURL = "https://example.com/default-profile-pic.png",
-            userType = UserType.REGULAR,
-            creationDate = Timestamp.now(),
-            country = "Nowhere",
-            friendsCount = 0)
+  private val defaultUser: User =
+      User(
+          userId = "defaultUserId",
+          username = "defaultUsername",
+          name = "Default",
+          surname = "User",
+          bio = "This is...",
+          profilePictureURL = "https://example.com/default-profile-pic.png",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.now(),
+          country = "Nowhere",
+          friendsCount = 0)
 
-    val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
+  val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-    /** Refreshes the UI state by fetching all Post items from the repository. */
-    fun refreshUIState() {
-        getAllPosts()
+  /** Refreshes the UI state by fetching all Post items from the repository. */
+  fun refreshUIState() {
+    getAllPosts()
+  }
+  /** Fetches user based on login */
+  private fun fetchUser(): User? {
+    var user: User? = null
+    val authorId = com.google.firebase.ktx.Firebase.auth.currentUser?.uid
+
+    viewModelScope.launch {
+      try {
+        // TODO: implement fetching user
+        /** _uiState.user = "fetchUserFromUserId(...)" */
+        // user = "to User."Firebase.auth.currentUser
+        user = if (authorId != null) userRepository.getUser(authorId) else defaultUser
+      } catch (e: Exception) {
+        Log.e("HomeScreenViewModel", "Error fetching user", e)
+      }
     }
-    /** Fetches user based on login */
-    private fun fetchUser(): User? {
-        var user: User? = null
-        val authorId = com.google.firebase.ktx.Firebase.auth.currentUser?.uid
+    return user
+  }
+  /** Fetches all Posts from the repository and updates the UI state. */
+  private fun getAllPosts() {
+    viewModelScope.launch {
+      try {
+        // TODO: implement fetching posts
+        /** Pull posts from repository and update UI state */
+        _uiState.value =
+            HomeUIState(
+                // posts = emptyList(),
+                posts = postRepository.getAllPostsByAuthor(),
+                user = fetchUser(),
+                notif = hasNotif())
+      } catch (e: Exception) {
+        Log.e("HomeScreenViewModel", "Error fetching posts", e)
+      }
+    }
+  }
 
-        viewModelScope.launch {
-            try {
-                // TODO: implement fetching user
-                /** _uiState.user = "fetchUserFromUserId(...)" */
-                // user = "to User."Firebase.auth.currentUser
-                user = if (authorId != null) userRepository.getUser(authorId) else defaultUser
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Error fetching user", e)
-            }
-        }
-        return user
-    }
-    /** Fetches all Posts from the repository and updates the UI state. */
-    private fun getAllPosts() {
-        viewModelScope.launch {
-            try {
-                // TODO: implement fetching posts
-                /** Pull posts from repository and update UI state */
-                _uiState.value =
-                    HomeUIState(
-                        // posts = emptyList(),
-                        posts = postRepository.getAllPostsByAuthor(),
-                        user = fetchUser(),
-                        notif = hasNotif())
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Error fetching posts", e)
-            }
-        }
-    }
-
-    private fun hasNotif(): Boolean {
-        // TODO: implement notification check
-        return false
-    }
+  private fun hasNotif(): Boolean {
+    // TODO: implement notification check
+    return false
+  }
 }

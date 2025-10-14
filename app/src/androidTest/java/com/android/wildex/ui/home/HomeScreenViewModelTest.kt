@@ -14,38 +14,38 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeScreenViewModelTest {
-    private lateinit var postsRepository: PostsRepository
-    private lateinit var userRepository: UserRepository
-    private lateinit var viewModel: HomeScreenViewModel
+  private lateinit var postsRepository: PostsRepository
+  private lateinit var userRepository: UserRepository
+  private lateinit var viewModel: HomeScreenViewModel
 
-    @Before
-    fun setUp() {
-        postsRepository = mockk()
-        userRepository = mockk()
-        viewModel = HomeScreenViewModel(postsRepository, userRepository)
-    }
+  @Before
+  fun setUp() {
+    postsRepository = mockk()
+    userRepository = mockk()
+    viewModel = HomeScreenViewModel(postsRepository, userRepository)
+  }
 
-    @After fun tearDown() {}
+  @After fun tearDown() {}
 
-    @Test
-    fun viewModel_initializes_default_UI_state() {
-        val initialState = viewModel.uiState.value
-        assertEquals(emptyList<Post>(), initialState.posts)
-        assertNull(initialState.user)
-        assertEquals(false, initialState.notif)
-    }
+  @Test
+  fun viewModel_initializes_default_UI_state() {
+    val initialState = viewModel.uiState.value
+    assertEquals(emptyList<Post>(), initialState.posts)
+    assertNull(initialState.user)
+    assertEquals(false, initialState.notif)
+  }
 
-    @Test
-    fun refreshUIState_updates_UI_state() {
-        val testData = FirestoreTest("testCollection")
-        coEvery { postsRepository.getAllPostsByAuthor() } returns listOf(testData.post1, testData.post2)
-        coEvery { userRepository.getUser(any()) } returns testData.user1
+  @Test
+  fun refreshUIState_updates_UI_state() {
+    val testData = FirestoreTest("testCollection")
+    coEvery { postsRepository.getAllPostsByAuthor() } returns listOf(testData.post1, testData.post2)
+    coEvery { userRepository.getUser(any()) } returns testData.user1
 
-        viewModel.refreshUIState()
-        val updatedState = viewModel.uiState.value
+    viewModel.refreshUIState()
+    val updatedState = viewModel.uiState.value
 
-        assertEquals(listOf(testData.post1, testData.post2), updatedState.posts)
-        assertEquals(testData.user1, updatedState.user)
-        assertEquals(false, updatedState.notif)
-    }
+    assertEquals(listOf(testData.post1, testData.post2), updatedState.posts)
+    assertEquals(testData.user1, updatedState.user)
+    assertEquals(false, updatedState.notif)
+  }
 }

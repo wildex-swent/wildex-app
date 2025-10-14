@@ -18,5 +18,5 @@ data class Achievement(
     val pictureURL: URL,
     val description: String,
     val name: String,
-    val condition: (List<Id>) -> Boolean,
+    val condition: suspend (List<Id>) -> Boolean,
 )

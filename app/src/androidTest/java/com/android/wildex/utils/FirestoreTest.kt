@@ -2,6 +2,8 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
@@ -102,5 +104,47 @@ open class FirestoreTest(val collectionPath: String) {
           animalId = "animal3",
           likesCount = 10,
           commentsCount = 5,
+      )
+
+  open val user1 =
+      User(
+          userId = "user1",
+          username = "user_one",
+          name = "First",
+          surname = "User",
+          bio = "Bio 1",
+          profilePictureURL = "url1",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
+          country = "Country1",
+          friendsCount = 2,
+      )
+
+  open val user2 =
+      User(
+          userId = "user2",
+          username = "user_two",
+          name = "Second",
+          surname = "User",
+          bio = "Bio 2",
+          profilePictureURL = "url2",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
+          country = "Country2",
+          friendsCount = 3,
+      )
+
+  open val user3 =
+      User(
+          userId = "user3",
+          username = "user_three",
+          name = "Third",
+          surname = "User",
+          bio = "Bio 3",
+          profilePictureURL = "url3",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
+          country = "Country3",
+          friendsCount = 0,
       )
 }

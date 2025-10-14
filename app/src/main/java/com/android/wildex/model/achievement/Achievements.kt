@@ -88,6 +88,7 @@ object Achievements {
           communityBuilder,
           influencer,
       )
+  val achievement_by_id: Map<Id, Achievement> = ALL.associateBy { it.achievementId }
 
   // ----------- Helpers ----------------
   private suspend fun PostsRepository.getLikedPosts(postIds: List<Id>): List<Post> {

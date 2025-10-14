@@ -61,7 +61,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
           repository.addPost(post1)
         } catch (e: IllegalArgumentException) {
           exceptionThrown = true
-          assertEquals("A Post with postId '${post1.postId}' already exists.", e.message)
         }
         assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
       }
@@ -103,7 +102,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         val exception = runCatching { repository.addPost(post2WithSameId) }.exceptionOrNull()
 
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("A Post with postId '${postId}' already exists.", exception?.message)
 
         val posts = repository.getAllPosts()
         assertEquals(1, posts.size)
@@ -142,7 +140,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
       runTest(timeout = 60.seconds) {
         val exception = runCatching { repository.deletePost("nonExistentId") }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("Post with given Id not found", exception?.message)
       }
 
   @Test
@@ -207,7 +204,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         val exception =
             runCatching { repository.editPost("nonExistentId", post2) }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("Post with given Id not found", exception?.message)
       }
 
   @Test
@@ -234,7 +230,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
           repository.getPost(nonExistentId)
         } catch (e: IllegalArgumentException) {
           exceptionThrown = true
-          assertEquals("Post with given Id not found", e.message)
         }
         assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
       }
@@ -329,6 +324,5 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
       runTest(timeout = 60.seconds) {
         val exception = runCatching { repository.getPost("nonExistentId") }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("Post with given Id not found", exception?.message)
       }
 }

@@ -23,17 +23,14 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
   override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> {
     val collection = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId).get().await()
-    if (!collection.exists()) {
-      throw IllegalArgumentException("UserAchievements of the given userId was not initialized")
-    }
+    require(collection.exists())
     val userAchievements = collection.toObject(UserAchievements::class.java)
     // Map achievement IDs to Achievements
     // If an ID does not match any Achievement, it is ignored
     // If matches, add to the list of the user's achievements to be returned
     val achievements =
-        userAchievements?.achievementsId?.mapNotNull { id ->
-          Achievements.ALL.find { it.achievementId == id }
-        } ?: emptyList()
+        userAchievements?.achievementsId?.mapNotNull { id -> Achievements.achievement_by_id[id] }
+            ?: emptyList()
     return achievements
   }
 
@@ -47,10 +44,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
   override suspend fun updateUserAchievements(userId: String, listIds: List<Id>) {
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
-    if (!doc.exists()) {
-      throw IllegalArgumentException("UserAchievements with given userId not found")
-    }
-
+    require(doc.exists())
     val userAchievements =
         doc.toObject(UserAchievements::class.java)
             ?: throw IllegalArgumentException("UserAchievements with given userId not found")
@@ -84,9 +78,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
   override suspend fun getAchievementsCountOfUser(userId: String): Int {
     val collection = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId).get().await()
-    if (!collection.exists()) {
-      throw IllegalArgumentException("UserAchievements of the given userId was not initialized")
-    }
+    require(collection.exists())
     val userAchievements = collection.toObject(UserAchievements::class.java)
     return userAchievements?.achievementsCount ?: 0
   }

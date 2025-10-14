@@ -98,7 +98,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             runCatching { repository.getAllAchievementsByUser(userId) }.exceptionOrNull()
 
         assertTrue(exception is IllegalArgumentException)
-        assertEquals("UserAchievements of the given userId was not initialized", exception?.message)
       }
 
   @Test
@@ -119,7 +118,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
         runCatching { repository.updateUserAchievements(userId, listIds) }.exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
-    assertEquals("UserAchievements with given userId not found", exception?.message)
   }
 
   @Test
@@ -164,7 +162,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val exception = runCatching { repository.getAchievementsCountOfUser(userId) }.exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
-    assertEquals("UserAchievements of the given userId was not initialized", exception?.message)
   }
 
   @Test
@@ -192,6 +189,5 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             .exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
-    assertEquals("UserAchievements with given userId not found", exception?.message)
   }
 }

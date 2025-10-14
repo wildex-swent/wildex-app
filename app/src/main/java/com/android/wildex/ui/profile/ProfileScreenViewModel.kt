@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,11 +31,7 @@ class ProfileScreenViewModel() : ViewModel() {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Nowhere",
-          friendsCount = 0,
-          animalsId = emptyList(),
-          animalsCount = 0,
-          achievementsId = emptyList(),
-          achievementsCount = 0,
+          friendsCount = 0
       )
 
   fun refreshUIState(

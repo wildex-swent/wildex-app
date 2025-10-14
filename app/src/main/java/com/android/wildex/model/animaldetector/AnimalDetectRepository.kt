@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.android.wildex.BuildConfig
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
@@ -16,9 +19,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 /**
  * Repository class for interacting with the AnimalDetect API.
@@ -29,13 +29,13 @@ import java.io.IOException
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
 class AnimalDetectRepository(val client: OkHttpClient) {
-    private val ad_apiKey = BuildConfig.ANIMALDETECT_API_KEY
+  private val ad_apiKey = BuildConfig.ANIMALDETECT_API_KEY
 
-    private val hf_apiKey = BuildConfig.HUGGINGFACE_API_KEY
+  private val hf_apiKey = BuildConfig.HUGGINGFACE_API_KEY
 
-    private val ad_baseUrl = "https://www.animaldetect.com/api/v1/detect"
+  private val ad_baseUrl = "https://www.animaldetect.com/api/v1/detect"
 
-    private val hf_baseUrl = "https://router.huggingface.co/v1/chat/completions"
+  private val hf_baseUrl = "https://router.huggingface.co/v1/chat/completions"
 
   /**
    * Detects an animal in the provided image URI. **Important:** This function performs network I/O
@@ -85,59 +85,59 @@ class AnimalDetectRepository(val client: OkHttpClient) {
       // Execute request
       client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) {
-            throw IOException("Unexpected code $response")
+          throw IOException("Unexpected code $response")
         }
 
         val body = response.body?.string()
         if (body.isNullOrEmpty()) {
-            throw IOException("Empty response body")
+          throw IOException("Empty response body")
         }
 
         // Parse JSON response
         val jsonElem = Json.parseToJsonElement(body)
         val result = jsonElem.jsonObject["annotations"]?.jsonArray?.firstOrNull()
         if (result == null) {
-            throw IOException("No annotations found")
+          throw IOException("No annotations found")
         }
 
         val label = result.jsonObject["label"]?.jsonPrimitive?.takeIf { it.isString }?.content
         val confidence = result.jsonObject["score"]?.jsonPrimitive?.float
 
         if (label == null || confidence == null) {
-            throw IOException("Invalid response body structure")
+          throw IOException("Invalid response body structure")
         }
 
         return AnimalDetectResponse(label, confidence)
       }
     } catch (e: Exception) {
-        Log.e(this.javaClass.name, "Error detecting animal: ${e.message}", e)
+      Log.e(this.javaClass.name, "Error detecting animal: ${e.message}", e)
       null
     } finally {
       // Clean up temp file
-        tempFile?.delete()?.let {
-            if (!it) {
-                Log.e(this.javaClass.name, "Error deleting temp file")
-            }
+      tempFile?.delete()?.let {
+        if (!it) {
+          Log.e(this.javaClass.name, "Error deleting temp file")
         }
+      }
     }
   }
 
-    /**
-     * Requests a short descriptive paragraph for a given animal from a HuggingFace LLM.
-     *
-     * This function sends a POST request to the LLM API with a system prompt instructing the model to
-     * behave as a wildlife guide and a user prompt containing the animal name. The response is parsed
-     * to extract the response content.
-     *
-     * @param animalName The name of the animal to describe.
-     * @return A cleaned description string if the request succeeds and a valid response is received;
-     *   null if an error occurs, the response body is empty, or the expected content is missing.
-     * @throws IOException Internally caught; any network or parsing errors result in null.
-     */
-    fun getAnimalDescription(animalName: String): String? =
-        try {
-            val payload =
-                """
+  /**
+   * Requests a short descriptive paragraph for a given animal from a HuggingFace LLM.
+   *
+   * This function sends a POST request to the LLM API with a system prompt instructing the model to
+   * behave as a wildlife guide and a user prompt containing the animal name. The response is parsed
+   * to extract the response content.
+   *
+   * @param animalName The name of the animal to describe.
+   * @return A cleaned description string if the request succeeds and a valid response is received;
+   *   null if an error occurs, the response body is empty, or the expected content is missing.
+   * @throws IOException Internally caught; any network or parsing errors result in null.
+   */
+  fun getAnimalDescription(animalName: String): String? =
+      try {
+        val payload =
+            """
             {
               "model": "deepseek-ai/DeepSeek-R1:novita",
               "messages": [
@@ -148,44 +148,44 @@ class AnimalDetectRepository(val client: OkHttpClient) {
               "stream": false
             }
         """
-                    .trimIndent()
+                .trimIndent()
 
-            val requestBody = payload.toRequestBody("application/json".toMediaType())
-            val request =
-                Request.Builder()
-                    .url(hf_baseUrl)
-                    .addHeader("Authorization", "Bearer $hf_apiKey")
-                    .addHeader("Content-Type", "application/json")
-                    .post(requestBody)
-                    .build()
+        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val request =
+            Request.Builder()
+                .url(hf_baseUrl)
+                .addHeader("Authorization", "Bearer $hf_apiKey")
+                .addHeader("Content-Type", "application/json")
+                .post(requestBody)
+                .build()
 
-            val client =
-                client
-                    .newBuilder()
-                    .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        val client =
+            client
+                .newBuilder()
+                .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+        client.newCall(request).execute().use { response ->
+          if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-                val body = response.body?.string() ?: throw IOException("Empty response body")
-                val json = Json.parseToJsonElement(body)
-                json.jsonObject["choices"]
-                    ?.jsonArray
-                    ?.firstOrNull()
-                    ?.jsonObject
-                    ?.get("message")
-                    ?.jsonObject
-                    ?.get("content")
-                    ?.jsonPrimitive
-                    ?.takeIf { it.isString }
-                    ?.content
-                    ?.replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
-                    ?.trim() ?: throw IOException("No content found")
-            }
-        } catch (e: Exception) {
-            Log.e(this.javaClass.name, "Error getting animal description: ${e.message}", e)
-            null
+          val body = response.body?.string() ?: throw IOException("Empty response body")
+          val json = Json.parseToJsonElement(body)
+          json.jsonObject["choices"]
+              ?.jsonArray
+              ?.firstOrNull()
+              ?.jsonObject
+              ?.get("message")
+              ?.jsonObject
+              ?.get("content")
+              ?.jsonPrimitive
+              ?.takeIf { it.isString }
+              ?.content
+              ?.replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
+              ?.trim() ?: throw IOException("No content found")
         }
+      } catch (e: Exception) {
+        Log.e(this.javaClass.name, "Error getting animal description: ${e.message}", e)
+        null
+      }
 }

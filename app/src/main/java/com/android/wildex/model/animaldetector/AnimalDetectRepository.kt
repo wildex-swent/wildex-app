@@ -38,28 +38,20 @@ class AnimalDetectRepository(val client: OkHttpClient) {
     private val hf_baseUrl = "https://router.huggingface.co/v1/chat/completions"
 
   /**
-   * Detects an animal in the provided image URI.
-   *
-   * Steps performed:
-   * 1. Creates a temporary file in the app's cache directory from the given [imageUri].
-   * 2. Determines the MIME type of the image and maps it to a suitable file extension.
-   * 3. Builds a multipart/form-data HTTP POST request containing:
-   *     - The image file
-   *     - Country ("USA")
-   *     - Detection threshold ("0.2")
-   * 4. Executes the request synchronously using [OkHttpClient].
-   * 5. Parses the JSON response and extracts the first annotation's label and confidence score.
-   * 6. Cleans up the temporary file after the request.
-   *
-   * **Important:** This function performs network I/O and should be called from a background
-   * thread, such as a coroutine running on [kotlinx.coroutines.Dispatchers.IO].
+   * Detects an animal in the provided image URI. **Important:** This function performs network I/O
+   * and should be called from a background thread, such as a coroutine running on
+   * [kotlinx.coroutines.Dispatchers.IO].
    *
    * @param context The Android context, used to access the [android.content.ContentResolver].
    * @param imageUri The URI of the image to detect.
    * @return [AnimalDetectResponse] containing the detected label and confidence score, or `null` if
    *   the request fails or the response is invalid.
    */
-  fun detectAnimal(context: Context, imageUri: Uri): AnimalDetectResponse? {
+  fun detectAnimal(
+      context: Context,
+      imageUri: Uri,
+      countryCode: String = "KEN",
+  ): AnimalDetectResponse? {
     var tempFile: File? = null
     return try {
       // Detect MIME type and map to file extension
@@ -80,8 +72,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
                   tempFile.name,
                   tempFile.asRequestBody(mimeType.toMediaTypeOrNull()),
               )
-              .addFormDataPart("country", "KEN")
-              .addFormDataPart("threshold", "0.2")
+              .addFormDataPart("country", countryCode)
               .build()
 
       val request =
@@ -119,18 +110,30 @@ class AnimalDetectRepository(val client: OkHttpClient) {
         return AnimalDetectResponse(label, confidence)
       }
     } catch (e: Exception) {
-      Log.e("AnimalDetectRepository", "Error detecting animal: ${e.message}", e)
+        Log.e(this.javaClass.name, "Error detecting animal: ${e.message}", e)
       null
     } finally {
       // Clean up temp file
         tempFile?.delete()?.let {
             if (!it) {
-                Log.e("AnimalDetectRepository", "Error deleting temp file")
+                Log.e(this.javaClass.name, "Error deleting temp file")
             }
         }
     }
   }
 
+    /**
+     * Requests a short descriptive paragraph for a given animal from a HuggingFace LLM.
+     *
+     * This function sends a POST request to the LLM API with a system prompt instructing the model to
+     * behave as a wildlife guide and a user prompt containing the animal name. The response is parsed
+     * to extract the response content.
+     *
+     * @param animalName The name of the animal to describe.
+     * @return A cleaned description string if the request succeeds and a valid response is received;
+     *   null if an error occurs, the response body is empty, or the expected content is missing.
+     * @throws IOException Internally caught; any network or parsing errors result in null.
+     */
     fun getAnimalDescription(animalName: String): String? =
         try {
             val payload =
@@ -176,13 +179,13 @@ class AnimalDetectRepository(val client: OkHttpClient) {
                     ?.jsonObject
                     ?.get("content")
                     ?.jsonPrimitive
+                    ?.takeIf { it.isString }
                     ?.content
                     ?.replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
-                    ?.replace(Regex("^\\s*Description\\s*:\\s*", RegexOption.IGNORE_CASE), "")
                     ?.trim() ?: throw IOException("No content found")
             }
         } catch (e: Exception) {
-            Log.e("AnimalDetectRepository", "Error getting animal description: ${e.message}", e)
+            Log.e(this.javaClass.name, "Error getting animal description: ${e.message}", e)
             null
         }
 }

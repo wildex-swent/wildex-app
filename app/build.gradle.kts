@@ -36,9 +36,23 @@ android {
   }
 
   buildTypes {
+    signingConfigs {
+      create("release") {
+        storeFile = file("upload-keystore.jks")
+        storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+        keyAlias = localProperties.getProperty("KEY_ALIAS")
+        keyPassword = localProperties.getProperty("KEY_PASSWORD")
+      }
+    }
+
     release {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      signingConfig = signingConfigs.getByName("release")
+    }
+
+    debug {
+      isMinifyEnabled = false
     }
 
     debug {

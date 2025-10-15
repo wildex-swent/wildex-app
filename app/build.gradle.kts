@@ -120,6 +120,12 @@ android {
     res.setSrcDirs(emptyList<File>())
     resources.setSrcDirs(emptyList<File>())
   }
+
+  sourceSets.getByName("testRelease") {
+    java.srcDirs("src/testDebug/java")
+    res.srcDirs("src/testDebug/res")
+    resources.srcDirs("src/testDebug/resources")
+  }
 }
 
 sonar {
@@ -235,6 +241,9 @@ dependencies {
 
   // Coil
   implementation("io.coil-kt:coil-compose:2.6.0")
+
+  // Manifest Compose for Robolectric in Release
+  testReleaseImplementation(libs.compose.test.manifest)
 }
 
 tasks.withType<Test> {
@@ -246,7 +255,7 @@ tasks.withType<Test> {
 }
 
 tasks.register("jacocoTestReport", JacocoReport::class) {
-  mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest")
+  mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest", "testReleaseUnitTest")
 
   reports {
     xml.required = true
@@ -267,14 +276,18 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
       }
+  val releaseTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release") {
+    exclude(fileFilter)
+  }
 
   val mainSrc = "${project.layout.projectDirectory}/src/main/java"
   sourceDirectories.setFrom(files(mainSrc))
-  classDirectories.setFrom(files(debugTree))
+  classDirectories.setFrom(files(debugTree, releaseTree))
   executionData.setFrom(
       fileTree(project.layout.buildDirectory.get()) {
         include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-        include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+        include("outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec")
+        include("outputs/code_coverage/**/connected/*/coverage.ec")
       }
   )
 }

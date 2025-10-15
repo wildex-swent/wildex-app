@@ -131,19 +131,19 @@ sonar {
     // Comma-separated paths to the various directories containing the *.xml JUnit report files.
     // Each path may be absolute or relative to the project base directory.
     property(
-        "sonar.junit.reportPaths",
-        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+      "sonar.junit.reportPaths",
+      "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
     )
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
     property(
-        "sonar.androidLint.reportPaths",
-        "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
+      "sonar.androidLint.reportPaths",
+      "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
     // Paths to JaCoCo XML coverage report files.
     property(
-        "sonar.coverage.jacoco.xmlReportPaths",
-        "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+      "sonar.coverage.jacoco.xmlReportPaths",
+      "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
     )
   }
 }
@@ -198,14 +198,6 @@ dependencies {
   implementation(libs.androidx.navigation.fragment.ktx)
   implementation(libs.androidx.navigation.ui.ktx)
 
-  // Testing Unit
-  testImplementation(libs.junit)
-  androidTestImplementation(libs.mockk)
-  androidTestImplementation(libs.mockk.android)
-  androidTestImplementation(libs.mockk.agent)
-  testImplementation(libs.mockk)
-  testImplementation(libs.json)
-
   // UI Tests
   globalTestImplementation(libs.compose.test.junit)
   debugImplementation(libs.compose.test.manifest)
@@ -221,7 +213,6 @@ dependencies {
   implementation(libs.okhttp)
 
   // Mock testing
-  testImplementation(libs.mockito)
   testImplementation(libs.mockwebserver)
   testImplementation(libs.mockk)
   testImplementation(libs.mockito.core)
@@ -231,6 +222,7 @@ dependencies {
   androidTestImplementation(libs.mockk.agent)
   androidTestImplementation(libs.mockito.android)
   androidTestImplementation(libs.mockito.kotlin)
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 tasks.withType<Test> {
@@ -250,28 +242,28 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 
   val fileFilter =
-      listOf(
-          "**/R.class",
-          "**/R$*.class",
-          "**/BuildConfig.*",
-          "**/Manifest*.*",
-          "**/*Test*.*",
-          "android/**/*.*",
-      )
+    listOf(
+      "**/R.class",
+      "**/R$*.class",
+      "**/BuildConfig.*",
+      "**/Manifest*.*",
+      "**/*Test*.*",
+      "android/**/*.*",
+    )
 
   val debugTree =
-      fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-        exclude(fileFilter)
-      }
+    fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+      exclude(fileFilter)
+    }
 
   val mainSrc = "${project.layout.projectDirectory}/src/main/java"
   sourceDirectories.setFrom(files(mainSrc))
   classDirectories.setFrom(files(debugTree))
   executionData.setFrom(
-      fileTree(project.layout.buildDirectory.get()) {
-        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-        include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
-      }
+    fileTree(project.layout.buildDirectory.get()) {
+      include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+      include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+    }
   )
 }
 

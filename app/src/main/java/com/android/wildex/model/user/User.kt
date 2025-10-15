@@ -39,9 +39,9 @@ data class User(
  * @property achievementsCount The total number of achievements the user has earned.
  */
 data class UserAchievements(
-    val userId: Id,
-    val achievementsId: List<Id>,
-    val achievementsCount: Int,
+    val userId: Id = "",
+    val achievementsId: List<Id> = emptyList(),
+    val achievementsCount: Int = 0,
 )
 
 /**
@@ -52,9 +52,9 @@ data class UserAchievements(
  * @property animalsCount The total number of animals associated with the user.
  */
 data class UserAnimals(
-    val userId: Id,
-    val animalsId: List<Id>,
-    val animalsCount: Int,
+    val userId: Id = "",
+    val animalsId: List<Id> = emptyList(),
+    val animalsCount: Int = 0,
 )
 
 /** Enum class representing the type of user. */

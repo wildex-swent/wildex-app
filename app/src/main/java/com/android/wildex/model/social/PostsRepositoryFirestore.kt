@@ -53,41 +53,28 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
 
   override suspend fun getPost(postId: Id): Post {
     val doc = db.collection(POST_COLLECTION_PATH).document(postId).get().await()
-    if (!doc.exists()) {
-      Log.w("PostsRepositoryFirestore", "Post with ID $postId not found.")
-      throw IllegalArgumentException("Post with given Id not found")
-    }
+    require(doc.exists())
     return convertToPost(doc) ?: throw IllegalArgumentException("Post with given Id not found")
   }
 
   override suspend fun addPost(post: Post) {
     val docRef = db.collection(POST_COLLECTION_PATH).document(post.postId)
     val doc = docRef.get().await()
-    if (doc.exists()) {
-      throw IllegalArgumentException("A Post with postId '${post.postId}' already exists.")
-    }
+    require(!doc.exists())
     docRef.set(post).await()
   }
 
   override suspend fun editPost(postId: Id, newValue: Post) {
     val docRef = db.collection(POST_COLLECTION_PATH).document(postId)
     val doc = docRef.get().await()
-
-    if (!doc.exists()) {
-      throw IllegalArgumentException("Post with given Id not found")
-    }
-
+    require(doc.exists())
     docRef.set(newValue).await()
   }
 
   override suspend fun deletePost(postId: String) {
     val docRef = db.collection(POST_COLLECTION_PATH).document(postId)
     val doc = docRef.get().await()
-
-    if (!doc.exists()) {
-      throw IllegalArgumentException("Post with given Id not found")
-    }
-
+    require(doc.exists())
     docRef.delete().await()
   }
 

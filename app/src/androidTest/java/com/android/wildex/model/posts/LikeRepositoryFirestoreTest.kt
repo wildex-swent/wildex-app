@@ -16,143 +16,143 @@ import org.junit.Test
 
 const val LIKE_COLLECTION_PATH = "likes"
 
-class LikeRepositoryFirestoreTest : FirestoreTest(LIKE_COLLECTION_PATH){
-    private var repository = LikeRepositoryFirestore(Firebase.firestore)
+class LikeRepositoryFirestoreTest : FirestoreTest(LIKE_COLLECTION_PATH) {
+  private var repository = LikeRepositoryFirestore(Firebase.firestore)
 
-    @Before
-    override fun setUp() {
-        super.setUp()
+  @Before
+  override fun setUp() {
+    super.setUp()
+  }
+
+  @After
+  override fun tearDown() {
+    super.tearDown()
+  }
+
+  suspend fun getLikesCount(): Int {
+    return super.getCount()
+  }
+
+  @Test
+  fun canAddLikeToRepository() = runTest {
+    repository.addLike(like1)
+    val likes = repository.getLikesForPost(like1.postId)
+    Log.e("PostsRepositoryFirestoreTest", "Post Size: $likes.size")
+    assertEquals(1, likes.size)
+    val storedLike = likes.first()
+    Log.e("PostsRepositoryFirestoreTest", "Expected: $like1")
+    Log.e("PostsRepositoryFirestoreTest", "Actual: $storedLike")
+    assertEquals(like1, storedLike)
+  }
+
+  @Test
+  fun addLikeWithExistingIdThrowsException() = runTest {
+    repository.addLike(like1)
+    var exceptionThrown = false
+    try {
+      repository.addLike(like1)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+      assertEquals("A Like with likeId '${like1.likeId}' already exists.", e.message)
     }
+    assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
+  }
 
-    @After
-    override fun tearDown() {
-        super.tearDown()
-    }
+  @Test
+  fun canAddMultipleLikesToRepository() = runTest {
+    repository.addLike(like1)
+    repository.addLike(like3)
+    val likes = repository.getLikesForPost(like1.postId)
+    assertEquals(2, likes.size)
+    val expectedLikes = setOf(like1, like3)
+    val storedLikes = likes.toSet()
+    assertEquals(expectedLikes, storedLikes)
+  }
 
-    suspend fun getLikesCount(): Int {
-        return super.getCount()
-    }
+  @Test
+  fun getNewLikeIdReturnsUniqueIDs() = runTest {
+    val numberIDs = 100
+    val likeIds = (0 until numberIDs).map { repository.getNewLikeId() }.toSet()
+    assertEquals(likeIds.size, numberIDs)
+  }
 
-    @Test
-    fun canAddLikeToRepository() = runTest {
-        repository.addLike(like1)
-        val likes = repository.getLikesForPost(like1.postId)
-        Log.e("PostsRepositoryFirestoreTest", "Post Size: $likes.size")
-        assertEquals(1, likes.size)
-        val storedLike = likes.first()
-        Log.e("PostsRepositoryFirestoreTest", "Expected: $like1")
-        Log.e("PostsRepositoryFirestoreTest", "Actual: $storedLike")
-        assertEquals(like1, storedLike)
-    }
+  @Test
+  fun likeIdIsUniqueInTheCollection() = runTest {
+    val likeId = "likeDuplicate"
+    val like1Modified = like1.copy(likeId = likeId)
+    val like3WithSameId = like3.copy(likeId = likeId)
 
-    @Test
-    fun addLikeWithExistingIdThrowsException() = runTest {
-        repository.addLike(like1)
-        var exceptionThrown = false
-        try {
-            repository.addLike(like1)
-        } catch (e: IllegalArgumentException) {
-            exceptionThrown = true
-            assertEquals("A Like with likeId '${like1.likeId}' already exists.", e.message)
-        }
-        assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
-    }
+    repository.addLike(like1Modified)
+    val exception = runCatching { repository.addLike(like3WithSameId) }.exceptionOrNull()
 
-    @Test
-    fun canAddMultipleLikesToRepository() = runTest {
-        repository.addLike(like1)
-        repository.addLike(like3)
-        val likes = repository.getLikesForPost(like1.postId)
-        assertEquals(2, likes.size)
-        val expectedLikes = setOf(like1, like3)
-        val storedLikes = likes.toSet()
-        assertEquals(expectedLikes, storedLikes)
-    }
+    assertTrue(exception is IllegalArgumentException)
+    assertEquals("A Like with likeId '${likeId}' already exists.", exception?.message)
 
-    @Test
-    fun getNewLikeIdReturnsUniqueIDs() = runTest {
-        val numberIDs = 100
-        val likeIds = (0 until numberIDs).map { repository.getNewLikeId() }.toSet()
-        assertEquals(likeIds.size, numberIDs)
-    }
+    val likes = repository.getLikesForPost(like1.postId)
+    assertEquals(1, likes.size)
 
-    @Test
-    fun likeIdIsUniqueInTheCollection() = runTest {
-        val likeId = "likeDuplicate"
-        val like1Modified = like1.copy(likeId = likeId)
-        val like3WithSameId = like3.copy(likeId = likeId)
+    val storedLike = likes.first()
+    assertEquals(storedLike.likeId, likeId)
+  }
 
-        repository.addLike(like1Modified)
-        val exception = runCatching { repository.addLike(like3WithSameId) }.exceptionOrNull()
+  @Test
+  fun canDeleteALikeByID() = runTest {
+    repository.addLike(like1)
+    repository.addLike(like2)
+    repository.addLike(like3)
 
-        assertTrue(exception is IllegalArgumentException)
-        assertEquals("A Like with likeId '${likeId}' already exists.", exception?.message)
+    repository.deleteLike(like2.likeId)
+    assertEquals(2, getLikesCount())
 
-        val likes = repository.getLikesForPost(like1.postId)
-        assertEquals(1, likes.size)
+    val expectedLikes = setOf(like1, like3)
+    val storedLikes = repository.getLikesForPost(like1.postId).toSet()
+    assertEquals(expectedLikes, storedLikes)
+  }
 
-        val storedLike = likes.first()
-        assertEquals(storedLike.likeId, likeId)
-    }
+  @Test
+  fun deleteNonExistentLikeThrowsException() = runTest {
+    val exception = runCatching { repository.deleteLike("nonExistentId") }.exceptionOrNull()
+    assertTrue(exception is IllegalArgumentException)
+    assertEquals("Like with given Id not found", exception?.message)
+  }
 
-    @Test
-    fun canDeleteALikeByID() = runTest {
-        repository.addLike(like1)
-        repository.addLike(like2)
-        repository.addLike(like3)
+  @Test
+  fun testGetAllLikesByCurrentUser() = runTest {
+    Firebase.auth.signInAnonymously().await()
 
-        repository.deleteLike(like2.likeId)
-        assertEquals(2, getLikesCount())
+    val currentUserId = Firebase.auth.currentUser?.uid ?: throw Exception("No current user found")
 
-        val expectedLikes = setOf(like1, like3)
-        val storedLikes = repository.getLikesForPost(like1.postId).toSet()
-        assertEquals(expectedLikes, storedLikes)
-    }
+    val like1 = like1.copy(userId = currentUserId)
+    val like2 = like2.copy(userId = "author2")
+    val like3 = like3.copy(userId = currentUserId)
 
-    @Test
-    fun deleteNonExistentLikeThrowsException() = runTest {
-        val exception = runCatching { repository.deleteLike("nonExistentId") }.exceptionOrNull()
-        assertTrue(exception is IllegalArgumentException)
-        assertEquals("Like with given Id not found", exception?.message)
-    }
+    repository.addLike(like1)
+    repository.addLike(like2)
+    repository.addLike(like3)
 
-    @Test
-    fun testGetAllLikesByCurrentUser() = runTest {
-        Firebase.auth.signInAnonymously().await()
+    val likesByCurrUser = repository.getAllLikesByCurrentUser()
 
-        val currentUserId = Firebase.auth.currentUser?.uid ?: throw Exception("No current user found")
+    assertEquals(2, likesByCurrUser.size)
+    assertTrue(likesByCurrUser.all { it.userId == currentUserId })
+  }
 
-        val like1 = like1.copy(userId = currentUserId)
-        val like2 = like2.copy(userId = "author2")
-        val like3 = like3.copy(userId = currentUserId)
+  @Test
+  fun testGetLikesForPostWhenNoLikeExists() = runTest {
+    val likes = repository.getLikesForPost("nonExistentPostId")
+    assertTrue(likes.isEmpty())
+  }
 
-        repository.addLike(like1)
-        repository.addLike(like2)
-        repository.addLike(like3)
+  @Test
+  fun testGetAllLikesByCurrentUserWhenNoLikesExist() = runTest {
+    Firebase.auth.signInAnonymously().await()
+    val likesByCurrUser = repository.getAllLikesByCurrentUser()
+    assertTrue(likesByCurrUser.isEmpty())
+  }
 
-        val likesByCurrUser = repository.getAllLikesByCurrentUser()
-
-        assertEquals(2, likesByCurrUser.size)
-        assertTrue(likesByCurrUser.all { it.userId == currentUserId })
-    }
-
-    @Test
-    fun testGetLikesForPostWhenNoLikeExists() = runTest {
-        val likes = repository.getLikesForPost("nonExistentPostId")
-        assertTrue(likes.isEmpty())
-    }
-
-    @Test
-    fun testGetAllLikesByCurrentUserWhenNoLikesExist() = runTest {
-        Firebase.auth.signInAnonymously().await()
-        val likesByCurrUser = repository.getAllLikesByCurrentUser()
-        assertTrue(likesByCurrUser.isEmpty())
-    }
-
-    @Test
-    fun testGetCurrentUserLikeForPostWhenNoLikeExistsForPost() = runTest {
-        Firebase.auth.signInAnonymously().await()
-        val like = repository.getLikeForPost("nonExistentPostId")
-        assertEquals(null, like)
-    }
+  @Test
+  fun testGetCurrentUserLikeForPostWhenNoLikeExistsForPost() = runTest {
+    Firebase.auth.signInAnonymously().await()
+    val like = repository.getLikeForPost("nonExistentPostId")
+    assertEquals(null, like)
+  }
 }

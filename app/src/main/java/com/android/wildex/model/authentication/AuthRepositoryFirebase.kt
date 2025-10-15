@@ -24,37 +24,10 @@ class AuthRepositoryFirebase(
 ) : AuthRepository {
 
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
-    return try {
-      if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-        val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
-        val firebaseCred = GoogleAuthProvider.getCredential(idToken, null)
-
-        // Sign in with Firebase
-        val user =
-            auth.signInWithCredential(firebaseCred).await().user
-                ?: return Result.failure(
-                    IllegalStateException("Login failed : Could not retrieve user information"))
-
-        return Result.success(user)
-      } else {
-        return Result.failure(
-            java.lang.IllegalStateException("Login failed: Credential is not of type Google ID"))
-      }
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error."}"))
-    }
+    TODO()
   }
 
   override fun signOut(): Result<Unit> {
-    return try {
-      // Firebase sign out
-      auth.signOut()
-
-      Result.success(Unit)
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
-    }
+    TODO()
   }
 }

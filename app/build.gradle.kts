@@ -252,6 +252,7 @@ tasks.withType<Test> {
   }
 }
 
+// kotlin
 tasks.register("jacocoTestReport", JacocoReport::class) {
   mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest", "testReleaseUnitTest")
 
@@ -261,33 +262,50 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 
   val fileFilter =
-      listOf(
-          "**/R.class",
-          "**/R$*.class",
-          "**/BuildConfig.*",
-          "**/Manifest*.*",
-          "**/*Test*.*",
-          "android/**/*.*",
-      )
+    listOf(
+      "**/R.class",
+      "**/R$*.class",
+      "**/BuildConfig.*",
+      "**/Manifest*.*",
+      "**/*Test*.*",
+      "android/**/*.*",
+    )
 
-  val debugTree =
-      fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-        exclude(fileFilter)
-      }
-  val releaseTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release") {
-    exclude(fileFilter)
+  // Classes compilées (ajout uniquement si le dossier existe)
+  val classDirs = mutableListOf<FileTree>()
+  val debugDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug")
+  val releaseDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release")
+  if (debugDir.exists()) classDirs += fileTree(debugDir) { exclude(fileFilter) }
+  if (releaseDir.exists()) classDirs += fileTree(releaseDir) { exclude(fileFilter) }
+  classDirectories.setFrom(classDirs)
+
+  // Sources
+  val srcDirs = listOf(
+    file("${project.layout.projectDirectory}/src/main/java"),
+    file("${project.layout.projectDirectory}/src/main/kotlin")
+  ).filter { it.exists() }
+  sourceDirectories.setFrom(files(if (srcDirs.isEmpty()) file("${project.layout.projectDirectory}/src/main/java") else srcDirs))
+
+  // Données de couverture: ne garder que les fichiers existants
+  val execFiles = fileTree(project.layout.buildDirectory.get()) {
+    include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    include("outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec")
+    include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec")
+    include("outputs/code_coverage/**/connected/*/coverage.ec")
+    include("jacoco/*.exec")
+    include("**/*.ec")
+  }.files.filter { it.exists() }
+  executionData.setFrom(files(execFiles))
+
+  // Ne génère un rapport que s'il y a des classes et des données de couverture
+  onlyIf {
+    classDirectories.files.isNotEmpty() && executionData.files.isNotEmpty()
   }
 
-  val mainSrc = "${project.layout.projectDirectory}/src/main/java"
-  sourceDirectories.setFrom(files(mainSrc))
-  classDirectories.setFrom(files(debugTree, releaseTree))
-  executionData.setFrom(
-      fileTree(project.layout.buildDirectory.get()) {
-        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-        include("outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec")
-        include("outputs/code_coverage/**/connected/*/coverage.ec")
-      }
-  )
+  doFirst {
+    logger.lifecycle("JaCoCo exec files: ${executionData.files}")
+    logger.lifecycle("JaCoCo class dirs: ${classDirectories.files}")
+  }
 }
 
 tasks.matching { it.name == "testDebugUnitTest" || it.name == "testReleaseUnitTest" }

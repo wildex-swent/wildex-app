@@ -206,9 +206,13 @@ dependencies {
   androidTestImplementation(libs.mockk.agent)
   testImplementation(libs.mockk)
 
+    // Coroutines
   testImplementation("junit:junit:4.13.2")
   testImplementation("io.mockk:mockk:1.13.12")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+  //Coil compose
+  implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<Test> {

@@ -1,6 +1,7 @@
 package com.android.wildex.model.animaldetector
 
 import com.android.wildex.BuildConfig
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -18,7 +19,7 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   override val urlPropName: String = "hf_baseUrl"
 
   @Test
-  fun `getAnimalDescription forms correct request`() {
+  fun `getAnimalDescription forms correct request`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200))
 
     repository.getAnimalDescription("animalName")
@@ -49,7 +50,7 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `getAnimalDescription returns expected content`() {
+  fun `getAnimalDescription returns expected content`() = runTest {
     val modelResponse =
         """
             {
@@ -78,7 +79,7 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `getAnimalDescription returns null on HTTP error`() {
+  fun `getAnimalDescription returns null on HTTP error`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(500))
 
     val description = repository.getAnimalDescription("elephant")
@@ -87,57 +88,57 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `returns null if response body is null`() {
+  fun `returns null if response body is null`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if choices field missing`() {
+  fun `returns null if choices field missing`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if choices not an array`() {
+  fun `returns null if choices not an array`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":{}}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if choices array empty`() {
+  fun `returns null if choices array empty`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[]}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if first choice not object`() {
+  fun `returns null if first choice not object`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[123]}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if message field missing`() {
+  fun `returns null if message field missing`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[{}]}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if message not an object`() {
+  fun `returns null if message not an object`() = runTest {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"choices":[{"message":123}]}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if content field missing`() {
+  fun `returns null if content field missing`() = runTest {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"choices":[{"message":{}}]}"""))
     assertNull(repository.getAnimalDescription("lion"))
   }
 
   @Test
-  fun `returns null if content is not a string`() {
+  fun `returns null if content is not a string`() = runTest {
     mockWebServer.enqueue(
         MockResponse()
             .setResponseCode(200)
@@ -146,7 +147,7 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `returns cleaned content on valid response with think tags`() {
+  fun `returns cleaned content on valid response with think tags`() = runTest {
     val body =
         """
             {

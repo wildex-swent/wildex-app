@@ -27,7 +27,6 @@ android {
   defaultConfig {
     applicationId = "com.android.wildex"
     minSdk = 28
-    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
@@ -63,7 +62,7 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.8" }
+  testCoverage { jacocoVersion = "0.8.11" }
 
   buildFeatures {
     compose = true

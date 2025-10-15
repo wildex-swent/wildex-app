@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AnimalDetectionTestScreen(repository: AnimalDetectRepository) {
   val context = LocalContext.current
-  val scope = rememberCoroutineScope({ Dispatchers.IO })
+  val scope = rememberCoroutineScope{ Dispatchers.IO }
 
   var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
   var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
@@ -82,7 +82,7 @@ fun AnimalDetectionTestScreen(repository: AnimalDetectRepository) {
                 // Run network calls on IO dispatcher
                 val result = with(Dispatchers.IO) { repository.detectAnimal(context, uri) }
 
-                detectionResult = result
+                detectionResult = result.first()
 
                 /*result?.animalType?.let { type ->
                   description = with(Dispatchers.IO) { repository.getAnimalDescription(type) }

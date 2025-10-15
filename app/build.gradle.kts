@@ -49,6 +49,7 @@ android {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
+      enableUnitTestCoverage = true
     }
 
     debug {
@@ -120,12 +121,6 @@ android {
     res.setSrcDirs(emptyList<File>())
     resources.setSrcDirs(emptyList<File>())
   }
-
-  sourceSets.getByName("testRelease") {
-    java.srcDirs("src/testDebug/java")
-    res.srcDirs("src/testDebug/res")
-    resources.srcDirs("src/testDebug/resources")
-  }
 }
 
 sonar {
@@ -138,7 +133,8 @@ sonar {
     // Each path may be absolute or relative to the project base directory.
     property(
         "sonar.junit.reportPaths",
-        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest," +
+                "${project.layout.buildDirectory.get()}/test-results/testReleaseUnitTest",
     )
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
@@ -241,9 +237,6 @@ dependencies {
 
   // Coil
   implementation("io.coil-kt:coil-compose:2.6.0")
-
-  // Manifest Compose for Robolectric in Release
-  testReleaseImplementation(libs.compose.test.manifest)
 }
 
 tasks.withType<Test> {
@@ -251,6 +244,11 @@ tasks.withType<Test> {
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true
     excludes = listOf("jdk.internal.*")
+  }
+  if (name.contains("Release")) {
+    exclude("**/ui/**")
+    exclude("**/*Compose*")
+    exclude("**/*ProfileScreenTest*")
   }
 }
 
@@ -291,6 +289,10 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       }
   )
 }
+
+tasks.matching { it.name == "testDebugUnitTest" || it.name == "testReleaseUnitTest" }
+  .configureEach { finalizedBy("jacocoTestReport") }
+tasks.named("sonarqube").configure { dependsOn("jacocoTestReport") }
 
 configurations.forEach { configuration ->
   // Exclude protobuf-lite from all configurations

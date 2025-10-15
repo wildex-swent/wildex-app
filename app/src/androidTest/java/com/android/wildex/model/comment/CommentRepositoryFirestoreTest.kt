@@ -7,8 +7,6 @@ import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 private const val COMMENTS_COLLECTION_PATH = "comments"
@@ -16,16 +14,6 @@ private const val COMMENTS_COLLECTION_PATH = "comments"
 class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
   private var repository = CommentsRepositoryFirestore(Firebase.firestore)
-
-  @Before
-  override fun setUp() {
-    super.setUp()
-  }
-
-  @After
-  override fun tearDown() {
-    super.tearDown()
-  }
 
   @Test
   fun getNewCommentIdReturnsUniqueIDs() = runTest {

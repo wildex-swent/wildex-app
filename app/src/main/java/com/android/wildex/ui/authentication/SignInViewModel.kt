@@ -73,6 +73,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                 isLoading = false, firebaseUser = firebaseUser, errorMsg = null, signedOut = false)
           }
           val userRepository = RepositoryProvider.userRepository
+          val achievementRepository = RepositoryProvider.userAchievementsRepository
           val userId = firebaseUser.uid
           try {
             userRepository.getUser(userId)
@@ -90,7 +91,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                     "Switzerland",
                     0)
             userRepository.addUser(newUser)
-            TODO("Initialize achievements for new user")
+            achievementRepository.initializeUserAchievements(userId)
           }
         }) { failure ->
           _uiState.update {

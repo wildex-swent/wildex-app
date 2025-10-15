@@ -16,6 +16,9 @@ import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
+import com.google.android.gms.tasks.Tasks
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
@@ -29,6 +32,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 const val UI_WAIT_TIMEOUT = 5_000L
 
@@ -36,6 +43,8 @@ const val UI_WAIT_TIMEOUT = 5_000L
 class AuthRepositoryFirebaseTest {
   private lateinit var auth: FirebaseAuth
   private lateinit var repository: AuthRepositoryFirebase
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockRepository: AuthRepositoryFirebase
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -50,6 +59,8 @@ class AuthRepositoryFirebaseTest {
     auth = FirebaseEmulator.auth
     auth.signOut()
     repository = AuthRepositoryFirebase(auth)
+    mockAuth = Mockito.mock(FirebaseAuth::class.java)
+    mockRepository = AuthRepositoryFirebase(mockAuth)
   }
 
   @After
@@ -148,5 +159,51 @@ class AuthRepositoryFirebaseTest {
       val result = repository.signInWithGoogle(fakeCredential)
       assertTrue(result.isFailure)
     }
+  }
+
+  @Test
+  fun signInWithGoogleThrowsException() {
+    runTest {
+      val brokenCredential = CustomCredential(
+        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
+        bundleOf()
+      )
+      whenever(mockAuth.signInWithCredential(any())).thenThrow(RuntimeException("Firebase exploded"))
+
+      val result = mockRepository.signInWithGoogle(brokenCredential)
+      assertTrue(result.isFailure)
+      assertTrue(result.exceptionOrNull()!!.message!!.contains("Login failed"))
+    }
+  }
+
+  @Test
+  fun signInWithGoogleReturnsFailureWhenUserIsNull() {
+    runTest {
+      val credential = CustomCredential(
+        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
+        bundleOf()
+      )
+
+      val fakeResult = Mockito.mock(AuthResult::class.java)
+      whenever(fakeResult.user).thenReturn(null)
+      val fakeTask = Tasks.forResult(fakeResult)
+
+      whenever(mockAuth.signInWithCredential(any())).thenReturn(fakeTask)
+
+      val result = mockRepository.signInWithGoogle(credential)
+
+      assertTrue(result.isFailure)
+      assertTrue(result.exceptionOrNull()?.message?.contains("Login failed") == true)
+    }
+  }
+
+  @Test
+  fun signOutThrowsExceptionReturnsFailure() {
+    Mockito.doThrow(RuntimeException("Boom")).`when`(mockAuth).signOut()
+
+    val result = mockRepository.signOut()
+
+    assertTrue(result.isFailure)
+    assertTrue(result.exceptionOrNull()!!.message!!.contains("Logout failed"))
   }
 }

@@ -2,6 +2,8 @@ package com.android.wildex.dataClasses
 
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
+import com.android.wildex.model.animaldetector.BoundingBox
+import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.relationship.Relationship
 import com.android.wildex.model.relationship.StatusEnum
 import com.android.wildex.model.report.Report
@@ -42,7 +44,7 @@ class DataClassesTest {
         )
 
     TestCase.assertEquals("animal1", animal.animalId)
-    TestCase.assertEquals("https://example.com/animal_pic", animal.pictureURL.toString())
+    TestCase.assertEquals("https://example.com/animal_pic", animal.pictureURL)
     TestCase.assertEquals("Lion", animal.name)
     TestCase.assertEquals("Panthera leo", animal.species)
     TestCase.assertEquals("The lion is a species in the family Felidae.", animal.description)
@@ -50,10 +52,28 @@ class DataClassesTest {
 
   @Test
   fun testAnimalDetectResponse() {
-    val response = AnimalDetectResponse(animalType = "Lion", confidence = 0.98f)
+    val boundingBox = BoundingBox(0.1f, 0.1f, 0.5f, 0.5f)
+    val taxonomy =
+        Taxonomy(
+            id = "1",
+            animalClass = "Mammalia",
+            order = "Carnivora",
+            family = "Felidae",
+            genus = "Panthera",
+            species = "P. leo",
+        )
+    val response =
+        AnimalDetectResponse(
+            animalType = "Lion",
+            confidence = 0.98f,
+            boundingBox = boundingBox,
+            taxonomy = taxonomy,
+        )
 
     TestCase.assertEquals("Lion", response.animalType)
     TestCase.assertEquals(0.98f, response.confidence)
+    TestCase.assertEquals(boundingBox, response.boundingBox)
+    TestCase.assertEquals(taxonomy, response.taxonomy)
   }
 
   @Test
@@ -81,7 +101,7 @@ class DataClassesTest {
         )
 
     TestCase.assertEquals("report1", report.reportId)
-    TestCase.assertEquals("https://example.com/report_pic", report.imageURL.toString())
+    TestCase.assertEquals("https://example.com/report_pic", report.imageURL)
     TestCase.assertEquals("Test Location", report.location.name)
     TestCase.assertEquals("Test report", report.description)
     TestCase.assertEquals("user1", report.authorId)
@@ -132,7 +152,7 @@ class DataClassesTest {
 
     TestCase.assertEquals("post1", post.postId)
     TestCase.assertEquals("user1", post.authorId)
-    TestCase.assertEquals("https://example.com/post_pic", post.pictureURL.toString())
+    TestCase.assertEquals("https://example.com/post_pic", post.pictureURL)
     TestCase.assertEquals("Post Location", post.location?.name)
     TestCase.assertEquals("Post description", post.description)
     TestCase.assertEquals(10, post.likesCount)
@@ -150,7 +170,7 @@ class DataClassesTest {
 
     TestCase.assertEquals("user1", simpleUser.userId)
     TestCase.assertEquals("TestUser", simpleUser.username)
-    TestCase.assertEquals("https://example.com/user_pic", simpleUser.profilePictureURL.toString())
+    TestCase.assertEquals("https://example.com/user_pic", simpleUser.profilePictureURL)
   }
 
   @Test
@@ -174,7 +194,7 @@ class DataClassesTest {
     TestCase.assertEquals("John", user.name)
     TestCase.assertEquals("Doe", user.surname)
     TestCase.assertEquals("Nature enthusiast", user.bio)
-    TestCase.assertEquals("https://example.com/user_pic", user.profilePictureURL.toString())
+    TestCase.assertEquals("https://example.com/user_pic", user.profilePictureURL)
     TestCase.assertEquals(UserType.REGULAR, user.userType)
     TestCase.assertEquals("Switzerland", user.country)
     TestCase.assertEquals(100, user.friendsCount)

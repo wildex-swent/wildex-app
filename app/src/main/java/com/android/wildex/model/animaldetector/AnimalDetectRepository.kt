@@ -120,7 +120,11 @@ class AnimalDetectRepository(val client: OkHttpClient) {
       null
     } finally {
       // Clean up temp file
-      tempFile?.delete()
+      tempFile?.delete()?.let {
+        if (!it) {
+          Log.w("AnimalDetectRepository", "Failed to delete temp file}")
+        }
+      }
     }
   }
 }

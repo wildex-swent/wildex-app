@@ -35,9 +35,9 @@ interface UserAchievementsRepository {
    * be removed.
    *
    * @param userId The unique identifier of the user whose achievements are to be updated.
-   * @param listPostIds A list of post IDs that may influence the user's achievements.
+   * @param listIds A list of post IDs that may influence the user's achievements.
    */
-  suspend fun updateUserAchievements(userId: String, listPostIds: List<Id>)
+  suspend fun updateUserAchievements(userId: String, listIds: List<Id>)
 
   /**
    * get achievement count of the user

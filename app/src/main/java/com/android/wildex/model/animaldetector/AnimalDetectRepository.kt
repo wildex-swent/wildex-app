@@ -46,8 +46,8 @@ class AnimalDetectRepository(val client: OkHttpClient) {
    *
    * @param context The Android context, used to access the [android.content.ContentResolver].
    * @param imageUri The URI of the image to detect.
-   * @return List<AnimalDetectResponse> containing detected labels and confidence scores, or empty list if
-   *   the request fails or the response is invalid.
+   * @return List<AnimalDetectResponse> containing detected labels and confidence scores, or empty
+   *   list if the request fails or the response is invalid.
    */
   suspend fun detectAnimal(
       context: Context,
@@ -86,44 +86,47 @@ class AnimalDetectRepository(val client: OkHttpClient) {
                   .build()
 
           // Execute request
-            client.newCall(request).execute().use { response ->
-              if (!response.isSuccessful) {
-                throw IOException("Unexpected code $response")
-              }
-
-              val body = response.body?.string()
-              if (body.isNullOrEmpty()) {
-                throw IOException("Empty response body")
-              }
-
-              // Parse JSON response
-              val jsonElem = Json.parseToJsonElement(body)
-              val annotations = jsonElem.jsonObject["annotations"]?.jsonArray ?: return@use emptyList()
-
-              annotations.mapNotNull { result ->
-                val obj = result.jsonObject
-                val label = obj["label"]?.jsonPrimitive?.takeIf { it.isString }?.content ?: return@mapNotNull null
-                val confidence = obj["score"]?.jsonPrimitive?.float ?: return@mapNotNull null
-                val bboxArr = obj["bbox"]?.jsonArray ?: return@mapNotNull null
-                if (bboxArr.size != 4) return@mapNotNull null
-                val boundingBox = BoundingBox(
-                  bboxArr[0].jsonPrimitive.float,
-                  bboxArr[1].jsonPrimitive.float,
-                  bboxArr[2].jsonPrimitive.float,
-                  bboxArr[3].jsonPrimitive.float
-                )
-                val taxonomyObj = obj["taxonomy"]?.jsonObject ?: return@mapNotNull null
-                val taxonomy = Taxonomy(
-                  taxonomyObj["id"]?.jsonPrimitive?.content ?: "",
-                  taxonomyObj["class"]?.jsonPrimitive?.content ?: "",
-                  taxonomyObj["order"]?.jsonPrimitive?.content ?: "",
-                  taxonomyObj["family"]?.jsonPrimitive?.content ?: "",
-                  taxonomyObj["genus"]?.jsonPrimitive?.content ?: "",
-                  taxonomyObj["species"]?.jsonPrimitive?.content ?: ""
-                )
-                AnimalDetectResponse(label, confidence, boundingBox, taxonomy)
-              }
+          client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+              throw IOException("Unexpected code $response")
             }
+
+            val body = response.body?.string()
+            if (body.isNullOrEmpty()) {
+              throw IOException("Empty response body")
+            }
+
+            // Parse JSON response
+            val jsonElem = Json.parseToJsonElement(body)
+            val annotations =
+                jsonElem.jsonObject["annotations"]?.jsonArray ?: return@use emptyList()
+
+            annotations.mapNotNull { result ->
+              val obj = result.jsonObject
+              val label =
+                  obj["label"]?.jsonPrimitive?.takeIf { it.isString }?.content
+                      ?: return@mapNotNull null
+              val confidence = obj["score"]?.jsonPrimitive?.float ?: return@mapNotNull null
+              val bboxArr = obj["bbox"]?.jsonArray ?: return@mapNotNull null
+              if (bboxArr.size != 4) return@mapNotNull null
+              val boundingBox =
+                  BoundingBox(
+                      bboxArr[0].jsonPrimitive.float,
+                      bboxArr[1].jsonPrimitive.float,
+                      bboxArr[2].jsonPrimitive.float,
+                      bboxArr[3].jsonPrimitive.float)
+              val taxonomyObj = obj["taxonomy"]?.jsonObject ?: return@mapNotNull null
+              val taxonomy =
+                  Taxonomy(
+                      taxonomyObj["id"]?.jsonPrimitive?.content ?: "",
+                      taxonomyObj["class"]?.jsonPrimitive?.content ?: "",
+                      taxonomyObj["order"]?.jsonPrimitive?.content ?: "",
+                      taxonomyObj["family"]?.jsonPrimitive?.content ?: "",
+                      taxonomyObj["genus"]?.jsonPrimitive?.content ?: "",
+                      taxonomyObj["species"]?.jsonPrimitive?.content ?: "")
+              AnimalDetectResponse(label, confidence, boundingBox, taxonomy)
+            }
+          }
         } catch (e: Exception) {
           Log.e(this.javaClass.name, "Error detecting animal: ${e.message}", e)
           emptyList()

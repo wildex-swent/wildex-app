@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AnimalDetectionTestScreen(repository: AnimalDetectRepository) {
   val context = LocalContext.current
-  val scope = rememberCoroutineScope{ Dispatchers.IO }
+  val scope = rememberCoroutineScope { Dispatchers.IO }
 
   var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
   var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }

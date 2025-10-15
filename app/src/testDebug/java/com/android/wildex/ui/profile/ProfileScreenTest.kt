@@ -24,8 +24,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ProfileScreenTest {
 
-  @get:Rule
-  val composeRule = createAndroidComposeRule<ComponentActivity>()
+  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
   private fun buildViewModelWithData(user: User): ProfileScreenViewModel {
     val userRepository = mockk<UserRepository>()
@@ -53,8 +52,7 @@ class ProfileScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.Companion.now(),
             country = "Switzerland",
-            friendsCount = 7
-        )
+            friendsCount = 7)
     val vm = buildViewModelWithData(testUser)
 
     var goBackClicked = false
@@ -122,12 +120,12 @@ class ProfileScreenTest {
     composeRule.onNodeWithText("Achievements", substring = false).performClick()
     composeRule.onNodeWithText("Map", substring = false).performClick()
 
-      Assert.assertEquals(true, goBackClicked)
-      Assert.assertEquals(true, settingsClicked)
-      Assert.assertEquals(testUser.userId, collectionClickedWith)
-      Assert.assertEquals(testUser.userId, friendsClickedWith)
-      Assert.assertEquals(testUser.userId, achievementsClickedWith)
-      Assert.assertEquals(testUser.userId, mapClickedWith)
+    Assert.assertEquals(true, goBackClicked)
+    Assert.assertEquals(true, settingsClicked)
+    Assert.assertEquals(testUser.userId, collectionClickedWith)
+    Assert.assertEquals(testUser.userId, friendsClickedWith)
+    Assert.assertEquals(testUser.userId, achievementsClickedWith)
+    Assert.assertEquals(testUser.userId, mapClickedWith)
   }
 
   @Test
@@ -144,18 +142,10 @@ class ProfileScreenTest {
     var friendsClicked = false
 
     composeRule.setContent {
-        Row {
-            ProfileAnimals(
-                id = "uid-1",
-                onCollection = { animalsClicked = true },
-                ownerProfile = false
-            )
-            ProfileFriends(
-                id = "uid-1",
-                onFriends = { friendsClicked = true },
-                ownerProfile = false
-            )
-        }
+      Row {
+        ProfileAnimals(id = "uid-1", onCollection = { animalsClicked = true }, ownerProfile = false)
+        ProfileFriends(id = "uid-1", onFriends = { friendsClicked = true }, ownerProfile = false)
+      }
     }
 
     composeRule
@@ -163,7 +153,7 @@ class ProfileScreenTest {
         .performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS, useUnmergedTree = true).performClick()
 
-      Assert.assertFalse(animalsClicked)
-      Assert.assertFalse(friendsClicked)
+    Assert.assertFalse(animalsClicked)
+    Assert.assertFalse(friendsClicked)
   }
 }

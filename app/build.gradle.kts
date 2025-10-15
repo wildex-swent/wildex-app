@@ -71,11 +71,11 @@ android {
   composeOptions { kotlinCompilerExtensionVersion = "1.4.2" }
 
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
-  kotlinOptions { jvmTarget = "1.8" }
+  kotlinOptions { jvmTarget = "11" }
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -94,6 +94,11 @@ android {
     unitTests {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
+    }
+    packagingOptions {
+      jniLibs {
+        useLegacyPackaging = true
+      }
     }
   }
 
@@ -183,6 +188,16 @@ dependencies {
   implementation(libs.firebase.auth.ktx)
   implementation(libs.firebase.auth)
 
+  // Credential Manager (for Google Sign-In)
+  implementation(libs.credentials)
+  implementation(libs.credentials.play.services.auth)
+  implementation(libs.googleid)
+
+  // Navigation
+  implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.navigation.fragment.ktx)
+  implementation(libs.androidx.navigation.ui.ktx)
+
   // UI Tests
   globalTestImplementation(libs.compose.test.junit)
   debugImplementation(libs.compose.test.manifest)
@@ -215,8 +230,8 @@ dependencies {
   implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
   // AndroidX Credential Manager
-  implementation("androidx.credentials:credentials:1.3.0")
-  implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+  //implementation("androidx.credentials:credentials:1.3.0")
+  //implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
 
   // Coil
   implementation("io.coil-kt:coil-compose:2.6.0")

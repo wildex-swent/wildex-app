@@ -55,7 +55,7 @@ fun SignInScreen(
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
 
-  LaunchedEffect(uiState.errorMsg, uiState.user) {
+  LaunchedEffect(uiState.errorMsg, uiState.firebaseUser) {
     // Show error message if login fails
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -63,7 +63,7 @@ fun SignInScreen(
     }
 
     // Navigate to home screen on successful login
-    uiState.user?.let {
+    uiState.firebaseUser?.let {
       Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
       onSignedIn()
     }
@@ -84,7 +84,7 @@ fun SignInScreen(
               Spacer(modifier = Modifier.height(48.dp))
 
               // Authenticate With Google Button
-              if (uiState.user == null) {
+              if (uiState.firebaseUser == null) {
                 if (uiState.isLoading) {
                   CircularProgressIndicator(
                       modifier =

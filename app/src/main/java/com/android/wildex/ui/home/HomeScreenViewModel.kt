@@ -11,6 +11,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,16 +23,11 @@ data class HomeUIState(
     val posts: List<Post> = emptyList(),
     val user: User? = null,
     val notif: Boolean = false,
-
-    // val errorMsg: String? = null,
-    // val signedOut: Boolean = false
-
 )
 
 class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    // private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(HomeUIState())
@@ -50,6 +46,7 @@ class HomeScreenViewModel(
           friendsCount = 0)
 
   val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
+    private var authorId: String? = ""
 
   /** Refreshes the UI state by fetching all Post items from the repository. */
   fun refreshUIState() {
@@ -58,14 +55,11 @@ class HomeScreenViewModel(
   /** Fetches user based on login */
   private fun fetchUser(): User? {
     var user: User? = null
-    val authorId = com.google.firebase.ktx.Firebase.auth.currentUser?.uid
+    authorId = com.google.firebase.ktx.Firebase.auth.currentUser?.uid
 
     viewModelScope.launch {
       try {
-        // TODO: implement fetching user
-        /** _uiState.user = "fetchUserFromUserId(...)" */
-        // user = "to User."Firebase.auth.currentUser
-        user = if (authorId != null) userRepository.getUser(authorId) else defaultUser
+        user = if (authorId != null) userRepository.getUser(authorId!!) else defaultUser
       } catch (e: Exception) {
         Log.e("HomeScreenViewModel", "Error fetching user", e)
       }
@@ -76,12 +70,10 @@ class HomeScreenViewModel(
   private fun getAllPosts() {
     viewModelScope.launch {
       try {
-        // TODO: implement fetching posts
         /** Pull posts from repository and update UI state */
         _uiState.value =
             HomeUIState(
-                // posts = emptyList(),
-                posts = postRepository.getAllPostsByAuthor(),
+                posts = postRepository.getAllPosts(),
                 user = fetchUser(),
                 notif = hasNotif())
       } catch (e: Exception) {

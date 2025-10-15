@@ -21,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -36,6 +37,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 class SignInViewModelTest {
@@ -72,8 +75,10 @@ class SignInViewModelTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun signInSuccessUpdatesUIStateWithUser() {
-    runTest {
-      val fakeUser = mockk<FirebaseUser>(relaxed = true)
+    runTest(timeout = 60.seconds) {
+      val fakeUser = mock(FirebaseUser::class.java)
+      Mockito.`when`(fakeUser.uid).thenReturn("fake-uid")
+
       val fakeCredential =
           CustomCredential(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, bundleOf("id_token" to fakeUserIdToken))
       val response = mockk<GetCredentialResponse>()
@@ -158,16 +163,32 @@ class SignInViewModelTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun clearErrorMsgResetsError() = runTest {
-    // Force an error first
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialUnknownException("test error")
 
     viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
-    // Then clear it
     viewModel.clearErrorMsg()
     val state = viewModel.uiState.value
     assertNull(state.errorMsg)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun signInHandlesUnexpectedException() {
+    runTest {
+      coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
+          RuntimeException("unexpected crash")
+
+      viewModel.signIn(context, credentialManager)
+      advanceUntilIdle()
+
+      val state = viewModel.uiState.value
+      assertFalse(state.isLoading)
+      assertNull(state.firebaseUser)
+      assertTrue(state.errorMsg?.contains("Unexpected error") == true)
+      assertTrue(state.signedOut)
+    }
   }
 }

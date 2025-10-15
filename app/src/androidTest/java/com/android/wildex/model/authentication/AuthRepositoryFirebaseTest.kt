@@ -164,11 +164,10 @@ class AuthRepositoryFirebaseTest {
   @Test
   fun signInWithGoogleThrowsException() {
     runTest {
-      val brokenCredential = CustomCredential(
-        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
-        bundleOf()
-      )
-      whenever(mockAuth.signInWithCredential(any())).thenThrow(RuntimeException("Firebase exploded"))
+      val brokenCredential =
+          CustomCredential(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, bundleOf())
+      whenever(mockAuth.signInWithCredential(any()))
+          .thenThrow(RuntimeException("Firebase exploded"))
 
       val result = mockRepository.signInWithGoogle(brokenCredential)
       assertTrue(result.isFailure)
@@ -179,10 +178,8 @@ class AuthRepositoryFirebaseTest {
   @Test
   fun signInWithGoogleReturnsFailureWhenUserIsNull() {
     runTest {
-      val credential = CustomCredential(
-        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
-        bundleOf()
-      )
+      val credential =
+          CustomCredential(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, bundleOf())
 
       val fakeResult = Mockito.mock(AuthResult::class.java)
       whenever(fakeResult.user).thenReturn(null)

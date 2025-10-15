@@ -213,7 +213,6 @@ dependencies {
   implementation(libs.okhttp)
 
   // Mock testing
-  testImplementation(libs.mockito)
   testImplementation(libs.mockwebserver)
   testImplementation(libs.mockk)
   testImplementation(libs.mockito.core)

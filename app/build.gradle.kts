@@ -198,17 +198,6 @@ dependencies {
   implementation(libs.okhttp)
 
   // Mock testing
-  /*testImplementation(libs.mockito.kotlin)
-  testImplementation(libs.mockwebserver)
-  androidTestImplementation(libs.mockk)
-  testImplementation(libs.mockito.core)
-  androidTestImplementation(libs.mockk.android)
-  androidTestImplementation(libs.mockk.agent)
-  testImplementation(libs.mockk)
-
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("io.mockk:mockk:1.13.12")
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")*/
   testImplementation(libs.mockwebserver)
   testImplementation(libs.mockk)
   testImplementation(libs.mockito.core)
@@ -221,6 +210,16 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
   testImplementation("io.mockk:mockk:1.13.12")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+  // Google Identity Services (Credential Manager - Google ID Token)
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+  // AndroidX Credential Manager
+  implementation("androidx.credentials:credentials:1.3.0")
+  implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+
+  // Coil
+  implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<Test> {

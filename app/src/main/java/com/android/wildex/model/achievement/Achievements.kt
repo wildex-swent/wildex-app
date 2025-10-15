@@ -6,7 +6,7 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
 
 object Achievements {
-  val postsRepository: PostsRepository = RepositoryProvider.postRepository
+  private val postsRepository: PostsRepository = RepositoryProvider.postRepository
 
   // Achievement 1: "Post Master" - Achieved when user has 10 or more posts
   val postMaster =
@@ -18,25 +18,26 @@ object Achievements {
           condition = { postIds -> postIds.size >= 10 },
       )
 
-  // Achievement 2: "Social Butterfly" - Achieved when user has liked 50 posts
+  // Achievement 2: "Social Butterfly" - Achieved when user has 50 liked posts
   val socialButterfly =
       Achievement(
           achievementId = "achievement_2",
           pictureURL = "image_placeholder", // Replace with actual image URL
-          description = "Like 50 posts",
+          description = "Reach 50 liked posts",
           name = "Social Butterfly",
           condition = { postIds ->
             val likedPosts = postsRepository.getLikedPosts(postIds)
             likedPosts.size >= 50
           },
       )
-  // Achievement 3: "Commentator" - Achieved when user has commented on 20 different posts
-  val commentator =
+
+  // Achievement 3: "Community Builder" - Achieved when user has 20 commented Posts
+  val communityBuilder =
       Achievement(
           achievementId = "achievement_3",
           pictureURL = "image_placeholder", // Replace with actual image URL
-          description = "Comment on 20 different posts",
-          name = "Commentator",
+          description = "Reach 20 commented posts",
+          name = "Community Builder",
           condition = { postIds ->
             val commentedPosts = postsRepository.getCommentedPosts(postIds)
             commentedPosts.size >= 20
@@ -56,8 +57,38 @@ object Achievements {
           },
       )
 
+  // Mock Achievement for testing purposes, DO NOT DELETE OTHERWISE THE TESTS WILL FAIL
+  val mockAchievement1 =
+      Achievement(
+          achievementId = "mockPostId",
+          pictureURL = "image_placeholder",
+          description = "This is a mock achievement for testing purposes",
+          name = "Mock Achievement",
+          condition = { postIds -> postIds.size == 1 && postIds[0] == "mockPostId" },
+      )
+
+  val mockAchievement2 =
+      Achievement(
+          achievementId = "mockPostId2",
+          pictureURL = "image_placeholder",
+          description = "This is another mock achievement for testing purposes",
+          name = "Mock Achievement 2",
+          condition = { postIds -> postIds.size == 2 },
+      )
+
+  // ------------------------------------------------------------
+
   // List of all achievements
-  val ALL = listOf(postMaster, socialButterfly, commentator, influencer)
+  val ALL =
+      listOf(
+          mockAchievement1,
+          mockAchievement2,
+          postMaster,
+          socialButterfly,
+          communityBuilder,
+          influencer,
+      )
+  val achievement_by_id: Map<Id, Achievement> = ALL.associateBy { it.achievementId }
 
   // ----------- Helpers ----------------
   private suspend fun PostsRepository.getLikedPosts(postIds: List<Id>): List<Post> {

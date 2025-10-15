@@ -10,7 +10,6 @@ import androidx.core.os.bundleOf
 import androidx.credentials.CustomCredential
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.wildex.WildexApp
 import com.android.wildex.ui.authentication.SignInScreen
 import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.utils.FakeCredentialManager
@@ -93,7 +92,7 @@ class AuthRepositoryFirebaseTest {
 
     val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
 
-    composeTestRule.setContent { WildexApp(credentialManager = fakeCredentialManager) }
+    composeTestRule.setContent { SignInScreen() }
     composeTestRule
         .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)
         .assertIsDisplayed()
@@ -127,9 +126,7 @@ class AuthRepositoryFirebaseTest {
 
     FirebaseEmulator.auth.signOut()
 
-    composeTestRule.setContent {
-      WildexApp(credentialManager = FakeCredentialManager.create(fakeIdToken))
-    }
+    composeTestRule.setContent { SignInScreen() }
 
     composeTestRule
         .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)

@@ -82,7 +82,7 @@ fun AnimalDetectionTestScreen(repository: AnimalDetectRepository) {
                 // Run network calls on IO dispatcher
                 val result = with(Dispatchers.IO) { repository.detectAnimal(context, uri) }
 
-                detectionResult = result.first()
+                detectionResult = result.firstOrNull()
 
                 /*result?.animalType?.let { type ->
                   description = with(Dispatchers.IO) { repository.getAnimalDescription(type) }

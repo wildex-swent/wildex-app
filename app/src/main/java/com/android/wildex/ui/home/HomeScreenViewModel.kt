@@ -11,7 +11,6 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +45,7 @@ class HomeScreenViewModel(
           friendsCount = 0)
 
   val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
-    private var authorId: String? = ""
+  private var authorId: String? = ""
 
   /** Refreshes the UI state by fetching all Post items from the repository. */
   fun refreshUIState() {
@@ -73,9 +72,7 @@ class HomeScreenViewModel(
         /** Pull posts from repository and update UI state */
         _uiState.value =
             HomeUIState(
-                posts = postRepository.getAllPosts(),
-                user = fetchUser(),
-                notif = hasNotif())
+                posts = postRepository.getAllPosts(), user = fetchUser(), notif = hasNotif())
       } catch (e: Exception) {
         Log.e("HomeScreenViewModel", "Error fetching posts", e)
       }

@@ -2,6 +2,7 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -148,6 +149,12 @@ open class FirestoreTest(val collectionPath: String) {
           country = "Country3",
           friendsCount = 0,
       )
+
+  open val like1 = Like("like1", postId = post1.postId, userId = user1.userId)
+
+  open val like2 = Like("like2", postId = post2.postId, userId = user2.userId)
+
+  open val like3 = Like("like3", postId = post1.postId, userId = user3.userId)
 
   open val comment1 =
       Comment(

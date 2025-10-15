@@ -198,21 +198,29 @@ dependencies {
   implementation(libs.okhttp)
 
   // Mock testing
-  testImplementation(libs.mockito)
-  testImplementation(libs.mockito.kotlin)
+  /*testImplementation(libs.mockito.kotlin)
   testImplementation(libs.mockwebserver)
   androidTestImplementation(libs.mockk)
+  testImplementation(libs.mockito.core)
   androidTestImplementation(libs.mockk.android)
   androidTestImplementation(libs.mockk.agent)
   testImplementation(libs.mockk)
 
-    // Coroutines
+  testImplementation("junit:junit:4.13.2")
+  testImplementation("io.mockk:mockk:1.13.12")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")*/
+  testImplementation(libs.mockwebserver)
+  testImplementation(libs.mockk)
+  testImplementation(libs.mockito.core)
+  testImplementation(libs.mockito.kotlin)
+  androidTestImplementation(libs.mockk)
+  androidTestImplementation(libs.mockk.android)
+  androidTestImplementation(libs.mockk.agent)
+  androidTestImplementation(libs.mockito.android)
+  androidTestImplementation(libs.mockito.kotlin)
   testImplementation("junit:junit:4.13.2")
   testImplementation("io.mockk:mockk:1.13.12")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-
-  //Coil compose
-  implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<Test> {

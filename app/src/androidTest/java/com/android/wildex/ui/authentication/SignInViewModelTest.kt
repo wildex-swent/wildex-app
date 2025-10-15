@@ -93,7 +93,7 @@ class SignInViewModelTest {
 
       val state = viewModel.uiState.value
       assertFalse(state.isLoading)
-      assertEquals(fakeUser, state.user)
+      assertEquals(fakeUser, state.firebaseUser)
       assertNull(state.errorMsg)
       assertFalse(state.signedOut)
 
@@ -112,7 +112,7 @@ class SignInViewModelTest {
 
     val state = viewModel.uiState.value
     assertFalse(state.isLoading)
-    assertNull(state.user)
+    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("cancel", ignoreCase = true) == true)
     assertTrue(state.signedOut)
   }
@@ -128,7 +128,7 @@ class SignInViewModelTest {
 
     val state = viewModel.uiState.value
     assertFalse(state.isLoading)
-    assertNull(state.user)
+    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("Failed to get credentials") == true)
     assertTrue(state.signedOut)
   }
@@ -150,7 +150,7 @@ class SignInViewModelTest {
 
     val state = viewModel.uiState.value
     assertFalse(state.isLoading)
-    assertNull(state.user)
+    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("auth failed") == true)
     assertTrue(state.signedOut)
   }

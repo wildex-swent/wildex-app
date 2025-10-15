@@ -10,6 +10,10 @@ plugins {
   id("jacoco")
 }
 
+jacoco {
+  toolVersion = "0.8.11"
+}
+
 android {
   namespace = "com.android.wildex"
   compileSdk = 34
@@ -62,7 +66,7 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.8" }
+  testCoverage { jacocoVersion = "0.8.11" }
 
   buildFeatures {
     compose = true
@@ -269,14 +273,16 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       "**/Manifest*.*",
       "**/*Test*.*",
       "android/**/*.*",
+      "META-INF/*.kotlin_module",
+      "META-INF/**",
     )
 
   // Classes compilées (ajout uniquement si le dossier existe)
   val classDirs = mutableListOf<FileTree>()
   val debugDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug")
   val releaseDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release")
-  if (debugDir.exists()) classDirs += fileTree(debugDir) { exclude(fileFilter) }
-  if (releaseDir.exists()) classDirs += fileTree(releaseDir) { exclude(fileFilter) }
+  if (debugDir.exists()) classDirs += fileTree(debugDir) { include("**/*.class"); exclude(fileFilter) }
+  if (releaseDir.exists()) classDirs += fileTree(releaseDir) { include("**/*.class"); exclude(fileFilter) }
   classDirectories.setFrom(classDirs)
 
   // Sources
@@ -288,9 +294,8 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
 
   // Données de couverture: ne garder que les fichiers existants
   val execFiles = fileTree(project.layout.buildDirectory.get()) {
-    include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-    include("outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec")
     include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec")
+    include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec.gz")
     include("outputs/code_coverage/**/connected/*/coverage.ec")
     include("jacoco/*.exec")
     include("**/*.ec")

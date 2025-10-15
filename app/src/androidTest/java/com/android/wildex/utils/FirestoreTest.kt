@@ -164,12 +164,4 @@ open class FirestoreTest(val collectionPath: String) {
           authorId = "author2",
           text = "text2",
           date = Timestamp.fromDate(2012, 12, 12))
-
-  open val comment3 =
-      Comment(
-          commentId = "comment3",
-          postId = "post3",
-          authorId = "author3",
-          text = "text3",
-          date = Timestamp.now())
 }

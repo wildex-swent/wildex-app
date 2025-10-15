@@ -76,9 +76,7 @@ class SignInScreenTest {
 
   @Test
   fun initialTagsAreDisplayed() {
-    composeTestRule.setContent {
-      SignInScreen(authViewModel = viewModel)
-    }
+    composeTestRule.setContent { SignInScreen(authViewModel = viewModel) }
 
     composeTestRule.onNodeWithTag(SignInScreenTestTags.APP_LOGO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertIsDisplayed()

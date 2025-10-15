@@ -123,11 +123,6 @@ class CommentsRepositoryFirestore(private val db: FirebaseFirestore) : CommentsR
 
       Comment(commentId = commentId, postId = postId, authorId = authorId, text = text, date = date)
     } catch (e: Exception) {
-      Log.e(
-          "CommentsRepositoryFirestore",
-          "documentToComment: error converting document ${document.id} to Comment",
-          e)
-
       null
     }
   }

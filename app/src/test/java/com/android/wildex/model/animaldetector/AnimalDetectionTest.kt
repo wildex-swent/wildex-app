@@ -14,7 +14,7 @@ import org.mockito.Mockito
 
 class AnimalDetectionTest : AnimalDetectRepositoryTest() {
   private lateinit var testUri: Uri
-  override val urlPropName: String = "ad_baseUrl"
+  override val urlPropName: String = "adBaseurl"
 
   @Before
   override fun setUp() {

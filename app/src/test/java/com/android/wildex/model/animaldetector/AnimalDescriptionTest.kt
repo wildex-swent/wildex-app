@@ -16,7 +16,7 @@ import org.junit.Test
 
 class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
 
-  override val urlPropName: String = "hf_baseUrl"
+  override val urlPropName: String = "hfBaseurl"
 
   @Test
   fun `getAnimalDescription forms correct request`() = runTest {

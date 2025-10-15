@@ -41,6 +41,7 @@ class CommentsRepositoryFirestore(private val db: FirebaseFirestore) : CommentsR
   override suspend fun editComment(commentId: String, newValue: Comment) {
     val docRef = collection.document(commentId)
     ensureDocumentExists(docRef, commentId)
+
     docRef.set(newValue).await()
   }
 

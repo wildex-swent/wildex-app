@@ -62,14 +62,14 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.11" }
+  testCoverage { jacocoVersion = "0.8.12" }
 
   buildFeatures {
     compose = true
     buildConfig = true
   }
 
-  composeOptions { kotlinCompilerExtensionVersion = "1.4.2" }
+  composeOptions { kotlinCompilerExtensionVersion = "1.5.3" }
 
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

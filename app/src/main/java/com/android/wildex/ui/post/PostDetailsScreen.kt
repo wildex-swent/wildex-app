@@ -1,6 +1,5 @@
 package com.android.wildex.ui.post
 
-// import coil.compose.AsyncImage
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,10 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.theme.WildexTheme
@@ -87,24 +88,14 @@ fun PostDetailsScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-              //              Image(
-              //                  painter = painterResource(R.drawable.tiger),
-              //                  contentDescription = "Post Image",
-              //                  modifier =
-              //                      Modifier.fillMaxWidth()
-              //                          .height(350.dp)
-              //                          .padding(8.dp)
-              //                          .clip(RoundedCornerShape(24.dp)),
-              //                  contentScale = ContentScale.Crop)
-
-              //              AsyncImage(
-              //                  model = postDetailsUIState.pictureURL,
-              //                  contentDescription = "Post picture",
-              //                  modifier =
-              //                      Modifier.size(40.dp)
-              //                          .clip(CircleShape)
-              //                          .border(2.dp, MaterialTheme.colorScheme.primary),
-              //                  contentScale = ContentScale.Crop)
+              AsyncImage(
+                  model = postDetailsUIState.pictureURL,
+                  contentDescription = "Post picture",
+                  modifier =
+                      Modifier.size(40.dp)
+                          .clip(CircleShape)
+                          .border(2.dp, MaterialTheme.colorScheme.primary),
+                  contentScale = ContentScale.Crop)
 
               PostInfoBar(
                   authorId = postDetailsUIState.authorId,
@@ -326,7 +317,7 @@ fun CommentInput(
                   modifier = Modifier.size(56.dp),
                   profileId = userId,
                   profilePictureURL = userProfilePictureURL,
-                  onProfile = onProfile) // should we go to our own profile here or just {} ?
+                  onProfile = onProfile)
 
               Spacer(modifier = Modifier.width(8.dp))
 
@@ -368,20 +359,14 @@ fun ClickableProfilePicture(
       onClick = { onProfile(profileId) },
       modifier =
           modifier.background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)) {
-        //        Icon(
-        //            imageVector = Icons.Default.Person,
-        //            contentDescription = "Profile",
-        //            modifier = Modifier.fillMaxSize(),
-        //            tint = MaterialTheme.colorScheme.onPrimary)
-
-        //        AsyncImage(
-        //            model = profilePictureURL,
-        //            contentDescription = "Profile picture",
-        //            modifier =
-        //                Modifier.size(40.dp)
-        //                    .clip(CircleShape)
-        //                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-        //            contentScale = ContentScale.Crop)
+        AsyncImage(
+            model = profilePictureURL,
+            contentDescription = "Profile picture",
+            modifier =
+                Modifier.size(40.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            contentScale = ContentScale.Crop)
       }
 }
 

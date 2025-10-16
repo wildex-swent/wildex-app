@@ -229,14 +229,22 @@ dependencies {
   androidTestImplementation(libs.mockito.kotlin)
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
-  // Coil
-  implementation("io.coil-kt:coil:2.6.0")
-  implementation("io.coil-kt:coil-compose:2.6.0")
-  testImplementation("io.coil-kt:coil:2.6.0")
-  testImplementation("io.coil-kt:coil-compose:2.6.0")
+  // Coil for image loading
+  implementation("io.coil-kt:coil:2.4.0")
+  implementation("io.coil-kt:coil-compose:2.4.0")
+  testImplementation("io.coil-kt:coil:2.4.0")
+  testImplementation("io.coil-kt:coil-compose:2.4.0")
+
+  androidTestImplementation("io.coil-kt:coil:2.4.0")
+  androidTestImplementation("io.coil-kt:coil-compose:2.4.0")
+
 }
 
 tasks.withType<Test> {
+  reports {
+    junitXml.required.set(true)
+    html.required.set(true)
+  }
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true

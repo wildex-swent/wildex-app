@@ -239,6 +239,17 @@ dependencies {
   testReleaseImplementation(libs.compose.test.manifest)
 }
 
+tasks.withType<Test>().configureEach {
+  if (name == "testReleaseUnitTest") {
+    enabled = false
+  }
+}
+androidComponents {
+  beforeVariants(selector().withBuildType("release")) { variant ->
+    variant.enableUnitTest = false
+  }
+}
+
 tasks.withType<Test> {
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {

@@ -91,39 +91,64 @@ class AnimalDetectRepository(val client: OkHttpClient) {
               throw IOException("Unexpected code $response")
             }
 
-            val body = response.body?.string()
-            if (body.isNullOrEmpty()) {
-              throw IOException("Empty response body")
-            }
+            val body = response.body!!.string()
 
             // Parse JSON response
             val jsonElem = Json.parseToJsonElement(body)
-            val annotations =
-                jsonElem.jsonObject["annotations"]?.jsonArray ?: return@use emptyList()
+            val annotationsElement = jsonElem.jsonObject["annotations"]
+            if (annotationsElement == null) {
+              return@use emptyList()
+            }
+            val annotations = annotationsElement.jsonArray
 
             annotations.mapNotNull { result ->
               val obj = result.jsonObject
-              val label =
-                  obj["label"]?.jsonPrimitive?.takeIf { it.isString }?.content
-                      ?: return@mapNotNull null
-              val confidence = obj["score"]?.jsonPrimitive?.float ?: return@mapNotNull null
-              val bboxArr = obj["bbox"]?.jsonArray ?: return@mapNotNull null
+              val labelElement = obj["label"]
+
+              val confidenceElement = obj["score"]
+              val bboxElement = obj["bbox"]
+              val taxonomyElement = obj["taxonomy"]
+              if (labelElement == null ||
+                  confidenceElement == null ||
+                  bboxElement == null ||
+                  taxonomyElement == null) {
+                return@mapNotNull null
+              }
+              val label = labelElement.jsonPrimitive.content
+              val confidence = confidenceElement.jsonPrimitive.float
+              val bboxArr = bboxElement.jsonArray
               if (bboxArr.size != 4) return@mapNotNull null
               val boundingBox =
                   BoundingBox(
                       bboxArr[0].jsonPrimitive.float,
                       bboxArr[1].jsonPrimitive.float,
                       bboxArr[2].jsonPrimitive.float,
-                      bboxArr[3].jsonPrimitive.float)
-              val taxonomyObj = obj["taxonomy"]?.jsonObject ?: return@mapNotNull null
+                      bboxArr[3].jsonPrimitive.float,
+                  )
+              val taxonomyObj = taxonomyElement.jsonObject
+              val idElement = taxonomyObj["id"]
+              val classElement = taxonomyObj["class"]
+              val orderElement = taxonomyObj["order"]
+              val familyElement = taxonomyObj["family"]
+              val genusElement = taxonomyObj["genus"]
+              val speciesElement = taxonomyObj["species"]
+              if (idElement == null ||
+                  classElement == null ||
+                  orderElement == null ||
+                  familyElement == null ||
+                  genusElement == null ||
+                  speciesElement == null) {
+                return@mapNotNull null
+              }
               val taxonomy =
                   Taxonomy(
-                      taxonomyObj["id"]?.jsonPrimitive?.content ?: "",
-                      taxonomyObj["class"]?.jsonPrimitive?.content ?: "",
-                      taxonomyObj["order"]?.jsonPrimitive?.content ?: "",
-                      taxonomyObj["family"]?.jsonPrimitive?.content ?: "",
-                      taxonomyObj["genus"]?.jsonPrimitive?.content ?: "",
-                      taxonomyObj["species"]?.jsonPrimitive?.content ?: "")
+                      idElement.jsonPrimitive.content,
+                      classElement.jsonPrimitive.content,
+                      orderElement.jsonPrimitive.content,
+                      familyElement.jsonPrimitive.content,
+                      genusElement.jsonPrimitive.content,
+                      speciesElement.jsonPrimitive.content,
+                  )
               AnimalDetectResponse(label, confidence, boundingBox, taxonomy)
             }
           }
@@ -187,7 +212,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
           client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-            val body = response.body?.string() ?: throw IOException("Empty response body")
+            val body = response.body!!.string()
             val json = Json.parseToJsonElement(body)
             json.jsonObject["choices"]
                 ?.jsonArray

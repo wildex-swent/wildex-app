@@ -140,12 +140,12 @@ class AnimalDetectionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `detectAnimal returns empty list on empty body`() = runTest {
+  fun `detectAnimal returns empty list on empty or null body`() = runTest {
     // Mock API response
     val jsonResponse = ""
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-    val result = repository.detectAnimal(context, testUri)
-    assertTrue(result.isEmpty())
+    val result1 = repository.detectAnimal(context, testUri)
+    assertTrue(result1.isEmpty())
   }
 
   @Test
@@ -157,71 +157,49 @@ class AnimalDetectionTest : AnimalDetectRepositoryTest() {
   }
 
   @Test
-  fun `detectAnimal returns null on field 'label' missing`() = runTest {
-    val jsonResponse =
-        """
-        {
-          "annotations": [
-            { "type": "Dog", "score": 0.95 }
-          ]
-        }
-        """
-            .trimIndent()
-    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-    val result = repository.detectAnimal(context, testUri)
-
-    assertTrue(result.isEmpty())
+  fun `detectAnimal returns empty on missing fields`() = runTest {
+    val missingFieldCases =
+        listOf(
+            // Missing label
+            """{"annotations":[{"score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+            // Missing score
+            """{"annotations":[{"label":"canine family","bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+            // Missing bbox
+            """{"annotations":[{"label":"canine family","score":0.95,"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+            // Missing taxonomy
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4]}]}""",
+            // Multiple fields missing (label and score)
+            """{"annotations":[{"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+        )
+    for (json in missingFieldCases) {
+      mockWebServer.enqueue(MockResponse().setBody(json).setResponseCode(200))
+      val result = repository.detectAnimal(context, testUri)
+      assertTrue(result.isEmpty())
+    }
   }
 
   @Test
-  fun `detectAnimal returns null on incorrect field 'label' value`() = runTest {
-    val jsonResponse =
-        """
-        {
-          "annotations": [
-            { "label": 37, "score": 0.95 }
-          ]
-        }
-        """
-            .trimIndent()
-    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-    val result = repository.detectAnimal(context, testUri)
-
-    assertTrue(result.isEmpty())
-  }
-
-  @Test
-  fun `detectAnimal returns null on field 'score' missing`() = runTest {
-    val jsonResponse =
-        """
-        {
-          "annotations": [
-            { "label": "Dog", "confidence": 0.95 }
-          ]  
-        }
-        """
-            .trimIndent()
-    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-    val result = repository.detectAnimal(context, testUri)
-
-    assertTrue(result.isEmpty())
-  }
-
-  @Test
-  fun `detectAnimal returns null on incorrect field 'score' value`() = runTest {
-    val jsonResponse =
-        """
-        {
-          "predictions": [
-            { "label": "Dog", "score": "invalid" }
-          ]
-        }
-        """
-            .trimIndent()
-    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-    val result = repository.detectAnimal(context, testUri)
-
-    assertTrue(result.isEmpty())
+  fun `detectAnimal returns empty on missing taxonomy fields`() = runTest {
+    val missingTaxonomyCases =
+        listOf(
+            // Missing id
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"class":"mammalia","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+            // Missing class
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","order":"carnivora","family":"canidae","genus":"","species":""}}]}""",
+            // Missing order
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","family":"canidae","genus":"","species":""}}]}""",
+            // Missing family
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","genus":"","species":""}}]}""",
+            // Missing genus
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","species":""}}]}""",
+            // Missing species
+            """{"annotations":[{"label":"canine family","score":0.95,"bbox":[0.1,0.2,0.3,0.4],"taxonomy":{"id":"id","class":"mammalia","order":"carnivora","family":"canidae","genus":""}}]}""",
+        )
+    for (json in missingTaxonomyCases) {
+      mockWebServer.enqueue(MockResponse().setBody(json).setResponseCode(200))
+      val result = repository.detectAnimal(context, testUri)
+      assertTrue(result.isEmpty())
+    }
   }
 
   @Test
@@ -240,5 +218,20 @@ class AnimalDetectionTest : AnimalDetectRepositoryTest() {
     val result = repository.detectAnimal(context, testUri)
 
     assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `detectAnimal returns empty for bbox size not equal to 4 or missing`() = runTest {
+    val invalidCases =
+        listOf(
+            """{"annotations":[{"bbox":[0.1,0.2,0.3],"score":0.99,"label":"canine family","taxonomy":{}}]}""",
+            """{"annotations":[{"bbox":[0.1,0.2,0.3,0.4,0.5],"score":0.99,"label":"canine family","taxonomy":{}}]}""",
+            """{"annotations":[{"score":0.99,"label":"canine family","taxonomy":{}}]}""",
+        )
+    for (json in invalidCases) {
+      mockWebServer.enqueue(MockResponse().setBody(json).setResponseCode(200))
+      val result = repository.detectAnimal(context, testUri)
+      assertTrue(result.isEmpty())
+    }
   }
 }

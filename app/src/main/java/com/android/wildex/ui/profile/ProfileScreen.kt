@@ -32,12 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.R
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -94,7 +96,7 @@ fun ProfileScreen(
   LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
 
   Scaffold(
-      modifier = Modifier,
+      modifier = Modifier.fillMaxSize(),
       topBar = { ProfileTopAppBar(ownerProfile, onGoBack, onSettings) },
       content = { pd ->
         ProfileContent(
@@ -116,7 +118,9 @@ fun ProfileTopAppBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSetti
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
           Text(
-              text = if (ownerProfile) "My Profile" else "User Profile",
+              text =
+                  if (ownerProfile) LocalContext.current.getString(R.string.profile)
+                  else LocalContext.current.getString(R.string.user_profile),
               style =
                   MaterialTheme.typography.titleLarge.copy(
                       fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 30.sp))

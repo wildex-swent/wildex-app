@@ -223,32 +223,13 @@ dependencies {
   androidTestImplementation(libs.mockk.agent)
   androidTestImplementation(libs.mockito.android)
   androidTestImplementation(libs.mockito.kotlin)
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("io.mockk:mockk:1.13.12")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
-  // Google Identity Services (Credential Manager - Google ID Token)
-  implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
-
-  // AndroidX Credential Manager
-  //implementation("androidx.credentials:credentials:1.3.0")
-  //implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-
   // Coil
+  implementation("io.coil-kt:coil:2.6.0")
   implementation("io.coil-kt:coil-compose:2.6.0")
-
-  testReleaseImplementation(libs.compose.test.manifest)
-}
-
-tasks.withType<Test>().configureEach {
-  if (name == "testReleaseUnitTest") {
-    enabled = false
-  }
-}
-androidComponents {
-  beforeVariants(selector().withBuildType("release")) { variant ->
-    variant.enableUnitTest = false
-  }
+  testImplementation("io.coil-kt:coil:2.6.0")
+  testImplementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<Test> {

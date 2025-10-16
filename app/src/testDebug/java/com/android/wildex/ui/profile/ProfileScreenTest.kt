@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
@@ -14,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import coil.ImageLoader
 import coil.compose.LocalImageLoader
 import coil.decode.DataSource
@@ -24,12 +24,15 @@ import coil.request.SuccessResult
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.google.firebase.Timestamp
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ProfileScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
@@ -62,7 +65,7 @@ class ProfileScreenTest {
           }
           .build()
 
-  private fun setThemedContent(block: @androidx.compose.runtime.Composable () -> Unit) {
+  private fun setThemedContent(block: @Composable () -> Unit) {
     composeRule.setContent {
       val ctx = LocalContext.current
       CompositionLocalProvider(LocalImageLoader provides noOpImageLoader(ctx)) {
@@ -84,8 +87,8 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).performClick()
 
-    assertEquals(1, back)
-    assertEquals(1, settings)
+    Assert.assertEquals(1, back)
+    Assert.assertEquals(1, settings)
   }
 
   @Test
@@ -147,8 +150,8 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
 
-    assertEquals(0, collection)
-    assertEquals(0, friends)
+    Assert.assertEquals(0, collection)
+    Assert.assertEquals(0, friends)
   }
 
   @Test
@@ -172,8 +175,8 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
 
-    assertEquals(1, collection)
-    assertEquals(1, friends)
+    Assert.assertEquals(1, collection)
+    Assert.assertEquals(1, friends)
   }
 
   @Test
@@ -197,7 +200,7 @@ class ProfileScreenTest {
     composeRule.onNodeWithText("Achievements").performClick()
     composeRule.onNodeWithText("Map").performClick()
 
-    assertEquals(1, achievements)
-    assertEquals(1, map)
+    Assert.assertEquals(1, achievements)
+    Assert.assertEquals(1, map)
   }
 }

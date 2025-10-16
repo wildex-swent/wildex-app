@@ -47,7 +47,7 @@ private val LightColorScheme =
 fun WildexTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
   val colorScheme =
@@ -62,9 +62,12 @@ fun WildexTheme(
   val view = LocalView.current
   if (!view.isInEditMode) {
     SideEffect {
-      val window = (view.context as Activity).window
-      window.statusBarColor = colorScheme.primary.toArgb()
-      WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+      val window = (view.context as? Activity)?.window
+      if (window != null && view.isAttachedToWindow) {
+        // Set Status bar color to match the theme
+        window.statusBarColor = colorScheme.primary.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+      }
     }
   }
 

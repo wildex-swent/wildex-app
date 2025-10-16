@@ -102,12 +102,13 @@ class PostDetailsScreenViewModelTest {
             userRepository = userRepository,
             commentRepository = commentRepository,
             likeRepository = likeRepository) {
-              "uid-1"
+              "currentUserId-1"
             }
     coEvery { postsRepository.getPost("post1") } returns testPost
     coEvery { userRepository.getSimpleUser("poster1") } returns testPostSimpleAuthor
     coEvery { userRepository.getSimpleUser("commentAuthor1") } returns testCommentsAuthor
-    coEvery { userRepository.getSimpleUser("uid-1") } returns SimpleUser("uid-1", "me", "url")
+    coEvery { userRepository.getSimpleUser("currentUserId-1") } returns
+        SimpleUser("currentUserId-1", "me", "url")
     coEvery { commentRepository.getAllCommentsByPost("post1") } returns testComments
     coEvery { postsRepository.editPost(any(), any()) } just Runs
     coEvery { likeRepository.getNewLikeId() } returns "like1"
@@ -153,7 +154,6 @@ class PostDetailsScreenViewModelTest {
   @Test
   fun addLike_calls_repositories_and_updates_state() = runBlocking {
     viewModel.loadPostDetails("post1")
-    coEvery { postsRepository.getPost("post1") } returns testPost.copy(likesCount = 42)
 
     viewModel.addLike()
     mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
@@ -164,9 +164,9 @@ class PostDetailsScreenViewModelTest {
 
   @Test
   fun removeLike_calls_repositories_and_updates_state() = runBlocking {
-    coEvery { likeRepository.getLikeForPost("post1") } returns Like("like1", "post1", "uid-1")
+    coEvery { likeRepository.getLikeForPost("post1") } returns
+        Like("like1", "post1", "currentUserId-1")
     viewModel.loadPostDetails("post1")
-    coEvery { postsRepository.getPost("post1") } returns testPost.copy(likesCount = 42)
 
     viewModel.removeLike()
     mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
@@ -181,7 +181,6 @@ class PostDetailsScreenViewModelTest {
     coEvery { commentRepository.addComment(any()) } just Runs
 
     viewModel.loadPostDetails("post1")
-    coEvery { postsRepository.getPost("post1") } returns testPost.copy(commentsCount = 5)
 
     viewModel.addComment("Nice!")
     mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
@@ -195,5 +194,121 @@ class PostDetailsScreenViewModelTest {
     viewModel.loadPostDetails("post1")
     viewModel.clearErrorMsg()
     Assert.assertNull(viewModel.uiState.value.errorMsg)
+  }
+
+  @Test
+  fun commentsToCommentsUI_sets_error_on_exception() = runBlocking {
+    coEvery { userRepository.getSimpleUser("commentAuthor1") } throws Exception("fail")
+
+    viewModel.loadPostDetails("post1")
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.commentsUI.isEmpty())
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun currentUserProfilePictureURL_sets_error_on_exception() = runBlocking {
+    coEvery { userRepository.getSimpleUser("currentUserId-1") } throws Exception("fail")
+
+    viewModel.loadPostDetails("post1")
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.currentUserProfilePictureURL == "")
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun likedByCurrentUser_sets_error_on_exception() = runBlocking {
+    coEvery { likeRepository.getLikeForPost("post1") } throws Exception("fail")
+
+    viewModel.loadPostDetails("post1")
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertFalse(state.likedByCurrentUser)
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun addLike_sets_error_on_exception_for_like_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { likeRepository.addLike(any()) } throws Exception("fail")
+
+    viewModel.addLike()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun addLike_sets_error_on_exception_for_post_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
+
+    viewModel.addLike()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun removeLike_sets_error_on_exception_for_like_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { likeRepository.deleteLike(any()) } throws Exception("fail")
+    coEvery { likeRepository.getLikeForPost(any()) } returns
+        Like("like1", "post1", "currentUserId-1")
+
+    viewModel.removeLike()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun removeLike_sets_error_on_exception_for_post_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { likeRepository.deleteLike(any()) } just Runs
+    coEvery { likeRepository.getLikeForPost(any()) } returns
+        Like("like1", "post1", "currentUserId-1")
+    coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
+
+    viewModel.removeLike()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun addComment_sets_error_on_exception_for_comment_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { commentRepository.getNewCommentId() } returns "commentNew"
+    coEvery { commentRepository.addComment(any()) } throws Exception("fail")
+
+    viewModel.addComment()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
+  }
+
+  @Test
+  fun addComment_sets_error_on_exception_for_post_handling() = runBlocking {
+    viewModel.loadPostDetails("post1")
+    coEvery { commentRepository.getNewCommentId() } returns "commentNew"
+    coEvery { commentRepository.addComment(any()) } just Runs
+    coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
+
+    viewModel.addComment()
+    mainDispatcherRule.dispatcher.scheduler.advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    Assert.assertTrue(state.errorMsg!!.contains("fail"))
   }
 }

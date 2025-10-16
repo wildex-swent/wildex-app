@@ -8,12 +8,9 @@ import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentsRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
-import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -55,7 +52,7 @@ data class CommentWithAuthorUI(
 class PostDetailsScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val commentRepository: CommentsRepository,
+    private val commentRepository: CommentsRepository = RepositoryProvider.commentRepository,
     private val likeRepository: LikeRepository,
     private val currentUserId: () -> String? = { Firebase.auth.currentUser?.uid ?: "" }
 ) : ViewModel() {
@@ -80,9 +77,35 @@ class PostDetailsScreenViewModel(
         val simpleAuthor = userRepository.getSimpleUser(post.authorId)
         val comments = commentRepository.getAllCommentsByPost(postId)
 
-        //        val post = testPost // To test UI
-        //        val simpleAuthor = testPostSimpleAuthor // To test UI
-        //        val comments = testComments // Temporary until commentRepository is implemented
+        var localErrorMsg: String? = null
+        val commentsUI =
+            try {
+              commentsToCommentsUI(comments)
+            } catch (e: Exception) {
+              Log.e("PostDetailsViewModel", "Error loading comments for post id $postId", e)
+              localErrorMsg = "Failed to load comments: ${e.message}"
+              emptyList()
+            }
+
+        val currentUserId = currentUserId() ?: ""
+        val currentUserProfilePictureURL =
+            try {
+              userRepository.getSimpleUser(currentUserId).profilePictureURL
+            } catch (e: Exception) {
+              Log.e("PostDetailsViewModel", "Error loading current user data", e)
+              if (localErrorMsg == null) localErrorMsg = "Failed to load user data: ${e.message}"
+              ""
+            }
+
+        val likedByCurrentUser =
+            try {
+              likeRepository.getLikeForPost(postId) != null
+            } catch (e: Exception) {
+              Log.e("PostDetailsViewModel", "Error loading current user like", e)
+              if (localErrorMsg == null) localErrorMsg = "Failed to load user like: ${e.message}"
+              false
+            }
+
         _uiState.value =
             PostDetailsUIState(
                 postId = postId,
@@ -100,32 +123,11 @@ class PostDetailsScreenViewModel(
                 authorId = post.authorId,
                 authorUsername = simpleAuthor.username,
                 authorProfilePictureURL = simpleAuthor.profilePictureURL,
-                commentsUI =
-                    try {
-                      commentsToCommentsUI(comments)
-                    } catch (e: Exception) {
-                      Log.e("PostDetailsViewModel", "Error loading comments for post id $postId", e)
-                      setErrorMsg("Failed to load comments: ${e.message}")
-                      emptyList()
-                    },
-                currentUserId = currentUserId() ?: "",
-                currentUserProfilePictureURL =
-                    try {
-                      userRepository.getSimpleUser(currentUserId() ?: "").profilePictureURL
-                    } catch (e: Exception) {
-                      Log.e("PostDetailsViewModel", "Error loading current user data", e)
-                      setErrorMsg("Failed to load user data: ${e.message}")
-                      ""
-                    },
-                likedByCurrentUser =
-                    try {
-                      likeRepository.getLikeForPost(postId) != null
-                    } catch (e: Exception) {
-                      Log.e("PostDetailsViewModel", "Error loading current user like", e)
-                      setErrorMsg("Failed to load user like: ${e.message}")
-                      false
-                    },
-                errorMsg = null)
+                commentsUI = commentsUI,
+                currentUserId = currentUserId,
+                currentUserProfilePictureURL = currentUserProfilePictureURL,
+                likedByCurrentUser = likedByCurrentUser,
+                errorMsg = localErrorMsg)
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
         setErrorMsg("Failed to load post details: ${e.message}")
@@ -208,7 +210,6 @@ class PostDetailsScreenViewModel(
   private suspend fun commentsToCommentsUI(comments: List<Comment>): List<CommentWithAuthorUI> {
     return comments.map { comment ->
       val author = userRepository.getSimpleUser(comment.authorId)
-      // val author = testCommentsAuthor
       CommentWithAuthorUI(
           authorId = author.userId,
           authorProfilePictureUrl = author.profilePictureURL,
@@ -221,56 +222,4 @@ class PostDetailsScreenViewModel(
               })
     }
   }
-
-  val testPost =
-      Post(
-          postId = "post1",
-          authorId = "poster1",
-          pictureURL = "https://upload.wikimedia.org/wikipedia/commons/5/56/Tiger.50.jpg",
-          location = Location(37.7749, -122.4194, "India"),
-          description = "Saw this beautiful tiger during my trip!",
-          date = Timestamp.now(),
-          animalId = "Tiger",
-          likesCount = 42,
-          commentsCount = 2)
-
-  val testPostSimpleAuthor =
-      SimpleUser(
-          userId = "poster1",
-          username = "tiger_lover",
-          profilePictureURL =
-              "https://vectorportal.com/storage/d5YN3OWWLMAJMqMZZJsITZT6bUniD0mbd2HGVNkB.jpg")
-  val testCommentsAuthor =
-      SimpleUser(
-          userId = "commentAuthor1",
-          username = "joe34",
-          profilePictureURL =
-              "https://vectorportal.com/storage/KIygRdXXMVXBs09f42hJ4VWOYVZIX9WdhOJP7Rf4.jpg")
-  val testComments =
-      listOf(
-          Comment(
-              commentId = "comment1",
-              postId = "post1",
-              authorId = "commentAuthor1",
-              text = "Great post!",
-              date = Timestamp.now()),
-          Comment(
-              commentId = "comment2",
-              postId = "post1",
-              authorId = "commentAuthor1",
-              text = "Thanks for sharing!",
-              date = Timestamp.now()),
-          Comment(
-              commentId = "comment3",
-              postId = "post1",
-              authorId = "commentAuthor1",
-              text = "It's beautiful!",
-              date = Timestamp.now()),
-          Comment(
-              commentId = "comment4",
-              postId = "post1",
-              authorId = "commentAuthor1",
-              text = "Would love to see it in person.",
-              date = Timestamp.now()),
-      )
 }

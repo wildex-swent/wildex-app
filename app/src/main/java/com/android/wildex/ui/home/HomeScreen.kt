@@ -27,11 +27,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +43,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.animal.Animal
@@ -58,77 +60,9 @@ import com.android.wildex.ui.home.HomeScreenTestTags.POST_COMMENT
 import com.android.wildex.ui.home.HomeScreenTestTags.POST_LIKE
 import com.android.wildex.ui.home.HomeScreenTestTags.POST_MORE_INFO
 import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
-import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
-
-// TODO: Remove those hardcoded values
-val Crimson = Color(112, 38, 50)
-val WildexGreen = Color(0xFF082C0B)
-val user =
-    User(
-        userId = "<user>",
-        username = "<username>",
-        name = "<name>",
-        surname = "<surname>",
-        bio = "<bio>",
-        profilePictureURL =
-            "https://www.shutterstock.com/image-photo/" +
-                "handsome-happy-african-american-bearded-600nw-2460702995.jpg",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "<country>",
-        friendsCount = 0,
-        animalsId = emptyList(),
-        animalsCount = 0,
-        achievementsId = emptyList(),
-        achievementsCount = 0,
-    )
-val mockPost =
-    Post(
-        postId = "<post>",
-        authorId = "<name>",
-        pictureURL =
-            "https://hips.hearstapps.com/hmg-prod/images/" +
-                "cute-baby-animals-1558535060.jpg?crop=0.752xw:1.00xh;0.125xw,0&resize=640:*",
-        location = Location(0.0, 0.0),
-        date = Timestamp.now(),
-        animalId = "<animal>",
-        likesCount = 0,
-        commentsCount = 0)
-val postAuthor =
-    User(
-        userId = "",
-        username = "<username>",
-        name = "<name>",
-        surname = "<surname>",
-        bio = "<bio>",
-        profilePictureURL =
-            "https://paulhollandphotography.com/cdn/shop/articles/4713_Individual_" +
-                "Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c.jpg?v=1743534144&width=1500",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "<country>",
-        friendsCount = 0,
-        animalsId = emptyList(),
-        animalsCount = 0,
-        achievementsId = emptyList(),
-        achievementsCount = 0,
-    )
-val animal =
-    Animal(
-        animalId = "<animal>",
-        pictureURL = "https://cdn.britannica.com/16/234216-050-C66F8665/beagle-hound-dog.jpg",
-        name = "<name>",
-        species = "<species>",
-        description = "<description>",
-    )
-
-fun createMockPosts(size: Int): List<Post> {
-  return List(size) { mockPost }
-}
-// TODO: End
 
 object HomeScreenTestTags {
   const val NO_POST = "HomeScreenNoPost"
@@ -141,13 +75,49 @@ object HomeScreenTestTags {
 }
 
 @Composable
-fun HomeScreen(size: Int) {
-  // TODO: import user
-  // TODO: import posts
-  val posts = createMockPosts(size)
+fun HomeScreen(
+    homeScreenViewModel: HomeScreenViewModel = viewModel(),
+    testEmptyPosts: Boolean = false
+) {
+  val uiState by homeScreenViewModel.uiState.collectAsState()
+
+  // TODO: use uiState.user
+  val user =
+      User(
+          userId = "",
+          username = "<username>",
+          name = "<name>",
+          surname = "<surname>",
+          bio = "<bio>",
+          profilePictureURL =
+              "https://paulhollandphotography.com/cdn/shop/articles/4713_Individual_" +
+                  "Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c.jpg?v=1743534144&width=1500",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.now(),
+          country = "<country>",
+          friendsCount = 0)
+
+  // TODO: use uiState.posts
+  var posts =
+      List(1) {
+        Post(
+            postId = "<post>",
+            authorId = "<name>",
+            pictureURL =
+                "https://hips.hearstapps.com/hmg-prod/images/" +
+                    "cute-baby-animals-1558535060.jpg?crop=0.752xw:1.00xh;0.125xw,0&resize=640:*",
+            location = Location(0.0, 0.0),
+            date = Timestamp.now(),
+            animalId = "<animal>",
+            likesCount = 0,
+            commentsCount = 0)
+      }
+  if (testEmptyPosts) posts = emptyList<Post>()
+
+  LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
 
   Scaffold(
-      topBar = { WildexTopAppBar() },
+      topBar = { WildexTopAppBar(user) },
       bottomBar = { /* TODO: BottomAppBar */},
       content = { pd ->
         if (posts.isEmpty()) {
@@ -160,7 +130,7 @@ fun HomeScreen(size: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WildexTopAppBar() {
+fun WildexTopAppBar(user: User) {
   TopAppBar(
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -171,7 +141,7 @@ fun WildexTopAppBar() {
                       fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 30.sp))
         }
       },
-      modifier = Modifier.border(1.dp, WildexGreen).shadow(5.dp),
+      modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary).shadow(5.dp),
       navigationIcon = {
         IconButton(
             onClick = { /* TODO: Navigate to Notifications */},
@@ -190,13 +160,16 @@ fun WildexTopAppBar() {
                   model = user.profilePictureURL,
                   contentDescription = "Profile picture",
                   modifier =
-                      Modifier.size(40.dp).clip(CircleShape).border(1.dp, WildexGreen, CircleShape),
+                      Modifier.size(40.dp)
+                          .clip(CircleShape)
+                          .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
                   contentScale = ContentScale.Crop)
             }
       },
       colors =
           TopAppBarDefaults.topAppBarColors(
-              titleContentColor = WildexGreen, navigationIconContentColor = WildexGreen))
+              titleContentColor = MaterialTheme.colorScheme.primary,
+              navigationIconContentColor = MaterialTheme.colorScheme.primary))
 }
 
 @Composable
@@ -208,11 +181,11 @@ fun NoPostsView() {
         Icon(
             painter = painterResource(R.drawable.nothing_found),
             contentDescription = "Nothing Found",
-            tint = WildexGreen,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(100.dp).testTag(NO_POST))
         Text(
             text = "No nearby posts.\n Start posting...",
-            color = WildexGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             fontSize = 25.sp)
       }
@@ -224,10 +197,7 @@ fun PostsView(posts: List<Post>, pd: PaddingValues) {
       modifier = Modifier.fillMaxSize().padding(pd),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Top) {
-        items(posts.size) { index ->
-          // TODO: import postAuthor
-          PostItem(post = posts[index])
-        }
+        items(posts.size) { index -> PostItem(post = posts[index]) }
       }
 }
 
@@ -239,9 +209,9 @@ fun PostItem(post: Post) {
       colors =
           CardColors(
               containerColor = Color.White,
-              contentColor = WildexGreen,
-              disabledContainerColor = WildexGreen,
-              disabledContentColor = WildexGreen),
+              contentColor = MaterialTheme.colorScheme.primary,
+              disabledContainerColor = MaterialTheme.colorScheme.primary,
+              disabledContentColor = MaterialTheme.colorScheme.primary),
       elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)) {
         Column {
           PostHeader(post)
@@ -253,11 +223,37 @@ fun PostItem(post: Post) {
 
 @Composable
 fun PostHeader(post: Post) {
+  // TODO: import author
+  val author =
+      User(
+          userId = "",
+          username = "<username>",
+          name = "<name>",
+          surname = "<surname>",
+          bio = "<bio>",
+          profilePictureURL =
+              "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
+                  "social-media-profile-photos.jpg",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.now(),
+          country = "<country>",
+          friendsCount = 0)
+
+  // TODO: import animal
+  val animal =
+      Animal(
+          animalId = "<animal>",
+          pictureURL = "https://cdn.britannica.com/16/234216-050-C66F8665/beagle-hound-dog.jpg",
+          name = "<name>",
+          species = "<species>",
+          description = "<description>",
+      )
+
   Row(
       modifier = Modifier.fillMaxWidth().padding(15.dp),
       verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
-            model = postAuthor.profilePictureURL,
+            model = author.profilePictureURL,
             contentDescription = "Author profile picture",
             modifier = Modifier.size(50.dp).clip(CircleShape).testTag(POST_AUTHOR_PICTURE))
 
@@ -265,7 +261,7 @@ fun PostHeader(post: Post) {
 
         Column {
           Text(
-              text = "${postAuthor.name} saw ${animal.name}",
+              text = "${author.name} saw ${animal.name}",
               fontWeight = FontWeight.Bold,
               fontSize = 20.sp)
           Text(
@@ -274,7 +270,7 @@ fun PostHeader(post: Post) {
                       .format(post.date.toDate()),
               fontWeight = FontWeight.SemiBold,
               fontSize = 15.sp,
-              color = Crimson)
+              color = MaterialTheme.colorScheme.tertiary)
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -285,7 +281,7 @@ fun PostHeader(post: Post) {
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                   contentDescription = "More Info",
-                  tint = Crimson,
+                  tint = MaterialTheme.colorScheme.tertiary,
                   modifier = Modifier.size(40.dp))
             }
       }
@@ -316,13 +312,13 @@ fun PostActions(post: Post) {
                 imageVector = Icons.Default.Favorite,
                 contentDescription = "Likes",
                 modifier = Modifier.size(30.dp),
-                tint = Crimson)
+                tint = MaterialTheme.colorScheme.tertiary)
           }
           Text(
               text = "${post.likesCount} likes",
               fontWeight = FontWeight.SemiBold,
               fontSize = 20.sp,
-              color = Crimson)
+              color = MaterialTheme.colorScheme.tertiary)
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -331,19 +327,19 @@ fun PostActions(post: Post) {
                 painter = painterResource(R.drawable.comment_icon),
                 contentDescription = "Comments",
                 modifier = Modifier.size(30.dp),
-                tint = Crimson)
+                tint = MaterialTheme.colorScheme.tertiary)
           }
           Text(
               text = "${post.commentsCount} comments",
               fontWeight = FontWeight.SemiBold,
               fontSize = 20.sp,
-              color = Crimson)
+              color = MaterialTheme.colorScheme.tertiary)
         }
       }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun HomeScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen(3) } }
-}
+  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen(HomeScreenViewModel()) } }
+}*/

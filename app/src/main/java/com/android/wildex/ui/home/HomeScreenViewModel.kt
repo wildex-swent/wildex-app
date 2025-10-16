@@ -40,7 +40,9 @@ class HomeScreenViewModel(
           name = "Default",
           surname = "User",
           bio = "This is...",
-          profilePictureURL = "https://example.com/default-profile-pic.png",
+          profilePictureURL =
+              "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
+                  "social-media-profile-photos.jpg",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Nowhere",

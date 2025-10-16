@@ -10,10 +10,6 @@ plugins {
   id("jacoco")
 }
 
-jacoco {
-  toolVersion = "0.8.11"
-}
-
 android {
   namespace = "com.android.wildex"
   compileSdk = 34
@@ -53,7 +49,6 @@ android {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
-      enableUnitTestCoverage = true
     }
 
     debug {
@@ -66,7 +61,7 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.11" }
+  testCoverage { jacocoVersion = "0.8.8" }
 
   buildFeatures {
     compose = true
@@ -81,7 +76,6 @@ android {
   }
 
   kotlinOptions { jvmTarget = "11" }
-
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -108,13 +102,19 @@ android {
     }
   }
 
-  // Redirige src/test/* vers testDebug pour isoler Robolectric des builds Release
+  // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
+  // (test)
+  // The next lines transfers the src/test/* from shared to the testDebug one
+  //
+  // This prevent errors from occurring during unit tests
   sourceSets.getByName("testDebug") {
     val test = sourceSets.getByName("test")
+
     java.setSrcDirs(test.java.srcDirs)
     res.setSrcDirs(test.res.srcDirs)
     resources.setSrcDirs(test.resources.srcDirs)
   }
+
   sourceSets.getByName("test") {
     java.setSrcDirs(emptyList<File>())
     res.setSrcDirs(emptyList<File>())
@@ -128,15 +128,19 @@ sonar {
     property("sonar.projectName", "wildex-app")
     property("sonar.organization", "wildex-swent")
     property("sonar.host.url", "https://sonarcloud.io")
+    // Comma-separated paths to the various directories containing the *.xml JUnit report files.
+    // Each path may be absolute or relative to the project base directory.
     property(
       "sonar.junit.reportPaths",
-      "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest," +
-              "${project.layout.buildDirectory.get()}/test-results/testReleaseUnitTest",
+      "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
     )
+    // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
+    // have to be changed too.
     property(
       "sonar.androidLint.reportPaths",
       "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
+    // Paths to JaCoCo XML coverage report files.
     property(
       "sonar.coverage.jacoco.xmlReportPaths",
       "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
@@ -168,9 +172,13 @@ dependencies {
 
   implementation(libs.compose.ui)
   implementation(libs.compose.ui.graphics)
+  // Material Design 3
   implementation(libs.compose.material3)
+  // Integration with activities
   implementation(libs.compose.activity)
+  // Integration with ViewModels
   implementation(libs.compose.viewmodel)
+  // Android Studio Preview support
   implementation(libs.compose.preview)
   debugImplementation(libs.compose.tooling)
 
@@ -221,29 +229,24 @@ dependencies {
   // Google Identity Services (Credential Manager - Google ID Token)
   implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
+  // AndroidX Credential Manager
+  //implementation("androidx.credentials:credentials:1.3.0")
+  //implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+
   // Coil
   implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 tasks.withType<Test> {
-  systemProperty("ro.build.fingerprint", "robolectric-wildex")
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true
     excludes = listOf("jdk.internal.*")
   }
-  // Sécuriser Release: ignorer tout test UI/Compose s'il était découvert
-  if (name.contains("Release")) {
-    exclude("**/ui/**")
-    exclude("**/*Compose*")
-    exclude("**/*ProfileScreenTest*")
-  }
 }
 
-// Rapport JaCoCo: choisir un seul variant (debug sinon release) et n'utiliser que ses *.exec
 tasks.register("jacocoTestReport", JacocoReport::class) {
-  // Exécute les tests si le CI invoque directement cette tâche
-  dependsOn("testDebugUnitTest")
+  mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest")
 
   reports {
     xml.required = true
@@ -258,73 +261,23 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       "**/Manifest*.*",
       "**/*Test*.*",
       "android/**/*.*",
-      "META-INF/*.kotlin_module",
-      "META-INF/**",
     )
 
-  val buildDirFile = project.layout.buildDirectory.get().asFile
+  val debugTree =
+    fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+      exclude(fileFilter)
+    }
 
-  // Dossiers classes par variant
-  val kotlinDebug = File(buildDirFile, "tmp/kotlin-classes/debug")
-  val javaDebug = File(buildDirFile, "intermediates/javac/debug/classes")
-  val kotlinRelease = File(buildDirFile, "tmp/kotlin-classes/release")
-  val javaRelease = File(buildDirFile, "intermediates/javac/release/classes")
-
-  // Choix du variant: debug si dispo, sinon release
-  val useDebug = kotlinDebug.exists() || javaDebug.exists()
-  val useRelease = !useDebug && (kotlinRelease.exists() || javaRelease.exists())
-
-  val classTrees = mutableListOf<FileTree>()
-  if (useDebug) {
-    if (kotlinDebug.exists()) classTrees += fileTree(kotlinDebug) { include("**/*.class"); exclude(fileFilter) }
-    if (javaDebug.exists()) classTrees += fileTree(javaDebug) { include("**/*.class"); exclude(fileFilter) }
-  } else if (useRelease) {
-    if (kotlinRelease.exists()) classTrees += fileTree(kotlinRelease) { include("**/*.class"); exclude(fileFilter) }
-    if (javaRelease.exists()) classTrees += fileTree(javaRelease) { include("**/*.class"); exclude(fileFilter) }
-    dependsOn("testReleaseUnitTest")
-  }
-  classDirectories.setFrom(classTrees)
-
-  // Sources
-  val srcDirs = listOf(
-    file("${project.layout.projectDirectory}/src/main/java"),
-    file("${project.layout.projectDirectory}/src/main/kotlin")
-  ).filter { it.exists() }
-  sourceDirectories.setFrom(files(srcDirs))
-
-  // Données de couverture: seulement le variant choisi, exclut volontairement les .ec
-  val execFiles = mutableListOf<File>()
-  if (useDebug) {
-    listOf(
-      "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-      "jacoco/testDebugUnitTest.exec"
-    ).mapTo(execFiles) { File(buildDirFile, it) }
-  } else if (useRelease) {
-    listOf(
-      "outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec",
-      "jacoco/testReleaseUnitTest.exec"
-    ).mapTo(execFiles) { File(buildDirFile, it) }
-  }
-  executionData.setFrom(files(execFiles.filter { it.exists() && it.length() > 0 }))
-
-  // Ne génère le rapport que s'il y a classes et données alignées
-  onlyIf {
-    classDirectories.files.isNotEmpty() && executionData.files.isNotEmpty()
-  }
-
-  doFirst {
-    logger.lifecycle("Variant: ${if (useDebug) "debug" else if (useRelease) "release" else "none"}")
-    logger.lifecycle("JaCoCo exec files: ${executionData.files}")
-    logger.lifecycle("JaCoCo class dirs: ${classDirectories.files}")
-  }
+  val mainSrc = "${project.layout.projectDirectory}/src/main/java"
+  sourceDirectories.setFrom(files(mainSrc))
+  classDirectories.setFrom(files(debugTree))
+  executionData.setFrom(
+    fileTree(project.layout.buildDirectory.get()) {
+      include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+      include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+    }
+  )
 }
-
-// Générer JaCoCo après les tests, sans changer le pipeline
-tasks.matching { it.name == "testDebugUnitTest" || it.name == "testReleaseUnitTest" }
-  .configureEach { finalizedBy("jacocoTestReport") }
-
-// Sonar lit un rapport JaCoCo à jour
-tasks.named("sonarqube").configure { dependsOn("jacocoTestReport") }
 
 configurations.forEach { configuration ->
   // Exclude protobuf-lite from all configurations

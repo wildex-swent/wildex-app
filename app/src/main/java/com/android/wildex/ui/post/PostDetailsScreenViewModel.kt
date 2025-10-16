@@ -28,7 +28,7 @@ data class PostDetailsUIState(
     val location: String = "",
     val description: String = "",
     val date: String = "",
-    val animalId: Id = "",
+    val animalName: Id = "",
     val likesCount: Int = 0,
     val commentsCount: Int = 0,
     val authorId: Id = "",
@@ -117,7 +117,7 @@ class PostDetailsScreenViewModel(
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                       return@let dateFormat.format(post.date.toDate())
                     },
-                animalId = post.animalId,
+                animalName = post.animalId, // TODO replace with animal name once repository is up
                 likesCount = post.likesCount,
                 commentsCount = post.commentsCount,
                 authorId = post.authorId,

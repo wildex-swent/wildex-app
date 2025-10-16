@@ -51,10 +51,12 @@ import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 
-object ProfileScreenTestTags {
-  const val POSTER_PROFILE_PICTURE = "poster_profile_picture"
-  const val COMMENT_PROFILE_PICTURE = "comment_profile_picture_"
-  const val CURRENT_USER_PROFILE_PICTURE = "current_user_profile_picture"
+fun testTagForProfilePicture(profileId: String, role: String = ""): String {
+  return if (role.isEmpty()) {
+    "ProfilePicture_$profileId"
+  } else {
+    "ProfilePicture_${role}_$profileId"
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,7 +107,7 @@ fun PostDetailsScreen(
                   authorId = postDetailsUIState.authorId,
                   authorProfilePictureURL = postDetailsUIState.authorProfilePictureURL,
                   authorUserName = postDetailsUIState.authorUsername,
-                  animalId = postDetailsUIState.animalId,
+                  animalName = postDetailsUIState.animalName,
                   date = postDetailsUIState.date,
                   location = postDetailsUIState.location,
                   likedByCurrentUser = postDetailsUIState.likedByCurrentUser,
@@ -159,7 +161,7 @@ fun PostInfoBar(
     authorId: Id = "",
     authorProfilePictureURL: URL = "",
     authorUserName: String = "",
-    animalId: Id = "",
+    animalName: Id = "",
     date: String = "",
     location: String = "",
     likedByCurrentUser: Boolean = false,
@@ -172,9 +174,10 @@ fun PostInfoBar(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         ClickableProfilePicture(
-            modifier = Modifier.size(64.dp).testTag(ProfileScreenTestTags.POSTER_PROFILE_PICTURE),
-            profilePictureURL = authorProfilePictureURL,
+            modifier = Modifier.size(64.dp),
             profileId = authorId,
+            profilePictureURL = authorProfilePictureURL,
+            role = "author",
             onProfile = onProfile)
 
         Column(
@@ -185,7 +188,7 @@ fun PostInfoBar(
                   text = "$authorUserName saw a",
               )
               Text(
-                  text = animalId,
+                  text = animalName,
                   color = MaterialTheme.colorScheme.primary,
               )
               Text(
@@ -216,18 +219,16 @@ fun PostInfoBar(
             horizontalAlignment = Alignment.CenterHorizontally) {
               IconButton(
                   onClick = {
-                    if (likedByCurrentUser) postDetailsScreenViewModel.addLike()
+                    if (!likedByCurrentUser) postDetailsScreenViewModel.addLike()
                     else postDetailsScreenViewModel.removeLike()
                   }) {
                     Icon(
                         imageVector =
                             if (likedByCurrentUser) Icons.Filled.Favorite
                             else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (likedByCurrentUser) "Unlike" else "Like",
+                        contentDescription = "Like status",
                         modifier = Modifier.size(40.dp),
-                        tint =
-                            if (likedByCurrentUser) MaterialTheme.colorScheme.tertiary
-                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        tint = MaterialTheme.colorScheme.tertiary)
                   }
 
               Text(text = likesCount.toString(), color = MaterialTheme.colorScheme.tertiary)
@@ -276,11 +277,10 @@ fun Comment(
   Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary).padding(14.dp)) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
       ClickableProfilePicture(
-          modifier =
-              Modifier.size(48.dp)
-                  .testTag(ProfileScreenTestTags.COMMENT_PROFILE_PICTURE + commentUI.authorId),
+          modifier = Modifier.size(48.dp),
           profileId = commentUI.authorId,
           profilePictureURL = commentUI.authorProfilePictureUrl,
+          role = "commenter",
           onProfile = onProfile)
 
       Spacer(modifier = Modifier.width(12.dp))
@@ -320,11 +320,10 @@ fun CommentInput(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically) {
               ClickableProfilePicture(
-                  modifier =
-                      Modifier.size(56.dp)
-                          .testTag(ProfileScreenTestTags.CURRENT_USER_PROFILE_PICTURE),
+                  modifier = Modifier.size(56.dp),
                   profileId = userId,
                   profilePictureURL = userProfilePictureURL,
+                  role = "comment_input",
                   onProfile = onProfile)
 
               Spacer(modifier = Modifier.width(8.dp))
@@ -361,12 +360,15 @@ fun ClickableProfilePicture(
     modifier: Modifier = Modifier,
     profileId: String = "",
     profilePictureURL: URL = "",
+    role: String = "",
     onProfile: (Id) -> Unit = {}
 ) {
   IconButton(
       onClick = { onProfile(profileId) },
       modifier =
-          modifier.background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)) {
+          modifier
+              .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
+              .testTag(testTagForProfilePicture(profileId, role))) {
         AsyncImage(
             model = profilePictureURL,
             contentDescription = "Profile picture",
@@ -377,9 +379,3 @@ fun ClickableProfilePicture(
             contentScale = ContentScale.Crop)
       }
 }
-
-// @Preview
-// @Composable
-// fun ProfileScreenPreview() {
-//  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { PostDetailsScreen("post1") } }
-// }

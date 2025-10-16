@@ -516,4 +516,79 @@ class ProfileScreenTest {
     Assert.assertEquals(4, collection)
     Assert.assertEquals(3, friends)
   }
+
+  @Test
+  fun profileTopAppBar_defaults_to_owner_and_shows_settings() {
+    var back = 0
+    var settings = 0
+
+    setThemedContent { ProfileTopAppBar(onGoBack = { back++ }, onSettings = { settings++ }) }
+
+    composeRule.onNodeWithText("My Profile").assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed().performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
+
+    Assert.assertEquals(1, settings)
+    Assert.assertEquals(1, back)
+  }
+
+  @Test
+  fun profileImageAndName_uses_default_values() {
+    setThemedContent { ProfileImageAndName() }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Name Surname")
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME).assertTextContains("Username")
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_COUNTRY).assertTextContains("Country")
+  }
+
+  @Test
+  fun profileDescription_uses_default_text_and_tag() {
+    setThemedContent { ProfileDescription() }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
+    composeRule.onNodeWithText("Bio:...").assertIsDisplayed()
+  }
+
+  @Test
+  fun profileAnimals_and_friends_defaults_render_and_click_when_owner() {
+    setThemedContent {
+      androidx.compose.foundation.layout.Column {
+        ProfileAnimals(ownerProfile = true)
+        ProfileFriends(ownerProfile = true)
+      }
+    }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).assertIsDisplayed().performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).assertIsDisplayed().performClick()
+
+    composeRule.onNodeWithText("Animals").assertIsDisplayed()
+    composeRule.onNodeWithText("Friends").assertIsDisplayed()
+  }
+
+  @Test
+  fun profileAchievements_and_map_defaults_render_and_click() {
+    setThemedContent {
+      androidx.compose.foundation.layout.Column {
+        ProfileAchievements()
+        ProfileMap()
+      }
+    }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
+    composeRule.onNodeWithText("Achievements").assertIsDisplayed().performClick()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
+    composeRule.onNodeWithText("Map").assertIsDisplayed().performClick()
+  }
+
+  @Test
+  fun profileFriendRequest_default_button_shown_and_clickable() {
+    setThemedContent { ProfileFriendRequest() }
+
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
+        .assertIsDisplayed()
+        .performClick()
+    composeRule.onNodeWithText("Send Friend Request").assertIsDisplayed()
+  }
 }

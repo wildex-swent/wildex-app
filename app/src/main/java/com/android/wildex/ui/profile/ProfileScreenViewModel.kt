@@ -29,7 +29,6 @@ class ProfileScreenViewModel(
     private val currentUserId: () -> String? = {
       com.google.firebase.ktx.Firebase.auth.currentUser?.uid
     },
-    private val uid: String = "",
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(ProfileUIState())
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
@@ -49,34 +48,34 @@ class ProfileScreenViewModel(
           country = "Nowhere",
           friendsCount = 0)
 
-  fun refreshUIState() {
+  fun refreshUIState(userId: String) {
     viewModelScope.launch {
       try {
-        val user = fetchUser()
-        val achievements = fetchAchievements()
-        _uiState.value = ProfileUIState(user, checkIsUserOwner(), achievements)
+        val user = fetchUser(userId)
+        val achievements = fetchAchievements(userId)
+        _uiState.value = ProfileUIState(user, checkIsUserOwner(userId), achievements)
       } catch (e: Exception) {
         Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
       }
     }
   }
 
-  private fun checkIsUserOwner(): Boolean {
-    return uid == currentUserId()
+  private fun checkIsUserOwner(userId: String): Boolean {
+    return userId == currentUserId()
   }
 
-  private suspend fun fetchUser(): User? {
+  private suspend fun fetchUser(userId: String): User? {
     return try {
-      userRepository.getUser(uid)
+      userRepository.getUser(userId)
     } catch (e: Exception) {
       Log.e("ProfileScreenViewModel", "Error fetching user", e)
       defaultUser
     }
   }
 
-  private suspend fun fetchAchievements(): List<Achievement> {
+  private suspend fun fetchAchievements(userId: String): List<Achievement> {
     return try {
-      achievementRepository.getAllAchievementsByUser(uid)
+      achievementRepository.getAllAchievementsByUser(userId)
     } catch (e: Exception) {
       Log.e("ProfileScreenViewModel", "Error fetching achievements", e)
       emptyList()

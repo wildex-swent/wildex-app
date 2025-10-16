@@ -1,3 +1,4 @@
+// kotlin
 package com.android.wildex.ui.profile
 
 import com.android.wildex.model.achievement.Achievement
@@ -11,7 +12,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -39,7 +39,7 @@ class ProfileScreenViewModelTest {
           country = "X",
           friendsCount = 1)
 
-  private val u2 = u1.copy(userId = "uid-1", username = "user_one_2", friendsCount = 42)
+  private val u2 = u1.copy(username = "user_one_2", friendsCount = 42)
 
   private val a1: Achievement = mockk()
   private val a2: Achievement = mockk()
@@ -52,11 +52,8 @@ class ProfileScreenViewModelTest {
         ProfileScreenViewModel(
             userRepository = userRepository,
             achievementRepository = achievementsRepository,
-            currentUserId = { "uid-1" },
-            uid = "uid-1")
+            currentUserId = { "uid-1" })
   }
-
-  @After fun tearDown() {}
 
   @Test
   fun viewModel_initializes_default_UI_state() {
@@ -72,7 +69,7 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
 
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -85,17 +82,17 @@ class ProfileScreenViewModelTest {
   @Test
   fun refreshUIState_ownerFalse_whenUidDiffersFromCurrent() {
     mainDispatcherRule.runTest {
+      // nouveau ViewModel avec un currentUserId différent
       viewModel =
           ProfileScreenViewModel(
               userRepository = userRepository,
               achievementRepository = achievementsRepository,
-              currentUserId = { "someone-else" },
-              uid = "uid-1")
+              currentUserId = { "someone-else" })
 
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
 
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -111,7 +108,7 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
 
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -128,7 +125,7 @@ class ProfileScreenViewModelTest {
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } throws
           RuntimeException("x")
 
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -142,12 +139,12 @@ class ProfileScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       coEvery { userRepository.getUser("uid-1") } returns u2
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a2)
-      viewModel.refreshUIState()
+      viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
       val s = viewModel.uiState.value

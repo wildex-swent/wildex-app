@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
@@ -72,6 +71,7 @@ object ProfileScreenTestTags {
   const val PROFILE_USERNAME = "ProfileScreenSurname"
   const val PROFILE_COUNTRY = "ProfileScreenCountry"
   const val PROFILE_DESCRIPTION = "ProfileScreenBio"
+  const val FRIEND_REQUEST = "ProfileScreenFriendRequest"
 }
 
 @Composable
@@ -84,21 +84,29 @@ fun ProfileScreen(
     onAchievements: (Id) -> Unit = {},
     onFriends: (Id) -> Unit = {},
     onMap: (Id) -> Unit = {},
+    onFriendRequest: (Id) -> Unit = {},
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val user = uiState.user
   val achievements = uiState.achievements
-  val ownerProfile: Boolean = true
+  val ownerProfile: Boolean = uiState.isUserOwner
 
   // Fetch user infos when the screen is recomposed
-  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState() }
+  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
 
   Scaffold(
       modifier = Modifier,
       topBar = { ProfileTopAppBar(ownerProfile, onGoBack, onSettings) },
       content = { pd ->
         ProfileContent(
-            pd, user ?: defaultUser, ownerProfile, onAchievements, onCollection, onMap, onFriends)
+            pd,
+            user ?: defaultUser,
+            ownerProfile,
+            onAchievements,
+            onCollection,
+            onMap,
+            onFriends,
+            onFriendRequest)
       })
 }
 
@@ -123,11 +131,13 @@ fun ProfileTopAppBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSetti
             }
       },
       actions = {
-        IconButton(
-            modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS),
-            onClick = { onSettings() }) {
-              Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
-            }
+        if (ownerProfile) {
+          IconButton(
+              modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS),
+              onClick = { onSettings() }) {
+                Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+              }
+        }
       },
   /*colors =
             TopAppBarDefaults.topAppBarColors(
@@ -143,6 +153,7 @@ fun ProfileContent(
     onCollection: (Id) -> Unit,
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
+    onFriendRequest: (Id) -> Unit,
 ) {
   val id = user.userId
   Column(modifier = Modifier.fillMaxSize().padding(pd)) {
@@ -160,6 +171,9 @@ fun ProfileContent(
     }
     ProfileAchievements(id, onAchievements)
     ProfileMap(id, onMap)
+    if (!ownerProfile) {
+      ProfileFriendRequest(id, onFriendRequest)
+    }
   }
 }
 
@@ -273,6 +287,15 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}) {
       }
 }
 
+@Composable
+fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
+  Button(
+      modifier = Modifier.testTag(ProfileScreenTestTags.FRIEND_REQUEST),
+      onClick = { onFriendRequest(id) }) {
+        Text(text = "Send Friend Request")
+      }
+}
+
 @Preview
 @Composable
 fun ProfileImageAndNamePreview() {
@@ -308,8 +331,3 @@ fun ProfileAchievementsPreview() {
 fun ProfileMapPreview(id: Id = "", onMap: (Id) -> Unit = {}) {
   ProfileMap(id, onMap)
 }
-/*@Preview
-@Composable
-fun ProfileScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { ProfileScreen(userUid = "0") } }
-}*/

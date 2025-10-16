@@ -3,13 +3,14 @@ package com.android.wildex.ui.profile
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -34,7 +35,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class ProfileScreenTest {
 
-  @get:Rule val composeRule = createComposeRule()
+  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
   private fun sampleUser() =
       User(
@@ -45,7 +46,7 @@ class ProfileScreenTest {
           bio = "Bio of Jane",
           profilePictureURL = "https://example.com/pic.jpg",
           userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
+          creationDate = Timestamp(0, 0),
           country = "Switzerland",
           friendsCount = 42)
 

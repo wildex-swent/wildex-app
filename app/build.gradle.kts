@@ -22,17 +22,18 @@ android {
   }
 
   val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
+  val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
 
   defaultConfig {
     applicationId = "com.android.wildex"
     minSdk = 28
-    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
     buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
+    buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
   }
 
   buildTypes {
@@ -61,7 +62,7 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.8" }
+  testCoverage { jacocoVersion = "0.8.11" }
 
   buildFeatures {
     compose = true

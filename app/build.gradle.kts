@@ -107,19 +107,13 @@ android {
     }
   }
 
-  // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
-  // (test)
-  // The next lines transfers the src/test/* from shared to the testDebug one
-  //
-  // This prevent errors from occurring during unit tests
+  // Redirige src/test/* vers testDebug pour isoler Robolectric des builds Release
   sourceSets.getByName("testDebug") {
     val test = sourceSets.getByName("test")
-
     java.setSrcDirs(test.java.srcDirs)
     res.setSrcDirs(test.res.srcDirs)
     resources.setSrcDirs(test.resources.srcDirs)
   }
-
   sourceSets.getByName("test") {
     java.setSrcDirs(emptyList<File>())
     res.setSrcDirs(emptyList<File>())
@@ -133,23 +127,18 @@ sonar {
     property("sonar.projectName", "wildex-app")
     property("sonar.organization", "wildex-swent")
     property("sonar.host.url", "https://sonarcloud.io")
-    // Comma-separated paths to the various directories containing the *.xml JUnit report files.
-    // Each path may be absolute or relative to the project base directory.
     property(
-        "sonar.junit.reportPaths",
-        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest," +
-                "${project.layout.buildDirectory.get()}/test-results/testReleaseUnitTest",
+      "sonar.junit.reportPaths",
+      "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest," +
+              "${project.layout.buildDirectory.get()}/test-results/testReleaseUnitTest",
     )
-    // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
-    // have to be changed too.
     property(
-        "sonar.androidLint.reportPaths",
-        "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
+      "sonar.androidLint.reportPaths",
+      "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
-    // Paths to JaCoCo XML coverage report files.
     property(
-        "sonar.coverage.jacoco.xmlReportPaths",
-        "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+      "sonar.coverage.jacoco.xmlReportPaths",
+      "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
     )
   }
 }
@@ -178,13 +167,9 @@ dependencies {
 
   implementation(libs.compose.ui)
   implementation(libs.compose.ui.graphics)
-  // Material Design 3
   implementation(libs.compose.material3)
-  // Integration with activities
   implementation(libs.compose.activity)
-  // Integration with ViewModels
   implementation(libs.compose.viewmodel)
-  // Android Studio Preview support
   implementation(libs.compose.preview)
   debugImplementation(libs.compose.tooling)
 
@@ -235,10 +220,6 @@ dependencies {
   // Google Identity Services (Credential Manager - Google ID Token)
   implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
-  // AndroidX Credential Manager
-  //implementation("androidx.credentials:credentials:1.3.0")
-  //implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-
   // Coil
   implementation("io.coil-kt:coil-compose:2.6.0")
 }
@@ -249,6 +230,7 @@ tasks.withType<Test> {
     isIncludeNoLocationClasses = true
     excludes = listOf("jdk.internal.*")
   }
+  // Sécuriser Release: ignorer tout test UI/Compose s'il était découvert
   if (name.contains("Release")) {
     exclude("**/ui/**")
     exclude("**/*Compose*")
@@ -256,9 +238,10 @@ tasks.withType<Test> {
   }
 }
 
-// kotlin
+// Rapport JaCoCo: seulement les .exec/.exec.gz des tests unitaires (exclut les .ec des connected tests)
 tasks.register("jacocoTestReport", JacocoReport::class) {
-  mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest", "testReleaseUnitTest")
+  // Exécute les tests si le CI invoque directement cette tâche
+  dependsOn("testDebugUnitTest", "testReleaseUnitTest")
 
   reports {
     xml.required = true
@@ -277,7 +260,6 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       "META-INF/**",
     )
 
-  // Classes compilées (ajout uniquement si le dossier existe)
   val classDirs = mutableListOf<FileTree>()
   val debugDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug")
   val releaseDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release")
@@ -285,24 +267,20 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   if (releaseDir.exists()) classDirs += fileTree(releaseDir) { include("**/*.class"); exclude(fileFilter) }
   classDirectories.setFrom(classDirs)
 
-  // Sources
   val srcDirs = listOf(
     file("${project.layout.projectDirectory}/src/main/java"),
     file("${project.layout.projectDirectory}/src/main/kotlin")
   ).filter { it.exists() }
   sourceDirectories.setFrom(files(if (srcDirs.isEmpty()) file("${project.layout.projectDirectory}/src/main/java") else srcDirs))
 
-  // Données de couverture: ne garder que les fichiers existants
+  // Garder uniquement les données des tests unitaires
   val execFiles = fileTree(project.layout.buildDirectory.get()) {
     include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec")
     include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec.gz")
-    include("outputs/code_coverage/**/connected/*/coverage.ec")
     include("jacoco/*.exec")
-    include("**/*.ec")
-  }.files.filter { it.exists() }
+  }.files.filter { it.exists() && it.length() > 0 }
   executionData.setFrom(files(execFiles))
 
-  // Ne génère un rapport que s'il y a des classes et des données de couverture
   onlyIf {
     classDirectories.files.isNotEmpty() && executionData.files.isNotEmpty()
   }
@@ -313,8 +291,11 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 }
 
+// Générer JaCoCo après les tests, sans changer le pipeline
 tasks.matching { it.name == "testDebugUnitTest" || it.name == "testReleaseUnitTest" }
   .configureEach { finalizedBy("jacocoTestReport") }
+
+// Sonar lit un rapport JaCoCo à jour
 tasks.named("sonarqube").configure { dependsOn("jacocoTestReport") }
 
 configurations.forEach { configuration ->

@@ -1,7 +1,9 @@
 package com.android.wildex.model
 
+import com.android.wildex.HttpClientProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.achievement.UserAchievementsRepositoryFirestore
+import com.android.wildex.model.animaldetector.AnimalDetectRepository
 import com.android.wildex.model.social.CommentsRepository
 import com.android.wildex.model.social.CommentsRepositoryFirestore
 import com.android.wildex.model.social.PostsRepository
@@ -10,6 +12,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlin.getValue
 
 /** Provides a single instance of all the repository in the app. */
 object RepositoryProvider {
@@ -21,5 +24,8 @@ object RepositoryProvider {
   }
   val userAchievementsRepository: UserAchievementsRepository by lazy {
     UserAchievementsRepositoryFirestore(Firebase.firestore)
+  }
+  val animalDetectRepository: AnimalDetectRepository by lazy {
+    AnimalDetectRepository(HttpClientProvider.client)
   }
 }

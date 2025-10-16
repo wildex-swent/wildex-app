@@ -230,13 +230,13 @@ dependencies {
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
   // Coil for image loading
-  implementation("io.coil-kt:coil:2.4.0")
-  implementation("io.coil-kt:coil-compose:2.4.0")
-  testImplementation("io.coil-kt:coil:2.4.0")
-  testImplementation("io.coil-kt:coil-compose:2.4.0")
+  implementation("io.coil-kt:coil:2.6.0")
+  implementation("io.coil-kt:coil-compose:2.6.0")
+  testImplementation("io.coil-kt:coil:2.6.0")
+  testImplementation("io.coil-kt:coil-compose:2.6.0")
 
-  androidTestImplementation("io.coil-kt:coil:2.4.0")
-  androidTestImplementation("io.coil-kt:coil-compose:2.4.0")
+  androidTestImplementation("io.coil-kt:coil:2.6.0")
+  androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
 
 }
 

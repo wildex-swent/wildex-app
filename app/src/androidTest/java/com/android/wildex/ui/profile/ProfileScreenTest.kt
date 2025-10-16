@@ -591,4 +591,79 @@ class ProfileScreenTest {
         .performClick()
     composeRule.onNodeWithText("Send Friend Request").assertIsDisplayed()
   }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun profileScreen_friendRequest_multiple_clicks_passes_id_each_time() = runTest {
+    val user = sampleUser()
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo = FakeAchievementsRepo(emptyList())
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            currentUserId = { "someone-else" },
+        )
+
+    var requests = 0
+    var lastId = ""
+
+    setThemedContent {
+      ProfileScreen(
+          profileScreenViewModel = vm,
+          userUid = "u-1",
+          onFriendRequest = {
+            requests++
+            lastId = it
+          },
+      )
+    }
+
+    advanceUntilIdle()
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+
+    Assert.assertEquals(2, requests)
+    Assert.assertEquals("u-1", lastId)
+  }
+
+  @Test
+  fun profileFriendRequest_is_enabled_and_shows_default_text() {
+    setThemedContent { ProfileFriendRequest() }
+
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
+        .assertIsDisplayed()
+        .assertIsEnabled()
+        .performClick()
+
+    composeRule.onNodeWithText("Send Friend Request").assertIsDisplayed()
+  }
+
+  @Test
+  fun profileContent_friendRequest_multiple_clicks_increments_callback() {
+    val user = sampleUser()
+    var requests = 0
+
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = user,
+          ownerProfile = false,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = { requests++ },
+      )
+    }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+
+    Assert.assertEquals(2, requests)
+  }
 }

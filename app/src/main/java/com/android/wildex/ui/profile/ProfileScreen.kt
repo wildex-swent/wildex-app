@@ -138,9 +138,7 @@ fun ProfileTopAppBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSetti
               }
         }
       },
-  /*colors =
-            TopAppBarDefaults.topAppBarColors(
-                titleContentColor = WildexGreen, navigationIconContentColor = WildexGreen)*/ )
+  )
 }
 
 @Composable

@@ -5,9 +5,13 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.* // pour Modifier.testTag et autres helpers
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -265,7 +269,84 @@ class ProfileScreenTest {
     composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
   }
 
-  // ProfileScreen with viewModel
+  @Test
+  fun localImageLoader_is_provided_to_composition() {
+    setThemedContent {
+      val loader = LocalImageLoader.current
+      Text(
+          text = if (loader != null) "HAS_LOADER" else "NO_LOADER",
+          modifier = Modifier.testTag("LOADER_CHECK"))
+    }
+
+    composeRule.onNodeWithTag("LOADER_CHECK").assertTextContains("HAS_LOADER")
+  }
+
+  @Test
+  fun collection_multiple_clicks_fire_when_owner() {
+    val user = sampleUser()
+    var collectionClicks = 0
+
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = user,
+          ownerProfile = true,
+          onAchievements = {},
+          onCollection = { collectionClicks++ },
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
+      )
+    }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
+
+    Assert.assertEquals(3, collectionClicks)
+  }
+
+  // kotlin
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun profileScreen_shows_description_node_even_when_bio_empty() = runTest {
+    val user = sampleUser().copy(bio = "")
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo =
+        object : UserAchievementsRepository {
+          override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> =
+              emptyList()
+
+          override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = emptyList()
+
+          override suspend fun initializeUserAchievements(userId: String) {}
+
+          override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
+
+          override suspend fun getAchievementsCountOfUser(userId: String): Int = 0
+        }
+
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            currentUserId = { "someone-else" },
+        )
+
+    setThemedContent {
+      ProfileScreen(
+          profileScreenViewModel = vm,
+          userUid = "u-1",
+          onFriendRequest = {},
+      )
+    }
+
+    advanceUntilIdle()
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
+  }
 
   class FakeAchievementsRepo(private val achievements: List<Achievement> = emptyList()) :
       UserAchievementsRepository {
@@ -280,8 +361,6 @@ class ProfileScreenTest {
     override suspend fun getAchievementsCountOfUser(userId: String): Int {
       return achievements?.size ?: 0
     }
-
-    // Implement other methods if needed, or throw NotImplementedError()
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -369,5 +448,72 @@ class ProfileScreenTest {
       Assert.assertEquals(1, requests)
       Assert.assertEquals("u-1", lastId)
     }
+  }
+
+  @Test
+  fun achievements_and_map_multiple_clicks_fire_repeatedly() {
+    val user = sampleUser()
+    var achievements = 0
+    var map = 0
+
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = user,
+          ownerProfile = false,
+          onAchievements = { achievements++ },
+          onCollection = {},
+          onMap = { map++ },
+          onFriends = {},
+          onFriendRequest = {},
+      )
+    }
+
+    repeat(3) { composeRule.onNodeWithText("Achievements").performClick() }
+    repeat(2) { composeRule.onNodeWithText("Map").performClick() }
+
+    Assert.assertEquals(3, achievements)
+    Assert.assertEquals(2, map)
+  }
+
+  @Test
+  fun back_button_multiple_clicks_and_settings_absence() {
+    var back = 0
+
+    setThemedContent {
+      ProfileTopAppBar(ownerProfile = false, onGoBack = { back++ }, onSettings = {})
+    }
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
+
+    composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
+    Assert.assertEquals(2, back)
+  }
+
+  @Test
+  fun owner_collection_and_friends_multiple_clicks() {
+    val user = sampleUser()
+    var collection = 0
+    var friends = 0
+
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = user,
+          ownerProfile = true,
+          onAchievements = {},
+          onCollection = { collection++ },
+          onMap = {},
+          onFriends = { friends++ },
+          onFriendRequest = {},
+      )
+    }
+
+    repeat(4) { composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick() }
+    repeat(3) { composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick() }
+
+    Assert.assertEquals(4, collection)
+    Assert.assertEquals(3, friends)
   }
 }

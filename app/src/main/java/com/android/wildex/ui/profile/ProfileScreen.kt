@@ -34,7 +34,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -294,40 +293,4 @@ fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
       onClick = { onFriendRequest(id) }) {
         Text(text = "Send Friend Request")
       }
-}
-
-@Preview
-@Composable
-fun ProfileImageAndNamePreview() {
-  ProfileImageAndName()
-}
-
-@Preview
-@Composable
-fun ProfileDescriptionPreview() {
-  ProfileDescription()
-}
-
-@Preview
-@Composable
-fun ProfileAnimalsPreview(id: Id = "", onCollection: (Id) -> Unit = {}) {
-  ProfileAnimals(id, onCollection, true)
-}
-
-@Preview
-@Composable
-fun ProfileFriendsPreview(id: Id = "", onFriends: (Id) -> Unit = {}) {
-  ProfileFriends(id, onFriends, true)
-}
-
-@Preview
-@Composable
-fun ProfileAchievementsPreview() {
-  ProfileAchievements()
-}
-
-@Preview
-@Composable
-fun ProfileMapPreview(id: Id = "", onMap: (Id) -> Unit = {}) {
-  ProfileMap(id, onMap)
 }

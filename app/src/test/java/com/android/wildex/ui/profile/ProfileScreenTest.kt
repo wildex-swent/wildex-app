@@ -1,15 +1,25 @@
 package com.android.wildex.ui.profile
 
-import androidx.activity.ComponentActivity
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import coil.ImageLoader
+import coil.compose.LocalImageLoader
+import coil.decode.DataSource
+import coil.intercept.Interceptor
+import coil.request.ImageResult
+import coil.request.SuccessResult
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.google.firebase.Timestamp
@@ -17,11 +27,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ProfileScreenTest {
 
-  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+  @get:Rule val composeRule = createComposeRule()
 
   private fun sampleUser() =
       User(
@@ -36,12 +49,36 @@ class ProfileScreenTest {
           country = "Switzerland",
           friendsCount = 42)
 
+  private fun noOpImageLoader(context: Context) =
+      ImageLoader.Builder(context)
+          .components {
+            add(
+                object : Interceptor {
+                  override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
+                    return SuccessResult(
+                        drawable = ColorDrawable(Color.GRAY),
+                        request = chain.request,
+                        dataSource = DataSource.MEMORY)
+                  }
+                })
+          }
+          .build()
+
+  private fun setThemedContent(block: @androidx.compose.runtime.Composable () -> Unit) {
+    composeRule.setContent {
+      val ctx = LocalContext.current
+      CompositionLocalProvider(LocalImageLoader provides noOpImageLoader(ctx)) {
+        MaterialTheme { block() }
+      }
+    }
+  }
+
   @Test
   fun topBar_shows_User_Profile_when_not_owner_and_buttons_click() {
     var back = 0
     var settings = 0
 
-    composeRule.setContent {
+    setThemedContent {
       ProfileTopAppBar(ownerProfile = false, onGoBack = { back++ }, onSettings = { settings++ })
     }
 
@@ -55,8 +92,7 @@ class ProfileScreenTest {
 
   @Test
   fun topBar_shows_My_Profile_when_owner() {
-    composeRule.setContent { ProfileTopAppBar(ownerProfile = true, onGoBack = {}, onSettings = {}) }
-
+    setThemedContent { ProfileTopAppBar(ownerProfile = true, onGoBack = {}, onSettings = {}) }
     composeRule.onNodeWithText("My Profile").assertIsDisplayed()
   }
 
@@ -64,7 +100,7 @@ class ProfileScreenTest {
   fun profileContent_shows_core_elements_and_texts() {
     val user = sampleUser()
 
-    composeRule.setContent {
+    setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,
@@ -98,7 +134,7 @@ class ProfileScreenTest {
     var collection = 0
     var friends = 0
 
-    composeRule.setContent {
+    setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,
@@ -123,7 +159,7 @@ class ProfileScreenTest {
     var collection = 0
     var friends = 0
 
-    composeRule.setContent {
+    setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,
@@ -148,7 +184,7 @@ class ProfileScreenTest {
     var achievements = 0
     var map = 0
 
-    composeRule.setContent {
+    setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,

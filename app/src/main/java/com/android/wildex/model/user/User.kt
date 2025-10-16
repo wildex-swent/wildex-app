@@ -17,10 +17,6 @@ import com.google.firebase.Timestamp
  * @property creationDate The date the user's account was created.
  * @property country The country the user is from.
  * @property friendsCount The number of friends the user has.
- * @property animalsId List of animal IDs the user has interacted with.
- * @property animalsCount The number of animals the user has interacted with.
- * @property achievementsId List of achievement IDs the user has earned.
- * @property achievementsCount The number of achievements the user has earned.
  */
 data class User(
     val userId: Id,
@@ -33,10 +29,32 @@ data class User(
     val creationDate: Timestamp,
     val country: String,
     val friendsCount: Int,
-    val animalsId: List<Id>,
-    val animalsCount: Int,
-    val achievementsId: List<Id>,
-    val achievementsCount: Int,
+)
+
+/**
+ * Represents a summary of a user's achievements.
+ *
+ * @property userId The unique identifier of the user to whom these achievements belong.
+ * @property achievementsId A list of unique identifiers for the achievements the user has earned.
+ * @property achievementsCount The total number of achievements the user has earned.
+ */
+data class UserAchievements(
+    val userId: Id = "",
+    val achievementsId: List<Id> = emptyList(),
+    val achievementsCount: Int = 0,
+)
+
+/**
+ * Represents a summary of a user's animals.
+ *
+ * @property userId The unique identifier of the user to whom these animals belong.
+ * @property animalsId A list of unique identifiers for the animals associated with the user.
+ * @property animalsCount The total number of animals associated with the user.
+ */
+data class UserAnimals(
+    val userId: Id = "",
+    val animalsId: List<Id> = emptyList(),
+    val animalsCount: Int = 0,
 )
 
 /** Enum class representing the type of user. */

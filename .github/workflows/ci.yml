@@ -62,6 +62,7 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+          KEYSTORE: ${{ secrets.KEYSTORE }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
@@ -74,6 +75,12 @@ jobs:
           else
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
           fi
+          
+          if [ -n "$KEYSTORE" ]; then
+            echo "$KEYSTORE" | base64 --decode > ./app/upload-keystore.jks
+          else
+            echo "::warning::KEYSTORE secret is not set. upload-keystore.jks will not be created."
+          fi          
 
       - name: create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -107,6 +114,10 @@ jobs:
         run: |
           # To run the CI with debug information, add --info
           ./gradlew check --parallel --build-cache
+
+      # Install Firebase CLI
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
       # Start Firebase emulators for instrumentation tests
       - name: Start Firebase emulators

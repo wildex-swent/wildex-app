@@ -81,6 +81,7 @@ android {
   }
 
   kotlinOptions { jvmTarget = "11" }
+
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -238,10 +239,10 @@ tasks.withType<Test> {
   }
 }
 
-// Rapport JaCoCo: seulement les .exec/.exec.gz des tests unitaires (exclut les .ec des connected tests)
+// Rapport JaCoCo: choisir un seul variant (debug sinon release) et n'utiliser que ses *.exec
 tasks.register("jacocoTestReport", JacocoReport::class) {
   // Exécute les tests si le CI invoque directement cette tâche
-  dependsOn("testDebugUnitTest", "testReleaseUnitTest")
+  dependsOn("testDebugUnitTest")
 
   reports {
     xml.required = true
@@ -260,32 +261,58 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
       "META-INF/**",
     )
 
-  val classDirs = mutableListOf<FileTree>()
-  val debugDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug")
-  val releaseDir = file("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/release")
-  if (debugDir.exists()) classDirs += fileTree(debugDir) { include("**/*.class"); exclude(fileFilter) }
-  if (releaseDir.exists()) classDirs += fileTree(releaseDir) { include("**/*.class"); exclude(fileFilter) }
-  classDirectories.setFrom(classDirs)
+  val buildDirFile = project.layout.buildDirectory.get().asFile
 
+  // Dossiers classes par variant
+  val kotlinDebug = File(buildDirFile, "tmp/kotlin-classes/debug")
+  val javaDebug = File(buildDirFile, "intermediates/javac/debug/classes")
+  val kotlinRelease = File(buildDirFile, "tmp/kotlin-classes/release")
+  val javaRelease = File(buildDirFile, "intermediates/javac/release/classes")
+
+  // Choix du variant: debug si dispo, sinon release
+  val useDebug = kotlinDebug.exists() || javaDebug.exists()
+  val useRelease = !useDebug && (kotlinRelease.exists() || javaRelease.exists())
+
+  val classTrees = mutableListOf<FileTree>()
+  if (useDebug) {
+    if (kotlinDebug.exists()) classTrees += fileTree(kotlinDebug) { include("**/*.class"); exclude(fileFilter) }
+    if (javaDebug.exists()) classTrees += fileTree(javaDebug) { include("**/*.class"); exclude(fileFilter) }
+  } else if (useRelease) {
+    if (kotlinRelease.exists()) classTrees += fileTree(kotlinRelease) { include("**/*.class"); exclude(fileFilter) }
+    if (javaRelease.exists()) classTrees += fileTree(javaRelease) { include("**/*.class"); exclude(fileFilter) }
+    dependsOn("testReleaseUnitTest")
+  }
+  classDirectories.setFrom(classTrees)
+
+  // Sources
   val srcDirs = listOf(
     file("${project.layout.projectDirectory}/src/main/java"),
     file("${project.layout.projectDirectory}/src/main/kotlin")
   ).filter { it.exists() }
-  sourceDirectories.setFrom(files(if (srcDirs.isEmpty()) file("${project.layout.projectDirectory}/src/main/java") else srcDirs))
+  sourceDirectories.setFrom(files(srcDirs))
 
-  // Garder uniquement les données des tests unitaires
-  val execFiles = fileTree(project.layout.buildDirectory.get()) {
-    include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec")
-    include("outputs/unit_test_code_coverage/*UnitTest/test*UnitTest.exec.gz")
-    include("jacoco/*.exec")
-  }.files.filter { it.exists() && it.length() > 0 }
-  executionData.setFrom(files(execFiles))
+  // Données de couverture: seulement le variant choisi, exclut volontairement les .ec
+  val execFiles = mutableListOf<File>()
+  if (useDebug) {
+    listOf(
+      "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+      "jacoco/testDebugUnitTest.exec"
+    ).mapTo(execFiles) { File(buildDirFile, it) }
+  } else if (useRelease) {
+    listOf(
+      "outputs/unit_test_code_coverage/releaseUnitTest/testReleaseUnitTest.exec",
+      "jacoco/testReleaseUnitTest.exec"
+    ).mapTo(execFiles) { File(buildDirFile, it) }
+  }
+  executionData.setFrom(files(execFiles.filter { it.exists() && it.length() > 0 }))
 
+  // Ne génère le rapport que s'il y a classes et données alignées
   onlyIf {
     classDirectories.files.isNotEmpty() && executionData.files.isNotEmpty()
   }
 
   doFirst {
+    logger.lifecycle("Variant: ${if (useDebug) "debug" else if (useRelease) "release" else "none"}")
     logger.lifecycle("JaCoCo exec files: ${executionData.files}")
     logger.lifecycle("JaCoCo class dirs: ${classDirectories.files}")
   }

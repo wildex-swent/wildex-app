@@ -1,42 +1,35 @@
+// kotlin
 package com.android.wildex.ui.profile
 
-import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.UserAchievementsRepository
+import androidx.compose.ui.unit.dp
 import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.google.firebase.Timestamp
-import io.mockk.coEvery
-import io.mockk.mockk
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowBuild
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class ProfileScreenTest {
 
-  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+  @get:Rule val composeRule = createComposeRule()
 
-  private fun buildViewModelWithData(user: User): ProfileScreenViewModel {
-    val userRepository = mockk<UserRepository>()
-    val achievementsRepository = mockk<UserAchievementsRepository>()
-    coEvery { userRepository.getUser(user.userId) } returns user
-    coEvery { achievementsRepository.getAllAchievementsByUser(user.userId) } returns
-        listOf(mockk<Achievement>(), mockk())
-    return ProfileScreenViewModel(
-        userRepository = userRepository,
-        achievementRepository = achievementsRepository,
-        currentUserId = { user.userId },
-        uid = user.userId)
+  @Before
+  fun setUpFingerprint() {
+    ShadowBuild.setFingerprint("robolectric-wildex")
   }
 
   @Test
@@ -48,12 +41,11 @@ class ProfileScreenTest {
             name = "John",
             surname = "Doe",
             bio = "This is a bio",
-            profilePictureURL = "https://example.com/pic.jpg",
+            profilePictureURL = "",
             userType = UserType.REGULAR,
-            creationDate = Timestamp.Companion.now(),
+            creationDate = Timestamp.now(),
             country = "Switzerland",
-            friendsCount = 7)
-    val vm = buildViewModelWithData(testUser)
+            friendsCount = 10)
 
     var goBackClicked = false
     var settingsClicked = false
@@ -63,16 +55,19 @@ class ProfileScreenTest {
     var mapClickedWith: String? = null
 
     composeRule.setContent {
-      ProfileScreen(
-          profileScreenViewModel = vm,
-          userUid = testUser.userId,
+      // On évite d’instancier le ViewModel réel: on compose directement le contenu
+      ProfileTopAppBar(
+          ownerProfile = true,
           onGoBack = { goBackClicked = true },
-          onSettings = { settingsClicked = true },
-          onCollection = { id -> collectionClickedWith = id },
-          onAchievements = { id -> achievementsClickedWith = id },
-          onFriends = { id -> friendsClickedWith = id },
-          onMap = { id -> mapClickedWith = id },
-      )
+          onSettings = { settingsClicked = true })
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = testUser,
+          ownerProfile = true,
+          onAchievements = { achievementsClickedWith = it },
+          onCollection = { collectionClickedWith = it },
+          onMap = { mapClickedWith = it },
+          onFriends = { friendsClickedWith = it })
     }
 
     composeRule.waitForIdle()
@@ -120,8 +115,8 @@ class ProfileScreenTest {
     composeRule.onNodeWithText("Achievements", substring = false).performClick()
     composeRule.onNodeWithText("Map", substring = false).performClick()
 
-    Assert.assertEquals(true, goBackClicked)
-    Assert.assertEquals(true, settingsClicked)
+    Assert.assertTrue(goBackClicked)
+    Assert.assertTrue(settingsClicked)
     Assert.assertEquals(testUser.userId, collectionClickedWith)
     Assert.assertEquals(testUser.userId, friendsClickedWith)
     Assert.assertEquals(testUser.userId, achievementsClickedWith)

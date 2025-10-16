@@ -226,6 +226,7 @@ dependencies {
 }
 
 tasks.withType<Test> {
+  systemProperty("ro.build.fingerprint", "robolectric-wildex")
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true

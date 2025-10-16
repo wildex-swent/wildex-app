@@ -7,4 +7,6 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
     <string name="welcome">Welcome to Wildex!</string>
+    <string name="profile">My Profile</string>
+    <string name="user_profile">User Profile</string>
 </resources>

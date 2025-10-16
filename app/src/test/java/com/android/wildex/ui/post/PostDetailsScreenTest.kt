@@ -161,5 +161,19 @@ class PostDetailsScreenTest {
         .performTextInput("Great post!")
     composeRule.onNode(hasContentDescription("Send comment")).performClick()
     Assert.assertEquals("Great post!", commentAdded)
+
+    // Click posters profile picture
+    composeRule.onNodeWithTag(ProfileScreenTestTags.POSTER_PROFILE_PICTURE).performClick()
+    Assert.assertEquals(post.authorId, profileClicked)
+
+    // Click comment authors profile picture
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.COMMENT_PROFILE_PICTURE + "commentAuthor1")
+        .performClick()
+    Assert.assertEquals("commentAuthor1", profileClicked)
+
+    // Click current users profile picture
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CURRENT_USER_PROFILE_PICTURE).performClick()
+    Assert.assertEquals("currentUserId-1", profileClicked)
   }
 }

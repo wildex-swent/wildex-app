@@ -30,7 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -45,13 +44,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
-import com.android.wildex.ui.theme.WildexTheme
+
+object ProfileScreenTestTags {
+  const val POSTER_PROFILE_PICTURE = "poster_profile_picture"
+  const val COMMENT_PROFILE_PICTURE = "comment_profile_picture_"
+  const val CURRENT_USER_PROFILE_PICTURE = "current_user_profile_picture"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,7 +172,7 @@ fun PostInfoBar(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         ClickableProfilePicture(
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(64.dp).testTag(ProfileScreenTestTags.POSTER_PROFILE_PICTURE),
             profilePictureURL = authorProfilePictureURL,
             profileId = authorId,
             onProfile = onProfile)
@@ -272,7 +276,9 @@ fun Comment(
   Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary).padding(14.dp)) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
       ClickableProfilePicture(
-          modifier = Modifier.size(48.dp),
+          modifier =
+              Modifier.size(48.dp)
+                  .testTag(ProfileScreenTestTags.COMMENT_PROFILE_PICTURE + commentUI.authorId),
           profileId = commentUI.authorId,
           profilePictureURL = commentUI.authorProfilePictureUrl,
           onProfile = onProfile)
@@ -314,7 +320,9 @@ fun CommentInput(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically) {
               ClickableProfilePicture(
-                  modifier = Modifier.size(56.dp),
+                  modifier =
+                      Modifier.size(56.dp)
+                          .testTag(ProfileScreenTestTags.CURRENT_USER_PROFILE_PICTURE),
                   profileId = userId,
                   profilePictureURL = userProfilePictureURL,
                   onProfile = onProfile)
@@ -370,8 +378,8 @@ fun ClickableProfilePicture(
       }
 }
 
-@Preview
-@Composable
-fun ProfileScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { PostDetailsScreen("post1") } }
-}
+// @Preview
+// @Composable
+// fun ProfileScreenPreview() {
+//  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { PostDetailsScreen("post1") } }
+// }

@@ -10,3 +10,4 @@ local.properties
 *.log
 .firebaserc
 google-services.json
+firebase.json

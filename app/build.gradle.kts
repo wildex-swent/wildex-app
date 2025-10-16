@@ -22,23 +22,38 @@ android {
   }
 
   val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
+  val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
 
   defaultConfig {
     applicationId = "com.android.wildex"
     minSdk = 28
-    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
     buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
+    buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
   }
 
   buildTypes {
+    signingConfigs {
+      create("release") {
+        storeFile = file("upload-keystore.jks")
+        storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+        keyAlias = localProperties.getProperty("KEY_ALIAS")
+        keyPassword = localProperties.getProperty("KEY_PASSWORD")
+      }
+    }
+
     release {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      signingConfig = signingConfigs.getByName("release")
+    }
+
+    debug {
+      isMinifyEnabled = false
     }
 
     debug {
@@ -47,21 +62,21 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.8" }
+  testCoverage { jacocoVersion = "0.8.12" }
 
   buildFeatures {
     compose = true
     buildConfig = true
   }
 
-  composeOptions { kotlinCompilerExtensionVersion = "1.4.2" }
+  composeOptions { kotlinCompilerExtensionVersion = "1.5.3" }
 
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
-  kotlinOptions { jvmTarget = "1.8" }
+  kotlinOptions { jvmTarget = "11" }
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -80,6 +95,11 @@ android {
     unitTests {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
+    }
+    packagingOptions {
+      jniLibs {
+        useLegacyPackaging = true
+      }
     }
   }
 
@@ -112,19 +132,23 @@ sonar {
     // Comma-separated paths to the various directories containing the *.xml JUnit report files.
     // Each path may be absolute or relative to the project base directory.
     property(
-        "sonar.junit.reportPaths",
+      "sonar.junit.reportPaths",
+      listOf(
         "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+        "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
+      ).joinToString(",")
     )
+
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
     property(
-        "sonar.androidLint.reportPaths",
-        "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
+      "sonar.androidLint.reportPaths",
+      "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
     // Paths to JaCoCo XML coverage report files.
     property(
-        "sonar.coverage.jacoco.xmlReportPaths",
-        "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+      "sonar.coverage.jacoco.xmlReportPaths",
+      "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
     )
   }
 }
@@ -172,6 +196,16 @@ dependencies {
   implementation(libs.firebase.auth.ktx)
   implementation(libs.firebase.auth)
 
+  // Credential Manager (for Google Sign-In)
+  implementation(libs.credentials)
+  implementation(libs.credentials.play.services.auth)
+  implementation(libs.googleid)
+
+  // Navigation
+  implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.navigation.fragment.ktx)
+  implementation(libs.androidx.navigation.ui.ktx)
+
   // UI Tests
   globalTestImplementation(libs.compose.test.junit)
   debugImplementation(libs.compose.test.manifest)
@@ -187,13 +221,16 @@ dependencies {
   implementation(libs.okhttp)
 
   // Mock testing
-  testImplementation(libs.mockito)
-  testImplementation(libs.mockito.kotlin)
   testImplementation(libs.mockwebserver)
+  testImplementation(libs.mockk)
+  testImplementation(libs.mockito.core)
+  testImplementation(libs.mockito.kotlin)
   androidTestImplementation(libs.mockk)
   androidTestImplementation(libs.mockk.android)
   androidTestImplementation(libs.mockk.agent)
-  testImplementation(libs.mockk)
+  androidTestImplementation(libs.mockito.android)
+  androidTestImplementation(libs.mockito.kotlin)
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 tasks.withType<Test> {
@@ -213,28 +250,28 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 
   val fileFilter =
-      listOf(
-          "**/R.class",
-          "**/R$*.class",
-          "**/BuildConfig.*",
-          "**/Manifest*.*",
-          "**/*Test*.*",
-          "android/**/*.*",
-      )
+    listOf(
+      "**/R.class",
+      "**/R$*.class",
+      "**/BuildConfig.*",
+      "**/Manifest*.*",
+      "**/*Test*.*",
+      "android/**/*.*",
+    )
 
   val debugTree =
-      fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-        exclude(fileFilter)
-      }
+    fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+      exclude(fileFilter)
+    }
 
   val mainSrc = "${project.layout.projectDirectory}/src/main/java"
   sourceDirectories.setFrom(files(mainSrc))
   classDirectories.setFrom(files(debugTree))
   executionData.setFrom(
-      fileTree(project.layout.buildDirectory.get()) {
-        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-        include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
-      }
+    fileTree(project.layout.buildDirectory.get()) {
+      include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+      include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+    }
   )
 }
 

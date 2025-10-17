@@ -15,7 +15,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-const val USERS_COLLECTION_PATH = "Users"
+const val USERS_COLLECTION_PATH = "users"
 
 class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   private var repository = UserRepositoryFirestore(Firebase.firestore)

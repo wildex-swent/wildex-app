@@ -38,7 +38,7 @@ data class PostDetailsUIState(
     val currentUserId: Id = "",
     val currentUserProfilePictureURL: URL = "",
     val likedByCurrentUser: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
 )
 
 data class CommentWithAuthorUI(
@@ -46,15 +46,15 @@ data class CommentWithAuthorUI(
     val authorProfilePictureUrl: String = "",
     val authorUserName: String = "",
     val text: String = "",
-    val date: String = ""
+    val date: String = "",
 )
 
 class PostDetailsScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val commentRepository: CommentsRepository = RepositoryProvider.commentRepository,
-    private val likeRepository: LikeRepository,
-    private val currentUserId: () -> String? = { Firebase.auth.currentUser?.uid ?: "" }
+    private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
+    private val currentUserId: Id = Firebase.auth.uid!!,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(PostDetailsUIState())
   val uiState: StateFlow<PostDetailsUIState> = _uiState.asStateFlow()
@@ -87,7 +87,6 @@ class PostDetailsScreenViewModel(
               emptyList()
             }
 
-        val currentUserId = currentUserId() ?: ""
         val currentUserProfilePictureURL =
             try {
               userRepository.getSimpleUser(currentUserId).profilePictureURL
@@ -127,7 +126,8 @@ class PostDetailsScreenViewModel(
                 currentUserId = currentUserId,
                 currentUserProfilePictureURL = currentUserProfilePictureURL,
                 likedByCurrentUser = likedByCurrentUser,
-                errorMsg = localErrorMsg)
+                errorMsg = localErrorMsg,
+            )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
         setErrorMsg("Failed to load post details: ${e.message}")
@@ -141,15 +141,16 @@ class PostDetailsScreenViewModel(
       try {
         val post = postRepository.getPost(postId)
         postRepository.editPost(
-            postId = postId, newValue = post.copy(likesCount = post.likesCount + 1))
+            postId = postId,
+            newValue = post.copy(likesCount = post.likesCount + 1),
+        )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
         setErrorMsg("Failed to load post : ${e.message}")
       }
       try {
         val likeId = likeRepository.getNewLikeId()
-        likeRepository.addLike(
-            Like(likeId = likeId, postId = postId, userId = currentUserId() ?: ""))
+        likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
         setErrorMsg("Failed to handle post likes: ${e.message}")
@@ -163,7 +164,9 @@ class PostDetailsScreenViewModel(
       try {
         val post = postRepository.getPost(postId)
         postRepository.editPost(
-            postId = postId, newValue = post.copy(likesCount = post.likesCount - 1))
+            postId = postId,
+            newValue = post.copy(likesCount = post.likesCount - 1),
+        )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
         setErrorMsg("Failed to load post : ${e.message}")
@@ -186,7 +189,9 @@ class PostDetailsScreenViewModel(
       try {
         val post = postRepository.getPost(postId)
         postRepository.editPost(
-            postId = postId, newValue = post.copy(commentsCount = post.commentsCount + 1))
+            postId = postId,
+            newValue = post.copy(commentsCount = post.commentsCount + 1),
+        )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
         setErrorMsg("Failed to load post : ${e.message}")
@@ -197,9 +202,11 @@ class PostDetailsScreenViewModel(
             Comment(
                 commentId = commentId,
                 postId = postId,
-                authorId = currentUserId() ?: "",
+                authorId = currentUserId,
                 text = text,
-                date = Timestamp.now()))
+                date = Timestamp.now(),
+            )
+        )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
         setErrorMsg("Failed to add comment: ${e.message}")
@@ -219,7 +226,8 @@ class PostDetailsScreenViewModel(
               comment.date.let {
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 return@let dateFormat.format(comment.date.toDate())
-              })
+              },
+      )
     }
   }
 }

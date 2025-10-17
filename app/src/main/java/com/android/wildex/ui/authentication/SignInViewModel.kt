@@ -9,9 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.R
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
-import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.firebase.Timestamp
@@ -33,7 +34,7 @@ data class AuthUIState(
     val isLoading: Boolean = false,
     val firebaseUser: FirebaseUser? = null,
     val errorMsg: String? = null,
-    val signedOut: Boolean = false
+    val signedOut: Boolean = false,
 )
 
 /**
@@ -41,8 +42,12 @@ data class AuthUIState(
  *
  * @property repository The repository used to perform authentication operations.
  */
-class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
-    ViewModel() {
+class SignInViewModel(
+    private val repository: AuthRepository = RepositoryProvider.authRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val achievementRepository: UserAchievementsRepository =
+        RepositoryProvider.userAchievementsRepository,
+) : ViewModel() {
   private val _uiState = MutableStateFlow(AuthUIState())
   val uiState: StateFlow<AuthUIState> = _uiState
 
@@ -60,7 +65,8 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
 
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id))
+                  serverClientId = context.getString(R.string.default_web_client_id)
+              )
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
@@ -70,10 +76,13 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
         repository.signInWithGoogle(credential).fold({ firebaseUser ->
           _uiState.update {
             it.copy(
-                isLoading = false, firebaseUser = firebaseUser, errorMsg = null, signedOut = false)
+                isLoading = false,
+                firebaseUser = firebaseUser,
+                errorMsg = null,
+                signedOut = false,
+            )
           }
-          val userRepository = RepositoryProvider.userRepository
-          val achievementRepository = RepositoryProvider.userAchievementsRepository
+
           val userId = firebaseUser.uid
           try {
             userRepository.getUser(userId)
@@ -85,11 +94,12 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                     "John",
                     "Doe",
                     "I am John Doe",
-                    "",
+                    "https://media.istockphoto.com/id/1223671392/vector/default-profile-picture-avatar-photo-placeholder-vector-illustration.jpg?s=612x612&w=0&k=20&c=s0aTdmT5aU6b8ot7VKm11DeID6NctRCpB755rA1BIP0=",
                     UserType.REGULAR,
                     Timestamp.now(),
                     "Switzerland",
-                    0)
+                    0,
+                )
             userRepository.addUser(newUser)
             achievementRepository.initializeUserAchievements(userId)
           }
@@ -99,7 +109,8 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                 isLoading = false,
                 firebaseUser = null,
                 errorMsg = failure.localizedMessage,
-                signedOut = true)
+                signedOut = true,
+            )
           }
         }
       } catch (e: GetCredentialCancellationException) {
@@ -109,7 +120,8 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
               isLoading = false,
               firebaseUser = null,
               errorMsg = context.getString(R.string.cancel_sign_in),
-              signedOut = true)
+              signedOut = true,
+          )
         }
       } catch (e: GetCredentialException) {
         // Other credential errors
@@ -118,7 +130,8 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
               isLoading = false,
               firebaseUser = null,
               errorMsg = "Failed to get credentials: ${e.localizedMessage}",
-              signedOut = true)
+              signedOut = true,
+          )
         }
       } catch (e: Exception) {
         // Unexpected errors
@@ -127,7 +140,8 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
               isLoading = false,
               firebaseUser = null,
               errorMsg = "Unexpected error: ${e.localizedMessage}",
-              signedOut = true)
+              signedOut = true,
+          )
         }
       }
     }

@@ -14,21 +14,21 @@ sealed class Screen(
     data class PostDetails(val postUid: String) :
         Screen(route = "post_details/${postUid}", name = "Post Details") {
         companion object {
-            const val route = "post_details/{postUid}"
+            const val PATH = "post_details"
         }
     }
 
     data class Profile(val userUid: String) :
         Screen(route = "profile/${userUid}", name = "Profile") {
         companion object {
-            const val route = "profile/{userUid}"
+            const val PATH = "profile"
         }
     }
 
     data class Achievements(val userUid: String) :
         Screen(route = "achievements/${userUid}", name = "Achievements") {
         companion object {
-            const val route = "achievements/{userUid}"
+            const val PATH = "achievements"
         }
     }
 
@@ -46,7 +46,7 @@ sealed class Screen(
     data class AnimalDetails(val animalUid: String) :
         Screen(route = "animal_detail/${animalUid}", name = "Animal Details") {
         companion object {
-            const val route = "animal_detail/{animalUid}"
+            const val PATH = "animal_detail"
         }
     }
 
@@ -55,7 +55,7 @@ sealed class Screen(
     data class ReportDetails(val reportUid: String) :
         Screen(route = "report_detail/${reportUid}", name = "Report Details") {
         companion object {
-            const val route = "report_detail/{reportUid}"
+            const val PATH = "report_detail"
         }
     }
 

@@ -81,6 +81,7 @@ object HomeScreenTestTags {
 @Composable
 fun HomeScreen(
     homeScreenViewModel: HomeScreenViewModel = viewModel(),
+    bottomBar: @Composable () -> Unit = {},
     onPostClick: (postId: Id) -> Unit = {},
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -93,7 +94,7 @@ fun HomeScreen(
 
     Scaffold(
         topBar = { WildexHomeTopAppBar(user, onNotificationClick, onProfilePictureClick) },
-        bottomBar = { /* Reserved for future BottomAppBar implementation */ },
+        bottomBar = { bottomBar() },
         content = { pd ->
             if (posts.isEmpty()) NoPostsView()
             else

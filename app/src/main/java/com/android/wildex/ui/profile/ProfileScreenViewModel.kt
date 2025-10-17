@@ -9,7 +9,10 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,21 +20,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ProfileUIState(
-    val user: User? = null,
+    val user: User,
     val isUserOwner: Boolean = true,
-    val achievements: List<Achievement> = emptyList()
+    val achievements: List<Achievement> = emptyList(),
 )
 
 class ProfileScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val achievementRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
-    private val currentUserId: () -> String? = {
-      com.google.firebase.ktx.Firebase.auth.currentUser?.uid
-    },
+    private val currentUserId: Id = Firebase.auth.uid!!,
 ) : ViewModel() {
-  private val _uiState = MutableStateFlow(ProfileUIState())
-  val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
   private val defaultUser: User =
       User(
           userId = "defaultUserId",
@@ -46,7 +45,10 @@ class ProfileScreenViewModel(
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Nowhere",
-          friendsCount = 0)
+          friendsCount = 0,
+      )
+  private val _uiState = MutableStateFlow(ProfileUIState(defaultUser))
+  val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
 
   fun refreshUIState(userId: String) {
     viewModelScope.launch {
@@ -61,10 +63,10 @@ class ProfileScreenViewModel(
   }
 
   private fun checkIsUserOwner(userId: String): Boolean {
-    return userId == currentUserId()
+    return userId == currentUserId
   }
 
-  private suspend fun fetchUser(userId: String): User? {
+  private suspend fun fetchUser(userId: String): User {
     return try {
       userRepository.getUser(userId)
     } catch (e: Exception) {

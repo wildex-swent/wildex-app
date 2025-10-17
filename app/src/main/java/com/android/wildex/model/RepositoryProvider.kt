@@ -4,6 +4,8 @@ import com.android.wildex.HttpClientProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.achievement.UserAchievementsRepositoryFirestore
 import com.android.wildex.model.animaldetector.AnimalDetectRepository
+import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.social.CommentsRepository
 import com.android.wildex.model.social.CommentsRepositoryFirestore
 import com.android.wildex.model.social.LikeRepository
@@ -30,4 +32,5 @@ object RepositoryProvider {
     AnimalDetectRepository(HttpClientProvider.client)
   }
   val likeRepository: LikeRepository by lazy { LikeRepositoryFirestore(Firebase.firestore) }
+  val authRepository: AuthRepository by lazy { AuthRepositoryFirebase() }
 }

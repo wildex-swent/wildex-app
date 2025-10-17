@@ -32,10 +32,7 @@ import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportDetailsScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.theme.WildexTheme
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import okhttp3.OkHttpClient
 
 /** Provide an OkHttpClient client for network requests. */

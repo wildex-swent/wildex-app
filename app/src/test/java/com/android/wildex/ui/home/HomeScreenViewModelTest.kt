@@ -10,7 +10,6 @@ import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule // <- ajouter cet import
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -156,8 +156,8 @@ class PostDetailsScreenTest {
 
     // Add comment
     /*composeRule
-        .onNode(hasText("Add a comment...") and hasSetTextAction())
-        .performTextInput("Great post!")*/
+    .onNode(hasText("Add a comment...") and hasSetTextAction())
+    .performTextInput("Great post!")*/
     composeRule.onNode(hasContentDescription("Send comment")).performClick()
     // Assert.assertEquals("Great post!", commentAdded)
 

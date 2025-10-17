@@ -14,12 +14,12 @@ import com.android.wildex.R
 
 @Composable
 fun CameraScreen(bottomBar: @Composable () -> Unit) {
-    Scaffold(bottomBar = { bottomBar() }) { innerPadding ->
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(innerPadding).fillMaxSize(),
-        ) {
-            Text(stringResource(R.string.not_implemented), textAlign = TextAlign.Center)
-        }
+  Scaffold(bottomBar = { bottomBar() }) { innerPadding ->
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.padding(innerPadding).fillMaxSize(),
+    ) {
+      Text(stringResource(R.string.not_implemented), textAlign = TextAlign.Center)
     }
+  }
 }

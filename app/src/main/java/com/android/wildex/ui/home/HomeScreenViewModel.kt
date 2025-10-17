@@ -43,7 +43,7 @@ private val defaultUser: SimpleUser =
         username = "defaultUsername",
         profilePictureURL =
             "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
-                    "social-media-profile-photos.jpg",
+                "social-media-profile-photos.jpg",
     )
 
 /** Default placeholder animal used when no valid animal is associated with a post. */
@@ -92,65 +92,65 @@ class HomeScreenViewModel(
     private val currentUserId: Id = Firebase.auth.uid!!,
 ) : ViewModel() {
 
-    /** Backing property for the home screen state. */
-    private val _uiState = MutableStateFlow(HomeUIState())
+  /** Backing property for the home screen state. */
+  private val _uiState = MutableStateFlow(HomeUIState())
 
-    /** Public immutable state exposed to the UI layer. */
-    val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
+  /** Public immutable state exposed to the UI layer. */
+  val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-    /**
-     * Refreshes the UI state by fetching posts and the current user. Updates [_uiState] with new
-     * values.
-     */
-    fun refreshUIState() {
-        viewModelScope.launch {
-            try {
-                val posts = fetchPosts()
-                val user = fetchUser()
-                _uiState.value = HomeUIState(posts = posts, currentUser = user)
-                Log.d("HomeScreenViewModel", "UI state refreshed with ${posts.size} posts.")
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
-            }
-        }
+  /**
+   * Refreshes the UI state by fetching posts and the current user. Updates [_uiState] with new
+   * values.
+   */
+  fun refreshUIState() {
+    viewModelScope.launch {
+      try {
+        val posts = fetchPosts()
+        val user = fetchUser()
+        _uiState.value = HomeUIState(posts = posts, currentUser = user)
+        Log.d("HomeScreenViewModel", "UI state refreshed with ${posts.size} posts.")
+      } catch (e: Exception) {
+        Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
+      }
     }
+  }
 
-    /**
-     * Retrieves posts and converts them to [PostState] objects including like status and author data.
-     */
-    private suspend fun fetchPosts(): List<PostState> =
-        postRepository.getAllPosts().map { post ->
-            PostState(
-                post = post,
-                isLiked = likeRepository.getLikeForPost(post.postId) != null,
-                author = userRepository.getSimpleUser(post.authorId),
+  /**
+   * Retrieves posts and converts them to [PostState] objects including like status and author data.
+   */
+  private suspend fun fetchPosts(): List<PostState> =
+      postRepository.getAllPosts().map { post ->
+        PostState(
+            post = post,
+            isLiked = likeRepository.getLikeForPost(post.postId) != null,
+            author = userRepository.getSimpleUser(post.authorId),
+        )
+      }
+
+  /** Fetches the current authenticated user’s information. */
+  private suspend fun fetchUser(): SimpleUser = userRepository.getSimpleUser(currentUserId)
+
+  /**
+   * Handles like/unlike logic for a specific post.
+   * - If the post is already liked by the current user, it removes the like.
+   * - Otherwise, it creates and adds a new like entry.
+   *
+   * @param postId The unique identifier of the post to toggle like status.
+   */
+  fun handleLike(postId: Id) {
+    viewModelScope.launch {
+      val like = likeRepository.getLikeForPost(postId)
+      if (like != null) {
+        likeRepository.deleteLike(like.likeId)
+      } else {
+        val newLike =
+            Like(
+                likeId = likeRepository.getNewLikeId(),
+                postId = postId,
+                userId = currentUserId,
             )
-        }
-
-    /** Fetches the current authenticated user’s information. */
-    private suspend fun fetchUser(): SimpleUser = userRepository.getSimpleUser(currentUserId)
-
-    /**
-     * Handles like/unlike logic for a specific post.
-     * - If the post is already liked by the current user, it removes the like.
-     * - Otherwise, it creates and adds a new like entry.
-     *
-     * @param postId The unique identifier of the post to toggle like status.
-     */
-    fun handleLike(postId: Id) {
-        viewModelScope.launch {
-            val like = likeRepository.getLikeForPost(postId)
-            if (like != null) {
-                likeRepository.deleteLike(like.likeId)
-            } else {
-                val newLike =
-                    Like(
-                        likeId = likeRepository.getNewLikeId(),
-                        postId = postId,
-                        userId = currentUserId,
-                    )
-                likeRepository.addLike(newLike)
-            }
-        }
+        likeRepository.addLike(newLike)
+      }
     }
+  }
 }

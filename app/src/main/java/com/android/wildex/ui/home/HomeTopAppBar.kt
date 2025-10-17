@@ -48,45 +48,44 @@ fun WildexHomeTopAppBar(
     onNotificationClick: () -> Unit,
     onProfilePictureClick: (userId: Id) -> Unit,
 ) {
-    TopAppBar(
-        title = {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
-            }
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = { onNotificationClick() },
-                modifier = Modifier.testTag(NOTIFICATION_BELL),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.notification_bell),
-                    contentDescription = "Notifications",
-                    modifier = Modifier.size(30.dp),
-                )
-            }
-        },
-        actions = {
-            IconButton(
-                onClick = { onProfilePictureClick(user.userId) },
-                modifier = Modifier.testTag(PROFILE_PICTURE),
-            ) {
-                AsyncImage(
-                    model = user.profilePictureURL,
-                    contentDescription = "Profile picture",
-                    modifier =
-                        Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            }
-        },
-        colors =
-            TopAppBarDefaults.topAppBarColors(
-                titleContentColor = MaterialTheme.colorScheme.primary,
-                navigationIconContentColor = MaterialTheme.colorScheme.primary,
-            ),
-    )
+  TopAppBar(
+      title = {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+          Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
+        }
+      },
+      navigationIcon = {
+        IconButton(
+            onClick = { onNotificationClick() },
+            modifier = Modifier.testTag(NOTIFICATION_BELL),
+        ) {
+          Icon(
+              painter = painterResource(R.drawable.notification_bell),
+              contentDescription = "Notifications",
+              modifier = Modifier.size(30.dp),
+          )
+        }
+      },
+      actions = {
+        IconButton(
+            onClick = { onProfilePictureClick(user.userId) },
+            modifier = Modifier.testTag(PROFILE_PICTURE),
+        ) {
+          AsyncImage(
+              model = user.profilePictureURL,
+              contentDescription = "Profile picture",
+              modifier =
+                  Modifier.size(40.dp)
+                      .clip(CircleShape)
+                      .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+              contentScale = ContentScale.Crop,
+          )
+        }
+      },
+      colors =
+          TopAppBarDefaults.topAppBarColors(
+              titleContentColor = MaterialTheme.colorScheme.primary,
+              navigationIconContentColor = MaterialTheme.colorScheme.primary,
+          ),
+  )
 }

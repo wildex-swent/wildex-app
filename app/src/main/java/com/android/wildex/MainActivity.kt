@@ -103,8 +103,7 @@ fun WildexApp(context: Context = LocalContext.current) {
                 Tab.Map,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // New Post
@@ -115,8 +114,7 @@ fun WildexApp(context: Context = LocalContext.current) {
                 Tab.NewPost,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // Collection
@@ -127,8 +125,7 @@ fun WildexApp(context: Context = LocalContext.current) {
                 Tab.Collection,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
     composable("${Screen.AnimalDetails.PATH}/{animalUid}") { backStackEntry ->
       val animalId = backStackEntry.arguments?.getString("animalUid")
@@ -149,8 +146,7 @@ fun WildexApp(context: Context = LocalContext.current) {
                 Tab.Report,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
     composable(Screen.SubmitReport.route) { TODO("Add submit report screen here") }
     composable("${Screen.ReportDetails.PATH}/{reportUid}") { backStackEntry ->

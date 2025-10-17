@@ -52,7 +52,7 @@ class ProfileScreenViewModelTest {
         ProfileScreenViewModel(
             userRepository = userRepository,
             achievementRepository = achievementsRepository,
-            currentUserId = { "uid-1" })
+            currentUserId = "uid-1")
   }
 
   @Test
@@ -87,7 +87,7 @@ class ProfileScreenViewModelTest {
           ProfileScreenViewModel(
               userRepository = userRepository,
               achievementRepository = achievementsRepository,
-              currentUserId = { "someone-else" })
+              currentUserId = "someone-else")
 
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
@@ -113,7 +113,7 @@ class ProfileScreenViewModelTest {
 
       val s = viewModel.uiState.value
       Assert.assertNotNull(s.user)
-      Assert.assertEquals("defaultUserId", s.user!!.userId)
+      Assert.assertEquals("defaultUserId", s.user.userId)
       Assert.assertEquals(listOf(a1), s.achievements)
     }
   }

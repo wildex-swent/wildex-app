@@ -20,41 +20,47 @@ class HomeScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNoPost() {
-    composeTestRule.setContent { HomeScreen(HomeScreenViewModel(), true) }
+    composeTestRule.setContent { HomeScreen() }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST_ICON).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_AUTHOR_PICTURE).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_MORE_INFO).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_IMAGE).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_COMMENT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LOCATION).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE_BUTTON).assertIsNotDisplayed()
   }
 
   @Test
   fun testTagsAreCorrectlySetWhenPosts() {
-    composeTestRule.setContent { HomeScreen(HomeScreenViewModel(), false) }
+    composeTestRule.setContent { HomeScreen() }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_AUTHOR_PICTURE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_MORE_INFO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_IMAGE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_COMMENT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LOCATION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE_BUTTON).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST_ICON).assertIsNotDisplayed()
   }
 
   @Test
   fun clickInteractionsWork() {
-    composeTestRule.setContent { HomeScreen(HomeScreenViewModel(), false) }
+    composeTestRule.setContent { HomeScreen() }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).performClick()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_AUTHOR_PICTURE).performClick()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_MORE_INFO).performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_IMAGE).performClick()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE).performClick()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_COMMENT).performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LOCATION).performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.POST_LIKE_BUTTON).performClick()
   }
 }

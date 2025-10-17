@@ -125,13 +125,12 @@ fun PostDetailsScreen(
                       .padding(8.dp)
                       .border(2.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(12.dp))
                       .clip(RoundedCornerShape(24.dp))
-                      .padding(8.dp)
-          ) {
-            Text(
-                text = postDetailsUIState.description,
-                color = MaterialTheme.colorScheme.tertiary,
-            )
-          }
+                      .padding(8.dp)) {
+                Text(
+                    text = postDetailsUIState.description,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+              }
 
           CommentSection(
               commentsUI = postDetailsUIState.commentsUI,
@@ -202,8 +201,7 @@ fun PostInfoBar(
                   append(" $animalName!")
                 }
               },
-          style = MaterialTheme.typography.titleLarge
-      )
+          style = MaterialTheme.typography.titleLarge)
       Text(
           text = date,
           color = MaterialTheme.colorScheme.tertiary,
@@ -237,16 +235,16 @@ fun PostInfoBar(
           onClick = {
             if (!likedByCurrentUser) postDetailsScreenViewModel.addLike()
             else postDetailsScreenViewModel.removeLike()
+          }) {
+            Icon(
+                imageVector =
+                    if (likedByCurrentUser) Icons.Filled.Favorite
+                    else Icons.Outlined.FavoriteBorder,
+                contentDescription = "Like status",
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.tertiary,
+            )
           }
-      ) {
-        Icon(
-            imageVector =
-                if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Like status",
-            modifier = Modifier.size(40.dp),
-            tint = MaterialTheme.colorScheme.tertiary,
-        )
-      }
 
       Text(text = likesCount.toString(), color = MaterialTheme.colorScheme.tertiary)
     }
@@ -267,24 +265,23 @@ fun CommentSection(
       modifier =
           Modifier.padding(8.dp)
               .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-              .clip(RoundedCornerShape(24.dp))
-  ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-      LazyColumn(
-          modifier = Modifier.weight(1f).fillMaxWidth(),
-          verticalArrangement = Arrangement.spacedBy(0.dp),
-      ) {
-        items(commentsUI) { commentUI -> Comment(commentUI = commentUI, onProfile = onProfile) }
-      }
+              .clip(RoundedCornerShape(24.dp))) {
+        Column(modifier = modifier.fillMaxWidth()) {
+          LazyColumn(
+              modifier = Modifier.weight(1f).fillMaxWidth(),
+              verticalArrangement = Arrangement.spacedBy(0.dp),
+          ) {
+            items(commentsUI) { commentUI -> Comment(commentUI = commentUI, onProfile = onProfile) }
+          }
 
-      CommentInput(
-          userId = userId,
-          userProfilePictureURL = userProfilePictureURL,
-          onProfile = onProfile,
-          postDetailsScreenViewModel = postDetailsScreenViewModel,
-      )
-    }
-  }
+          CommentInput(
+              userId = userId,
+              userProfilePictureURL = userProfilePictureURL,
+              onProfile = onProfile,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+          )
+        }
+      }
 }
 
 @Composable
@@ -334,49 +331,47 @@ fun CommentInput(
   Box(
       modifier =
           Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-              .padding(8.dp)
-  ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      ClickableProfilePicture(
-          modifier = Modifier.size(56.dp),
-          profileId = userId,
-          profilePictureURL = userProfilePictureURL,
-          role = "comment_input",
-          onProfile = onProfile,
-      )
+              .padding(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          ClickableProfilePicture(
+              modifier = Modifier.size(56.dp),
+              profileId = userId,
+              profilePictureURL = userProfilePictureURL,
+              role = "comment_input",
+              onProfile = onProfile,
+          )
 
-      Spacer(modifier = Modifier.width(8.dp))
+          Spacer(modifier = Modifier.width(8.dp))
 
-      var text by remember { mutableStateOf("") }
+          var text by remember { mutableStateOf("") }
 
-      OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
-          placeholder = { Text("Add a comment ...") },
-          modifier = Modifier.weight(1f),
-          shape = RoundedCornerShape(24.dp),
-          singleLine = true,
-          trailingIcon = {
-            IconButton(
-                onClick = {
-                  if (text.isNotBlank()) {
-                    postDetailsScreenViewModel.addComment(text)
-                    text = ""
-                  }
-                }
-            ) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Send,
-                  contentDescription = "Send comment",
-              )
-            }
-          },
-      )
-    }
-  }
+          OutlinedTextField(
+              value = text,
+              onValueChange = { text = it },
+              placeholder = { Text("Add a comment ...") },
+              modifier = Modifier.weight(1f),
+              shape = RoundedCornerShape(24.dp),
+              singleLine = true,
+              trailingIcon = {
+                IconButton(
+                    onClick = {
+                      if (text.isNotBlank()) {
+                        postDetailsScreenViewModel.addComment(text)
+                        text = ""
+                      }
+                    }) {
+                      Icon(
+                          imageVector = Icons.AutoMirrored.Filled.Send,
+                          contentDescription = "Send comment",
+                      )
+                    }
+              },
+          )
+        }
+      }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

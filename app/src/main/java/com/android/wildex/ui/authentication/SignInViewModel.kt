@@ -65,8 +65,7 @@ class SignInViewModel(
 
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id)
-              )
+                  serverClientId = context.getString(R.string.default_web_client_id))
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 

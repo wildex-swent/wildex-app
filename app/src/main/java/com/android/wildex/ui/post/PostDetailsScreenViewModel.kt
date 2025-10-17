@@ -202,8 +202,7 @@ class PostDetailsScreenViewModel(
                     authorId = currentUserId,
                     text = text,
                     date = Timestamp.now(),
-                )
-            )
+                ))
           } catch (e: Exception) {
             Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
             setErrorMsg("Failed to add comment: ${e.message}")

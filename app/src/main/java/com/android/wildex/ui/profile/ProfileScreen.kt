@@ -100,14 +100,7 @@ fun ProfileScreen(
       topBar = { ProfileTopAppBar(ownerProfile, onGoBack, onSettings) },
       content = { pd ->
         ProfileContent(
-            pd,
-            user,
-            ownerProfile,
-            onAchievements,
-            onCollection,
-            onMap,
-            onFriends,
-            onFriendRequest)
+            pd, user, ownerProfile, onAchievements, onCollection, onMap, onFriends, onFriendRequest)
       })
 }
 

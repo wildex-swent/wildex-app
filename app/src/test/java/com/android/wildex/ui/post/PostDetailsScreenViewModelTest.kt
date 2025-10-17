@@ -1,4 +1,4 @@
-package com.android.wildex.ui.home
+package com.android.wildex.ui.post
 
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentsRepository
@@ -9,7 +9,6 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Location
-import com.android.wildex.ui.post.PostDetailsScreenViewModel
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.Runs
@@ -19,7 +18,6 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -46,21 +44,24 @@ class PostDetailsScreenViewModelTest {
           date = Timestamp.now(),
           animalId = "Tiger",
           likesCount = 0,
-          commentsCount = 4)
+          commentsCount = 4,
+      )
 
   private val testPostSimpleAuthor =
       SimpleUser(
           userId = "poster1",
           username = "tiger_lover",
           profilePictureURL =
-              "https://vectorportal.com/storage/d5YN3OWWLMAJMqMZZJsITZT6bUniD0mbd2HGVNkB.jpg")
+              "https://vectorportal.com/storage/d5YN3OWWLMAJMqMZZJsITZT6bUniD0mbd2HGVNkB.jpg",
+      )
 
   private val testCommentsAuthor =
       SimpleUser(
           userId = "commentAuthor1",
           username = "joe34",
           profilePictureURL =
-              "https://vectorportal.com/storage/KIygRdXXMVXBs09f42hJ4VWOYVZIX9WdhOJP7Rf4.jpg")
+              "https://vectorportal.com/storage/KIygRdXXMVXBs09f42hJ4VWOYVZIX9WdhOJP7Rf4.jpg",
+      )
 
   private val testComments =
       listOf(
@@ -69,25 +70,29 @@ class PostDetailsScreenViewModelTest {
               postId = "post1",
               authorId = "commentAuthor1",
               text = "Great post!",
-              date = Timestamp.now()),
+              date = Timestamp.now(),
+          ),
           Comment(
               commentId = "comment2",
               postId = "post1",
               authorId = "commentAuthor1",
               text = "Thanks for sharing!",
-              date = Timestamp.now()),
+              date = Timestamp.now(),
+          ),
           Comment(
               commentId = "comment3",
               postId = "post1",
               authorId = "commentAuthor1",
               text = "It's beautiful!",
-              date = Timestamp.now()),
+              date = Timestamp.now(),
+          ),
           Comment(
               commentId = "comment4",
               postId = "post1",
               authorId = "commentAuthor1",
               text = "Would love to see it in person.",
-              date = Timestamp.now()),
+              date = Timestamp.now(),
+          ),
       )
 
   @Before
@@ -101,9 +106,9 @@ class PostDetailsScreenViewModelTest {
             postRepository = postsRepository,
             userRepository = userRepository,
             commentRepository = commentRepository,
-            likeRepository = likeRepository) {
-              "currentUserId-1"
-            }
+            likeRepository = likeRepository,
+            "currentUserId-1",
+        )
     coEvery { postsRepository.getPost("post1") } returns testPost
     coEvery { userRepository.getSimpleUser("poster1") } returns testPostSimpleAuthor
     coEvery { userRepository.getSimpleUser("commentAuthor1") } returns testCommentsAuthor

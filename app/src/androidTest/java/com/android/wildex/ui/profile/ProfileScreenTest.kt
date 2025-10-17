@@ -331,7 +331,7 @@ class ProfileScreenTest {
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
-            currentUserId = { "someone-else" },
+            currentUserId = "someone-else",
         )
 
     setThemedContent {
@@ -359,7 +359,7 @@ class ProfileScreenTest {
     override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int {
-      return achievements?.size ?: 0
+      return achievements.size
     }
   }
 
@@ -375,7 +375,7 @@ class ProfileScreenTest {
           ProfileScreenViewModel(
               userRepository = userRepo,
               achievementRepository = achRepo,
-              currentUserId = { "u-1" },
+              currentUserId = "u-1",
           )
 
       var achievements = 0
@@ -418,7 +418,7 @@ class ProfileScreenTest {
           ProfileScreenViewModel(
               userRepository = userRepo,
               achievementRepository = achRepo,
-              currentUserId = { "someone-else" },
+              currentUserId = "someone-else",
           )
 
       var requests = 0
@@ -603,7 +603,7 @@ class ProfileScreenTest {
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
-            currentUserId = { "someone-else" },
+            currentUserId = "someone-else",
         )
 
     var requests = 0

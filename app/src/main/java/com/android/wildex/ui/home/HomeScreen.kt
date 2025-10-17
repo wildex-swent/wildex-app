@@ -1,6 +1,13 @@
 package com.android.wildex.ui.home
 
-import androidx.compose.foundation.border
+/**
+ * HomeScreen.kt
+ *
+ * Defines the main Home Screen UI for the Wildex Android app using Jetpack Compose. Displays user
+ * posts, profile picture, and notifications. Handles post interactions such as likes and navigation
+ * to details.
+ */
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,19 +24,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,309 +42,288 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.social.Post
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserType
-import com.android.wildex.model.utils.Location
-import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
-import com.android.wildex.ui.home.HomeScreenTestTags.NO_POST
-import com.android.wildex.ui.home.HomeScreenTestTags.POST_AUTHOR_PICTURE
-import com.android.wildex.ui.home.HomeScreenTestTags.POST_COMMENT
-import com.android.wildex.ui.home.HomeScreenTestTags.POST_LIKE
-import com.android.wildex.ui.home.HomeScreenTestTags.POST_MORE_INFO
-import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
-import com.google.firebase.Timestamp
+import com.android.wildex.model.utils.Id
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/** Test tag constants used for UI testing of HomeScreen components. */
 object HomeScreenTestTags {
-  const val NO_POST = "HomeScreenNoPost"
-  const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
-  const val PROFILE_PICTURE = "HomeScreenProfilePicture"
-  const val POST_AUTHOR_PICTURE = "HomeScreenPostAuthorPicture"
-  const val POST_MORE_INFO = "HomeScreenPostMoreInfo"
-  const val POST_LIKE = "HomeScreenPostLike"
-  const val POST_COMMENT = "HomeScreenPostComment"
+    const val NO_POST_ICON = "HomeScreenNoPost"
+    const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
+    const val PROFILE_PICTURE = "HomeScreenProfilePicture"
+    const val POST_AUTHOR_PICTURE = "HomeScreenPostAuthorPicture"
+    const val POST_LIKE = "HomeScreenPostLike"
+    const val POST_COMMENT = "HomeScreenPostComment"
+    const val POST_IMAGE = "HomeScreenPostImage"
+    const val POST_LOCATION = "HomeScreenPostLocation"
+    const val POST_LIKE_BUTTON = "HomeScreenPostLikeButton"
 }
 
+/**
+ * Entry point composable for the home screen.
+ *
+ * @param homeScreenViewModel ViewModel managing UI state and data.
+ * @param onPostClick Callback invoked when a post is selected.
+ * @param onProfilePictureClick Callback invoked when the profile picture is selected.
+ * @param onNotificationClick Callback invoked when the notification icon is clicked.
+ */
 @Composable
 fun HomeScreen(
     homeScreenViewModel: HomeScreenViewModel = viewModel(),
-    testEmptyPosts: Boolean = false
+    onPostClick: (postId: Id) -> Unit = {},
+    onProfilePictureClick: (userId: Id) -> Unit = {},
+    onNotificationClick: () -> Unit = {},
 ) {
-  val uiState by homeScreenViewModel.uiState.collectAsState()
+    val uiState by homeScreenViewModel.uiState.collectAsState()
+    val user = uiState.currentUser
+    val posts = uiState.posts
 
-  // TODO: use uiState.user
-  val user =
-      User(
-          userId = "",
-          username = "<username>",
-          name = "<name>",
-          surname = "<surname>",
-          bio = "<bio>",
-          profilePictureURL =
-              "https://paulhollandphotography.com/cdn/shop/articles/4713_Individual_" +
-                  "Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c.jpg?v=1743534144&width=1500",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "<country>",
-          friendsCount = 0)
+    LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
 
-  // TODO: use uiState.posts
-  var posts =
-      List(1) {
-        Post(
-            postId = "<post>",
-            authorId = "<name>",
-            pictureURL =
-                "https://hips.hearstapps.com/hmg-prod/images/" +
-                    "cute-baby-animals-1558535060.jpg?crop=0.752xw:1.00xh;0.125xw,0&resize=640:*",
-            location = Location(0.0, 0.0),
-            date = Timestamp.now(),
-            animalId = "<animal>",
-            likesCount = 0,
-            commentsCount = 0)
-      }
-  if (testEmptyPosts) posts = emptyList<Post>()
-
-  LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
-
-  Scaffold(
-      topBar = { WildexTopAppBar(user) },
-      bottomBar = { /* TODO: BottomAppBar */},
-      content = { pd ->
-        if (posts.isEmpty()) {
-          NoPostsView()
-        } else {
-          PostsView(posts = posts, pd = pd)
-        }
-      })
+    Scaffold(
+        topBar = { WildexHomeTopAppBar(user, onNotificationClick, onProfilePictureClick) },
+        bottomBar = { /* Reserved for future BottomAppBar implementation */ },
+        content = { pd ->
+            if (posts.isEmpty()) NoPostsView()
+            else
+                PostsView(
+                    posts = posts,
+                    pd = pd,
+                    viewModel = homeScreenViewModel,
+                    onPostClick = onPostClick,
+                )
+        },
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WildexTopAppBar(user: User) {
-  TopAppBar(
-      title = {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-          Text(
-              text = "Wildex",
-              style =
-                  MaterialTheme.typography.titleLarge.copy(
-                      fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 30.sp))
-        }
-      },
-      modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary).shadow(5.dp),
-      navigationIcon = {
-        IconButton(
-            onClick = { /* TODO: Navigate to Notifications */},
-            modifier = Modifier.testTag(NOTIFICATION_BELL)) {
-              Icon(
-                  painter = painterResource(R.drawable.notification_bell),
-                  contentDescription = "Notifications",
-                  modifier = Modifier.size(30.dp))
-            }
-      },
-      actions = {
-        IconButton(
-            onClick = { /* TODO: Navigate to Profile */},
-            modifier = Modifier.testTag(PROFILE_PICTURE)) {
-              AsyncImage(
-                  model = user.profilePictureURL,
-                  contentDescription = "Profile picture",
-                  modifier =
-                      Modifier.size(40.dp)
-                          .clip(CircleShape)
-                          .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                  contentScale = ContentScale.Crop)
-            }
-      },
-      colors =
-          TopAppBarDefaults.topAppBarColors(
-              titleContentColor = MaterialTheme.colorScheme.primary,
-              navigationIconContentColor = MaterialTheme.colorScheme.primary))
-}
-
+/** Displays a placeholder view when there are no posts available. */
 @Composable
 fun NoPostsView() {
-  Column(
-      modifier = Modifier.fillMaxSize(),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
         Icon(
             painter = painterResource(R.drawable.nothing_found),
             contentDescription = "Nothing Found",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(100.dp).testTag(NO_POST))
+            modifier = Modifier
+                .size(100.dp)
+                .testTag(HomeScreenTestTags.NO_POST_ICON),
+        )
         Text(
             text = "No nearby posts.\n Start posting...",
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
-            fontSize = 25.sp)
-      }
+            fontSize = 25.sp,
+        )
+    }
 }
 
+/**
+ * Displays a scrollable list of posts.
+ *
+ * @param posts List of PostState objects representing UI data for each post.
+ * @param pd Padding values from the Scaffold content.
+ * @param viewModel Reference to HomeScreenViewModel for like actions.
+ * @param onPostClick Callback when a post is clicked.
+ */
 @Composable
-fun PostsView(posts: List<Post>, pd: PaddingValues) {
-  LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(pd),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Top) {
-        items(posts.size) { index -> PostItem(post = posts[index]) }
-      }
-}
-
-@Composable
-fun PostItem(post: Post) {
-  Card(
-      modifier = Modifier.padding(15.dp),
-      shape = RoundedCornerShape(15.dp),
-      colors =
-          CardColors(
-              containerColor = Color.White,
-              contentColor = MaterialTheme.colorScheme.primary,
-              disabledContainerColor = MaterialTheme.colorScheme.primary,
-              disabledContentColor = MaterialTheme.colorScheme.primary),
-      elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)) {
-        Column {
-          PostHeader(post)
-          PostImage(post)
-          PostActions(post)
+fun PostsView(
+    posts: List<PostState>,
+    pd: PaddingValues,
+    viewModel: HomeScreenViewModel,
+    onPostClick: (Id) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(pd),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        items(posts.size) { index ->
+            PostItem(postState = posts[index], viewModel = viewModel, onPostClick = onPostClick)
         }
-      }
+    }
 }
 
+/**
+ * Displays a single post card with image and information.
+ *
+ * @param postState Contains post, author, and UI state (like status).
+ * @param viewModel Reference to the HomeScreenViewModel for handling likes.
+ * @param onPostClick Callback invoked when the post is selected.
+ */
 @Composable
-fun PostHeader(post: Post) {
-  // TODO: import author
-  val author =
-      User(
-          userId = "",
-          username = "<username>",
-          name = "<name>",
-          surname = "<surname>",
-          bio = "<bio>",
-          profilePictureURL =
-              "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
-                  "social-media-profile-photos.jpg",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "<country>",
-          friendsCount = 0)
-
-  // TODO: import animal
-  val animal =
-      Animal(
-          animalId = "<animal>",
-          pictureURL = "https://cdn.britannica.com/16/234216-050-C66F8665/beagle-hound-dog.jpg",
-          name = "<name>",
-          species = "<species>",
-          description = "<description>",
-      )
-
-  Row(
-      modifier = Modifier.fillMaxWidth().padding(15.dp),
-      verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(
-            model = author.profilePictureURL,
-            contentDescription = "Author profile picture",
-            modifier = Modifier.size(50.dp).clip(CircleShape).testTag(POST_AUTHOR_PICTURE))
-
-        Spacer(modifier = Modifier.width(15.dp))
-
-        Column {
-          Text(
-              text = "${author.name} saw ${animal.name}",
-              fontWeight = FontWeight.Bold,
-              fontSize = 20.sp)
-          Text(
-              text =
-                  SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                      .format(post.date.toDate()),
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 15.sp,
-              color = MaterialTheme.colorScheme.tertiary)
+fun PostItem(postState: PostState, viewModel: HomeScreenViewModel, onPostClick: (Id) -> Unit) {
+    Card(
+        modifier = Modifier.padding(15.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors =
+            CardColors(
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary,
+                disabledContentColor = MaterialTheme.colorScheme.primary,
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
+    ) {
+        Row {
+            PostImage(postState, viewModel)
+            PostInfo(postState, onPostClick = onPostClick)
         }
+    }
+}
 
-        Spacer(modifier = Modifier.weight(1f))
+/**
+ * Displays detailed information for a post, including author, timestamp, location, likes, and
+ * comments.
+ *
+ * @param postState State containing post and author information.
+ * @param onPostClick Callback when the post is clicked.
+ */
+@Composable
+fun PostInfo(postState: PostState, onPostClick: (postId: Id) -> Unit) {
+    val post = postState.post
+    val author = postState.author
+    val animal = postState.animal
 
-        IconButton(
-            onClick = { /* TODO: Navigate to Post Details */},
-            modifier = Modifier.testTag(POST_MORE_INFO)) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                  contentDescription = "More Info",
-                  tint = MaterialTheme.colorScheme.tertiary,
-                  modifier = Modifier.size(40.dp))
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier =
+            Modifier
+                .padding(10.dp, 10.dp, 30.dp, 10.dp)
+                .clickable(onClick = { onPostClick(post.postId) }),
+    ) {
+        Row {
+            AsyncImage(
+                model = author.profilePictureURL,
+                contentDescription = "Author profile picture",
+                modifier =
+                    Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .testTag(HomeScreenTestTags.POST_AUTHOR_PICTURE),
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "${author.username} saw ${animal.name}",
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Left,
+                )
+                Text(
+                    text =
+                        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                            .format(post.date.toDate()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
             }
-      }
-}
-
-@Composable
-fun PostImage(post: Post) {
-  AsyncImage(
-      model = post.pictureURL,
-      contentDescription = "Post picture",
-      modifier =
-          Modifier.fillMaxWidth()
-              .height(200.dp)
-              .clip(RoundedCornerShape(15.dp))
-              .padding(horizontal = 15.dp),
-      contentScale = ContentScale.Crop)
-}
-
-@Composable
-fun PostActions(post: Post) {
-  Row(
-      modifier = Modifier.fillMaxWidth().padding(15.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-          IconButton(onClick = { /* TODO: Like */}, modifier = Modifier.testTag(POST_LIKE)) {
-            Icon(
-                imageVector = Icons.Default.Favorite,
-                contentDescription = "Likes",
-                modifier = Modifier.size(30.dp),
-                tint = MaterialTheme.colorScheme.tertiary)
-          }
-          Text(
-              text = "${post.likesCount} likes",
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 20.sp,
-              color = MaterialTheme.colorScheme.tertiary)
         }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-          IconButton(onClick = { /* TODO: Comments */}, modifier = Modifier.testTag(POST_COMMENT)) {
-            Icon(
-                painter = painterResource(R.drawable.comment_icon),
-                contentDescription = "Comments",
-                modifier = Modifier.size(30.dp),
-                tint = MaterialTheme.colorScheme.tertiary)
-          }
-          Text(
-              text = "${post.commentsCount} comments",
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 20.sp,
-              color = MaterialTheme.colorScheme.tertiary)
+        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.testTag(HomeScreenTestTags.POST_LOCATION)) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Location",
+                    modifier = Modifier.size(25.dp),
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = post.location?.name ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.testTag(HomeScreenTestTags.POST_LIKE)) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Likes",
+                    modifier = Modifier.size(25.dp),
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = "${post.likesCount} likes",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.testTag(HomeScreenTestTags.POST_COMMENT)) {
+                Icon(
+                    painter = painterResource(R.drawable.comment_icon),
+                    contentDescription = "Comments",
+                    modifier = Modifier.size(25.dp),
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = "${post.commentsCount} comments",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
         }
-      }
+    }
 }
 
-/*@Preview
+/**
+ * Displays the post image and handles like toggling.
+ *
+ * @param postState State object containing post data and like status.
+ * @param viewModel ViewModel to handle like interactions and state refresh.
+ */
 @Composable
-fun HomeScreenPreview() {
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { HomeScreen(HomeScreenViewModel()) } }
-}*/
+fun PostImage(postState: PostState, viewModel: HomeScreenViewModel) {
+    val post = postState.post
+    val isLiked = postState.isLiked
+    Box {
+        AsyncImage(
+            model = post.pictureURL,
+            contentDescription = "Post picture",
+            modifier =
+                Modifier
+                    .fillMaxWidth(.5f)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .testTag(HomeScreenTestTags.POST_IMAGE),
+            contentScale = ContentScale.Crop,
+        )
+        IconButton(
+            onClick = {
+                viewModel.handleLike(post.postId)
+                viewModel.refreshUIState()
+            },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .testTag(HomeScreenTestTags.POST_LIKE_BUTTON),
+        ) {
+            Icon(
+                imageVector = if (isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = "Like button",
+                modifier = Modifier.size(30.dp),
+            )
+        }
+    }
+}

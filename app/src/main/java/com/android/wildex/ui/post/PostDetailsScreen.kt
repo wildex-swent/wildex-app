@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -84,6 +85,7 @@ fun PostDetailsScreen(
   }
 
   Scaffold(
+      modifier = Modifier.padding(10.dp),
       topBar = {
         PostDetailsTopBar(
             onGoBack = onGoBack,
@@ -93,50 +95,55 @@ fun PostDetailsScreen(
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              AsyncImage(
-                  model = postDetailsUIState.pictureURL,
-                  contentDescription = "Post picture",
-                  modifier =
-                      Modifier.size(40.dp)
-                          .clip(CircleShape)
-                          .border(2.dp, MaterialTheme.colorScheme.primary),
-                  contentScale = ContentScale.Crop)
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          AsyncImage(
+              model = postDetailsUIState.pictureURL,
+              contentDescription = "Post picture",
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .fillMaxHeight(.4f)
+                      .clip(RoundedCornerShape(20.dp)),
+              contentScale = ContentScale.Crop,
+          )
 
-              PostInfoBar(
-                  authorId = postDetailsUIState.authorId,
-                  authorProfilePictureURL = postDetailsUIState.authorProfilePictureURL,
-                  authorUserName = postDetailsUIState.authorUsername,
-                  animalName = postDetailsUIState.animalName,
-                  date = postDetailsUIState.date,
-                  location = postDetailsUIState.location,
-                  likedByCurrentUser = postDetailsUIState.likedByCurrentUser,
-                  likesCount = postDetailsUIState.likesCount,
-                  onProfile = onProfile,
-                  postDetailsScreenViewModel = postDetailsScreenViewModel)
+          PostInfoBar(
+              authorId = postDetailsUIState.authorId,
+              authorProfilePictureURL = postDetailsUIState.authorProfilePictureURL,
+              authorUserName = postDetailsUIState.authorUsername,
+              animalName = postDetailsUIState.animalName,
+              date = postDetailsUIState.date,
+              location = postDetailsUIState.location,
+              likedByCurrentUser = postDetailsUIState.likedByCurrentUser,
+              likesCount = postDetailsUIState.likesCount,
+              onProfile = onProfile,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+          )
 
-              Box(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(8.dp)
-                          .border(
-                              2.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(12.dp))
-                          .clip(RoundedCornerShape(24.dp))
-                          .padding(8.dp)) {
-                    Text(
-                        text = postDetailsUIState.description,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                  }
+          Box(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(8.dp)
+                      .border(2.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(12.dp))
+                      .clip(RoundedCornerShape(24.dp))
+                      .padding(8.dp)
+          ) {
+            Text(
+                text = postDetailsUIState.description,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+          }
 
-              CommentSection(
-                  commentsUI = postDetailsUIState.commentsUI,
-                  userId = postDetailsUIState.currentUserId,
-                  userProfilePictureURL = postDetailsUIState.currentUserProfilePictureURL,
-                  onProfile = onProfile,
-                  postDetailsScreenViewModel = postDetailsScreenViewModel)
-            }
-      })
+          CommentSection(
+              commentsUI = postDetailsUIState.commentsUI,
+              userId = postDetailsUIState.currentUserId,
+              userProfilePictureURL = postDetailsUIState.currentUserProfilePictureURL,
+              onProfile = onProfile,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+          )
+        }
+      },
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,9 +156,11 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = "Back to Homepage",
-              tint = MaterialTheme.colorScheme.primary)
+              tint = MaterialTheme.colorScheme.primary,
+          )
         }
-      })
+      },
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -167,73 +176,80 @@ fun PostInfoBar(
     likedByCurrentUser: Boolean = false,
     likesCount: Int = 0,
     onProfile: (Id) -> Unit = {},
-    postDetailsScreenViewModel: PostDetailsScreenViewModel
+    postDetailsScreenViewModel: PostDetailsScreenViewModel,
 ) {
   Row(
       modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        ClickableProfilePicture(
-            modifier = Modifier.size(64.dp),
-            profileId = authorId,
-            profilePictureURL = authorProfilePictureURL,
-            role = "author",
-            onProfile = onProfile)
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    ClickableProfilePicture(
+        modifier = Modifier.size(64.dp),
+        profileId = authorId,
+        profilePictureURL = authorProfilePictureURL,
+        role = "author",
+        onProfile = onProfile,
+    )
 
-        Column(
-            modifier = Modifier.weight(2f).padding(horizontal = 8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Text(
-                  text = "$authorUserName saw a",
-              )
-              Text(
-                  text = animalName,
-                  color = MaterialTheme.colorScheme.primary,
-              )
-              Text(
-                  text = date,
-                  color = MaterialTheme.colorScheme.tertiary,
-              )
-            }
+    Column(
+        modifier = Modifier.weight(2f).padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      Text(
+          text = "$authorUserName saw a",
+      )
+      Text(
+          text = animalName,
+          color = MaterialTheme.colorScheme.primary,
+      )
+      Text(
+          text = date,
+          color = MaterialTheme.colorScheme.tertiary,
+      )
+    }
 
-        Column(
-            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Icon(
-                  imageVector = Icons.Default.LocationOn,
-                  contentDescription = "Location",
-                  modifier = Modifier.size(40.dp),
-                  tint = MaterialTheme.colorScheme.tertiary)
+    Column(
+        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      Icon(
+          imageVector = Icons.Default.LocationOn,
+          contentDescription = "Location",
+          modifier = Modifier.size(40.dp),
+          tint = MaterialTheme.colorScheme.tertiary,
+      )
 
-              Text(
-                  text = location,
-                  color = MaterialTheme.colorScheme.tertiary,
-              )
-            }
+      Text(
+          text = location,
+          color = MaterialTheme.colorScheme.tertiary,
+      )
+    }
 
-        Column(
-            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              IconButton(
-                  onClick = {
-                    if (!likedByCurrentUser) postDetailsScreenViewModel.addLike()
-                    else postDetailsScreenViewModel.removeLike()
-                  }) {
-                    Icon(
-                        imageVector =
-                            if (likedByCurrentUser) Icons.Filled.Favorite
-                            else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Like status",
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.tertiary)
-                  }
-
-              Text(text = likesCount.toString(), color = MaterialTheme.colorScheme.tertiary)
-            }
+    Column(
+        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      IconButton(
+          onClick = {
+            if (!likedByCurrentUser) postDetailsScreenViewModel.addLike()
+            else postDetailsScreenViewModel.removeLike()
+          }
+      ) {
+        Icon(
+            imageVector =
+                if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = "Like status",
+            modifier = Modifier.size(40.dp),
+            tint = MaterialTheme.colorScheme.tertiary,
+        )
       }
+
+      Text(text = likesCount.toString(), color = MaterialTheme.colorScheme.tertiary)
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -244,29 +260,30 @@ fun CommentSection(
     userId: Id = "",
     userProfilePictureURL: URL = "",
     onProfile: (Id) -> Unit = {},
-    postDetailsScreenViewModel: PostDetailsScreenViewModel
+    postDetailsScreenViewModel: PostDetailsScreenViewModel,
 ) {
   Box(
       modifier =
           Modifier.padding(8.dp)
               .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-              .clip(RoundedCornerShape(24.dp))) {
-        Column(modifier = modifier.fillMaxWidth()) {
-          LazyColumn(
-              modifier = Modifier.weight(1f).fillMaxWidth(),
-              verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                items(commentsUI) { commentUI ->
-                  Comment(commentUI = commentUI, onProfile = onProfile)
-                }
-              }
-
-          CommentInput(
-              userId = userId,
-              userProfilePictureURL = userProfilePictureURL,
-              onProfile = onProfile,
-              postDetailsScreenViewModel = postDetailsScreenViewModel)
-        }
+              .clip(RoundedCornerShape(24.dp))
+  ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+      LazyColumn(
+          modifier = Modifier.weight(1f).fillMaxWidth(),
+          verticalArrangement = Arrangement.spacedBy(0.dp),
+      ) {
+        items(commentsUI) { commentUI -> Comment(commentUI = commentUI, onProfile = onProfile) }
       }
+
+      CommentInput(
+          userId = userId,
+          userProfilePictureURL = userProfilePictureURL,
+          onProfile = onProfile,
+          postDetailsScreenViewModel = postDetailsScreenViewModel,
+      )
+    }
+  }
 }
 
 @Composable
@@ -281,7 +298,8 @@ fun Comment(
           profileId = commentUI.authorId,
           profilePictureURL = commentUI.authorProfilePictureUrl,
           role = "commenter",
-          onProfile = onProfile)
+          onProfile = onProfile,
+      )
 
       Spacer(modifier = Modifier.width(12.dp))
 
@@ -310,48 +328,54 @@ fun CommentInput(
     userId: Id = "",
     userProfilePictureURL: URL = "",
     onProfile: (Id) -> Unit = {},
-    postDetailsScreenViewModel: PostDetailsScreenViewModel
+    postDetailsScreenViewModel: PostDetailsScreenViewModel,
 ) {
   Box(
       modifier =
           Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-              .padding(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-              ClickableProfilePicture(
-                  modifier = Modifier.size(56.dp),
-                  profileId = userId,
-                  profilePictureURL = userProfilePictureURL,
-                  role = "comment_input",
-                  onProfile = onProfile)
+              .padding(8.dp)
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClickableProfilePicture(
+          modifier = Modifier.size(56.dp),
+          profileId = userId,
+          profilePictureURL = userProfilePictureURL,
+          role = "comment_input",
+          onProfile = onProfile,
+      )
 
-              Spacer(modifier = Modifier.width(8.dp))
+      Spacer(modifier = Modifier.width(8.dp))
 
-              var text by remember { mutableStateOf("") }
+      var text by remember { mutableStateOf("") }
 
-              OutlinedTextField(
-                  value = text,
-                  onValueChange = { text = it },
-                  placeholder = { Text("Add a comment...") },
-                  modifier = Modifier.weight(1f),
-                  shape = RoundedCornerShape(24.dp),
-                  singleLine = true,
-                  trailingIcon = {
-                    IconButton(
-                        onClick = {
-                          if (text.isNotBlank()) {
-                            postDetailsScreenViewModel.addComment(text)
-                            text = ""
-                          }
-                        }) {
-                          Icon(
-                              imageVector = Icons.AutoMirrored.Filled.Send,
-                              contentDescription = "Send comment")
-                        }
-                  })
+      OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          placeholder = { Text("Add a comment ...") },
+          modifier = Modifier.weight(1f),
+          shape = RoundedCornerShape(24.dp),
+          singleLine = true,
+          trailingIcon = {
+            IconButton(
+                onClick = {
+                  if (text.isNotBlank()) {
+                    postDetailsScreenViewModel.addComment(text)
+                    text = ""
+                  }
+                }
+            ) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Send,
+                  contentDescription = "Send comment",
+              )
             }
-      }
+          },
+      )
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -361,21 +385,24 @@ fun ClickableProfilePicture(
     profileId: String = "",
     profilePictureURL: URL = "",
     role: String = "",
-    onProfile: (Id) -> Unit = {}
+    onProfile: (Id) -> Unit = {},
 ) {
   IconButton(
       onClick = { onProfile(profileId) },
       modifier =
           modifier
-              .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-              .testTag(testTagForProfilePicture(profileId, role))) {
-        AsyncImage(
-            model = profilePictureURL,
-            contentDescription = "Profile picture",
-            modifier =
-                Modifier.size(40.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-            contentScale = ContentScale.Crop)
-      }
+              .height(56.dp)
+              .testTag(testTagForProfilePicture(profileId, role)),
+
+  ) {
+    AsyncImage(
+        model = profilePictureURL,
+        contentDescription = "Profile picture",
+        modifier =
+            Modifier
+                .clip(CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+        contentScale = ContentScale.Crop,
+    )
+  }
 }

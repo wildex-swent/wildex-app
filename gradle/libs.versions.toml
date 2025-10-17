@@ -29,6 +29,7 @@ googleid = "1.1.1"
 okhttp = "4.12.0"
 
 kotlinxSerializationJson = "1.6.2"
+kotlinxCoroutinesTest = "1.8.1"
 
 # Testing
 mockitoAndroid = "5.13.0"
@@ -41,6 +42,8 @@ mockk = "1.13.7"
 mockkAgent = "1.13.7"
 mockkAndroid = "1.13.7"
 navigationCompose = "2.7.7"
+
+coil = "2.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -79,6 +82,7 @@ kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", ve
 kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
@@ -91,6 +95,9 @@ mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "
 mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+
+coil = { module = "io.coil-kt:coil", version.ref = "coil" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

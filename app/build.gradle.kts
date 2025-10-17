@@ -52,9 +52,7 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
 
-    debug {
-      isMinifyEnabled = false
-    }
+    debug { isMinifyEnabled = false }
 
     debug {
       enableUnitTestCoverage = true
@@ -96,11 +94,7 @@ android {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
     }
-    packagingOptions {
-      jniLibs {
-        useLegacyPackaging = true
-      }
-    }
+    packagingOptions { jniLibs { useLegacyPackaging = true } }
   }
 
   // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
@@ -132,23 +126,24 @@ sonar {
     // Comma-separated paths to the various directories containing the *.xml JUnit report files.
     // Each path may be absolute or relative to the project base directory.
     property(
-      "sonar.junit.reportPaths",
-      listOf(
-        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
-        "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
-      ).joinToString(",")
+        "sonar.junit.reportPaths",
+        listOf(
+                "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+                "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
+            )
+            .joinToString(","),
     )
 
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
     property(
-      "sonar.androidLint.reportPaths",
-      "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
+        "sonar.androidLint.reportPaths",
+        "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
     // Paths to JaCoCo XML coverage report files.
     property(
-      "sonar.coverage.jacoco.xmlReportPaths",
-      "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+        "sonar.coverage.jacoco.xmlReportPaths",
+        "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
     )
   }
 }
@@ -164,13 +159,16 @@ dependencies {
   implementation(libs.androidx.appcompat)
   implementation(libs.material)
   implementation(libs.androidx.lifecycle.runtime.ktx)
-  implementation(platform(libs.compose.bom))
+  implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.navigation.fragment.ktx)
+  implementation(libs.androidx.navigation.ui.ktx)
+  globalTestImplementation(libs.androidx.junit)
+  globalTestImplementation(libs.androidx.espresso.core)
+  // Navigation
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.navigation.fragment.ktx)
   implementation(libs.androidx.navigation.ui.ktx)
   testImplementation(libs.junit)
-  globalTestImplementation(libs.androidx.junit)
-  globalTestImplementation(libs.androidx.espresso.core)
   implementation(libs.kotlinx.serialization.json)
 
   // ------------- Jetpack Compose ------------------
@@ -178,6 +176,7 @@ dependencies {
   implementation(composeBom)
   globalTestImplementation(composeBom)
 
+  implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
   implementation(libs.compose.ui.graphics)
   // Material Design 3
@@ -189,6 +188,9 @@ dependencies {
   // Android Studio Preview support
   implementation(libs.compose.preview)
   debugImplementation(libs.compose.tooling)
+  // UI Tests
+  globalTestImplementation(libs.compose.test.junit)
+  debugImplementation(libs.compose.test.manifest)
 
   // Firebase
   implementation(libs.firebase.database.ktx)
@@ -200,15 +202,6 @@ dependencies {
   implementation(libs.credentials)
   implementation(libs.credentials.play.services.auth)
   implementation(libs.googleid)
-
-  // Navigation
-  implementation(libs.androidx.navigation.compose)
-  implementation(libs.androidx.navigation.fragment.ktx)
-  implementation(libs.androidx.navigation.ui.ktx)
-
-  // UI Tests
-  globalTestImplementation(libs.compose.test.junit)
-  debugImplementation(libs.compose.test.manifest)
 
   // --------- Kaspresso test framework ----------
   globalTestImplementation(libs.kaspresso)
@@ -230,17 +223,13 @@ dependencies {
   androidTestImplementation(libs.mockk.agent)
   androidTestImplementation(libs.mockito.android)
   androidTestImplementation(libs.mockito.kotlin)
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+  testImplementation(libs.kotlinx.coroutines.test)
 
   // Coil for image loading
-  implementation("io.coil-kt:coil:2.6.0")
-  implementation("io.coil-kt:coil-compose:2.6.0")
-  testImplementation("io.coil-kt:coil:2.6.0")
-  testImplementation("io.coil-kt:coil-compose:2.6.0")
-
-  androidTestImplementation("io.coil-kt:coil:2.6.0")
-  androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
-
+  implementation(libs.coil)
+  implementation(libs.coil.compose)
+  globalTestImplementation(libs.coil)
+  globalTestImplementation(libs.coil.compose)
 }
 
 tasks.withType<Test> {
@@ -264,28 +253,28 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 
   val fileFilter =
-    listOf(
-      "**/R.class",
-      "**/R$*.class",
-      "**/BuildConfig.*",
-      "**/Manifest*.*",
-      "**/*Test*.*",
-      "android/**/*.*",
-    )
+      listOf(
+          "**/R.class",
+          "**/R$*.class",
+          "**/BuildConfig.*",
+          "**/Manifest*.*",
+          "**/*Test*.*",
+          "android/**/*.*",
+      )
 
   val debugTree =
-    fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-      exclude(fileFilter)
-    }
+      fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+      }
 
   val mainSrc = "${project.layout.projectDirectory}/src/main/java"
   sourceDirectories.setFrom(files(mainSrc))
   classDirectories.setFrom(files(debugTree))
   executionData.setFrom(
-    fileTree(project.layout.buildDirectory.get()) {
-      include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-      include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
-    }
+      fileTree(project.layout.buildDirectory.get()) {
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+      }
   )
 }
 

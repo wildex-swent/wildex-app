@@ -136,82 +136,90 @@ class PostDetailsScreenViewModel(
   }
 
   fun addLike() {
-    viewModelScope.launch {
-      val postId = _uiState.value.postId
-      try {
-        val post = postRepository.getPost(postId)
-        postRepository.editPost(
-            postId = postId,
-            newValue = post.copy(likesCount = post.likesCount + 1),
-        )
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-        setErrorMsg("Failed to load post : ${e.message}")
-      }
-      try {
-        val likeId = likeRepository.getNewLikeId()
-        likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
-        setErrorMsg("Failed to handle post likes: ${e.message}")
-      }
-    }
+    viewModelScope
+        .launch {
+          val postId = _uiState.value.postId
+          try {
+            val post = postRepository.getPost(postId)
+            postRepository.editPost(
+                postId = postId,
+                newValue = post.copy(likesCount = post.likesCount + 1),
+            )
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
+            setErrorMsg("Failed to load post : ${e.message}")
+          }
+          try {
+            val likeId = likeRepository.getNewLikeId()
+            likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
+            setErrorMsg("Failed to handle post likes: ${e.message}")
+          }
+        }
+        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
   }
 
   fun removeLike() {
-    viewModelScope.launch {
-      val postId = _uiState.value.postId
-      try {
-        val post = postRepository.getPost(postId)
-        postRepository.editPost(
-            postId = postId,
-            newValue = post.copy(likesCount = post.likesCount - 1),
-        )
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-        setErrorMsg("Failed to load post : ${e.message}")
-      }
-      try {
-        val likeId =
-            likeRepository.getLikeForPost(postId = postId)?.likeId
-                ?: throw Exception("Like not found")
-        likeRepository.deleteLike(likeId)
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
-        setErrorMsg("Failed to handle post likes: ${e.message}")
-      }
-    }
+    viewModelScope
+        .launch {
+          val postId = _uiState.value.postId
+
+          try {
+            val likeId =
+                likeRepository.getLikeForPost(postId = postId)?.likeId
+                    ?: throw Exception("Like not found")
+            likeRepository.deleteLike(likeId)
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
+            setErrorMsg("Failed to handle post likes: ${e.message}")
+            return@launch
+          }
+          try {
+            val post = postRepository.getPost(postId)
+            postRepository.editPost(
+                postId = postId,
+                newValue = post.copy(likesCount = post.likesCount - 1),
+            )
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
+            setErrorMsg("Failed to load post : ${e.message}")
+          }
+        }
+        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
   }
 
   fun addComment(text: String = "") {
-    viewModelScope.launch {
-      val postId = _uiState.value.postId
-      try {
-        val post = postRepository.getPost(postId)
-        postRepository.editPost(
-            postId = postId,
-            newValue = post.copy(commentsCount = post.commentsCount + 1),
-        )
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-        setErrorMsg("Failed to load post : ${e.message}")
-      }
-      try {
-        val commentId = commentRepository.getNewCommentId()
-        commentRepository.addComment(
-            Comment(
-                commentId = commentId,
+    viewModelScope
+        .launch {
+          val postId = _uiState.value.postId
+          try {
+            val post = postRepository.getPost(postId)
+            postRepository.editPost(
                 postId = postId,
-                authorId = currentUserId,
-                text = text,
-                date = Timestamp.now(),
+                newValue = post.copy(commentsCount = post.commentsCount + 1),
             )
-        )
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
-        setErrorMsg("Failed to add comment: ${e.message}")
-      }
-    }
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
+            setErrorMsg("Failed to load post : ${e.message}")
+          }
+          try {
+            val commentId = commentRepository.getNewCommentId()
+            commentRepository.addComment(
+                Comment(
+                    commentId = commentId,
+                    postId = postId,
+                    authorId = currentUserId,
+                    text = text,
+                    date = Timestamp.now(),
+                )
+            )
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
+            setErrorMsg("Failed to add comment: ${e.message}")
+          }
+        }
+        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
   }
 
   private suspend fun commentsToCommentsUI(comments: List<Comment>): List<CommentWithAuthorUI> {

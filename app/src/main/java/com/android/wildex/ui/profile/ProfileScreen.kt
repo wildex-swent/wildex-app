@@ -101,7 +101,7 @@ fun ProfileScreen(
       content = { pd ->
         ProfileContent(
             pd,
-            user ?: defaultUser,
+            user,
             ownerProfile,
             onAchievements,
             onCollection,

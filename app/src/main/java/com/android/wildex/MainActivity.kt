@@ -64,13 +64,6 @@ fun WildexApp(context: Context = LocalContext.current) {
   val navigationActions = NavigationActions(navController)
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.route else Screen.Home.route
-  val wildexBottomBar =
-      @Composable {
-        BottomNavigationMenu(
-            Tab.Home,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-        )
-      }
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth

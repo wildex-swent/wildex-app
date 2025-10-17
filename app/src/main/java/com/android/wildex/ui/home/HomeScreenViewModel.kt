@@ -107,7 +107,7 @@ class HomeScreenViewModel(
       try {
         val posts = fetchPosts()
         val user = fetchUser()
-        _uiState.value = HomeUIState(posts = posts, currentUser = user)
+        _uiState.value = HomeUIState(currentUser = user, posts = posts)
         Log.d("HomeScreenViewModel", "UI state refreshed with ${posts.size} posts.")
       } catch (e: Exception) {
         Log.e("HomeScreenViewModel", "Error refreshing UI state", e)

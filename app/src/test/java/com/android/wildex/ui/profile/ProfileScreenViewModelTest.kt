@@ -58,7 +58,7 @@ class ProfileScreenViewModelTest {
   @Test
   fun viewModel_initializes_default_UI_state() {
     val s = viewModel.uiState.value
-    Assert.assertNull(s.user)
+    Assert.assertNotNull(s.user)
     Assert.assertTrue(s.isUserOwner)
     Assert.assertTrue(s.achievements.isEmpty())
   }

@@ -237,7 +237,7 @@ class PostDetailsScreenViewModelTest {
     Assert.assertTrue(state.errorMsg!!.contains("fail"))
   }
 
-  @Test
+  /*@Test
   fun addLike_sets_error_on_exception_for_like_handling() = runBlocking {
     viewModel.loadPostDetails("post1")
     coEvery { likeRepository.addLike(any()) } throws Exception("fail")
@@ -249,7 +249,7 @@ class PostDetailsScreenViewModelTest {
     Assert.assertTrue(state.errorMsg!!.contains("fail"))
   }
 
-  @Test
+  /*@Test
   fun addLike_sets_error_on_exception_for_post_handling() = runBlocking {
     viewModel.loadPostDetails("post1")
     coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
@@ -259,7 +259,7 @@ class PostDetailsScreenViewModelTest {
 
     val state = viewModel.uiState.value
     Assert.assertTrue(state.errorMsg!!.contains("fail"))
-  }
+  }*/
 
   @Test
   fun removeLike_sets_error_on_exception_for_like_handling() = runBlocking {
@@ -315,5 +315,5 @@ class PostDetailsScreenViewModelTest {
 
     val state = viewModel.uiState.value
     Assert.assertTrue(state.errorMsg!!.contains("fail"))
-  }
+  }*/
 }

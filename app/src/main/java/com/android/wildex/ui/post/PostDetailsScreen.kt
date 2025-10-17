@@ -196,9 +196,9 @@ fun PostInfoBar(
       Text(
           text =
               buildAnnotatedString {
-                append("$authorUserName saw a")
+                append("$authorUserName saw an")
                 withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                  append(" $animalName!")
+                  append(" animal!")
                 }
               },
           style = MaterialTheme.typography.titleLarge)

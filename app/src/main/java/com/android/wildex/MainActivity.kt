@@ -50,8 +50,6 @@ const val AUTH_PORT = 9099
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    Firebase.auth.useEmulator(HOST, AUTH_PORT)
-    Firebase.firestore.useEmulator(HOST, FIRESTORE_PORT)
     super.onCreate(savedInstanceState)
     setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
   }

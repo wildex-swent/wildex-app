@@ -62,14 +62,14 @@ android {
     }
   }
 
-  testCoverage { jacocoVersion = "0.8.11" }
+  testCoverage { jacocoVersion = "0.8.12" }
 
   buildFeatures {
     compose = true
     buildConfig = true
   }
 
-  composeOptions { kotlinCompilerExtensionVersion = "1.4.2" }
+  composeOptions { kotlinCompilerExtensionVersion = "1.5.3" }
 
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -133,8 +133,12 @@ sonar {
     // Each path may be absolute or relative to the project base directory.
     property(
       "sonar.junit.reportPaths",
-      "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+      listOf(
+        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+        "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
+      ).joinToString(",")
     )
+
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
     property(
@@ -225,12 +229,22 @@ dependencies {
   androidTestImplementation(libs.mockito.kotlin)
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
-  // Coil
-  implementation("io.coil-kt:coil:2.3.0")
-  implementation("io.coil-kt:coil-compose:2.3.0")
+  // Coil for image loading
+  implementation("io.coil-kt:coil:2.6.0")
+  implementation("io.coil-kt:coil-compose:2.6.0")
+  testImplementation("io.coil-kt:coil:2.6.0")
+  testImplementation("io.coil-kt:coil-compose:2.6.0")
+
+  androidTestImplementation("io.coil-kt:coil:2.6.0")
+  androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
+
 }
 
 tasks.withType<Test> {
+  reports {
+    junitXml.required.set(true)
+    html.required.set(true)
+  }
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true

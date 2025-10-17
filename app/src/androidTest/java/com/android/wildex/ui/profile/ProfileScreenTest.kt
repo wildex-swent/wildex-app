@@ -93,7 +93,6 @@ class ProfileScreenTest {
       ProfileTopAppBar(ownerProfile = false, onGoBack = { back++ }, onSettings = {})
     }
 
-    composeRule.onNodeWithText("User Profile").assertIsDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
     composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
 
@@ -208,7 +207,7 @@ class ProfileScreenTest {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,
-          ownerProfile = false,
+          ownerProfile = true,
           onAchievements = { achievements++ },
           onCollection = {},
           onMap = { map++ },
@@ -217,8 +216,8 @@ class ProfileScreenTest {
       )
     }
 
-    composeRule.onNodeWithText("Achievements").performClick()
-    composeRule.onNodeWithText("Map").performClick()
+    composeRule.onNodeWithText("View all achievements →").performClick()
+    composeRule.onNodeWithText("View in full screen →").performClick()
 
     Assert.assertEquals(1, achievements)
     Assert.assertEquals(1, map)
@@ -397,8 +396,8 @@ class ProfileScreenTest {
       composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
       composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
 
-      composeRule.onNodeWithText("Achievements").performClick()
-      composeRule.onNodeWithText("Map").performClick()
+      composeRule.onNodeWithText("View all achievements →").performClick()
+      composeRule.onNodeWithText("View in full screen →").performClick()
 
       Assert.assertEquals(1, achievements)
       Assert.assertEquals(1, map)
@@ -438,7 +437,6 @@ class ProfileScreenTest {
       advanceUntilIdle()
       composeRule.waitForIdle()
 
-      composeRule.onNodeWithText("User Profile").assertIsDisplayed()
       composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
       composeRule
           .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
@@ -460,7 +458,7 @@ class ProfileScreenTest {
       ProfileContent(
           pd = PaddingValues(0.dp),
           user = user,
-          ownerProfile = false,
+          ownerProfile = true,
           onAchievements = { achievements++ },
           onCollection = {},
           onMap = { map++ },
@@ -469,8 +467,8 @@ class ProfileScreenTest {
       )
     }
 
-    repeat(3) { composeRule.onNodeWithText("Achievements").performClick() }
-    repeat(2) { composeRule.onNodeWithText("Map").performClick() }
+    repeat(3) { composeRule.onNodeWithText("View all achievements →").performClick() }
+    repeat(2) { composeRule.onNodeWithText("View in full screen →").performClick() }
 
     Assert.assertEquals(3, achievements)
     Assert.assertEquals(2, map)
@@ -569,16 +567,16 @@ class ProfileScreenTest {
   fun profileAchievements_and_map_defaults_render_and_click() {
     setThemedContent {
       androidx.compose.foundation.layout.Column {
-        ProfileAchievements()
+        ProfileAchievements(ownerProfile = true)
         ProfileMap()
       }
     }
 
     composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
-    composeRule.onNodeWithText("Achievements").assertIsDisplayed().performClick()
+    composeRule.onNodeWithText("View all achievements →").assertIsDisplayed().performClick()
 
     composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
-    composeRule.onNodeWithText("Map").assertIsDisplayed().performClick()
+    composeRule.onNodeWithText("View in full screen →").assertIsDisplayed().performClick()
   }
 
   @Test

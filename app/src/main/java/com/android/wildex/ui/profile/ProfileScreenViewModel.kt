@@ -32,13 +32,13 @@ class ProfileScreenViewModel(
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(ProfileUIState())
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
-  private val defaultUser: User =
+  val defaultUser: User =
       User(
-          userId = "defaultUserId",
-          username = "defaultUsername",
-          name = "Default",
-          surname = "User",
-          bio = "This is...",
+          userId = "0",
+          username = "Oscour<3",
+          name = "Nuit",
+          surname = "Blanche",
+          bio = "This is a default user bio.",
           profilePictureURL =
               "https://paulhollandphotography.com/cdn/shop/articles" +
                   "/4713_Individual_Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c" +
@@ -46,7 +46,8 @@ class ProfileScreenViewModel(
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Nowhere",
-          friendsCount = 0)
+          friendsCount = 12,
+      )
 
   fun refreshUIState(userId: String) {
     viewModelScope.launch {

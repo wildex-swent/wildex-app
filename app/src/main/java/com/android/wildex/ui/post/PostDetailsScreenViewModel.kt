@@ -75,7 +75,7 @@ class PostDetailsScreenViewModel(
 
         val post = postRepository.getPost(postId)
         val simpleAuthor = userRepository.getSimpleUser(post.authorId)
-        val comments = commentRepository.getAllCommentsByPost(postId)
+        val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }
 
         var localErrorMsg: String? = null
         val commentsUI =
@@ -194,16 +194,6 @@ class PostDetailsScreenViewModel(
         .launch {
           val postId = _uiState.value.postId
           try {
-            val post = postRepository.getPost(postId)
-            postRepository.editPost(
-                postId = postId,
-                newValue = post.copy(commentsCount = post.commentsCount + 1),
-            )
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-            setErrorMsg("Failed to load post : ${e.message}")
-          }
-          try {
             val commentId = commentRepository.getNewCommentId()
             commentRepository.addComment(
                 Comment(
@@ -217,6 +207,17 @@ class PostDetailsScreenViewModel(
           } catch (e: Exception) {
             Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
             setErrorMsg("Failed to add comment: ${e.message}")
+            return@launch
+          }
+          try {
+            val post = postRepository.getPost(postId)
+            postRepository.editPost(
+                postId = postId,
+                newValue = post.copy(commentsCount = post.commentsCount + 1),
+            )
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
+            setErrorMsg("Failed to load post : ${e.message}")
           }
         }
         .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }

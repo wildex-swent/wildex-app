@@ -1,7 +1,6 @@
 package com.android.wildex.ui.post
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +45,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -100,10 +102,7 @@ fun PostDetailsScreen(
           AsyncImage(
               model = postDetailsUIState.pictureURL,
               contentDescription = "Post picture",
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .fillMaxHeight(.4f)
-                      .clip(RoundedCornerShape(20.dp)),
+              modifier = Modifier.fillMaxWidth().fillMaxHeight(.4f).clip(RoundedCornerShape(20.dp)),
               contentScale = ContentScale.Crop,
           )
 
@@ -193,15 +192,17 @@ fun PostInfoBar(
 
     Column(
         modifier = Modifier.weight(2f).padding(horizontal = 8.dp),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Text(
-          text = "$authorUserName saw a",
-      )
-      Text(
-          text = animalName,
-          color = MaterialTheme.colorScheme.primary,
+          text =
+              buildAnnotatedString {
+                append("$authorUserName saw a")
+                withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                  append(" $animalName!")
+                }
+              },
+          style = MaterialTheme.typography.titleLarge
       )
       Text(
           text = date,
@@ -389,19 +390,13 @@ fun ClickableProfilePicture(
 ) {
   IconButton(
       onClick = { onProfile(profileId) },
-      modifier =
-          modifier
-              .height(56.dp)
-              .testTag(testTagForProfilePicture(profileId, role)),
-
+      modifier = modifier.height(56.dp).testTag(testTagForProfilePicture(profileId, role)),
   ) {
     AsyncImage(
         model = profilePictureURL,
         contentDescription = "Profile picture",
         modifier =
-            Modifier
-                .clip(CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            Modifier.clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
         contentScale = ContentScale.Crop,
     )
   }

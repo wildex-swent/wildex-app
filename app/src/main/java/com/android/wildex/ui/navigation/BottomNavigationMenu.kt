@@ -1,5 +1,6 @@
 package com.android.wildex.ui.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -44,12 +45,12 @@ fun BottomNavigationMenu(
 ) {
   NavigationBar(
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
+          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).background(MaterialTheme.colorScheme.surface),
       containerColor = MaterialTheme.colorScheme.surface,
   ) {
     tabs.forEach { tab ->
       NavigationBarItem(
-          icon = { Icon(tab.icon, contentDescription = tab.name, modifier.size(30.dp)) },
+          icon = { Icon(tab.icon, contentDescription = tab.name, modifier.size(37.dp)) },
           selected = tab == selectedTab,
           onClick = { onTabSelected(tab) },
           modifier =
@@ -57,9 +58,9 @@ fun BottomNavigationMenu(
                   .testTag(NavigationTestTags.getTabTestTag(tab)),
           colors =
               NavigationBarItemDefaults.colors(
-                  selectedIconColor = MaterialTheme.colorScheme.primary,
-                  unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                  indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                  selectedIconColor = MaterialTheme.colorScheme.secondary,
+                  unselectedIconColor = MaterialTheme.colorScheme.primary,
+                  indicatorColor = MaterialTheme.colorScheme.surface,
               ),
       )
     }

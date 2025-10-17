@@ -19,9 +19,11 @@ import kotlinx.coroutines.launch
 data class ProfileUIState(
     val user: User? = null,
     val isUserOwner: Boolean = true,
-    val achievements: List<Achievement> = emptyList()
+    val achievements: List<Achievement> = emptyList(),
+    val animalCount: Int = 17
 )
 
+// TODO: Add UserAnimals Repository once implemented
 class ProfileScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val achievementRepository: UserAchievementsRepository =
@@ -34,7 +36,7 @@ class ProfileScreenViewModel(
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
   val defaultUser: User =
       User(
-          userId = "0",
+          userId = "defaultUserId",
           username = "Oscour<3",
           name = "Nuit",
           surname = "Blanche",
@@ -82,4 +84,6 @@ class ProfileScreenViewModel(
       emptyList()
     }
   }
+
+  // TODO: ADD fetch animals count
 }

@@ -42,12 +42,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.theme.FontSizes
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -78,7 +79,8 @@ fun ProfileScreen(
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val user = uiState.user
   val ownerProfile: Boolean = uiState.isUserOwner
-  // val achievements = uiState.achievements
+  val achievements = uiState.achievements
+  val animalsCount = uiState.animalCount
 
   LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
 
@@ -90,7 +92,9 @@ fun ProfileScreen(
             pd = pd,
             user = user ?: profileScreenViewModel.defaultUser,
             ownerProfile = ownerProfile,
+            achievements = achievements,
             onAchievements = onAchievements,
+            animalCount = animalsCount,
             onCollection = onCollection,
             onMap = onMap,
             onFriends = onFriends,
@@ -147,6 +151,8 @@ fun ProfileContent(
     pd: PaddingValues,
     user: User,
     ownerProfile: Boolean,
+    achievements: List<Achievement> = emptyList(),
+    animalCount: Int = 17,
     onAchievements: (Id) -> Unit,
     onCollection: (Id) -> Unit,
     onMap: (Id) -> Unit,
@@ -166,12 +172,24 @@ fun ProfileContent(
     ProfileDescription(description = user.bio)
     Spacer(modifier = Modifier.height(12.dp))
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-      ProfileAnimals(id = id, onCollection = onCollection, ownerProfile = ownerProfile)
+      ProfileAnimals(
+          id = id,
+          onCollection = onCollection,
+          ownerProfile = ownerProfile,
+          animalCount = animalCount)
       Spacer(modifier = Modifier.width(12.dp))
-      ProfileFriends(id = id, onFriends = onFriends, ownerProfile = ownerProfile)
+      ProfileFriends(
+          id = id,
+          onFriends = onFriends,
+          ownerProfile = ownerProfile,
+          friendCount = user.friendsCount)
     }
     Spacer(modifier = Modifier.height(12.dp))
-    ProfileAchievements(id = id, onAchievements = onAchievements, ownerProfile = ownerProfile)
+    ProfileAchievements(
+        id = id,
+        onAchievements = onAchievements,
+        ownerProfile = ownerProfile,
+        listAchievement = achievements)
     Spacer(modifier = Modifier.height(12.dp))
     ProfileMap(id = id, onMap = onMap)
     Spacer(modifier = Modifier.height(24.dp))
@@ -217,7 +235,7 @@ fun ProfileImageAndName(
           style =
               MaterialTheme.typography.titleMedium.copy(
                   fontWeight = FontWeight.Bold,
-                  fontSize = 24.sp,
+                  fontSize = FontSizes.ProfileName,
               ),
           color = cs.onBackground,
       )
@@ -227,7 +245,7 @@ fun ProfileImageAndName(
           style =
               MaterialTheme.typography.bodyMedium.copy(
                   fontWeight = FontWeight.Bold,
-                  fontSize = 18.sp,
+                  fontSize = FontSizes.ProfileUsername,
               ),
           color = cs.onBackground,
       )
@@ -244,7 +262,7 @@ fun ProfileImageAndName(
             text = country,
             style =
                 MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 14.sp,
+                    fontSize = FontSizes.BodyMedium,
                     fontWeight = FontWeight.SemiBold,
                 ),
             color = cs.secondary,
@@ -265,22 +283,26 @@ fun ProfileDescription(description: String = "Bio:...") {
               .background(color = cs.secondary, shape = RoundedCornerShape(8.dp))
               .fillMaxWidth()
               .padding(12.dp)
-              .testTag(ProfileScreenTestTags.PROFILE_DESCRIPTION)
-  ) {
-    Text(
-        text = description.ifBlank { " " },
-        color = cs.onSecondary,
-        style =
-            MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-            ),
-    )
-  }
+              .testTag(ProfileScreenTestTags.PROFILE_DESCRIPTION)) {
+        Text(
+            text = description.ifBlank { " " },
+            color = cs.onSecondary,
+            style =
+                MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = FontSizes.BodyMedium,
+                ),
+        )
+      }
 }
 
 @Composable
-fun ProfileAnimals(id: Id = "", onCollection: (Id) -> Unit = {}, ownerProfile: Boolean) {
+fun ProfileAnimals(
+    id: Id = "",
+    onCollection: (Id) -> Unit = {},
+    ownerProfile: Boolean,
+    animalCount: Int = 17
+) {
   val cs = MaterialTheme.colorScheme
   Button(
       modifier = Modifier.height(64.dp).width(176.dp).testTag(ProfileScreenTestTags.COLLECTION),
@@ -298,12 +320,16 @@ fun ProfileAnimals(id: Id = "", onCollection: (Id) -> Unit = {}, ownerProfile: B
       )
       Spacer(modifier = Modifier.width(10.dp))
       Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(text = "15", color = cs.onPrimary, fontWeight = FontWeight.SemiBold, fontSize = 24.sp)
+        Text(
+            text = "$animalCount",
+            color = cs.onPrimary,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = FontSizes.StatLarge)
         Text(
             text = "Animals",
             color = cs.onPrimary,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
+            fontSize = FontSizes.StatLabel,
         )
       }
     }
@@ -311,7 +337,12 @@ fun ProfileAnimals(id: Id = "", onCollection: (Id) -> Unit = {}, ownerProfile: B
 }
 
 @Composable
-fun ProfileFriends(id: Id = "", onFriends: (Id) -> Unit = {}, ownerProfile: Boolean) {
+fun ProfileFriends(
+    id: Id = "",
+    onFriends: (Id) -> Unit = {},
+    ownerProfile: Boolean,
+    friendCount: Int = 42
+) {
   val cs = MaterialTheme.colorScheme
   Button(
       modifier = Modifier.height(64.dp).width(176.dp).testTag(ProfileScreenTestTags.FRIENDS),
@@ -329,12 +360,16 @@ fun ProfileFriends(id: Id = "", onFriends: (Id) -> Unit = {}, ownerProfile: Bool
       )
       Spacer(modifier = Modifier.width(10.dp))
       Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(text = "34", color = cs.onTertiary, fontWeight = FontWeight.SemiBold, fontSize = 24.sp)
+        Text(
+            text = "$friendCount",
+            color = cs.onTertiary,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = FontSizes.StatLarge)
         Text(
             text = "Friends",
             color = cs.onTertiary,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
+            fontSize = FontSizes.StatLabel,
         )
       }
     }
@@ -342,7 +377,12 @@ fun ProfileFriends(id: Id = "", onFriends: (Id) -> Unit = {}, ownerProfile: Bool
 }
 
 @Composable
-fun ProfileAchievements(id: Id = "", onAchievements: (Id) -> Unit = {}, ownerProfile: Boolean) {
+fun ProfileAchievements(
+    id: Id = "",
+    onAchievements: (Id) -> Unit = {},
+    ownerProfile: Boolean,
+    listAchievement: List<Achievement> = emptyList()
+) {
   val cs = MaterialTheme.colorScheme
   Column(
       modifier =
@@ -350,49 +390,48 @@ fun ProfileAchievements(id: Id = "", onAchievements: (Id) -> Unit = {}, ownerPro
               .padding(horizontal = 16.dp)
               .border(1.dp, cs.background, shape = RoundedCornerShape(12.dp))
               .padding(12.dp)
-              .testTag(ProfileScreenTestTags.ACHIEVEMENTS)
-  ) {
-    if (ownerProfile) {
-      Button(
-          onClick = { onAchievements(id) },
-          modifier = Modifier.align(Alignment.End),
-          colors =
-              ButtonDefaults.buttonColors(
-                  containerColor = cs.background,
-                  contentColor = cs.onBackground,
-              ),
-      ) {
-        Text(text = "View all achievements →")
+              .testTag(ProfileScreenTestTags.ACHIEVEMENTS)) {
+        if (ownerProfile) {
+          Button(
+              onClick = { onAchievements(id) },
+              modifier = Modifier.align(Alignment.End),
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = cs.background,
+                      contentColor = cs.onBackground,
+                  ),
+          ) {
+            Text(text = "View all achievements →")
+          }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+          IconButton(onClick = { /* left */}) {
+            Icon(
+                painter = painterResource(R.drawable.chevron_left),
+                contentDescription = "Prev",
+                tint = cs.secondary,
+                modifier = Modifier.size(32.dp),
+            )
+          }
+          Spacer(modifier = Modifier.width(8.dp))
+          Box(modifier = Modifier.weight(1f).height(80.dp).background(cs.background)) {
+            Text(
+                text = "Achievements Placeholder",
+                modifier = Modifier.align(Alignment.Center).padding(8.dp),
+                color = cs.onBackground,
+            )
+          }
+          Spacer(modifier = Modifier.width(8.dp))
+          IconButton(onClick = { /* right */}) {
+            Icon(
+                painter = painterResource(R.drawable.chevron_right),
+                contentDescription = "Next",
+                tint = cs.secondary,
+                modifier = Modifier.size(32.dp),
+            )
+          }
+        }
       }
-    }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-      IconButton(onClick = { /* left */ }) {
-        Icon(
-            painter = painterResource(R.drawable.chevron_left),
-            contentDescription = "Prev",
-            tint = cs.secondary,
-            modifier = Modifier.size(32.dp),
-        )
-      }
-      Spacer(modifier = Modifier.width(8.dp))
-      Box(modifier = Modifier.weight(1f).height(80.dp).background(cs.background)) {
-        Text(
-            text = "Achievements Placeholder",
-            modifier = Modifier.align(Alignment.Center).padding(8.dp),
-            color = cs.onBackground,
-        )
-      }
-      Spacer(modifier = Modifier.width(8.dp))
-      IconButton(onClick = { /* right */ }) {
-        Icon(
-            painter = painterResource(R.drawable.chevron_right),
-            contentDescription = "Next",
-            tint = cs.secondary,
-            modifier = Modifier.size(32.dp),
-        )
-      }
-    }
-  }
 }
 
 @Composable
@@ -404,34 +443,32 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, ownerProfile: Boolean = tr
               .padding(horizontal = 16.dp)
               .border(1.dp, cs.onBackground.copy(alpha = 0.08f), shape = RoundedCornerShape(12.dp))
               .padding(12.dp)
-              .testTag(ProfileScreenTestTags.MAP)
-  ) {
-    Box(
-        modifier =
-            Modifier.fillMaxWidth()
-                .height(140.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(cs.background)
-    ) {
-      Text(
-          text = "Map Placeholder",
-          modifier = Modifier.align(Alignment.Center),
-          color = cs.onBackground,
-      )
-    }
+              .testTag(ProfileScreenTestTags.MAP)) {
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(cs.background)) {
+              Text(
+                  text = "Map Placeholder",
+                  modifier = Modifier.align(Alignment.Center),
+                  color = cs.onBackground,
+              )
+            }
 
-    Button(
-        onClick = { onMap(id) },
-        modifier = Modifier.align(Alignment.Start).padding(top = 8.dp),
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = cs.secondary,
-                contentColor = cs.onSecondary,
-            ),
-    ) {
-      Text(text = "View in full screen →")
-    }
-  }
+        Button(
+            onClick = { onMap(id) },
+            modifier = Modifier.align(Alignment.Start).padding(top = 8.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = cs.secondary,
+                    contentColor = cs.onSecondary,
+                ),
+        ) {
+          Text(text = "View in full screen →")
+        }
+      }
 }
 
 @Composable

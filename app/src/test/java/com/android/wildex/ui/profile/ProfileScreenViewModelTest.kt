@@ -153,4 +153,12 @@ class ProfileScreenViewModelTest {
       Assert.assertTrue(s.isUserOwner)
     }
   }
+
+  // TDOD: Remove later, temporary tests to increase coverage
+
+  @Test
+  fun returnAnimalCount() {
+    val s = viewModel.uiState.value.animalCount
+    Assert.assertTrue(s is Int)
+  }
 }

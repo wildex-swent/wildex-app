@@ -42,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -171,7 +170,7 @@ fun PostItem(postState: PostState, viewModel: HomeScreenViewModel, onPostClick: 
       shape = RoundedCornerShape(20.dp),
       colors =
           CardColors(
-              containerColor = Color.White,
+              containerColor = MaterialTheme.colorScheme.background,
               contentColor = MaterialTheme.colorScheme.primary,
               disabledContainerColor = MaterialTheme.colorScheme.primary,
               disabledContentColor = MaterialTheme.colorScheme.primary,

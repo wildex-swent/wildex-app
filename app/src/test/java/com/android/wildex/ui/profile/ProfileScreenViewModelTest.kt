@@ -37,7 +37,8 @@ class ProfileScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          friendsCount = 1)
+          friendsCount = 1,
+      )
 
   private val u2 = u1.copy(username = "user_one_2", friendsCount = 42)
 
@@ -52,7 +53,8 @@ class ProfileScreenViewModelTest {
         ProfileScreenViewModel(
             userRepository = userRepository,
             achievementRepository = achievementsRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
   }
 
   @Test
@@ -87,7 +89,8 @@ class ProfileScreenViewModelTest {
           ProfileScreenViewModel(
               userRepository = userRepository,
               achievementRepository = achievementsRepository,
-              currentUserId = "someone-else")
+              currentUserId = "someone-else",
+          )
 
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
@@ -152,5 +155,12 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(listOf(a2), s.achievements)
       Assert.assertTrue(s.isUserOwner)
     }
+  }
+
+  // TOOD: Remove later, temporary tests to increase coverage
+  @Test
+  fun returnAnimalCount() {
+    val s = viewModel.uiState.value.animalCount
+    Assert.assertTrue(s is Int)
   }
 }

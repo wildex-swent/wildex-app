@@ -28,7 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.user.User
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
 import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
@@ -44,7 +44,7 @@ import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WildexHomeTopAppBar(
-    user: User,
+    user: SimpleUser,
     onNotificationClick: () -> Unit,
     onProfilePictureClick: (userId: Id) -> Unit,
 ) {

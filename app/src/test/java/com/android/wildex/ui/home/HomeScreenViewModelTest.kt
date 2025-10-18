@@ -7,12 +7,11 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
-import com.android.wildex.utils.MainDispatcherRule // <- ajouter cet import
+import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.After
@@ -20,6 +19,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeScreenViewModelTest {
@@ -78,7 +78,7 @@ class HomeScreenViewModelTest {
   @Test
   fun viewModel_initializes_default_UI_state() {
     val initialState = viewModel.uiState.value
-    Assert.assertTrue(initialState.posts.isEmpty())
+      Assert.assertTrue(initialState.postStates.isEmpty())
     Assert.assertNull(initialState.user)
     Assert.assertFalse(initialState.notif)
   }
@@ -93,7 +93,7 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1, p2), updatedState.posts)
+        Assert.assertEquals(listOf(p1, p2), updatedState.postStates)
       Assert.assertEquals(u1, updatedState.user)
       Assert.assertFalse(updatedState.notif)
     }
@@ -110,7 +110,7 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1), s.posts)
+        Assert.assertEquals(listOf(p1), s.postStates)
       Assert.assertNotNull(s.user)
       Assert.assertEquals("defaultUserId", s.user!!.userId)
       Assert.assertEquals("defaultUsername", s.user!!.username)
@@ -129,7 +129,7 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1, p2), s.posts)
+        Assert.assertEquals(listOf(p1, p2), s.postStates)
       Assert.assertNotNull(s.user)
       Assert.assertEquals("defaultUserId", s.user!!.userId)
       Assert.assertFalse(s.notif)
@@ -169,7 +169,7 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p2), s.posts)
+        Assert.assertEquals(listOf(p2), s.postStates)
       Assert.assertEquals(u2, s.user)
       Assert.assertFalse(s.notif)
     }
@@ -178,7 +178,7 @@ class HomeScreenViewModelTest {
   @Test
   fun homeUIState_defaultValues_areCorrect() {
     val s = HomeUIState()
-    Assert.assertTrue(s.posts.isEmpty())
+      Assert.assertTrue(s.postStates.isEmpty())
     Assert.assertNull(s.user)
     Assert.assertFalse(s.notif)
   }

@@ -52,9 +52,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.social.Post
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -89,8 +86,8 @@ fun HomeScreen(
     onNotificationClick: () -> Unit = {},
 ) {
   val uiState by homeScreenViewModel.uiState.collectAsState()
-    val user = uiState.user!!
-    val posts = uiState.posts
+    val user = uiState.currentUser
+    val postStates = uiState.postStates
 
   LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
 
@@ -98,12 +95,12 @@ fun HomeScreen(
       topBar = { WildexHomeTopAppBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
       content = { pd ->
-          if (posts.isEmpty()) NoPostsView()
+          if (postStates.isEmpty()) NoPostsView()
           else
               PostsView(
-                  posts = posts,
+                  postStates = postStates,
                   pd = pd,
-                  viewModel = homeScreenViewModel,
+                  onPostLike = { postId -> homeScreenViewModel.toggleLike(postId) },
                   onPostClick = onPostClick,
               )
       },
@@ -138,16 +135,16 @@ fun NoPostsView() {
 /**
  * Displays a scrollable list of posts.
  *
- * @param posts List of PostState objects representing UI data for each post.
+ * @param postStates List of PostState objects representing UI data for each post.
  * @param pd Padding values from the Scaffold content.
  * @param viewModel Reference to HomeScreenViewModel for like actions.
  * @param onPostClick Callback when a post is clicked.
  */
 @Composable
 fun PostsView(
-    posts: List<Post>,
+    postStates: List<PostState>,
     pd: PaddingValues,
-    viewModel: HomeScreenViewModel,
+    onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
 ) {
   LazyColumn(
@@ -157,8 +154,12 @@ fun PostsView(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Top,
   ) {
-      items(posts.size) { index ->
-          PostItem(post = posts[index], viewModel = viewModel, onPostClick = onPostClick)
+      items(postStates.size) { index ->
+          PostItem(
+              postState = postStates[index],
+              onPostLike = onPostLike,
+              onPostClick = onPostClick
+          )
       }
   }
 }
@@ -166,12 +167,12 @@ fun PostsView(
 /**
  * Displays a single post card with image and information.
  *
- * @param post Contains post, author, and UI state (like status).
+ * @param postState Contains post, author, and UI state (like status).
  * @param viewModel Reference to the HomeScreenViewModel for handling likes.
  * @param onPostClick Callback invoked when the post is selected.
  */
 @Composable
-fun PostItem(post: Post, viewModel: HomeScreenViewModel, onPostClick: (Id) -> Unit) {
+fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -> Unit) {
   Card(
       modifier = Modifier.padding(15.dp),
       shape = RoundedCornerShape(20.dp),
@@ -185,8 +186,8 @@ fun PostItem(post: Post, viewModel: HomeScreenViewModel, onPostClick: (Id) -> Un
       elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
   ) {
       Row {
-          PostImage(post, viewModel)
-          PostInfo(post, onPostClick = onPostClick)
+          PostImage(postState, onPostLike = onPostLike)
+          PostInfo(postState, onPostClick = onPostClick)
       }
   }
 }
@@ -195,27 +196,14 @@ fun PostItem(post: Post, viewModel: HomeScreenViewModel, onPostClick: (Id) -> Un
  * Displays detailed information for a post, including author, timestamp, location, likes, and
  * comments.
  *
- * @param post State containing post and author information.
+ * @param postState State containing post and author information.
  * @param onPostClick Callback when the post is clicked.
  */
 @Composable
-fun PostInfo(post: Post, onPostClick: (postId: Id) -> Unit) {
-    val post = post
-  val author =
-      SimpleUser(
-          post.authorId,
-          "john_doe",
-          "https://example.com/profile.jpg",
-      ) // Placeholder for author data
-
-  val animal =
-      Animal(
-          post.animalId,
-          "Lion",
-          "https://example.com/lion.jpg",
-          "canis",
-          "A large wild cat known for its strength and majesty.",
-      ) // Placeholder for animal data
+fun PostInfo(postState: PostState, onPostClick: (postId: Id) -> Unit) {
+    val post = postState.post
+    val author = postState.author
+    val animal = postState.animal
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -307,11 +295,12 @@ fun PostInfo(post: Post, onPostClick: (postId: Id) -> Unit) {
 /**
  * Displays the post image and handles like toggling.
  *
- * @param post State object containing post data and like status.
+ * @param postState State object containing post data and like status.
  * @param viewModel ViewModel to handle like interactions and state refresh.
  */
 @Composable
-fun PostImage(post: Post, viewModel: HomeScreenViewModel) {
+fun PostImage(postState: PostState, onPostLike: (Id) -> Unit = {}) {
+    val post = postState.post
     Box {
         AsyncImage(
             model = post.pictureURL,
@@ -325,7 +314,7 @@ fun PostImage(post: Post, viewModel: HomeScreenViewModel) {
             contentScale = ContentScale.Crop,
         )
         IconButton(
-            onClick = {}, // viewModel.toggleLike(post.postId)},
+            onClick = { onPostLike(post.postId) },
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .testTag(HomeScreenTestTags.POST_LIKE_BUTTON),

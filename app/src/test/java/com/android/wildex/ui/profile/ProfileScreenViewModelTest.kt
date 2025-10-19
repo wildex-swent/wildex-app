@@ -116,7 +116,7 @@ class ProfileScreenViewModelTest {
 
       val s = viewModel.uiState.value
       Assert.assertNotNull(s.user)
-      Assert.assertEquals("defaultUserId", s.user.userId)
+      Assert.assertEquals("defaultUserId", s.user!!.userId)
       Assert.assertEquals(listOf(a1), s.achievements)
     }
   }
@@ -157,7 +157,7 @@ class ProfileScreenViewModelTest {
     }
   }
 
-  // TOOD: Remove later, temporary tests to increase coverage
+  // TODD: Remove later, temporary tests to increase coverage
   @Test
   fun returnAnimalCount() {
     val s = viewModel.uiState.value.animalCount

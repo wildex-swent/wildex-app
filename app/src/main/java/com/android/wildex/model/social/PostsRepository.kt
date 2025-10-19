@@ -28,4 +28,7 @@ interface PostsRepository {
 
   /** Deletes a Post item from the repository. */
   suspend fun deletePost(postId: Id)
+
+  /** Increments the number of likes for a specific Post item by a given delta. */
+  suspend fun incrementLikes(postId: Id, delta: Int)
 }

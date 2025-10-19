@@ -9,18 +9,37 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+val defaultUser: User =
+    User(
+        userId = "defaultUserId",
+        username = "DefaultUsername",
+        name = "Default",
+        surname = "User",
+        bio = "This is a default user bio.",
+        profilePictureURL =
+            "https://paulhollandphotography.com/cdn/shop/articles" +
+                "/4713_Individual_Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c" +
+                ".jpg?v=1743534144&width=1500",
+        userType = UserType.REGULAR,
+        creationDate = Timestamp.now(),
+        country = "Nowhere",
+        friendsCount = 12,
+    )
+
 data class ProfileUIState(
-    val user: User? = null,
+    val user: User? = defaultUser,
     val isUserOwner: Boolean = true,
     val achievements: List<Achievement> = emptyList(),
-    val animalCount: Int = 17
+    val animalCount: Int = 17,
 )
 
 // TODO: Add UserAnimals Repository once implemented
@@ -28,28 +47,10 @@ class ProfileScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val achievementRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
-    private val currentUserId: () -> String? = {
-      com.google.firebase.ktx.Firebase.auth.currentUser?.uid
-    },
+    private val currentUserId: Id = Firebase.auth.uid!!,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(ProfileUIState())
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
-  val defaultUser: User =
-      User(
-          userId = "defaultUserId",
-          username = "Oscour<3",
-          name = "Nuit",
-          surname = "Blanche",
-          bio = "This is a default user bio.",
-          profilePictureURL =
-              "https://paulhollandphotography.com/cdn/shop/articles" +
-                  "/4713_Individual_Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c" +
-                  ".jpg?v=1743534144&width=1500",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "Nowhere",
-          friendsCount = 12,
-      )
 
   fun refreshUIState(userId: String) {
     viewModelScope.launch {
@@ -64,7 +65,7 @@ class ProfileScreenViewModel(
   }
 
   private fun checkIsUserOwner(userId: String): Boolean {
-    return userId == currentUserId()
+    return userId == currentUserId
   }
 
   private suspend fun fetchUser(userId: String): User? {

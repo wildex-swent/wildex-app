@@ -56,15 +56,17 @@ class PostDetailsScreenViewModel(
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val currentUserId: Id = Firebase.auth.uid!!,
 ) : ViewModel() {
+
   private val _uiState = MutableStateFlow(PostDetailsUIState())
   val uiState: StateFlow<PostDetailsUIState> = _uiState.asStateFlow()
 
-  /** Clears the error message in the UI state. */
+  /** In-flight guard to avoid double-tap spamming like/unlike. */
+  @Volatile private var likeInFlight = false
+
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
-  /** Sets an error message in the UI state. */
   private fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
@@ -72,7 +74,6 @@ class PostDetailsScreenViewModel(
   fun loadPostDetails(postId: String) {
     viewModelScope.launch {
       try {
-
         val post = postRepository.getPost(postId)
         val simpleAuthor = userRepository.getSimpleUser(post.authorId)
         val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }
@@ -111,12 +112,8 @@ class PostDetailsScreenViewModel(
                 pictureURL = post.pictureURL,
                 location = post.location?.name ?: "",
                 description = post.description,
-                date =
-                    post.date.let {
-                      val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                      return@let dateFormat.format(post.date.toDate())
-                    },
-                animalName = post.animalId, // TODO replace with animal name once repository is up
+                date = formatDate(post.date),
+                animalName = post.animalId, // TODO: replace with actual animal name when available
                 likesCount = post.likesCount,
                 commentsCount = post.commentsCount,
                 authorId = post.authorId,
@@ -135,91 +132,162 @@ class PostDetailsScreenViewModel(
     }
   }
 
+  /** Optimistically update like state in UI. */
+  private fun applyOptimisticLike(liked: Boolean) {
+    _uiState.value =
+        _uiState.value.copy(
+            likedByCurrentUser = liked,
+            likesCount = (_uiState.value.likesCount + if (liked) 1 else -1).coerceAtLeast(0))
+  }
+
+  /** Try to increment likes with a single repo call (recommended). */
+  private suspend fun safeIncrementLikes(postId: Id, delta: Int) {
+    try {
+      postRepository.incrementLikes(postId, delta)
+    } catch (e: IllegalArgumentException) {
+      Log.w("PostDetailsViewModel", "Post not found for incrementLikes")
+    } catch (e: UnsupportedOperationException) {
+      // If not implemented in your repo, you can add a fallback here if needed.
+      Log.w("PostDetailsViewModel", "incrementLikes not implemented in repository")
+    }
+  }
+
   fun addLike() {
-    viewModelScope
-        .launch {
-          val postId = _uiState.value.postId
-          try {
-            val post = postRepository.getPost(postId)
-            postRepository.editPost(
-                postId = postId,
-                newValue = post.copy(likesCount = post.likesCount + 1),
-            )
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-            setErrorMsg("Failed to load post : ${e.message}")
-          }
-          try {
-            val likeId = likeRepository.getNewLikeId()
-            likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
-            setErrorMsg("Failed to handle post likes: ${e.message}")
-          }
-        }
-        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
+    if (likeInFlight || _uiState.value.likedByCurrentUser) return
+    likeInFlight = true
+
+    // Optimistic UI
+    applyOptimisticLike(liked = true)
+
+    viewModelScope.launch {
+      val postId = _uiState.value.postId
+      val rollback = {
+        _uiState.value =
+            _uiState.value.copy(
+                likedByCurrentUser = false,
+                likesCount = (_uiState.value.likesCount - 1).coerceAtLeast(0))
+      }
+      try {
+        val likeId = likeRepository.getNewLikeId()
+        likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
+        safeIncrementLikes(postId, +1)
+      } catch (e: Exception) {
+        Log.e("PostDetailsViewModel", "addLike failed for $postId", e)
+        setErrorMsg("Failed to like. Check your connection.")
+        rollback()
+      } finally {
+        likeInFlight = false
+      }
+    }
   }
 
   fun removeLike() {
-    viewModelScope
-        .launch {
-          val postId = _uiState.value.postId
+    if (likeInFlight || !_uiState.value.likedByCurrentUser) return
+    likeInFlight = true
 
-          try {
-            val likeId =
-                likeRepository.getLikeForPost(postId = postId)?.likeId
-                    ?: throw Exception("Like not found")
-            likeRepository.deleteLike(likeId)
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error handling post likes by post id $postId", e)
-            setErrorMsg("Failed to handle post likes: ${e.message}")
-            return@launch
-          }
-          try {
-            val post = postRepository.getPost(postId)
-            postRepository.editPost(
-                postId = postId,
-                newValue = post.copy(likesCount = post.likesCount - 1),
-            )
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-            setErrorMsg("Failed to load post : ${e.message}")
-          }
-        }
-        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
+    // Optimistic UI
+    applyOptimisticLike(liked = false)
+
+    viewModelScope.launch {
+      val postId = _uiState.value.postId
+      val rollback = {
+        _uiState.value =
+            _uiState.value.copy(
+                likedByCurrentUser = true, likesCount = _uiState.value.likesCount + 1)
+      }
+      try {
+        val like =
+            likeRepository.getLikeForPost(postId) ?: throw IllegalStateException("Like not found")
+        likeRepository.deleteLike(like.likeId)
+        safeIncrementLikes(postId, -1)
+      } catch (e: Exception) {
+        Log.e("PostDetailsViewModel", "removeLike failed for $postId", e)
+        setErrorMsg("Failed to remove like. Try again.")
+        rollback()
+      } finally {
+        likeInFlight = false
+      }
+    }
   }
 
+  /** Optimistic comment add with rollback on failure. */
   fun addComment(text: String = "") {
-    viewModelScope
-        .launch {
-          val postId = _uiState.value.postId
+    if (text.isBlank()) return
+
+    viewModelScope.launch {
+      val postId = _uiState.value.postId
+      val now = Timestamp.now()
+      val formattedNow = formatDate(now)
+
+      // Build optimistic UI comment
+      val currentPfp = _uiState.value.currentUserProfilePictureURL
+      val username =
           try {
-            val commentId = commentRepository.getNewCommentId()
-            commentRepository.addComment(
-                Comment(
-                    commentId = commentId,
-                    postId = postId,
-                    authorId = currentUserId,
-                    text = text,
-                    date = Timestamp.now(),
-                ))
+            userRepository.getSimpleUser(currentUserId).username
           } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
-            setErrorMsg("Failed to add comment: ${e.message}")
-            return@launch
+            Log.w(
+                "PostDetailsViewModel", "Could not fetch current username quickly; using fallback")
+            "You"
           }
-          try {
-            val post = postRepository.getPost(postId)
-            postRepository.editPost(
+
+      val optimistic =
+          CommentWithAuthorUI(
+              authorId = currentUserId,
+              authorProfilePictureUrl = currentPfp,
+              authorUserName = username,
+              text = text,
+              date = formattedNow,
+          )
+
+      // 1) Optimistically prepend comment + bump count
+      val before = _uiState.value
+      _uiState.value =
+          before.copy(
+              commentsUI = listOf(optimistic) + before.commentsUI,
+              commentsCount = before.commentsCount + 1)
+
+      try {
+        // 2) Persist comment
+        val commentId = commentRepository.getNewCommentId()
+        commentRepository.addComment(
+            Comment(
+                commentId = commentId,
                 postId = postId,
-                newValue = post.copy(commentsCount = post.commentsCount + 1),
-            )
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error loading post by post id $postId", e)
-            setErrorMsg("Failed to load post : ${e.message}")
-          }
+                authorId = currentUserId,
+                text = text,
+                date = now,
+            ))
+
+        // 3) Update count in the post (optional to keep server in sync)
+        try {
+          val post = postRepository.getPost(postId)
+          postRepository.editPost(
+              postId = postId,
+              newValue = post.copy(commentsCount = post.commentsCount + 1),
+          )
+        } catch (e: Exception) {
+          // Not fatal for UI; server count may lag until next refresh
+          Log.w(
+              "PostDetailsViewModel",
+              "Failed to increment post commentsCount on server: ${e.message}")
         }
-        .invokeOnCompletion { loadPostDetails(_uiState.value.postId) }
+      } catch (e: Exception) {
+        // Rollback UI
+        Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
+        setErrorMsg("Failed to add comment: ${e.message}")
+        // remove the optimistic one and restore count
+        val current = _uiState.value
+        _uiState.value =
+            current.copy(
+                commentsUI = current.commentsUI.drop(1),
+                commentsCount = (current.commentsCount - 1).coerceAtLeast(0))
+      }
+    }
+  }
+
+  private fun formatDate(ts: Timestamp): String {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    return dateFormat.format(ts.toDate())
   }
 
   private suspend fun commentsToCommentsUI(comments: List<Comment>): List<CommentWithAuthorUI> {
@@ -230,11 +298,7 @@ class PostDetailsScreenViewModel(
           authorProfilePictureUrl = author.profilePictureURL,
           authorUserName = author.username,
           text = comment.text,
-          date =
-              comment.date.let {
-                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                return@let dateFormat.format(comment.date.toDate())
-              },
+          date = formatDate(comment.date),
       )
     }
   }

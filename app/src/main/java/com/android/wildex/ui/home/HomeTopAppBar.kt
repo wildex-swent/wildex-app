@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
@@ -51,7 +52,7 @@ fun WildexHomeTopAppBar(
   TopAppBar(
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-          Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
+          Text(text = "Wildex", style = MaterialTheme.typography.titleLarge.copy(fontSize = 30.sp))
         }
       },
       navigationIcon = {

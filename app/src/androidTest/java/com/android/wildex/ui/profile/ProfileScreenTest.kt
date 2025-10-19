@@ -330,7 +330,7 @@ class ProfileScreenTest {
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
-            currentUserId = { "someone-else" },
+            currentUserId = "someone-else",
         )
 
     setThemedContent {
@@ -374,7 +374,7 @@ class ProfileScreenTest {
           ProfileScreenViewModel(
               userRepository = userRepo,
               achievementRepository = achRepo,
-              currentUserId = { "u-1" },
+              currentUserId = "u-1",
           )
 
       var achievements = 0
@@ -417,7 +417,7 @@ class ProfileScreenTest {
           ProfileScreenViewModel(
               userRepository = userRepo,
               achievementRepository = achRepo,
-              currentUserId = { "someone-else" },
+              currentUserId = "someone-else",
           )
 
       var requests = 0
@@ -601,7 +601,7 @@ class ProfileScreenTest {
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
-            currentUserId = { "someone-else" },
+            currentUserId = "someone-else",
         )
 
     var requests = 0

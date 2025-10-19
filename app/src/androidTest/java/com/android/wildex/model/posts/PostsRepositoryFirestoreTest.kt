@@ -325,4 +325,25 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         val exception = runCatching { repository.getPost("nonExistentId") }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
       }
+
+  @Test
+  fun incrementLikesWorksCorrectly() =
+      runTest(timeout = 60.seconds) {
+        repository.addPost(post1)
+
+        // Increment likes by 5
+        repository.incrementLikes(post1.postId, 5)
+        var updatedPost = repository.getPost(post1.postId)
+        assertEquals(15, updatedPost.likesCount)
+
+        // Decrement likes by 2
+        repository.incrementLikes(post1.postId, -2)
+        updatedPost = repository.getPost(post1.postId)
+        assertEquals(13, updatedPost.likesCount)
+
+        // Increment likes by 0 (no change)
+        repository.incrementLikes(post1.postId, 0)
+        updatedPost = repository.getPost(post1.postId)
+        assertEquals(13, updatedPost.likesCount)
+      }
 }

@@ -5,6 +5,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
@@ -76,6 +77,13 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
     val doc = docRef.get().await()
     require(doc.exists())
     docRef.delete().await()
+  }
+
+  override suspend fun incrementLikes(postId: Id, delta: Int) {
+    val docRef = db.collection(POST_COLLECTION_PATH).document(postId)
+    val doc = docRef.get().await()
+    require(doc.exists())
+    docRef.update("likesCount", FieldValue.increment(delta.toLong())).await()
   }
 
   private fun convertToPost(doc: DocumentSnapshot): Post? {

@@ -3,11 +3,13 @@ package com.android.wildex.ui.home
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
@@ -116,7 +118,11 @@ class HomeScreenTest {
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
 
+    // Ensure each post is brought into view before asserting
+    scrollToPost(fullPost.postId)
     assertFullPostIsDisplayed(fullPost.postId)
+
+    scrollToPost(fullPost2.postId)
     assertFullPostIsDisplayed(fullPost2.postId)
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.NO_POST_ICON, useUnmergedTree = true)
@@ -255,6 +261,8 @@ class HomeScreenTest {
     }
     composeTestRule.setContent { HomeScreen(homeScreenVM) }
 
+    // Scroll to first post and assert
+    scrollToPost(postWithCounts.postId)
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCounts.postId), useUnmergedTree = true)
         .assertIsDisplayed()
@@ -265,6 +273,9 @@ class HomeScreenTest {
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("7 comments"))
+
+    // Scroll to second post and assert
+    scrollToPost(postWithCount.postId)
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCount.postId), useUnmergedTree = true)
         .assertIsDisplayed()
@@ -278,14 +289,13 @@ class HomeScreenTest {
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1 comment"))
+  }
+
+  private fun scrollToPost(postId: String) {
     composeTestRule
-        .onNodeWithTag(
-            HomeScreenTestTags.commentTag(postWithCount.postId),
-            useUnmergedTree = true,
-        )
-        .assertIsDisplayed()
-        .onChildren()
-        .assertAny(hasText("1 comment"))
+        .onNodeWithTag(HomeScreenTestTags.POSTS_LIST, useUnmergedTree = true)
+        .performScrollToNode(hasTestTag(HomeScreenTestTags.imageTag(postId)))
+    composeTestRule.waitForIdle()
   }
 
   private fun assertFullPostIsDisplayed(postId: String) {

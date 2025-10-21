@@ -71,6 +71,7 @@ object HomeScreenTestTags {
   const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
   const val PROFILE_PICTURE = "HomeScreenProfilePicture"
   const val TITLE = "HomeScreenTitle"
+  const val POSTS_LIST = "HomeScreenPostsList"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -168,7 +169,7 @@ fun PostsView(
     onPostClick: (Id) -> Unit,
 ) {
   LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(pd),
+      modifier = Modifier.fillMaxSize().padding(pd).testTag(HomeScreenTestTags.POSTS_LIST),
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {

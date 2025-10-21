@@ -73,7 +73,8 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "0",
           authorId = "author1",
-          pictureURL = "AuthorOne",
+          pictureURL =
+              "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.0, 0.0),
           description = "Description 1",
           date = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
@@ -86,7 +87,8 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "1",
           authorId = "author2",
-          pictureURL = "AuthorTwo",
+          pictureURL =
+              "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.1, 0.3),
           description = "Description 2",
           date = Timestamp.Companion.fromDate(2035, Calendar.SEPTEMBER, 4),
@@ -99,7 +101,8 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "2",
           authorId = "author3",
-          pictureURL = "AuthorThree",
+          pictureURL =
+              "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.3, 0.3),
           description = "Description 3",
           date = Timestamp.Companion.fromDate(2024, Calendar.SEPTEMBER, 8),

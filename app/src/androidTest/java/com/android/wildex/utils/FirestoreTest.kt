@@ -10,11 +10,11 @@ import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import java.util.Calendar
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import java.util.Calendar
 
 open class FirestoreTest(val collectionPath: String) {
 

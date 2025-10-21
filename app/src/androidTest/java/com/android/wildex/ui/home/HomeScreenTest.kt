@@ -26,301 +26,286 @@ import org.junit.runner.RunWith
 class HomeScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
-    private val postRepository = LocalRepositories.postsRepository
-    private val userRepository = LocalRepositories.userRepository
-    private val likeRepository = LocalRepositories.likeRepository
-    private val fullPost =
-        Post(
-            postId = "uid",
-            authorId = "poster0",
-            pictureURL =
-                "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14213.jpg",
-            location = Location(0.0, 0.0, "Casablanca"),
-            description = "Description 1",
-            date = Timestamp.now(),
-            animalId = "animal1",
-            likesCount = 10,
-            commentsCount = 5,
-        )
+  private val postRepository = LocalRepositories.postsRepository
+  private val userRepository = LocalRepositories.userRepository
+  private val likeRepository = LocalRepositories.likeRepository
+  private val fullPost =
+      Post(
+          postId = "uid",
+          authorId = "poster0",
+          pictureURL =
+              "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14213.jpg",
+          location = Location(0.0, 0.0, "Casablanca"),
+          description = "Description 1",
+          date = Timestamp.now(),
+          animalId = "animal1",
+          likesCount = 10,
+          commentsCount = 5,
+      )
 
-    private lateinit var homeScreenVM: HomeScreenViewModel
+  private lateinit var homeScreenVM: HomeScreenViewModel
 
-    @Before
-    fun setup() = runBlocking {
-        homeScreenVM = HomeScreenViewModel(postRepository, userRepository, likeRepository, "uid")
-        userRepository.addUser(
-            User(
-                userId = "uid",
-                username = "testuser",
-                name = "Test",
-                surname = "User",
-                bio = "This is a test user.",
-                profilePictureURL =
-                    "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-                userType = UserType.REGULAR,
-                creationDate = Timestamp.now(),
-                country = "Testland",
-                friendsCount = 0,
-            )
-        )
-        userRepository.addUser(
-            User(
-                userId = "poster0",
-                username = "testuser",
-                name = "Test",
-                surname = "User",
-                bio = "This is a test user.",
-                profilePictureURL =
-                    "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-                userType = UserType.REGULAR,
-                creationDate = Timestamp.now(),
-                country = "Testland",
-                friendsCount = 0,
-            )
-        )
-    }
+  @Before
+  fun setup() = runBlocking {
+    homeScreenVM = HomeScreenViewModel(postRepository, userRepository, likeRepository, "uid")
+    userRepository.addUser(
+        User(
+            userId = "uid",
+            username = "testuser",
+            name = "Test",
+            surname = "User",
+            bio = "This is a test user.",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "Testland",
+            friendsCount = 0,
+        ))
+    userRepository.addUser(
+        User(
+            userId = "poster0",
+            username = "testuser",
+            name = "Test",
+            surname = "User",
+            bio = "This is a test user.",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "Testland",
+            friendsCount = 0,
+        ))
+  }
 
-    @After
-    fun tearDown() {
-        LocalRepositories.clearAll()
-    }
+  @After
+  fun tearDown() {
+    LocalRepositories.clearAll()
+  }
 
   @Test
   fun testTagsAreCorrectlySetWhenNoPost() {
-      composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
-      composeTestRule
-          .onNodeWithTag(HomeScreenTestTags.TITLE)
-          .assertIsDisplayed()
-          .onChildren()
-          .assertAny(hasText("Wildex"))
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.TITLE)
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("Wildex"))
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST_ICON).assertIsDisplayed()
 
-      composeTestRule.onNodeWithTag(HomeScreenTestTags.authorPictureTag("uid"))
-          .assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(HomeScreenTestTags.likeTag("uid")).assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(HomeScreenTestTags.commentTag("uid")).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.authorPictureTag("uid")).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.likeTag("uid")).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.commentTag("uid")).assertIsNotDisplayed()
   }
 
   @Test
   fun testTagsAreCorrectlySetWhenPosts() {
-      val fullPost2 = fullPost.copy(postId = "post2")
-      runBlocking {
-          postRepository.addPost(fullPost)
-          postRepository.addPost(fullPost2)
-          homeScreenVM.refreshUIState()
-      }
+    val fullPost2 = fullPost.copy(postId = "post2")
+    runBlocking {
+      postRepository.addPost(fullPost)
+      postRepository.addPost(fullPost2)
+      homeScreenVM.refreshUIState()
+    }
 
-      composeTestRule.setContent { HomeScreen(homeScreenVM) }
-      composeTestRule.waitForIdle()
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
 
-      assertFullPostIsDisplayed(fullPost.postId)
-      assertFullPostIsDisplayed(fullPost2.postId)
-      composeTestRule
-          .onNodeWithTag(HomeScreenTestTags.NO_POST_ICON, useUnmergedTree = true)
-          .assertIsNotDisplayed()
+    assertFullPostIsDisplayed(fullPost.postId)
+    assertFullPostIsDisplayed(fullPost2.postId)
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.NO_POST_ICON, useUnmergedTree = true)
+        .assertIsNotDisplayed()
   }
 
   @Test
   fun postWithoutLocation_doesNotShowLocation() {
-      val noLocationPost = fullPost.copy(location = null)
-      val blankLocationPost = fullPost.copy(location = Location(0.0, 0.0, "   "))
-      runBlocking {
-          postRepository.addPost(noLocationPost)
-          postRepository.addPost(blankLocationPost)
-      }
+    val noLocationPost = fullPost.copy(location = null)
+    val blankLocationPost = fullPost.copy(location = Location(0.0, 0.0, "   "))
+    runBlocking {
+      postRepository.addPost(noLocationPost)
+      postRepository.addPost(blankLocationPost)
+    }
 
-      composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
 
-      composeTestRule
-          .onNodeWithTag(
-              HomeScreenTestTags.locationTag(noLocationPost.postId),
-              useUnmergedTree = true,
-          )
-          .assertIsNotDisplayed()
-      composeTestRule
-          .onNodeWithTag(
-              HomeScreenTestTags.locationTag(blankLocationPost.postId),
-              useUnmergedTree = true,
-          )
-          .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.locationTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.locationTag(blankLocationPost.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsNotDisplayed()
   }
 
-    @Test
-    fun profilePictureClick_invokesCallback() {
-        var profileClicked = false
+  @Test
+  fun profilePictureClick_invokesCallback() {
+    var profileClicked = false
 
-        composeTestRule.setContent {
-            HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = true })
-        }
+    composeTestRule.setContent {
+      HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = true })
+    }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).performClick()
-        assert(profileClicked)
+    assert(profileClicked)
+  }
+
+  @Test
+  fun notificationBellClick_invokesCallback() {
+    var notificationClicked = false
+    composeTestRule.setContent {
+      HomeScreen(homeScreenVM, onNotificationClick = { notificationClicked = true })
+    }
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
+    assert(notificationClicked)
+  }
+
+  @Test
+  fun likeButtonAndLikeCountClick_togglesLikeToRepository() {
+    runBlocking {
+      postRepository.addPost(fullPost)
+      homeScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeButtonTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
+    composeTestRule.waitForIdle()
+    runBlocking {
+      val like = likeRepository.getLikeForPost(fullPost.postId)
+      assert(like != null)
+    }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeButtonTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
+    composeTestRule.waitForIdle()
+    runBlocking {
+      val like = likeRepository.getLikeForPost(fullPost.postId)
+      assert(like == null)
     }
 
-    @Test
-    fun notificationBellClick_invokesCallback() {
-        var notificationClicked = false
-        composeTestRule.setContent {
-            HomeScreen(homeScreenVM, onNotificationClick = { notificationClicked = true })
-        }
-        composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
-        assert(notificationClicked)
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
+    composeTestRule.waitForIdle()
+    runBlocking {
+      val like = likeRepository.getLikeForPost(fullPost.postId)
+      assert(like != null)
+    }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
+    composeTestRule.waitForIdle()
+    runBlocking {
+      val like = likeRepository.getLikeForPost(fullPost.postId)
+      assert(like == null)
+    }
+  }
+
+  @Test
+  fun postImageAndCommentCountClick_invokesCallback() {
+    var postClicked = false
+    runBlocking {
+      postRepository.addPost(fullPost)
+      homeScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent {
+      HomeScreen(
+          homeScreenVM,
+          onPostClick = { postId ->
+            if (postId == fullPost.postId) {
+              postClicked = true
+            }
+          },
+      )
     }
 
-    @Test
-    fun likeButtonAndLikeCountClick_togglesLikeToRepository() {
-        runBlocking {
-            postRepository.addPost(fullPost)
-            homeScreenVM.refreshUIState()
-        }
-        composeTestRule.setContent { HomeScreen(homeScreenVM) }
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.likeButtonTag(fullPost.postId),
-                useUnmergedTree = true
-            )
-            .performClick()
-        composeTestRule.waitForIdle()
-        runBlocking {
-            val like = likeRepository.getLikeForPost(fullPost.postId)
-            assert(like != null)
-        }
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.likeButtonTag(fullPost.postId),
-                useUnmergedTree = true
-            )
-            .performClick()
-        composeTestRule.waitForIdle()
-        runBlocking {
-            val like = likeRepository.getLikeForPost(fullPost.postId)
-            assert(like == null)
-        }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.imageTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
 
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
-            .performClick()
-        composeTestRule.waitForIdle()
-        runBlocking {
-            val like = likeRepository.getLikeForPost(fullPost.postId)
-            assert(like != null)
-        }
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
-            .performClick()
-        composeTestRule.waitForIdle()
-        runBlocking {
-            val like = likeRepository.getLikeForPost(fullPost.postId)
-            assert(like == null)
-        }
+    assert(postClicked)
+
+    postClicked = false
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.commentTag(fullPost.postId), useUnmergedTree = true)
+        .performClick()
+
+    assert(postClicked)
+  }
+
+  @Test
+  fun likeAndCommentCountsAreDisplayedCorrectly() {
+    val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
+    val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)
+    runBlocking {
+      postRepository.addPost(postWithCounts)
+      postRepository.addPost(postWithCount)
+      homeScreenVM.refreshUIState()
     }
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
 
-    @Test
-    fun postImageAndCommentCountClick_invokesCallback() {
-        var postClicked = false
-        runBlocking {
-            postRepository.addPost(fullPost)
-            homeScreenVM.refreshUIState()
-        }
-        composeTestRule.setContent {
-            HomeScreen(
-                homeScreenVM,
-                onPostClick = { postId ->
-                    if (postId == fullPost.postId) {
-                        postClicked = true
-                    }
-                },
-            )
-        }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCounts.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("42 likes"))
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.commentTag(postWithCounts.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("7 comments"))
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCount.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("1 like"))
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.commentTag(postWithCount.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("1 comment"))
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.commentTag(postWithCount.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsDisplayed()
+        .onChildren()
+        .assertAny(hasText("1 comment"))
+  }
 
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.imageTag(fullPost.postId), useUnmergedTree = true)
-            .performClick()
-
-        assert(postClicked)
-
-        postClicked = false
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.commentTag(fullPost.postId), useUnmergedTree = true)
-            .performClick()
-
-        assert(postClicked)
-    }
-
-    @Test
-    fun likeAndCommentCountsAreDisplayedCorrectly() {
-        val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
-        val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)
-        runBlocking {
-            postRepository.addPost(postWithCounts)
-            postRepository.addPost(postWithCount)
-            homeScreenVM.refreshUIState()
-        }
-        composeTestRule.setContent { HomeScreen(homeScreenVM) }
-
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.likeTag(postWithCounts.postId),
-                useUnmergedTree = true
-            )
-            .assertIsDisplayed()
-            .onChildren()
-            .assertAny(hasText("42 likes"))
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.commentTag(postWithCounts.postId),
-                useUnmergedTree = true
-            )
-            .assertIsDisplayed()
-            .onChildren()
-            .assertAny(hasText("7 comments"))
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCount.postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-            .onChildren()
-            .assertAny(hasText("1 like"))
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.commentTag(postWithCount.postId),
-                useUnmergedTree = true,
-            )
-            .assertIsDisplayed()
-            .onChildren()
-            .assertAny(hasText("1 comment"))
-        composeTestRule
-            .onNodeWithTag(
-                HomeScreenTestTags.commentTag(postWithCount.postId),
-                useUnmergedTree = true,
-            )
-            .assertIsDisplayed()
-            .onChildren()
-            .assertAny(hasText("1 comment"))
-    }
-
-    private fun assertFullPostIsDisplayed(postId: String) {
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.locationTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.likeTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
-            .assertIsDisplayed()
+  private fun assertFullPostIsDisplayed(postId: String) {
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.locationTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

@@ -1,7 +1,7 @@
 // kotlin
 package com.android.wildex.ui.home
-/*
-import android.util.Log
+
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
@@ -56,20 +56,25 @@ class HomeScreenViewModelTest {
           commentsCount = 1,
       )
 
-  private val u1 =
-      SimpleUser(
-          userId = "uid-1",
-          username = "user_one",
-          profilePictureURL = "u",
-      )
+  private val u1 = SimpleUser(userId = "uid-1", username = "user_one", profilePictureURL = "u")
+
+  private val author1 = SimpleUser("author1", "author_one", "url1")
+  private val author2 = SimpleUser("author2", "author_two", "url2")
+
+  private val like1 = Like(likeId = "like1", postId = "p1", userId = "author-2")
+
+  private val like2 = Like(likeId = "like2", postId = "p2", userId = "author-1")
 
   @Before
   fun setUp() {
     postsRepository = mockk()
     userRepository = mockk()
     likeRepository = mockk()
-    coEvery { likeRepository.getLikeForPost(any()) } returns null
     viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository, "uid-1")
+    coEvery { userRepository.getSimpleUser("author1") } returns author1
+    coEvery { userRepository.getSimpleUser("author2") } returns author2
+    coEvery { likeRepository.getLikeForPost("p1") } returns null
+    coEvery { likeRepository.getLikeForPost("p2") } returns null
   }
 
   @Test
@@ -83,19 +88,23 @@ class HomeScreenViewModelTest {
   fun refreshUIState_updates_UI_state_success() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
+      coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
-
       viewModel.refreshUIState()
       advanceUntilIdle()
-
+      val expectedStates =
+          listOf(
+              PostState(p1, isLiked = true, author = author1),
+              PostState(p2, isLiked = false, author = author2),
+          )
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1, p2), updatedState.postStates.map { it.post })
+      Assert.assertEquals(expectedStates, updatedState.postStates)
       Assert.assertEquals(u1, updatedState.currentUser)
     }
   }
 
   @Test
-  fun refreshUIState_whenCurrentUserNull_usesDefaultUser_and_doesNotCallUserRepo() {
+  fun refreshUIState_whenCurrentUserNull_usesDefaultUser() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
@@ -105,11 +114,10 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1), s.postStates.map { it.post })
+      Assert.assertEquals(listOf(PostState(p1, false, author1)), s.postStates)
       Assert.assertNotNull(s.currentUser)
       Assert.assertEquals("defaultUserId", s.currentUser.userId)
       Assert.assertEquals("defaultUsername", s.currentUser.username)
-      coVerify(exactly = 0) { userRepository.getSimpleUser(any()) }
     }
   }
 
@@ -118,12 +126,18 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
       coEvery { userRepository.getSimpleUser("uid-1") } throws RuntimeException("boom")
+      coEvery { likeRepository.getLikeForPost("p2") } returns like2
 
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p1, p2), s.postStates.map { it.post })
+      val expectedStates =
+          listOf(
+              PostState(p1, isLiked = false, author = author1),
+              PostState(p2, isLiked = true, author = author2),
+          )
+      Assert.assertEquals(expectedStates, s.postStates)
       Assert.assertNotNull(s.currentUser)
       Assert.assertEquals("defaultUserId", s.currentUser.userId)
     }
@@ -152,17 +166,23 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { likeRepository.getLikeForPost("p1") } returns like1
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val u2 = u1.copy(username = "user_one_2")
       coEvery { postsRepository.getAllPosts() } returns listOf(p2)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u2
+      coEvery { likeRepository.getLikeForPost("p2") } returns like2
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(p2), s.postStates.map { it.post })
+      val expectedStates =
+          listOf(
+              PostState(p2, isLiked = true, author = author2),
+          )
+      Assert.assertEquals(expectedStates, s.postStates)
       Assert.assertEquals(u2, s.currentUser)
     }
   }
@@ -173,5 +193,36 @@ class HomeScreenViewModelTest {
     Assert.assertTrue(s.postStates.isEmpty())
     Assert.assertEquals(s.currentUser, defaultUser)
   }
+
+  @Test
+  fun toggleLike_addsLike_whenNotAlreadyLiked() {
+    mainDispatcherRule.runTest {
+      val newLike = Like(likeId = "like42", postId = "p1", userId = "uid-1")
+      var liked = false
+      coEvery { likeRepository.getLikeForPost("p1") } returns null
+      coEvery { likeRepository.getNewLikeId() } returns "like42"
+
+      coEvery { likeRepository.addLike(newLike) } coAnswers { liked = true }
+
+      viewModel.toggleLike("p1")
+      advanceUntilIdle()
+
+      assert(liked)
+      coVerify(exactly = 0) { likeRepository.deleteLike(any()) }
+    }
+  }
+
+  @Test
+  fun toggleLike_removesLike_whenAlreadyLiked() {
+    mainDispatcherRule.runTest {
+      var isDeleted = false
+      coEvery { likeRepository.getLikeForPost("p1") } returns like1
+      coEvery { likeRepository.deleteLike("like1") } coAnswers { isDeleted = true }
+
+      viewModel.toggleLike("p1")
+      advanceUntilIdle()
+      assert(isDeleted)
+      coVerify(exactly = 0) { likeRepository.addLike(any()) }
+    }
+  }
 }
- */

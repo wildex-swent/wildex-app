@@ -37,7 +37,7 @@ data class HomeUIState(
 )
 
 /** Default placeholder user used when no valid user is loaded. */
-private val defaultUser: SimpleUser =
+val defaultUser: SimpleUser =
     SimpleUser(
         userId = "defaultUserId",
         username = "defaultUsername",
@@ -47,7 +47,7 @@ private val defaultUser: SimpleUser =
     )
 
 /** Default placeholder animal used when no valid animal is associated with a post. */
-private val defaultAnimal: Animal =
+val defaultAnimal: Animal =
     Animal(
         animalId = "defaultAnimalId",
         name = "Default Animal",
@@ -89,7 +89,12 @@ class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
-    private val currentUserId: Id = Firebase.auth.uid!!,
+    private val currentUserId: Id =
+        try {
+            Firebase.auth.uid ?: "defaultUserId"
+        } catch (_: Exception) {
+            "defaultUserId"
+        } ?: "defaultUserId",
 ) : ViewModel() {
 
     /** Backing property for the home screen state. */
@@ -128,7 +133,12 @@ class HomeScreenViewModel(
         }
 
     /** Fetches the current authenticated user’s information. */
-    private suspend fun fetchUser(): SimpleUser = userRepository.getSimpleUser(currentUserId)
+    private suspend fun fetchUser(): SimpleUser =
+        try {
+            userRepository.getSimpleUser(currentUserId)
+        } catch (_: Exception) {
+            defaultUser
+        }
 
     /**
      * Handles like/unlike logic for a specific post.

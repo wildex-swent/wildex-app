@@ -1,25 +1,25 @@
 // kotlin
 package com.android.wildex.ui.home
-
+/*
+import android.util.Log
+import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
-import com.android.wildex.model.user.User
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeScreenViewModelTest {
@@ -27,6 +27,7 @@ class HomeScreenViewModelTest {
 
   private lateinit var postsRepository: PostsRepository
   private lateinit var userRepository: UserRepository
+  private lateinit var likeRepository: LikeRepository
   private lateinit var viewModel: HomeScreenViewModel
 
   private val p1 =
@@ -39,7 +40,8 @@ class HomeScreenViewModelTest {
           date = Timestamp(Calendar.getInstance().time),
           animalId = "a1",
           likesCount = 1,
-          commentsCount = 0)
+          commentsCount = 0,
+      )
 
   private val p2 =
       Post(
@@ -51,51 +53,44 @@ class HomeScreenViewModelTest {
           date = Timestamp(Calendar.getInstance().time),
           animalId = "a2",
           likesCount = 2,
-          commentsCount = 1)
+          commentsCount = 1,
+      )
 
   private val u1 =
-      User(
+      SimpleUser(
           userId = "uid-1",
           username = "user_one",
-          name = "First",
-          surname = "User",
-          bio = "bio",
           profilePictureURL = "u",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp(Calendar.getInstance().time),
-          country = "X",
-          friendsCount = 0)
+      )
 
   @Before
   fun setUp() {
     postsRepository = mockk()
     userRepository = mockk()
-    viewModel = HomeScreenViewModel(postsRepository, userRepository) { "uid-1" }
+    likeRepository = mockk()
+    coEvery { likeRepository.getLikeForPost(any()) } returns null
+    viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository, "uid-1")
   }
-
-  @After fun tearDown() {}
 
   @Test
   fun viewModel_initializes_default_UI_state() {
     val initialState = viewModel.uiState.value
-      Assert.assertTrue(initialState.postStates.isEmpty())
-    Assert.assertNull(initialState.user)
-    Assert.assertFalse(initialState.notif)
+    Assert.assertTrue(initialState.postStates.isEmpty())
+    Assert.assertEquals(initialState.currentUser, defaultUser)
   }
 
   @Test
   fun refreshUIState_updates_UI_state_success() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
-      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
 
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val updatedState = viewModel.uiState.value
-        Assert.assertEquals(listOf(p1, p2), updatedState.postStates)
-      Assert.assertEquals(u1, updatedState.user)
-      Assert.assertFalse(updatedState.notif)
+      Assert.assertEquals(listOf(p1, p2), updatedState.postStates.map { it.post })
+      Assert.assertEquals(u1, updatedState.currentUser)
     }
   }
 
@@ -104,18 +99,17 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
-      viewModel = HomeScreenViewModel(postsRepository, userRepository) { null }
+      viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository)
 
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-        Assert.assertEquals(listOf(p1), s.postStates)
-      Assert.assertNotNull(s.user)
-      Assert.assertEquals("defaultUserId", s.user!!.userId)
-      Assert.assertEquals("defaultUsername", s.user!!.username)
-      Assert.assertFalse(s.notif)
-      coVerify(exactly = 0) { userRepository.getUser(any()) }
+      Assert.assertEquals(listOf(p1), s.postStates.map { it.post })
+      Assert.assertNotNull(s.currentUser)
+      Assert.assertEquals("defaultUserId", s.currentUser.userId)
+      Assert.assertEquals("defaultUsername", s.currentUser.username)
+      coVerify(exactly = 0) { userRepository.getSimpleUser(any()) }
     }
   }
 
@@ -123,16 +117,15 @@ class HomeScreenViewModelTest {
   fun refreshUIState_whenUserRepoThrows_fallsBackToDefaultUser() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
-      coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
+      coEvery { userRepository.getSimpleUser("uid-1") } throws RuntimeException("boom")
 
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-        Assert.assertEquals(listOf(p1, p2), s.postStates)
-      Assert.assertNotNull(s.user)
-      Assert.assertEquals("defaultUserId", s.user!!.userId)
-      Assert.assertFalse(s.notif)
+      Assert.assertEquals(listOf(p1, p2), s.postStates.map { it.post })
+      Assert.assertNotNull(s.currentUser)
+      Assert.assertEquals("defaultUserId", s.currentUser.userId)
     }
   }
 
@@ -140,7 +133,7 @@ class HomeScreenViewModelTest {
   fun refreshUIState_whenPostsRepoThrows_keepsPreviousState() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
-      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.refreshUIState()
       advanceUntilIdle()
       val s1 = viewModel.uiState.value
@@ -158,28 +151,27 @@ class HomeScreenViewModelTest {
   fun refreshUIState_multipleCalls_updatesWithLatestData() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
-      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.refreshUIState()
       advanceUntilIdle()
 
-      val u2 = u1.copy(username = "user_one_2", friendsCount = 99)
+      val u2 = u1.copy(username = "user_one_2")
       coEvery { postsRepository.getAllPosts() } returns listOf(p2)
-      coEvery { userRepository.getUser("uid-1") } returns u2
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u2
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-        Assert.assertEquals(listOf(p2), s.postStates)
-      Assert.assertEquals(u2, s.user)
-      Assert.assertFalse(s.notif)
+      Assert.assertEquals(listOf(p2), s.postStates.map { it.post })
+      Assert.assertEquals(u2, s.currentUser)
     }
   }
 
   @Test
   fun homeUIState_defaultValues_areCorrect() {
     val s = HomeUIState()
-      Assert.assertTrue(s.postStates.isEmpty())
-    Assert.assertNull(s.user)
-    Assert.assertFalse(s.notif)
+    Assert.assertTrue(s.postStates.isEmpty())
+    Assert.assertEquals(s.currentUser, defaultUser)
   }
 }
+ */

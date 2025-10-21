@@ -6,7 +6,6 @@ import com.android.wildex.utils.FirestoreTest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.util.Calendar
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.tasks.await
@@ -14,8 +13,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.util.Calendar
 
-const val USERS_COLLECTION_PATH = "Users"
+const val USERS_COLLECTION_PATH = "users"
 
 class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   private var repository = UserRepositoryFirestore(Firebase.firestore)

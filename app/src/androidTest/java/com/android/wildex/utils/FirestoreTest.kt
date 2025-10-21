@@ -10,11 +10,11 @@ import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import java.util.Calendar
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
+import java.util.Calendar
 
 open class FirestoreTest(val collectionPath: String) {
 
@@ -73,7 +73,8 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "0",
           authorId = "author1",
-          pictureURL = "AuthorOne",
+          pictureURL =
+              "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14213.jpg",
           location = Location(0.0, 0.0),
           description = "Description 1",
           date = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
@@ -86,7 +87,8 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "1",
           authorId = "author2",
-          pictureURL = "AuthorTwo",
+          pictureURL =
+              "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14223.jpg",
           location = Location(0.1, 0.3),
           description = "Description 2",
           date = Timestamp.Companion.fromDate(2035, Calendar.SEPTEMBER, 4),
@@ -99,7 +101,7 @@ open class FirestoreTest(val collectionPath: String) {
       Post(
           postId = "2",
           authorId = "author3",
-          pictureURL = "AuthorThree",
+          pictureURL = "https://i.pinimg.com/736x/5b/7c/3a/5b7c3a24f4827e9b1f1783eba2afd1d6.jpg",
           location = Location(0.3, 0.3),
           description = "Description 3",
           date = Timestamp.Companion.fromDate(2024, Calendar.SEPTEMBER, 8),

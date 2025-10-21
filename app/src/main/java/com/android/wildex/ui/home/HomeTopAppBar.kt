@@ -50,7 +50,12 @@ fun WildexHomeTopAppBar(
 ) {
     TopAppBar(
         title = {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(HomeScreenTestTags.TITLE),
+                contentAlignment = Alignment.Center,
+            ) {
                 Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
             }
         },

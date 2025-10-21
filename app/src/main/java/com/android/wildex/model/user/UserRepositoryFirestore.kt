@@ -6,7 +6,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-private const val USERS_COLLECTION_PATH = "Users"
+private const val USERS_COLLECTION_PATH = "users"
 private const val TAG = "UserRepositoryFirestore"
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {

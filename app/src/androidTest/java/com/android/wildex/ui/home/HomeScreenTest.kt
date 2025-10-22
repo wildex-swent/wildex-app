@@ -49,10 +49,11 @@ class HomeScreenTest {
 
   @Before
   fun setup() = runBlocking {
-    homeScreenVM = HomeScreenViewModel(postRepository, userRepository, likeRepository, "uid")
+    homeScreenVM =
+        HomeScreenViewModel(postRepository, userRepository, likeRepository, "currentUserId-1")
     userRepository.addUser(
         User(
-            userId = "uid",
+            userId = "currentUserId-1",
             username = "testuser",
             name = "Test",
             surname = "User",
@@ -98,9 +99,15 @@ class HomeScreenTest {
         .assertAny(hasText("Wildex"))
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST_ICON).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.authorPictureTag("uid")).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.likeTag("uid")).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.commentTag("uid")).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.authorPictureTag("currentUserId-1"))
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag("currentUserId-1"))
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.commentTag("currentUserId-1"))
+        .assertIsNotDisplayed()
   }
 
   @Test

@@ -64,7 +64,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 
 fun testTagForProfilePicture(profileId: String, role: String = ""): String {
-    return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
+  return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,14 +75,14 @@ fun PostDetailsScreen(
     onGoBack: () -> Unit = {},
     onProfile: (Id) -> Unit = {},
 ) {
-    val uiState by postDetailsScreenViewModel.uiState.collectAsState()
+  val uiState by postDetailsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-    LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
+  LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
 
-    LaunchedEffect(uiState.errorMsg) {
-        uiState.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       postDetailsScreenViewModel.clearErrorMsg()
     }
   }
@@ -90,144 +90,130 @@ fun PostDetailsScreen(
   Scaffold(
       topBar = { PostDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
-          // Pinned comment input – content scrolls behind it
-          CommentInput(
-              userId = uiState.currentUserId,
-              userProfilePictureURL = uiState.currentUserProfilePictureURL,
-              onProfile = onProfile,
-              postDetailsScreenViewModel = postDetailsScreenViewModel,
+        // Pinned comment input – content scrolls behind it
+        CommentInput(
+            userId = uiState.currentUserId,
+            userProfilePictureURL = uiState.currentUserProfilePictureURL,
+            onProfile = onProfile,
+            postDetailsScreenViewModel = postDetailsScreenViewModel,
         )
       },
   ) { pd ->
-      Box(Modifier
-          .fillMaxSize()
-          .padding(pd)) {
-          // Full scroll: hero image + content sheet + comments
-          LazyColumn(
-              modifier = Modifier.fillMaxSize(),
-              verticalArrangement = Arrangement.spacedBy(0.dp),
+    Box(Modifier.fillMaxSize().padding(pd)) {
+      // Full scroll: hero image + content sheet + comments
+      LazyColumn(
+          modifier = Modifier.fillMaxSize(),
+          verticalArrangement = Arrangement.spacedBy(0.dp),
+      ) {
+        // HERO IMAGE with soft gradient top and bottom
+        item { PostPicture(uiState.pictureURL) }
+
+        // CONTENT SHEET (rounded top), contains info + description + "Comments" header
+        item {
+          Surface(
+              color = colorScheme.background,
+              shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+              modifier = Modifier.fillMaxWidth(),
           ) {
-              // HERO IMAGE with soft gradient top and bottom
-              item { PostPicture(uiState.pictureURL) }
+            Column(Modifier.fillMaxWidth()) {
+              // make the sheet overlap a bit with the image to look continuous
+              Spacer(Modifier.height(8.dp))
 
-              // CONTENT SHEET (rounded top), contains info + description + "Comments" header
-              item {
-                  Surface(
-                      color = colorScheme.background,
-                      shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                      modifier = Modifier.fillMaxWidth(),
-                  ) {
-                      Column(Modifier.fillMaxWidth()) {
-                          // make the sheet overlap a bit with the image to look continuous
-                          Spacer(Modifier.height(8.dp))
+              LocationSpeciesLikeBar(
+                  location = uiState.location,
+                  species = uiState.animalSpecies,
+                  likedByCurrentUser = uiState.likedByCurrentUser,
+                  likesCount = uiState.likesCount,
+                  onLike = { postDetailsScreenViewModel.addLike() },
+                  onUnlike = { postDetailsScreenViewModel.removeLike() },
+              )
 
-                          LocationSpeciesLikeBar(
-                              location = uiState.location,
-                              species = uiState.animalSpecies,
-                              likedByCurrentUser = uiState.likedByCurrentUser,
-                              likesCount = uiState.likesCount,
-                              onLike = { postDetailsScreenViewModel.addLike() },
-                              onUnlike = { postDetailsScreenViewModel.removeLike() },
-                          )
+              // INFO BAR
+              PostInfoBar(
+                  authorId = uiState.authorId,
+                  authorProfilePictureURL = uiState.authorProfilePictureURL,
+                  authorUserName = uiState.authorUsername,
+                  animalName = uiState.animalName,
+                  date = uiState.date,
+                  onProfile = onProfile,
+              )
 
-                          // INFO BAR
-                          PostInfoBar(
-                              authorId = uiState.authorId,
-                              authorProfilePictureURL = uiState.authorProfilePictureURL,
-                              authorUserName = uiState.authorUsername,
-                              animalName = uiState.animalName,
-                              date = uiState.date,
-                              onProfile = onProfile,
-                          )
-
-                          // DESCRIPTION – clean card with subtle border
-                          if (uiState.description.isNotBlank()) {
-                              Card(
-                                  modifier =
-                                      Modifier
-                                          .fillMaxWidth()
-                                          .padding(horizontal = 16.dp, vertical = 10.dp),
-                                  shape = RoundedCornerShape(32.dp),
-                                  colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                                  border = BorderStroke(1.dp, colorScheme.tertiary),
-                                  elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                              ) {
-                                  Text(
-                                      text = uiState.description,
-                                      color = colorScheme.onBackground,
-                                      modifier = Modifier.padding(14.dp),
-                                      style = typography.bodyMedium,
-                                  )
-                              }
-                          }
-                          // COMMENTS HEADER
-                          Column(
-                              Modifier
-                                  .fillMaxWidth()
-                                  .padding(horizontal = 16.dp, vertical = 12.dp)
-                          ) {
-                              Text(
-                                  text =
-                                      if (uiState.commentsUI.size == 1) "1 Comment"
-                                      else "${uiState.commentsUI.size} Comments",
-                                  style = typography.titleSmall,
-                                  color = colorScheme.onBackground,
-                              )
-                          }
-                      }
-                  }
+              // DESCRIPTION – clean card with subtle border
+              if (uiState.description.isNotBlank()) {
+                Card(
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                    shape = RoundedCornerShape(32.dp),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+                    border = BorderStroke(1.dp, colorScheme.tertiary),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                ) {
+                  Text(
+                      text = uiState.description,
+                      color = colorScheme.onBackground,
+                      modifier = Modifier.padding(14.dp),
+                      style = typography.bodyMedium,
+                  )
+                }
               }
-
-              // COMMENTS LIST – full-width, airy rows
-              itemsIndexed(uiState.commentsUI) { idx, commentUI ->
-                  Comment(commentUI = commentUI, onProfile = onProfile)
+              // COMMENTS HEADER
+              Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text(
+                    text =
+                        if (uiState.commentsUI.size == 1) "1 Comment"
+                        else "${uiState.commentsUI.size} Comments",
+                    style = typography.titleSmall,
+                    color = colorScheme.onBackground,
+                )
               }
-
-              // Spacer so the last comment clears the bottom input
-              item { Spacer(Modifier.height(96.dp)) }
+            }
           }
+        }
+
+        // COMMENTS LIST – full-width, airy rows
+        itemsIndexed(uiState.commentsUI) { idx, commentUI ->
+          Comment(commentUI = commentUI, onProfile = onProfile)
+        }
+
+        // Spacer so the last comment clears the bottom input
+        item { Spacer(Modifier.height(96.dp)) }
       }
+    }
   }
 }
 
 @Composable
 private fun PostPicture(pictureURL: URL) {
-    Box(Modifier.fillMaxWidth()) {
-        AsyncImage(
-            model = pictureURL,
-            contentDescription = "Post picture",
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxSize(),
-        )
-        // top black gradient overlay
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .align(Alignment.TopCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.7f),
-                            1f to Color.Transparent,
-                        )
-                    )
-        )
-        // bottom gradient to transition into sheet
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            1f to colorScheme.background,
-                        )
-                    )
-        )
-    }
+  Box(Modifier.fillMaxWidth()) {
+    AsyncImage(
+        model = pictureURL,
+        contentDescription = "Post picture",
+        contentScale = ContentScale.FillWidth,
+        modifier = Modifier.fillMaxSize(),
+    )
+    // top black gradient overlay
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(72.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.7f),
+                        1f to Color.Transparent,
+                    )))
+    // bottom gradient to transition into sheet
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(72.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        1f to colorScheme.background,
+                    )))
+  }
 }
 
 // ---------- Info bar (author, date, location, like) ----------
@@ -241,36 +227,34 @@ fun PostInfoBar(
     onProfile: (Id) -> Unit = {},
 ) {
   Row(
-      modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp, vertical = 10.dp),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
       horizontalArrangement = Arrangement.spacedBy(12.dp),
       verticalAlignment = Alignment.CenterVertically,
   ) {
-      ClickableProfilePicture(
-          modifier = Modifier.size(48.dp),
-          profileId = authorId,
-          profilePictureURL = authorProfilePictureURL,
-          role = "author",
-          onProfile = onProfile,
+    ClickableProfilePicture(
+        modifier = Modifier.size(48.dp),
+        profileId = authorId,
+        profilePictureURL = authorProfilePictureURL,
+        role = "author",
+        onProfile = onProfile,
+    )
+
+    Column(Modifier.weight(1f)) {
+      Text(
+          text =
+              buildAnnotatedString {
+                withStyle(SpanStyle(color = colorScheme.tertiary)) { append(authorUserName) }
+                append(" saw ${if (animalName.startsWithVowel()) "an " else "a "}")
+                withStyle(SpanStyle(color = colorScheme.primary)) { append("${animalName}!") }
+              },
+          style = typography.titleLarge,
+          maxLines = 2,
+          overflow = TextOverflow.Ellipsis,
       )
+      Text(text = date, color = colorScheme.tertiary, style = typography.labelMedium)
 
-      Column(Modifier.weight(1f)) {
-          Text(
-              text =
-                  buildAnnotatedString {
-                      withStyle(SpanStyle(color = colorScheme.tertiary)) { append(authorUserName) }
-                      append(" saw ${if (animalName.startsWithVowel()) "an " else "a "}")
-                      withStyle(SpanStyle(color = colorScheme.primary)) { append("${animalName}!") }
-                  },
-              style = typography.titleLarge,
-              maxLines = 2,
-              overflow = TextOverflow.Ellipsis,
-          )
-          Text(text = date, color = colorScheme.tertiary, style = typography.labelMedium)
-
-          Spacer(Modifier.height(5.dp))
-      }
+      Spacer(Modifier.height(5.dp))
+    }
   }
 }
 
@@ -283,82 +267,80 @@ fun LocationSpeciesLikeBar(
     onLike: () -> Unit = {},
     onUnlike: () -> Unit = {},
 ) {
-    // Location & Likes row
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val iconSize = 28.dp
-        val textStyle = typography.titleMedium
-        val spacing = 6.dp
-        if (location.isNotBlank()) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(.33f),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = "Location",
-                    tint = colorScheme.tertiary,
-                    modifier = Modifier.size(iconSize),
-                )
-                Spacer(Modifier.width(spacing))
-                Text(
-                    text = location,
-                    style = textStyle,
-                    color = colorScheme.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        if (species.isNotBlank()) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(.33f),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Pets,
-                    contentDescription = "Species",
-                    tint = colorScheme.tertiary,
-                    modifier = Modifier.size(iconSize),
-                )
-                Spacer(Modifier.width(spacing))
-                Text(
-                    text = species,
-                    style = textStyle,
-                    color = colorScheme.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth(.33f),
-        ) {
-            Icon(
-                imageVector =
-                    if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = "Like status",
-                tint = colorScheme.tertiary,
-                modifier =
-                    Modifier
-                        .size(iconSize)
-                        .clickable {
-                            if (!likedByCurrentUser) onLike() else onUnlike()
-                        },
-            )
-            Text(
-                text = likesCount.toString(),
-                color = colorScheme.tertiary,
-                style = textStyle,
-            )
-        }
+  // Location & Likes row
+  Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    val iconSize = 28.dp
+    val textStyle = typography.titleMedium
+    val spacing = 6.dp
+    if (location.isNotBlank()) {
+      Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.fillMaxWidth(.33f),
+      ) {
+        Icon(
+            imageVector = Icons.Filled.LocationOn,
+            contentDescription = "Location",
+            tint = colorScheme.tertiary,
+            modifier = Modifier.size(iconSize),
+        )
+        Spacer(Modifier.width(spacing))
+        Text(
+            text = location,
+            style = textStyle,
+            color = colorScheme.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
     }
+
+    if (species.isNotBlank()) {
+      Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.fillMaxWidth(.33f),
+      ) {
+        Icon(
+            imageVector = Icons.Filled.Pets,
+            contentDescription = "Species",
+            tint = colorScheme.tertiary,
+            modifier = Modifier.size(iconSize),
+        )
+        Spacer(Modifier.width(spacing))
+        Text(
+            text = species,
+            style = textStyle,
+            color = colorScheme.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth(.33f),
+    ) {
+      Icon(
+          imageVector =
+              if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+          contentDescription = "Like status",
+          tint = colorScheme.tertiary,
+          modifier =
+              Modifier.size(iconSize).clickable {
+                if (!likedByCurrentUser) onLike() else onUnlike()
+              },
+      )
+      Text(
+          text = likesCount.toString(),
+          color = colorScheme.tertiary,
+          style = textStyle,
+      )
+    }
+  }
 }
 
 // ---------- One comment row ----------
@@ -367,18 +349,14 @@ fun Comment(
     commentUI: CommentWithAuthorUI,
     onProfile: (Id) -> Unit = {},
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-        border = BorderStroke(1.dp, colorScheme.primary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp), verticalAlignment = Alignment.Top) {
+  Card(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+      shape = RoundedCornerShape(32.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+      border = BorderStroke(1.dp, colorScheme.primary),
+      elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+  ) {
+    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.Top) {
       ClickableProfilePicture(
           modifier = Modifier.fillMaxHeight(),
           profileId = commentUI.authorId,
@@ -387,7 +365,7 @@ fun Comment(
           onProfile = onProfile,
       )
 
-            Spacer(modifier = Modifier.width(10.dp))
+      Spacer(modifier = Modifier.width(10.dp))
 
       Column(modifier = Modifier.weight(1f)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -404,11 +382,11 @@ fun Comment(
           )
         }
         Spacer(modifier = Modifier.height(4.dp))
-          Text(
-              text = commentUI.text,
-              style = typography.bodyMedium,
-              color = colorScheme.onBackground,
-          )
+        Text(
+            text = commentUI.text,
+            style = typography.bodyMedium,
+            color = colorScheme.onBackground,
+        )
       }
     }
   }
@@ -425,20 +403,18 @@ fun CommentInput(
 ) {
   Box(
       modifier =
-          Modifier
-              .fillMaxWidth()
+          Modifier.fillMaxWidth()
               .background(colorScheme.background)
               .border(
                   width = 1.dp,
                   color = colorScheme.onBackground.copy(alpha = 0.06f),
                   shape = RoundedCornerShape(0.dp),
               )
-              .padding(horizontal = 12.dp, vertical = 8.dp)
-  ) {
-      Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
+              .padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
           ClickableProfilePicture(
               modifier = Modifier.size(44.dp),
               profileId = userId,
@@ -459,23 +435,23 @@ fun CommentInput(
               shape = RoundedCornerShape(32.dp),
               singleLine = true,
               trailingIcon = {
-                  IconButton(
-                      onClick = {
-                          if (text.isNotBlank()) {
-                              postDetailsScreenViewModel.addComment(text)
-                              text = ""
-                          }
-                      }) {
+                IconButton(
+                    onClick = {
+                      if (text.isNotBlank()) {
+                        postDetailsScreenViewModel.addComment(text)
+                        text = ""
+                      }
+                    }) {
                       Icon(
                           imageVector = Icons.AutoMirrored.Filled.Send,
                           contentDescription = "Send comment",
                           tint = colorScheme.primary,
                       )
-                  }
+                    }
               },
           )
+        }
       }
-  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -491,22 +467,20 @@ fun ClickableProfilePicture(
       onClick = { onProfile(profileId) },
       modifier = modifier.testTag(testTagForProfilePicture(profileId, role)),
   ) {
-      AsyncImage(
-          model = profilePictureURL,
-          contentDescription = "Profile picture",
-          modifier = Modifier
-              .clip(CircleShape)
-              .border(1.dp, colorScheme.primary, CircleShape),
-          contentScale = ContentScale.Crop,
-      )
+    AsyncImage(
+        model = profilePictureURL,
+        contentDescription = "Profile picture",
+        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
+        contentScale = ContentScale.Crop,
+    )
   }
 }
 
 private fun String.startsWithVowel(): Boolean {
-    val lower = this.lowercase()
-    return lower.startsWith("a") ||
-            lower.startsWith("e") ||
-            lower.startsWith("i") ||
-            lower.startsWith("o") ||
-            lower.startsWith("u")
+  val lower = this.lowercase()
+  return lower.startsWith("a") ||
+      lower.startsWith("e") ||
+      lower.startsWith("i") ||
+      lower.startsWith("o") ||
+      lower.startsWith("u")
 }

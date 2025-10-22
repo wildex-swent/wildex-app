@@ -91,9 +91,9 @@ class HomeScreenViewModel(
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val currentUserId: Id =
         try {
-            Firebase.auth.uid
+          Firebase.auth.uid
         } catch (_: Exception) {
-            defaultUser.userId
+          defaultUser.userId
         } ?: defaultUser.userId,
 ) : ViewModel() {
 

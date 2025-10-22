@@ -18,7 +18,7 @@ interface ClearableRepository {
 object LocalRepositories {
 
   class PostsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-    PostsRepository, ClearableRepository {
+      PostsRepository, ClearableRepository {
     val listOfPosts = mutableListOf<Post>()
 
     init {
@@ -30,10 +30,10 @@ object LocalRepositories {
     override suspend fun getAllPosts(): List<Post> = listOfPosts
 
     override suspend fun getAllPostsByAuthor(): List<Post> =
-      listOfPosts.filter { it.authorId == currentUserId }
+        listOfPosts.filter { it.authorId == currentUserId }
 
     override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post> =
-      listOfPosts.filter { it.authorId == authorId }
+        listOfPosts.filter { it.authorId == authorId }
 
     override suspend fun getPost(postId: Id): Post = listOfPosts.find { it.postId == postId }!!
 
@@ -56,7 +56,7 @@ object LocalRepositories {
   }
 
   class LikeRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-    LikeRepository, ClearableRepository {
+      LikeRepository, ClearableRepository {
     val listOfLikes = mutableListOf<Like>()
 
     init {
@@ -66,13 +66,13 @@ object LocalRepositories {
     override fun getNewLikeId(): String = "newLikeId"
 
     override suspend fun getAllLikesByCurrentUser(): List<Like> =
-      listOfLikes.filter { it.userId == currentUserId }
+        listOfLikes.filter { it.userId == currentUserId }
 
     override suspend fun getLikesForPost(postId: String): List<Like> =
-      listOfLikes.filter { it.postId == postId }
+        listOfLikes.filter { it.postId == postId }
 
     override suspend fun getLikeForPost(postId: String): Like? =
-      listOfLikes.find { it.postId == postId && it.userId == currentUserId }
+        listOfLikes.find { it.postId == postId && it.userId == currentUserId }
 
     override suspend fun addLike(like: Like) {
       listOfLikes.add(like)
@@ -88,7 +88,7 @@ object LocalRepositories {
   }
 
   class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-    UserRepository, ClearableRepository {
+      UserRepository, ClearableRepository {
     val listOfUsers = mutableListOf<User>()
 
     init {
@@ -102,9 +102,9 @@ object LocalRepositories {
     override suspend fun getSimpleUser(userId: Id): SimpleUser {
       val user = listOfUsers.find { it.userId == userId }!!
       return SimpleUser(
-        userId = user.userId,
-        username = user.username,
-        profilePictureURL = user.profilePictureURL,
+          userId = user.userId,
+          username = user.username,
+          profilePictureURL = user.profilePictureURL,
       )
     }
 
@@ -127,7 +127,7 @@ object LocalRepositories {
   }
 
   class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-    CommentRepository, ClearableRepository {
+      CommentRepository, ClearableRepository {
     val listOfComments = mutableListOf<Comment>()
 
     init {
@@ -137,7 +137,7 @@ object LocalRepositories {
     override fun getNewCommentId(): String = "newCommentId"
 
     override suspend fun getAllCommentsByPost(postId: String): List<Comment> =
-      listOfComments.filter { it.postId == postId }
+        listOfComments.filter { it.postId == postId }
 
     override suspend fun addComment(comment: Comment) {
       listOfComments.add(comment)

@@ -99,7 +99,7 @@ jobs:
           chmod +x ./gradlew
 
       # Check formatting
-      - name: KTFmt Check
+      - name: KTFMT Check
         run: |
           ./gradlew ktfmtCheck
 
@@ -110,7 +110,7 @@ jobs:
           ./gradlew assemble lint --parallel --build-cache
 
       # Run Unit tests
-      - name: Run tests
+      - name: Run Unit tests
         run: |
           # To run the CI with debug information, add --info
           ./gradlew check --parallel --build-cache
@@ -131,7 +131,7 @@ jobs:
           fi
 
       # Run connected tests on the emulator
-      - name: run tests
+      - name: Run Android tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34

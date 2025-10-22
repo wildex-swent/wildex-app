@@ -51,9 +51,7 @@ fun HomeTopBar(
   TopAppBar(
       title = {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(HomeScreenTestTags.TITLE),
+            modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.TITLE),
             contentAlignment = Alignment.Center,
         ) {
           Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
@@ -80,8 +78,7 @@ fun HomeTopBar(
               model = user.profilePictureURL,
               contentDescription = "Profile picture",
               modifier =
-                  Modifier
-                      .size(40.dp)
+                  Modifier.size(40.dp)
                       .clip(CircleShape)
                       .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
               contentScale = ContentScale.Crop,

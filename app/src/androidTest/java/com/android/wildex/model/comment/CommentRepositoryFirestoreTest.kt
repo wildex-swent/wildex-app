@@ -13,7 +13,7 @@ private const val COMMENTS_COLLECTION_PATH = "comments"
 
 class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
-    private var repository = CommentRepositoryFirestore(Firebase.firestore)
+  private var repository = CommentRepositoryFirestore(Firebase.firestore)
 
   @Test
   fun getNewCommentIdReturnsUniqueIDs() = runTest {

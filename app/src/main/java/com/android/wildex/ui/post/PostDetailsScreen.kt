@@ -465,8 +465,7 @@ fun CommentInput(
                               postDetailsScreenViewModel.addComment(text)
                               text = ""
                           }
-                      }
-                  ) {
+                      }) {
                       Icon(
                           imageVector = Icons.AutoMirrored.Filled.Send,
                           contentDescription = "Send comment",

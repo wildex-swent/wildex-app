@@ -288,9 +288,9 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
     }
 
     // Image
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onPostClick(post.postId) }) {
+      Box(modifier = Modifier
+          .fillMaxWidth()
+          .clickable { onPostClick(post.postId) }) {
       AsyncImage(
           model = post.pictureURL,
           contentDescription = "Post picture",

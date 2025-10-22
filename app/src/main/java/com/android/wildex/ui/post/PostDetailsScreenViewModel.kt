@@ -162,9 +162,25 @@ class PostDetailsScreenViewModel(
       try {
         val likeId = likeRepository.getNewLikeId()
           likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
+
+          // Update count in the post (optional to keep server in sync)
+          try {
+              val post = postRepository.getPost(postId)
+              postRepository.editPost(
+                  postId = postId,
+                  newValue = post.copy(likesCount = post.likesCount + 1),
+              )
+          } catch (e: Exception) {
+              // Not fatal for UI; server count may lag until next refresh
+              Log.w(
+                  "PostDetailsViewModel",
+                  "Failed to increment post likesCount on server: ${e.message}",
+              )
+              setErrorMsg("Failed to update post likes: ${e.message}.")
+          }
       } catch (e: Exception) {
           Log.e("PostDetailsViewModel", "addLike failed for $postId", e)
-          setErrorMsg("Failed to like. Check your connection.")
+          setErrorMsg("Failed to like: ${e.message}")
           rollback()
       } finally {
           likeInFlight = false
@@ -192,9 +208,25 @@ class PostDetailsScreenViewModel(
           val like =
               likeRepository.getLikeForPost(postId) ?: throw IllegalStateException("Like not found")
           likeRepository.deleteLike(like.likeId)
+
+          // Update count in the post (optional to keep server in sync)
+          try {
+              val post = postRepository.getPost(postId)
+              postRepository.editPost(
+                  postId = postId,
+                  newValue = post.copy(likesCount = post.likesCount - 1),
+              )
+          } catch (e: Exception) {
+              // Not fatal for UI; server count may lag until next refresh
+              Log.w(
+                  "PostDetailsViewModel",
+                  "Failed to decrement post likesCount on server: ${e.message}",
+              )
+              setErrorMsg("Failed to update post likes: ${e.message}.")
+          }
       } catch (e: Exception) {
           Log.e("PostDetailsViewModel", "removeLike failed for $postId", e)
-          setErrorMsg("Failed to remove like. Try again.")
+          setErrorMsg("Failed to remove like: ${e.message}")
           rollback()
       } finally {
           likeInFlight = false
@@ -258,6 +290,7 @@ class PostDetailsScreenViewModel(
                   "PostDetailsViewModel",
                   "Failed to increment post commentsCount on server: ${e.message}",
               )
+              setErrorMsg("Failed to update post comments: ${e.message}.")
           }
       } catch (e: Exception) {
           // Rollback UI

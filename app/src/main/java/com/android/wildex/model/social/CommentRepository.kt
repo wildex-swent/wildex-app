@@ -1,7 +1,7 @@
 package com.android.wildex.model.social
 
 /** Represents a repository that manages Comment items. */
-interface CommentsRepository {
+interface CommentRepository {
 
   /** Generates and returns a new unique identifier for a Comment item. */
   fun getNewCommentId(): String

@@ -52,9 +52,7 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
 
-    debug {
-      isMinifyEnabled = false
-    }
+    debug { isMinifyEnabled = false }
 
     debug {
       enableUnitTestCoverage = true
@@ -96,11 +94,7 @@ android {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
     }
-    packagingOptions {
-      jniLibs {
-        useLegacyPackaging = true
-      }
-    }
+    packagingOptions { jniLibs { useLegacyPackaging = true } }
   }
 
   // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
@@ -136,7 +130,8 @@ sonar {
       listOf(
         "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
         "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
-      ).joinToString(",")
+      )
+        .joinToString(","),
     )
 
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
@@ -237,7 +232,7 @@ dependencies {
 
   androidTestImplementation("io.coil-kt:coil:2.6.0")
   androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
-
+  implementation(libs.compose.material.icons)
 }
 
 tasks.withType<Test> {

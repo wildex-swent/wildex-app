@@ -15,7 +15,7 @@ private object CommentsFields {
 }
 
 /** Represents a repository that manages Comment items. */
-class CommentsRepositoryFirestore(private val db: FirebaseFirestore) : CommentsRepository {
+class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRepository {
 
   private val collection = db.collection(COMMENTS_COLLECTION_PATH)
 

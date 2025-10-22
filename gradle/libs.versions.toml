@@ -92,6 +92,8 @@ mockito-android = { module = "org.mockito:mockito-android", version.ref = "mocki
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 
+compose-material-icons = { module = "androidx.compose.material:material-icons-extended", name = "material-icons-extended" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

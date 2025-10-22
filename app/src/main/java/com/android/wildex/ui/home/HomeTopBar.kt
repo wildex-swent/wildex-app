@@ -43,7 +43,7 @@ import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WildexHomeTopAppBar(
+fun HomeTopBar(
     user: SimpleUser,
     onNotificationClick: () -> Unit,
     onProfilePictureClick: (userId: Id) -> Unit,
@@ -51,7 +51,9 @@ fun WildexHomeTopAppBar(
   TopAppBar(
       title = {
         Box(
-            modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.TITLE),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(HomeScreenTestTags.TITLE),
             contentAlignment = Alignment.Center,
         ) {
           Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
@@ -78,7 +80,8 @@ fun WildexHomeTopAppBar(
               model = user.profilePictureURL,
               contentDescription = "Profile picture",
               modifier =
-                  Modifier.size(40.dp)
+                  Modifier
+                      .size(40.dp)
                       .clip(CircleShape)
                       .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
               contentScale = ContentScale.Crop,

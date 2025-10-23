@@ -111,7 +111,7 @@ fun HomeScreen(
   LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
 
   Scaffold(
-      topBar = { WildexHomeTopAppBar(user, onNotificationClick, onProfilePictureClick) },
+      topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
       content = { pd ->
         if (postStates.isEmpty()) NoPostsView()

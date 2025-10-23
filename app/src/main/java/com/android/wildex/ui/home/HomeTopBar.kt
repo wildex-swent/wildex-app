@@ -43,7 +43,7 @@ import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WildexHomeTopAppBar(
+fun HomeTopBar(
     user: SimpleUser,
     onNotificationClick: () -> Unit,
     onProfilePictureClick: (userId: Id) -> Unit,

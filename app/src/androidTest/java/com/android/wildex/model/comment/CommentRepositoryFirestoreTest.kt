@@ -1,6 +1,6 @@
 package com.android.wildex.model.comment
 
-import com.android.wildex.model.social.CommentsRepositoryFirestore
+import com.android.wildex.model.social.CommentRepositoryFirestore
 import com.android.wildex.utils.FirestoreTest
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -13,7 +13,7 @@ private const val COMMENTS_COLLECTION_PATH = "comments"
 
 class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
-  private var repository = CommentsRepositoryFirestore(Firebase.firestore)
+  private var repository = CommentRepositoryFirestore(Firebase.firestore)
 
   @Test
   fun getNewCommentIdReturnsUniqueIDs() = runTest {

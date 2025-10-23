@@ -91,10 +91,10 @@ class HomeScreenViewModel(
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val currentUserId: Id =
         try {
-          Firebase.auth.uid ?: "defaultUserId"
+          Firebase.auth.uid
         } catch (_: Exception) {
-          "defaultUserId"
-        } ?: "defaultUserId",
+          defaultUser.userId
+        } ?: defaultUser.userId,
 ) : ViewModel() {
 
   /** Backing property for the home screen state. */

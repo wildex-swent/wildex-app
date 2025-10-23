@@ -1,5 +1,6 @@
 package com.android.wildex.ui.profile
 
+import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -141,10 +142,14 @@ fun ProfileAchievements(
           Spacer(Modifier.height(8.dp))
 
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            ArrowButton(isLeft = true, tint = cs.secondary) {
-              navDirection = -1
-              startIndex = wrap(startIndex - 1)
-            }
+            ArrowButton(
+                isLeft = true,
+                tint = cs.secondary,
+                onClick = {
+                  navDirection = -1
+                  startIndex = wrap(startIndex - 1)
+                },
+                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV))
 
             Spacer(Modifier.width(6.dp))
 
@@ -189,10 +194,14 @@ fun ProfileAchievements(
 
             Spacer(Modifier.width(6.dp))
 
-            ArrowButton(isLeft = false, tint = cs.secondary) {
-              navDirection = +1
-              startIndex = wrap(startIndex + 1)
-            }
+            ArrowButton(
+                isLeft = false,
+                tint = cs.secondary,
+                onClick = {
+                  navDirection = +1
+                  startIndex = wrap(startIndex + 1)
+                },
+                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT))
           }
         }
   }
@@ -227,7 +236,12 @@ private fun AchievementChip(a: Achievement) {
 }
 
 @Composable
-private fun ArrowButton(isLeft: Boolean, tint: Color, onClick: () -> Unit) {
+private fun ArrowButton(
+    isLeft: Boolean,
+    tint: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
   val interaction = remember { MutableInteractionSource() }
   val pressed by interaction.collectIsPressedAsState()
   val scale by
@@ -240,7 +254,7 @@ private fun ArrowButton(isLeft: Boolean, tint: Color, onClick: () -> Unit) {
       onClick = onClick,
       interactionSource = interaction,
       modifier =
-          Modifier.graphicsLayer {
+          modifier.graphicsLayer {
             scaleX = scale
             scaleY = scale
           },

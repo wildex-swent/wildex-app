@@ -20,6 +20,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -261,7 +262,8 @@ class ProfileScreenTest {
       val loader = LocalImageLoader.current
       Text(
           text = if (loader != null) "HAS_LOADER" else "NO_LOADER",
-          modifier = Modifier.testTag("LOADER_CHECK"))
+          modifier = Modifier.testTag("LOADER_CHECK"),
+      )
     }
     composeRule.onNodeWithTag("LOADER_CHECK").assertTextContains("HAS_LOADER")
   }
@@ -573,5 +575,171 @@ class ProfileScreenTest {
         .assertIsEnabled()
         .performClick()
     composeRule.onNodeWithText("Send Friend Request").assertExists()
+  }
+
+  @Test
+  fun achievements_initial_window_is_first_three() {
+    val items =
+        (1..5).map { i ->
+          Achievement(
+              achievementId = "a$i",
+              name = "A$i",
+              pictureURL = "url$i",
+              description = "",
+              condition = { true })
+        }
+    setThemedContent {
+      ProfileAchievements(
+          id = "u-1",
+          onAchievements = {},
+          ownerProfile = true,
+          listAchievement = items,
+      )
+    }
+    // Visible should be A1, A2, A3
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertDoesNotExist()
+    composeRule.onNodeWithText("A5").assertDoesNotExist()
+  }
+
+  @Test
+  fun achievements_next_advances_window_and_wraps() {
+    val items =
+        (1..5).map { i ->
+          Achievement(
+              achievementId = "a$i",
+              name = "A$i",
+              pictureURL = "url$i",
+              description = "",
+              condition = { true })
+        }
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = sampleUser(),
+          ownerProfile = true,
+          achievements = items,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
+      )
+    }
+
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS)
+
+    // Initial: A1 A2 A3
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+
+    // Next → A2 A3 A4
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A1").assertDoesNotExist()
+    composeRule.onNodeWithText("A5").assertDoesNotExist()
+
+    // Next → A3 A4 A5
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+    composeRule.onNodeWithText("A1").assertDoesNotExist()
+    composeRule.onNodeWithText("A2").assertDoesNotExist()
+
+    // Next (wrap) → A4 A5 A1
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertDoesNotExist()
+    composeRule.onNodeWithText("A3").assertDoesNotExist()
+  }
+
+  @Test
+  fun achievements_prev_moves_back_and_wraps() {
+    val items =
+        (1..5).map { i ->
+          Achievement(
+              achievementId = "a$i",
+              name = "A$i",
+              pictureURL = "url$i",
+              description = "",
+              condition = { true })
+        }
+    setThemedContent {
+      ProfileContent(
+          pd = PaddingValues(0.dp),
+          user = sampleUser(),
+          ownerProfile = true,
+          achievements = items,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
+      )
+    }
+
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS)
+
+    // Initial: A1 A2 A3
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+
+    // Prev (wrap) → A5 A1 A2
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
+    composeRule.onNodeWithText("A5").assertExists()
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertDoesNotExist()
+    composeRule.onNodeWithText("A4").assertDoesNotExist()
+
+    // Prev → A4 A5 A1
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertDoesNotExist()
+    composeRule.onNodeWithText("A3").assertDoesNotExist()
+  }
+
+  @Test
+  fun achievements_cta_visible_for_owner_and_clicks() {
+    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "", { true }) }
+    var clicks = 0
+    setThemedContent {
+      ProfileAchievements(
+          id = "user-x",
+          onAchievements = { if (it == "user-x") clicks++ },
+          ownerProfile = true,
+          listAchievement = items,
+      )
+    }
+    composeRule
+        .onNodeWithText("View all achievements", substring = true)
+        .assertExists()
+        .performClick()
+    Assert.assertEquals(1, clicks)
+  }
+
+  @Test
+  fun achievements_cta_hidden_for_non_owner() {
+    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "", { true }) }
+    setThemedContent {
+      ProfileAchievements(
+          id = "user-x",
+          onAchievements = {},
+          ownerProfile = false,
+          listAchievement = items,
+      )
+    }
+    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
   }
 }

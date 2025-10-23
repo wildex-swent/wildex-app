@@ -25,7 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
@@ -47,7 +46,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,6 +82,9 @@ object ProfileScreenTestTags {
   const val SCROLL = "ProfileScreenScroll"
   const val ACHIEVEMENTS_CTA = "ProfileScreenAchievementsCTA"
   const val MAP_CTA = "ProfileScreenMapCTA"
+
+  const val ACHIEVEMENTS_PREV = "ProfileScreenAchievementsPrev"
+  const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
 }
 
 @Composable

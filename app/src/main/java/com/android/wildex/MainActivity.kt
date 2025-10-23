@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.android.wildex.ui.post.PostDetailsScreen
+import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.theme.WildexTheme
 import okhttp3.OkHttpClient
 
@@ -27,6 +27,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WildexApp() {
   // Text(text = "Welcome to Wildex!")
-  val postId = "1GgwzSKiYK5s44ItwC1O"
-  PostDetailsScreen(postId)
+  val userId = "CqhVQWI6GNYSuluLGwPy"
+  ProfileScreen(userUid = userId)
 }

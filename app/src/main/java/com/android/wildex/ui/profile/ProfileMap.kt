@@ -52,7 +52,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}) {
 
           Button(
               onClick = { onMap(id) },
-              modifier = Modifier.padding(top = 10.dp),
+              modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
               colors =
                   ButtonDefaults.buttonColors(
                       containerColor = cs.primary,

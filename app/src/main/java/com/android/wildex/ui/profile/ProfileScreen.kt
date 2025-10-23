@@ -81,6 +81,9 @@ object ProfileScreenTestTags {
   const val PROFILE_COUNTRY = "ProfileScreenCountry"
   const val PROFILE_DESCRIPTION = "ProfileScreenBio"
   const val FRIEND_REQUEST = "ProfileScreenFriendRequest"
+  const val SCROLL = "ProfileScreenScroll"
+  const val ACHIEVEMENTS_CTA = "ProfileScreenAchievementsCTA"
+  const val MAP_CTA = "ProfileScreenMapCTA"
 }
 
 @Composable
@@ -148,56 +151,61 @@ fun ProfileContent(
 ) {
   val id = user.userId
 
-  Column(modifier = Modifier.fillMaxSize().padding(pd).verticalScroll(rememberScrollState())) {
-    Spacer(Modifier.height(6.dp))
-    ProfileImageAndName(
-        name = user.name,
-        surname = user.surname,
-        username = user.username,
-        profilePicture = user.profilePictureURL,
-        country = user.country,
-        isProfessional = user.userType.name == "PROFESSIONAL",
-    )
+  Column(
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(pd)
+              .verticalScroll(rememberScrollState())
+              .testTag(ProfileScreenTestTags.SCROLL)) {
+        Spacer(Modifier.height(6.dp))
+        ProfileImageAndName(
+            name = user.name,
+            surname = user.surname,
+            username = user.username,
+            profilePicture = user.profilePictureURL,
+            country = user.country,
+            isProfessional = user.userType.name == "PROFESSIONAL",
+        )
 
-    Spacer(modifier = Modifier.height(10.dp))
-    ProfileDescription(description = user.bio)
+        Spacer(modifier = Modifier.height(10.dp))
+        ProfileDescription(description = user.bio)
 
-    Spacer(modifier = Modifier.height(14.dp))
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-      ProfileAnimals(
-          modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
-          id = id,
-          onCollection = onCollection,
-          ownerProfile = ownerProfile,
-          animalCount = animalCount,
-      )
-      Spacer(modifier = Modifier.width(12.dp))
-      ProfileFriends(
-          modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
-          id = id,
-          onFriends = onFriends,
-          ownerProfile = ownerProfile,
-          friendCount = user.friendsCount,
-      )
-    }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+          ProfileAnimals(
+              modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
+              id = id,
+              onCollection = onCollection,
+              ownerProfile = ownerProfile,
+              animalCount = animalCount,
+          )
+          Spacer(modifier = Modifier.width(12.dp))
+          ProfileFriends(
+              modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
+              id = id,
+              onFriends = onFriends,
+              ownerProfile = ownerProfile,
+              friendCount = user.friendsCount,
+          )
+        }
 
-    Spacer(modifier = Modifier.height(14.dp))
-    ProfileAchievements(
-        id = id,
-        onAchievements = onAchievements,
-        ownerProfile = ownerProfile,
-        listAchievement = achievements,
-    )
+        Spacer(modifier = Modifier.height(14.dp))
+        ProfileAchievements(
+            id = id,
+            onAchievements = onAchievements,
+            ownerProfile = ownerProfile,
+            listAchievement = achievements,
+        )
 
-    Spacer(modifier = Modifier.height(14.dp))
-    ProfileMap(id = id, onMap = onMap)
+        Spacer(modifier = Modifier.height(14.dp))
+        ProfileMap(id = id, onMap = onMap)
 
-    Spacer(modifier = Modifier.height(24.dp))
-    if (!ownerProfile) {
-      ProfileFriendRequest(id = id, onFriendRequest = onFriendRequest)
-    }
-    Spacer(Modifier.height(12.dp))
-  }
+        Spacer(modifier = Modifier.height(24.dp))
+        if (!ownerProfile) {
+          ProfileFriendRequest(id = id, onFriendRequest = onFriendRequest)
+        }
+        Spacer(Modifier.height(12.dp))
+      }
 }
 
 @Composable

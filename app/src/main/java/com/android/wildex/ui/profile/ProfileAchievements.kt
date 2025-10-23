@@ -87,7 +87,8 @@ fun ProfileAchievements(
                       containerColor = cs.background,
                       contentColor = cs.onBackground,
                   ),
-              modifier = Modifier.align(Alignment.End),
+              modifier =
+                  Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
           ) {
             Text("View all achievements →")
           }

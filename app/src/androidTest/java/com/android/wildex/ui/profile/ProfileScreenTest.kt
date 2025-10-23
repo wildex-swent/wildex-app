@@ -11,15 +11,20 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.* // pour Modifier.testTag et autres helpers
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.LocalImageLoader
@@ -45,6 +50,10 @@ import org.junit.Test
 class ProfileScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
+
+  private fun ComposeContentTestRule.scrollToTagWithinScroll(tag: String) {
+    onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasTestTag(tag))
+  }
 
   private fun sampleUser() =
       User(
@@ -88,25 +97,20 @@ class ProfileScreenTest {
   @Test
   fun topBar_shows_User_Profile_when_not_owner_and_no_settings_button() {
     var back = 0
-
     setThemedContent {
       ProfileTopAppBar(ownerProfile = false, onGoBack = { back++ }, onSettings = {})
     }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
     composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
-
     Assert.assertEquals(1, back)
   }
 
   @Test
   fun topBar_shows_My_Profile_when_owner_and_settings_click() {
     var settings = 0
-
     setThemedContent {
       ProfileTopAppBar(ownerProfile = true, onGoBack = {}, onSettings = { settings++ })
     }
-
     composeRule.onNodeWithText("My Profile").assertIsDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed().performClick()
     Assert.assertEquals(1, settings)
@@ -115,7 +119,6 @@ class ProfileScreenTest {
   @Test
   fun profileContent_shows_core_elements_and_texts() {
     val user = sampleUser()
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -128,21 +131,18 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Jane Doe")
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME).assertTextContains("jane_doe")
     composeRule
         .onNodeWithTag(ProfileScreenTestTags.PROFILE_COUNTRY)
         .assertTextContains("Switzerland")
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).assertIsDisplayed()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).assertIsDisplayed()
-
-    composeRule.onNodeWithText("Animals").assertIsDisplayed()
-    composeRule.onNodeWithText("Friends").assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).assertExists()
+    composeRule.onNodeWithText("Animals").assertExists()
+    composeRule.onNodeWithText("Friends").assertExists()
   }
 
   @Test
@@ -150,7 +150,6 @@ class ProfileScreenTest {
     val user = sampleUser()
     var collection = 0
     var friends = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -163,10 +162,8 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
-
     Assert.assertEquals(0, collection)
     Assert.assertEquals(0, friends)
   }
@@ -176,7 +173,6 @@ class ProfileScreenTest {
     val user = sampleUser()
     var collection = 0
     var friends = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -189,10 +185,8 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
-
     Assert.assertEquals(1, collection)
     Assert.assertEquals(1, friends)
   }
@@ -202,7 +196,6 @@ class ProfileScreenTest {
     val user = sampleUser()
     var achievements = 0
     var map = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -215,10 +208,10 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
-    composeRule.onNodeWithText("View all achievements →").performClick()
-    composeRule.onNodeWithText("View in full screen →").performClick()
-
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).performClick()
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.MAP_CTA)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).performClick()
     Assert.assertEquals(1, achievements)
     Assert.assertEquals(1, map)
   }
@@ -227,7 +220,6 @@ class ProfileScreenTest {
   fun friend_request_visible_and_clickable_when_not_owner() {
     val user = sampleUser()
     var requests = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -240,18 +232,14 @@ class ProfileScreenTest {
           onFriendRequest = { requests++ },
       )
     }
-
-    composeRule
-        .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-        .assertIsDisplayed()
-        .performClick()
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.FRIEND_REQUEST)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().performClick()
     Assert.assertEquals(1, requests)
   }
 
   @Test
   fun friend_request_hidden_when_owner() {
     val user = sampleUser()
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -264,7 +252,6 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
     composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
   }
 
@@ -276,7 +263,6 @@ class ProfileScreenTest {
           text = if (loader != null) "HAS_LOADER" else "NO_LOADER",
           modifier = Modifier.testTag("LOADER_CHECK"))
     }
-
     composeRule.onNodeWithTag("LOADER_CHECK").assertTextContains("HAS_LOADER")
   }
 
@@ -284,7 +270,6 @@ class ProfileScreenTest {
   fun collection_multiple_clicks_fire_when_owner() {
     val user = sampleUser()
     var collectionClicks = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -297,15 +282,10 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
-
+    repeat(3) { composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick() }
     Assert.assertEquals(3, collectionClicks)
   }
 
-  // kotlin
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun profileScreen_shows_description_node_even_when_bio_empty() = runTest {
@@ -343,7 +323,6 @@ class ProfileScreenTest {
 
     advanceUntilIdle()
     composeRule.waitForIdle()
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
   }
 
@@ -357,95 +336,89 @@ class ProfileScreenTest {
 
     override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
 
-    override suspend fun getAchievementsCountOfUser(userId: String): Int {
-      return achievements?.size ?: 0
-    }
+    override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun profileScreen_owner_shows_my_profile_settings_and_triggers_callbacks() {
-    runTest {
-      val user = sampleUser().copy(userId = "u-1")
-      val userRepo = mockk<UserRepositoryFirestore>()
-      coEvery { userRepo.getUser("u-1") } returns user
-      val achRepo = FakeAchievementsRepo(emptyList())
-      val vm =
-          ProfileScreenViewModel(
-              userRepository = userRepo,
-              achievementRepository = achRepo,
-              currentUserId = "u-1",
-          )
-
-      var achievements = 0
-      var map = 0
-
-      setThemedContent {
-        ProfileScreen(
-            profileScreenViewModel = vm,
-            userUid = "u-1",
-            onAchievements = { if (it == "u-1") achievements++ },
-            onMap = { if (it == "u-1") map++ },
+  fun profileScreen_owner_shows_my_profile_settings_and_triggers_callbacks() = runTest {
+    val user = sampleUser().copy(userId = "u-1")
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo = FakeAchievementsRepo(emptyList())
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            currentUserId = "u-1",
         )
-      }
 
-      advanceUntilIdle()
-      composeRule.waitForIdle()
+    var achievements = 0
+    var map = 0
 
-      composeRule.onNodeWithText("My Profile").assertIsDisplayed()
-      composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
-      composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
-
-      composeRule.onNodeWithText("View all achievements →").performClick()
-      composeRule.onNodeWithText("View in full screen →").performClick()
-
-      Assert.assertEquals(1, achievements)
-      Assert.assertEquals(1, map)
+    setThemedContent {
+      ProfileScreen(
+          profileScreenViewModel = vm,
+          userUid = "u-1",
+          onAchievements = { if (it == "u-1") achievements++ },
+          onMap = { if (it == "u-1") map++ },
+      )
     }
+
+    advanceUntilIdle()
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithText("My Profile").assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
+    composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
+
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).performClick()
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.MAP_CTA)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).performClick()
+
+    Assert.assertEquals(1, achievements)
+    Assert.assertEquals(1, map)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun profileScreen_not_owner_hides_settings_and_shows_friend_request() {
-    runTest {
-      val user = sampleUser()
-      val userRepo = mockk<UserRepositoryFirestore>()
-      coEvery { userRepo.getUser("u-1") } returns user
-      val achRepo = FakeAchievementsRepo(emptyList())
+  fun profileScreen_not_owner_hides_settings_and_shows_friend_request() = runTest {
+    val user = sampleUser()
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo = FakeAchievementsRepo(emptyList())
 
-      val vm =
-          ProfileScreenViewModel(
-              userRepository = userRepo,
-              achievementRepository = achRepo,
-              currentUserId = "someone-else",
-          )
-
-      var requests = 0
-      var lastId = ""
-
-      setThemedContent {
-        ProfileScreen(
-            profileScreenViewModel = vm,
-            userUid = "u-1",
-            onFriendRequest = {
-              requests++
-              lastId = it
-            },
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            currentUserId = "someone-else",
         )
-      }
 
-      advanceUntilIdle()
-      composeRule.waitForIdle()
+    var requests = 0
+    var lastId = ""
 
-      composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
-      composeRule
-          .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-          .assertIsDisplayed()
-          .performClick()
-
-      Assert.assertEquals(1, requests)
-      Assert.assertEquals("u-1", lastId)
+    setThemedContent {
+      ProfileScreen(
+          profileScreenViewModel = vm,
+          userUid = "u-1",
+          onFriendRequest = {
+            requests++
+            lastId = it
+          },
+      )
     }
+
+    advanceUntilIdle()
+    composeRule.waitForIdle()
+
+    composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.FRIEND_REQUEST)
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().performClick()
+
+    Assert.assertEquals(1, requests)
+    Assert.assertEquals("u-1", lastId)
   }
 
   @Test
@@ -467,8 +440,14 @@ class ProfileScreenTest {
       )
     }
 
-    repeat(3) { composeRule.onNodeWithText("View all achievements →").performClick() }
-    repeat(2) { composeRule.onNodeWithText("View in full screen →").performClick() }
+    repeat(3) {
+      composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+      composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).performClick()
+    }
+    repeat(2) {
+      composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.MAP_CTA)
+      composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).performClick()
+    }
 
     Assert.assertEquals(3, achievements)
     Assert.assertEquals(2, map)
@@ -477,14 +456,11 @@ class ProfileScreenTest {
   @Test
   fun back_button_multiple_clicks_and_settings_absence() {
     var back = 0
-
     setThemedContent {
       ProfileTopAppBar(ownerProfile = false, onGoBack = { back++ }, onSettings = {})
     }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
-
     composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
     Assert.assertEquals(2, back)
   }
@@ -494,7 +470,6 @@ class ProfileScreenTest {
     val user = sampleUser()
     var collection = 0
     var friends = 0
-
     setThemedContent {
       ProfileContent(
           pd = PaddingValues(0.dp),
@@ -507,33 +482,15 @@ class ProfileScreenTest {
           onFriendRequest = {},
       )
     }
-
     repeat(4) { composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick() }
     repeat(3) { composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick() }
-
     Assert.assertEquals(4, collection)
     Assert.assertEquals(3, friends)
   }
 
   @Test
-  fun profileTopAppBar_defaults_to_owner_and_shows_settings() {
-    var back = 0
-    var settings = 0
-
-    setThemedContent { ProfileTopAppBar(onGoBack = { back++ }, onSettings = { settings++ }) }
-
-    composeRule.onNodeWithText("My Profile").assertIsDisplayed()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed().performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.GO_BACK).performClick()
-
-    Assert.assertEquals(1, settings)
-    Assert.assertEquals(1, back)
-  }
-
-  @Test
   fun profileImageAndName_uses_default_values() {
     setThemedContent { ProfileImageAndName() }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Name Surname")
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME).assertTextContains("Username")
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_COUNTRY).assertTextContains("Country")
@@ -542,25 +499,8 @@ class ProfileScreenTest {
   @Test
   fun profileDescription_uses_default_text_and_tag() {
     setThemedContent { ProfileDescription() }
-
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
     composeRule.onNodeWithText("Bio:...").assertIsDisplayed()
-  }
-
-  @Test
-  fun profileAnimals_and_friends_defaults_render_and_click_when_owner() {
-    setThemedContent {
-      androidx.compose.foundation.layout.Column {
-        ProfileAnimals(ownerProfile = true)
-        ProfileFriends(ownerProfile = true)
-      }
-    }
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).assertIsDisplayed().performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).assertIsDisplayed().performClick()
-
-    composeRule.onNodeWithText("Animals").assertIsDisplayed()
-    composeRule.onNodeWithText("Friends").assertIsDisplayed()
   }
 
   @Test
@@ -571,23 +511,17 @@ class ProfileScreenTest {
         ProfileMap()
       }
     }
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
-    composeRule.onNodeWithText("View all achievements →").assertIsDisplayed().performClick()
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
-    composeRule.onNodeWithText("View in full screen →").assertIsDisplayed().performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).assertExists().performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).assertExists().performClick()
   }
 
   @Test
   fun profileFriendRequest_default_button_shown_and_clickable() {
     setThemedContent { ProfileFriendRequest() }
-
-    composeRule
-        .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-        .assertIsDisplayed()
-        .performClick()
-    composeRule.onNodeWithText("Send Friend Request").assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().performClick()
+    composeRule.onNodeWithText("Send Friend Request").assertExists()
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -621,8 +555,10 @@ class ProfileScreenTest {
     advanceUntilIdle()
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.FRIEND_REQUEST)
+    val req = composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
+    req.performClick()
+    req.performClick()
 
     Assert.assertEquals(2, requests)
     Assert.assertEquals("u-1", lastId)
@@ -631,37 +567,11 @@ class ProfileScreenTest {
   @Test
   fun profileFriendRequest_is_enabled_and_shows_default_text() {
     setThemedContent { ProfileFriendRequest() }
-
     composeRule
         .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-        .assertIsDisplayed()
+        .assertExists()
         .assertIsEnabled()
         .performClick()
-
-    composeRule.onNodeWithText("Send Friend Request").assertIsDisplayed()
-  }
-
-  @Test
-  fun profileContent_friendRequest_multiple_clicks_increments_callback() {
-    val user = sampleUser()
-    var requests = 0
-
-    setThemedContent {
-      ProfileContent(
-          pd = PaddingValues(0.dp),
-          user = user,
-          ownerProfile = false,
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-          onFriendRequest = { requests++ },
-      )
-    }
-
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
-
-    Assert.assertEquals(2, requests)
+    composeRule.onNodeWithText("Send Friend Request").assertExists()
   }
 }

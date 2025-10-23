@@ -11,10 +11,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -586,7 +588,8 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
-              condition = { true })
+              condition = { true },
+          )
         }
     setThemedContent {
       ProfileAchievements(
@@ -613,7 +616,8 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
-              condition = { true })
+              condition = { true },
+          )
         }
     setThemedContent {
       ProfileContent(
@@ -670,7 +674,8 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
-              condition = { true })
+              condition = { true },
+          )
         }
     setThemedContent {
       ProfileContent(
@@ -741,5 +746,19 @@ class ProfileScreenTest {
       )
     }
     composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
+  }
+
+  @Test
+  fun profileLoading_showsCircularProgress() {
+    setThemedContent { ProfileLoading(pd = PaddingValues(0.dp)) }
+    composeRule
+        .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun profileNotFound_showsErrorMessage() {
+    setThemedContent { ProfileNotFound(pd = PaddingValues(0.dp)) }
+    composeRule.onNodeWithText("Loading failed. Please try again.").assertIsDisplayed()
   }
 }

@@ -164,4 +164,48 @@ class ProfileScreenViewModelTest {
     val s = viewModel.uiState.value.animalCount
     Assert.assertTrue(s is Int)
   }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun refreshUIState_withBlankUserId_setsErrorAndStopsLoading() =
+      mainDispatcherRule.runTest {
+        viewModel.refreshUIState("")
+        advanceUntilIdle()
+
+        val s = viewModel.uiState.value
+        Assert.assertEquals("Empty user id", s.errorMsg)
+        Assert.assertFalse(s.isLoading)
+        Assert.assertNull(s.user)
+        Assert.assertFalse(s.isUserOwner)
+      }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun refreshUIState_whenUnexpectedErrorAfterFetch_hitsOuterCatch() =
+      mainDispatcherRule.runTest {
+        val badUser = mockk<User>(relaxed = true)
+        io.mockk.every { badUser.userId } throws RuntimeException("kaboom")
+
+        coEvery { userRepository.getUser("uid-1") } returns badUser
+        coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
+
+        viewModel.refreshUIState("uid-1")
+        advanceUntilIdle()
+
+        val s = viewModel.uiState.value
+        Assert.assertTrue(s.errorMsg?.startsWith("Unexpected error: kaboom") == true)
+        Assert.assertFalse(s.isLoading)
+      }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun clearErrorMsg_resetsErrorField() =
+      mainDispatcherRule.runTest {
+        viewModel.refreshUIState("")
+        advanceUntilIdle()
+        Assert.assertNotNull(viewModel.uiState.value.errorMsg)
+
+        viewModel.clearErrorMsg()
+        Assert.assertNull(viewModel.uiState.value.errorMsg)
+      }
 }

@@ -27,7 +27,7 @@ sealed class Screen(
 
     object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
 
-    object NewPost : Screen(route = "new_post", name = "New Post", isTopLevelDestination = true)
+    object Camera : Screen(route = "camera", name = "Camera", isTopLevelDestination = true)
 
     object Collection :
         Screen(route = "collection", name = "Collection", isTopLevelDestination = true)

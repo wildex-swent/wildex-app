@@ -9,7 +9,7 @@ object NavigationTestTags {
     const val UNLOCKED_ANIMAL = "UnlockedAnimal" // To be moved to CollectionTestTags
     const val HOME_TAB = "HomeTab"
     const val MAP_TAB = "MapTab"
-    const val NEW_POST_TAB = "NewPostTab"
+    const val CAMERA_TAB = "CameraTab"
     const val COLLECTION_TAB = "CollectionTab"
     const val REPORT_TAB = "ReportTab"
 
@@ -17,7 +17,7 @@ object NavigationTestTags {
         when (tab) {
             is Tab.Home -> HOME_TAB
             is Tab.Map -> MAP_TAB
-            is Tab.NewPost -> NEW_POST_TAB
+            is Tab.Camera -> CAMERA_TAB
             is Tab.Collection -> COLLECTION_TAB
             is Tab.Report -> REPORT_TAB
         }

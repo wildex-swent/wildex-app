@@ -9,9 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.R
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
-import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.firebase.Timestamp
@@ -41,7 +42,11 @@ data class AuthUIState(
  *
  * @property repository The repository used to perform authentication operations.
  */
-class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
+class SignInViewModel(
+    private val repository: AuthRepository = RepositoryProvider.authRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val userAchievementsRepository: UserAchievementsRepository = RepositoryProvider.userAchievementsRepository
+) :
     ViewModel() {
   private val _uiState = MutableStateFlow(AuthUIState())
   val uiState: StateFlow<AuthUIState> = _uiState
@@ -72,8 +77,6 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
             it.copy(
                 isLoading = false, firebaseUser = firebaseUser, errorMsg = null, signedOut = false)
           }
-          val userRepository = RepositoryProvider.userRepository
-          val achievementRepository = RepositoryProvider.userAchievementsRepository
           val userId = firebaseUser.uid
           try {
             userRepository.getUser(userId)
@@ -91,7 +94,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                     "Switzerland",
                     0)
             userRepository.addUser(newUser)
-            achievementRepository.initializeUserAchievements(userId)
+            userAchievementsRepository.initializeUserAchievements(userId)
           }
         }) { failure ->
           _uiState.update {

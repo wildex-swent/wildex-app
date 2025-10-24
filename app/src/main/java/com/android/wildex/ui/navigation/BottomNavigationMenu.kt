@@ -30,14 +30,14 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
     object Map : Tab("Map", Icons.Filled.LocationOn, Screen.Map)
 
-    object NewPost : Tab("New Post", Icons.Filled.AddCircle, Screen.NewPost)
+    object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
 
     object Collection : Tab("Collection", Icons.Filled.Search, Screen.Collection)
 
     object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }
 
-private val tabs = listOf(Tab.Home, Tab.Map, Tab.NewPost, Tab.Collection, Tab.Report)
+private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Report)
 
 @Composable
 fun BottomNavigationMenu(

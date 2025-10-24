@@ -9,6 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,80 +52,90 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WildexApp(
-  context: Context = LocalContext.current,
-  credentialManager: CredentialManager = CredentialManager.create(context),
-  navController: NavHostController = rememberNavController(),
+    context: Context = LocalContext.current,
+    credentialManager: CredentialManager = CredentialManager.create(context),
+    navController: NavHostController = rememberNavController(),
 ) {
+  var currentUser by remember { mutableStateOf(FirebaseAuth.getInstance().currentUser) }
+  LaunchedEffect(Unit) {
+    val authStateListener =
+        FirebaseAuth.AuthStateListener { auth -> currentUser = auth.currentUser }
+    FirebaseAuth.getInstance().addAuthStateListener(authStateListener)
+  }
+
   val navigationActions = NavigationActions(navController)
-  val startDestination =
-    if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.route else Screen.Home.route
+  val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
     composable(Screen.Auth.route) {
       SignInScreen(
-        credentialManager = credentialManager,
-        onSignedIn = { navigationActions.navigateTo(Screen.Home) },
+          credentialManager = credentialManager,
+          onSignedIn = { navigationActions.navigateTo(Screen.Home) },
       )
     }
 
     // Home
     composable(Screen.Home.route) {
       HomeScreen(
-        bottomBar = {
-          BottomNavigationMenu(
-            Tab.Home,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-          )
-        },
-        onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
-        onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
-        onNotificationClick = {},
+          bottomBar = {
+            BottomNavigationMenu(
+                Tab.Home,
+                onTabSelected = { navigationActions.navigateTo(it.destination) },
+            )
+          },
+          onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
+          onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+          onNotificationClick = {},
       )
     }
 
     // Map
     composable(Screen.Map.route) {
       MapScreen(
-        bottomBar = {
-          BottomNavigationMenu(
-            Tab.Map,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-          )
-        })
+          bottomBar = {
+            BottomNavigationMenu(
+                Tab.Map,
+                onTabSelected = { navigationActions.navigateTo(it.destination) },
+            )
+          }
+      )
     }
 
-    // New Post
-    composable(Screen.NewPost.route) {
+    // Camera
+    composable(Screen.Camera.route) {
       CameraScreen(
-        bottomBar = {
-          BottomNavigationMenu(
-            Tab.NewPost,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-          )
-        })
+          bottomBar = {
+            BottomNavigationMenu(
+                Tab.Camera,
+                onTabSelected = { navigationActions.navigateTo(it.destination) },
+            )
+          }
+      )
     }
 
     // Collection
     composable(Screen.Collection.route) {
       CollectionScreen(
-        bottomBar = {
-          BottomNavigationMenu(
-            Tab.Collection,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-          )
-        })
+          bottomBar = {
+            BottomNavigationMenu(
+                Tab.Collection,
+                onTabSelected = { navigationActions.navigateTo(it.destination) },
+            )
+          }
+      )
     }
 
     // Reports
     composable(Screen.Report.route) {
       ReportScreen(
-        bottomBar = {
-          BottomNavigationMenu(
-            Tab.Report,
-            onTabSelected = { navigationActions.navigateTo(it.destination) },
-          )
-        })
+          bottomBar = {
+            BottomNavigationMenu(
+                Tab.Report,
+                onTabSelected = { navigationActions.navigateTo(it.destination) },
+            )
+          }
+      )
     }
 
     // Post Details
@@ -128,9 +143,9 @@ fun WildexApp(
       val postId = backStackEntry.arguments?.getString("postUid")
       if (postId != null) {
         PostDetailsScreen(
-          postId = postId,
-          onGoBack = { navigationActions.goBack() },
-          onProfile = { userUid -> navigationActions.navigateTo(Screen.Profile(userUid)) },
+            postId = postId,
+            onGoBack = { navigationActions.goBack() },
+            onProfile = { userUid -> navigationActions.navigateTo(Screen.Profile(userUid)) },
         )
       } else {
         Log.e("PostDetailsScreen", "Post UID is null")
@@ -144,8 +159,8 @@ fun WildexApp(
       val userId = backStackEntry.arguments?.getString("userUid")
       if (userId != null) {
         ProfileScreen(
-          userUid = userId,
-          onGoBack = { navigationActions.goBack() },
+            userUid = userId,
+            onGoBack = { navigationActions.goBack() },
         )
       } else {
         Log.e("ProfileScreen", "User UID is null")

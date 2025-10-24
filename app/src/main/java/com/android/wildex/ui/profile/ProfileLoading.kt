@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.android.wildex.R
 
 @Composable
 fun ProfileLoading(pd: PaddingValues) {
@@ -21,6 +23,8 @@ fun ProfileLoading(pd: PaddingValues) {
 @Composable
 fun ProfileNotFound(pd: PaddingValues) {
   Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
-    Text(text = "Loading failed. Please try again.", color = colorScheme.onBackground)
+    Text(
+        text = LocalContext.current.getString(R.string.fail_loading),
+        color = colorScheme.onBackground)
   }
 }

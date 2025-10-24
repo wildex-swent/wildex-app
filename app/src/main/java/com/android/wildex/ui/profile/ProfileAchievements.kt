@@ -1,6 +1,5 @@
 package com.android.wildex.ui.profile
 
-import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -49,10 +48,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.utils.Id
 
@@ -135,7 +136,7 @@ fun ProfileAchievements(
                         contentColor = cs.onBackground,
                     ),
             ) {
-              Text("View all achievements →")
+              Text(LocalContext.current.getString(R.string.view_achievements))
             }
           }
 
@@ -244,6 +245,8 @@ private fun ArrowButton(
 ) {
   val interaction = remember { MutableInteractionSource() }
   val pressed by interaction.collectIsPressedAsState()
+  val context = LocalContext.current
+  LocalContext.current.getString(R.string.view_achievements)
   val scale by
       animateFloatAsState(
           targetValue = if (pressed) 0.94f else 1f,
@@ -261,7 +264,9 @@ private fun ArrowButton(
   ) {
     Icon(
         imageVector = if (isLeft) Icons.Filled.ChevronLeft else Icons.Filled.ChevronRight,
-        contentDescription = if (isLeft) "Prev" else "Next",
+        contentDescription =
+            if (isLeft) context.getString(R.string.prev_arrow)
+            else context.getString(R.string.next_arrow),
         tint = tint,
         modifier = Modifier.size(68.dp),
     )

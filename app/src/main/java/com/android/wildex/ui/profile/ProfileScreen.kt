@@ -63,8 +63,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 
 object ProfileScreenTestTags {
@@ -102,7 +104,7 @@ fun ProfileScreen(
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-  LaunchedEffect(userUid) { profileScreenViewModel.refreshUIState(userUid) }
+  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -112,26 +114,24 @@ fun ProfileScreen(
 
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = { ProfileTopAppBar(uiState.isUserOwner, onGoBack, onSettings) },
+      topBar = { ProfileTopBar(uiState.isUserOwner, onGoBack, onSettings) },
   ) { pd ->
     when {
       uiState.isLoading -> ProfileLoading(pd)
       uiState.user == null -> ProfileNotFound(pd)
       else -> {
-        Box(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
-          ProfileContent(
-              pd = pd,
-              user = uiState.user!!,
-              ownerProfile = uiState.isUserOwner,
-              achievements = uiState.achievements,
-              onAchievements = onAchievements,
-              animalCount = uiState.animalCount,
-              onCollection = onCollection,
-              onMap = onMap,
-              onFriends = onFriends,
-              onFriendRequest = onFriendRequest,
-          )
-        }
+        ProfileContent(
+            pd = pd,
+            user = uiState.user!!,
+            ownerProfile = uiState.isUserOwner,
+            achievements = uiState.achievements,
+            onAchievements = onAchievements,
+            animalCount = uiState.animalCount,
+            onCollection = onCollection,
+            onMap = onMap,
+            onFriends = onFriends,
+            onFriendRequest = onFriendRequest,
+        )
       }
     }
   }
@@ -165,7 +165,7 @@ fun ProfileContent(
             username = user.username,
             profilePicture = user.profilePictureURL,
             country = user.country,
-            isProfessional = user.userType.name == "PROFESSIONAL",
+            isProfessional = user.userType == UserType.PROFESSIONAL,
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -362,7 +362,8 @@ fun ProfileDescription(description: String = "Bio:...") {
       }
       Spacer(Modifier.height(8.dp))
       Text(
-          text = description.ifBlank { " " },
+          text =
+              description.ifBlank { LocalContext.current.getString(R.string.default_description) },
           color = cs.onBackground,
           maxLines = 4,
           overflow = TextOverflow.Ellipsis,
@@ -520,7 +521,7 @@ fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
             ),
         shape = RoundedCornerShape(10.dp),
     ) {
-      Text(text = "Send Friend Request")
+      Text(text = LocalContext.current.getString(R.string.send_friend_request))
     }
   }
 }

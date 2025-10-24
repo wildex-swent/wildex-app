@@ -21,7 +21,7 @@ import com.android.wildex.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopAppBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSettings: () -> Unit) {
+fun ProfileTopBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSettings: () -> Unit) {
   val cs = colorScheme
   TopAppBar(
       title = {

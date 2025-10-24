@@ -17,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 
 @Composable
@@ -59,7 +61,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}) {
                       contentColor = cs.onPrimary,
                   ),
           ) {
-            Text(text = "View in full screen →")
+            Text(text = LocalContext.current.getString(R.string.view_map))
           }
         }
   }

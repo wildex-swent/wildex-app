@@ -51,7 +51,7 @@ class ProfileScreenViewModel(
       }
 
       try {
-        val user = fetchUser(userId)
+        val user = userRepository.getUser(userId)
         val achievements = fetchAchievements(userId)
         _uiState.value =
             _uiState.value.copy(
@@ -66,6 +66,7 @@ class ProfileScreenViewModel(
         setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
         _uiState.value =
             _uiState.value.copy(
+                user = null,
                 isLoading = false,
             )
       }
@@ -78,15 +79,6 @@ class ProfileScreenViewModel(
 
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
-  }
-
-  private suspend fun fetchUser(userId: String): User? {
-    return try {
-      userRepository.getUser(userId)
-    } catch (e: Exception) {
-      setErrorMsg(e.message ?: "Failed to load user")
-      null
-    }
   }
 
   private suspend fun fetchAchievements(userId: String): List<Achievement> {

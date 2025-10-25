@@ -131,7 +131,7 @@ object Achievements {
           pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f41b.svg",
           description = "This is a mock achievement for testing purposes",
           name = "Mock Achievement",
-          expects = setOf(InputKey.POST_IDS),
+          expects = setOf(InputKey.TEST_IDS),
           condition = { postIds -> postIds.size == 1 && postIds[0] == "mockPostId" },
       )
 
@@ -142,7 +142,7 @@ object Achievements {
           pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1fab2.svg",
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
-          expects = setOf(InputKey.POST_IDS),
+          expects = setOf(InputKey.TEST_IDS),
           condition = { postIds -> postIds.size == 2 },
       )
 

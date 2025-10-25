@@ -20,12 +20,13 @@ data class Achievement(
     val name: String,
     val expects: Set<InputKey>,
     val condition: (suspend (List<Id>) -> Boolean)? = null,
-    val multiCondition: (suspend (Map<InputKey, List<Id>>) -> Boolean)? = null
+    val multiCondition: (suspend (Map<InputKey, List<Id>>) -> Boolean)? = null,
 )
 
 /** Indicates the type of input key used to evaluate achievement conditions. */
 enum class InputKey {
+  TEST_IDS,
   POST_IDS,
   LIKE_IDS,
-  COMMENT_IDS
+  COMMENT_IDS,
 }

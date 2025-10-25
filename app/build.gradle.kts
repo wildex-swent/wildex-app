@@ -23,6 +23,8 @@ android {
 
   val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
   val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
+  val mbApiKey: String = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
+
 
   defaultConfig {
     applicationId = "com.android.wildex"
@@ -34,6 +36,7 @@ android {
     vectorDrawables { useSupportLibrary = true }
     buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
     buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
+    buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mbApiKey\"")
   }
 
   buildTypes {
@@ -164,6 +167,10 @@ dependencies {
   globalTestImplementation(libs.androidx.junit)
   globalTestImplementation(libs.androidx.espresso.core)
   implementation(libs.kotlinx.serialization.json)
+
+  // ------------------- Mapbox SDK -------------------
+  implementation("com.mapbox.maps:android-ndk27:11.15.2")
+  implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
 
   // ------------- Jetpack Compose ------------------
   val composeBom = platform(libs.compose.bom)

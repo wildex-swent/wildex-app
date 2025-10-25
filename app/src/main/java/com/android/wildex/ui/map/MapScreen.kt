@@ -11,7 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.android.wildex.R
+import androidx.lifecycle.viewmodel.compose.viewModel
 
+object MapScreenTestTags {
+  const val MAP = "MapScreen"
 @Composable
 fun MapScreen(bottomBar: @Composable () -> Unit) {
   Scaffold(bottomBar = { bottomBar() }) { innerPadding ->

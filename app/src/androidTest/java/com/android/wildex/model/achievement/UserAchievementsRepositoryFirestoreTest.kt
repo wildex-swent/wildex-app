@@ -53,7 +53,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(userId)
 
     val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
+    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
 
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isNotEmpty())
@@ -66,11 +66,10 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(userId)
 
     val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
+    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
 
     val count = repository.getAchievementsCountOfUser(userId)
-    // 2 because of the first post achievement
-    assertEquals(2, count)
+    assertEquals(1, count)
   }
 
   @Test
@@ -124,18 +123,17 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(userId)
 
     val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
+    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
 
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isNotEmpty())
     assertEquals(Achievements.ALL.find { it.achievementId == "mockPostId" }, achievements[0])
 
     val newListIds = listOf("mockPostId", "RandomId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to newListIds))
+    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to newListIds))
 
     val updatedAchievements = repository.getAllAchievementsByUser(userId)
-    // 2 because of the first post achievement
-    assertEquals(2, updatedAchievements.size)
+    assertEquals(1, updatedAchievements.size)
     assertFalse(updatedAchievements.any { it.achievementId == "mockPostId" })
     assertTrue(updatedAchievements.any { it.achievementId == "mockPostId2" })
   }

@@ -335,6 +335,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -362,6 +363,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -411,6 +413,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -447,7 +450,10 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_visible_for_owner_and_clicks() {
-    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "") { true } }
+    val items =
+        (1..2).map { i ->
+          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
+        }
     var clicks = 0
     composeRule.setContent {
       ProfileAchievements(
@@ -466,7 +472,10 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_hidden_for_non_owner() {
-    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "") { true } }
+    val items =
+        (1..2).map { i ->
+          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
+        }
     composeRule.setContent {
       ProfileAchievements(
           id = "user-x",

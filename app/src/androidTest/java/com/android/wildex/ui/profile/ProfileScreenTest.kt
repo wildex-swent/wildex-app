@@ -21,10 +21,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -180,11 +182,14 @@ class ProfileScreenTest {
           override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> =
               emptyList()
 
+          override suspend fun updateUserAchievements(
+              userId: String,
+              inputs: Map<InputKey, List<Id>>
+          ) {}
+
           override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = emptyList()
 
           override suspend fun initializeUserAchievements(userId: String) {}
-
-          override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
 
           override suspend fun getAchievementsCountOfUser(userId: String): Int = 0
         }
@@ -214,7 +219,7 @@ class ProfileScreenTest {
 
     override suspend fun initializeUserAchievements(userId: String) {}
 
-    override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
+    override suspend fun updateUserAchievements(userId: String, inputs: Map<InputKey, List<Id>>) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
   }
@@ -330,6 +335,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -357,6 +363,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -406,6 +413,7 @@ class ProfileScreenTest {
               name = "A$i",
               pictureURL = "url$i",
               description = "",
+              expects = setOf(InputKey.POST_IDS),
               condition = { true },
           )
         }
@@ -442,7 +450,10 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_visible_for_owner_and_clicks() {
-    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "") { true } }
+    val items =
+        (1..2).map { i ->
+          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
+        }
     var clicks = 0
     composeRule.setContent {
       ProfileAchievements(
@@ -461,7 +472,10 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_hidden_for_non_owner() {
-    val items = (1..2).map { i -> Achievement("a$i", "A$i", "url$i", "") { true } }
+    val items =
+        (1..2).map { i ->
+          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
+        }
     composeRule.setContent {
       ProfileAchievements(
           id = "user-x",

@@ -92,12 +92,12 @@ fun ProfileAchievements(
               modifier =
                   Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
           ) {
-            Text("View all achievements →")
+            Text(LocalContext.current.getString(R.string.view_achievements))
           }
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            "No achievements yet!",
+            text = LocalContext.current.getString(R.string.no_achievements),
             color = cs.onBackground,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
@@ -246,7 +246,6 @@ private fun ArrowButton(
   val interaction = remember { MutableInteractionSource() }
   val pressed by interaction.collectIsPressedAsState()
   val context = LocalContext.current
-  LocalContext.current.getString(R.string.view_achievements)
   val scale by
       animateFloatAsState(
           targetValue = if (pressed) 0.94f else 1f,

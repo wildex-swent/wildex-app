@@ -16,4 +16,5 @@
     <string name="view_map">View in full screen →</string>
     <string name="default_description">No description yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
+    <string name="no_achievements">No achievements yet!</string>
 </resources>

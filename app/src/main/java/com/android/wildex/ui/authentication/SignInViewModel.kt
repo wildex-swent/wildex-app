@@ -45,9 +45,9 @@ data class AuthUIState(
 class SignInViewModel(
     private val repository: AuthRepository = RepositoryProvider.authRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val userAchievementsRepository: UserAchievementsRepository = RepositoryProvider.userAchievementsRepository
-) :
-    ViewModel() {
+    private val userAchievementsRepository: UserAchievementsRepository =
+        RepositoryProvider.userAchievementsRepository
+) : ViewModel() {
   private val _uiState = MutableStateFlow(AuthUIState())
   val uiState: StateFlow<AuthUIState> = _uiState
 

@@ -7,17 +7,11 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import com.android.wildex.WildexApp
-import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserType
-import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FirebaseEmulator
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After

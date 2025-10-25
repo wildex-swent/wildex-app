@@ -98,8 +98,7 @@ fun WildexApp(
                 Tab.Map,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // Camera
@@ -110,8 +109,7 @@ fun WildexApp(
                 Tab.Camera,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // Collection
@@ -122,8 +120,7 @@ fun WildexApp(
                 Tab.Collection,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // Reports
@@ -134,8 +131,7 @@ fun WildexApp(
                 Tab.Report,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          }
-      )
+          })
     }
 
     // Post Details

@@ -26,15 +26,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-    object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
+  object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
 
-    object Map : Tab("Map", Icons.Filled.LocationOn, Screen.Map)
+  object Map : Tab("Map", Icons.Filled.LocationOn, Screen.Map)
 
-    object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
+  object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
 
-    object Collection : Tab("Collection", Icons.Filled.Search, Screen.Collection)
+  object Collection : Tab("Collection", Icons.Filled.Search, Screen.Collection)
 
-    object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
+  object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }
 
 private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Report)
@@ -45,44 +45,37 @@ fun BottomNavigationMenu(
     onTabSelected: (Tab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cs = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(24.dp)
+  val cs = MaterialTheme.colorScheme
+  val shape = RoundedCornerShape(24.dp)
 
-    NavigationBar(
-        modifier =
-            modifier
-                .padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
-                .fillMaxWidth()
-                .height(64.dp)
-                .clip(shape)
-                .border(width = 1.dp, color = cs.primary.copy(alpha = 0.5f), shape = shape)
-                .background(cs.background)
-                .testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
-        containerColor = cs.background,
-        tonalElevation = 0.dp,
-    ) {
-        tabs.forEach { tab ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        tab.icon,
-                        contentDescription = tab.name,
-                        modifier = Modifier.size(32.dp)
-                    )
-                },
-                selected = tab == selectedTab,
-                onClick = { onTabSelected(tab) },
-                modifier =
-                    Modifier
-                        .clip(RoundedCornerShape(50.dp))
-                        .testTag(NavigationTestTags.getTabTestTag(tab)),
-                colors =
-                    NavigationBarItemDefaults.colors(
-                        selectedIconColor = cs.secondary,
-                        unselectedIconColor = cs.primary,
-                        indicatorColor = cs.background,
-                    ),
-            )
-        }
+  NavigationBar(
+      modifier =
+          modifier
+              .padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
+              .fillMaxWidth()
+              .height(64.dp)
+              .clip(shape)
+              .border(width = 1.dp, color = cs.primary.copy(alpha = 0.5f), shape = shape)
+              .background(cs.background)
+              .testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
+      containerColor = cs.background,
+      tonalElevation = 0.dp,
+  ) {
+    tabs.forEach { tab ->
+      NavigationBarItem(
+          icon = { Icon(tab.icon, contentDescription = tab.name, modifier = Modifier.size(32.dp)) },
+          selected = tab == selectedTab,
+          onClick = { onTabSelected(tab) },
+          modifier =
+              Modifier.clip(RoundedCornerShape(50.dp))
+                  .testTag(NavigationTestTags.getTabTestTag(tab)),
+          colors =
+              NavigationBarItemDefaults.colors(
+                  selectedIconColor = cs.secondary,
+                  unselectedIconColor = cs.primary,
+                  indicatorColor = cs.background,
+              ),
+      )
     }
+  }
 }

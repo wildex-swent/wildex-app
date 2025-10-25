@@ -8,9 +8,9 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
-import com.google.firebase.Timestamp
+import com.android.wildex.model.utils.Id
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,66 +18,74 @@ import kotlinx.coroutines.launch
 
 data class ProfileUIState(
     val user: User? = null,
-    val isUserOwner: Boolean = true,
-    val achievements: List<Achievement> = emptyList()
+    val isUserOwner: Boolean = false,
+    val achievements: List<Achievement> = emptyList(),
+    val animalCount: Int = 17,
+    val isLoading: Boolean = true,
+    val errorMsg: String? = null,
 )
 
 class ProfileScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val achievementRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
-    private val currentUserId: () -> String? = {
-      com.google.firebase.ktx.Firebase.auth.currentUser?.uid
-    },
+    private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
+
   private val _uiState = MutableStateFlow(ProfileUIState())
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
-  private val defaultUser: User =
-      User(
-          userId = "defaultUserId",
-          username = "defaultUsername",
-          name = "Default",
-          surname = "User",
-          bio = "This is...",
-          profilePictureURL =
-              "https://paulhollandphotography.com/cdn/shop/articles" +
-                  "/4713_Individual_Outdoor_f930382f-c9d6-4e5b-b17d-9fe300ae169c" +
-                  ".jpg?v=1743534144&width=1500",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "Nowhere",
-          friendsCount = 0)
 
   fun refreshUIState(userId: String) {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+
+      if (userId.isBlank()) {
+        setErrorMsg("Empty user id")
+        _uiState.value =
+            _uiState.value.copy(
+                isLoading = false,
+                user = null,
+                isUserOwner = false,
+            )
+        return@launch
+      }
+
       try {
-        val user = fetchUser(userId)
+        val user = userRepository.getUser(userId)
         val achievements = fetchAchievements(userId)
-        _uiState.value = ProfileUIState(user, checkIsUserOwner(userId), achievements)
+        _uiState.value =
+            _uiState.value.copy(
+                user = user,
+                isUserOwner = (currentUserId != null && user?.userId == currentUserId),
+                achievements = achievements,
+                isLoading = false,
+                errorMsg = _uiState.value.errorMsg,
+            )
       } catch (e: Exception) {
         Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
+        setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
+        _uiState.value =
+            _uiState.value.copy(
+                user = null,
+                isLoading = false,
+            )
       }
     }
   }
 
-  private fun checkIsUserOwner(userId: String): Boolean {
-    return userId == currentUserId()
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
-  private suspend fun fetchUser(userId: String): User? {
-    return try {
-      userRepository.getUser(userId)
-    } catch (e: Exception) {
-      Log.e("ProfileScreenViewModel", "Error fetching user", e)
-      defaultUser
-    }
+  private fun setErrorMsg(msg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
   private suspend fun fetchAchievements(userId: String): List<Achievement> {
     return try {
       achievementRepository.getAllAchievementsByUser(userId)
     } catch (e: Exception) {
-      Log.e("ProfileScreenViewModel", "Error fetching achievements", e)
+      setErrorMsg(e.message ?: "Failed to load achievements")
       emptyList()
     }
   }

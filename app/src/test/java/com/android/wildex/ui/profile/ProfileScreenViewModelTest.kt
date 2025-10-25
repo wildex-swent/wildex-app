@@ -1,4 +1,3 @@
-// kotlin
 package com.android.wildex.ui.profile
 
 import com.android.wildex.model.achievement.Achievement
@@ -37,7 +36,8 @@ class ProfileScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          friendsCount = 1)
+          friendsCount = 1,
+      )
 
   private val u2 = u1.copy(username = "user_one_2", friendsCount = 42)
 
@@ -52,85 +52,74 @@ class ProfileScreenViewModelTest {
         ProfileScreenViewModel(
             userRepository = userRepository,
             achievementRepository = achievementsRepository,
-            currentUserId = { "uid-1" })
+            currentUserId = "uid-1",
+        )
   }
 
   @Test
-  fun viewModel_initializes_default_UI_state() {
+  fun viewModel_initializes_default_UI_state_isEmptyLoading() {
     val s = viewModel.uiState.value
     Assert.assertNull(s.user)
-    Assert.assertTrue(s.isUserOwner)
+    Assert.assertFalse(s.isUserOwner)
+    Assert.assertTrue(s.isLoading)
     Assert.assertTrue(s.achievements.isEmpty())
+    Assert.assertNull(s.errorMsg)
   }
 
   @Test
-  fun refreshUIState_updates_UI_state_success_ownerTrue() {
+  fun refreshUIState_owner_true_and_false_paths() {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
+      val s1 = viewModel.uiState.value
+      Assert.assertEquals(u1, s1.user)
+      Assert.assertTrue(s1.isUserOwner)
+      Assert.assertEquals(listOf(a1, a2), s1.achievements)
 
-      val s = viewModel.uiState.value
-      Assert.assertEquals(u1, s.user)
-      Assert.assertTrue(s.isUserOwner)
-      Assert.assertEquals(listOf(a1, a2), s.achievements)
-    }
-  }
-
-  @Test
-  fun refreshUIState_ownerFalse_whenUidDiffersFromCurrent() {
-    mainDispatcherRule.runTest {
-      // nouveau ViewModel avec un currentUserId différent
       viewModel =
           ProfileScreenViewModel(
               userRepository = userRepository,
               achievementRepository = achievementsRepository,
-              currentUserId = { "someone-else" })
-
+              currentUserId = "someone-else",
+          )
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals(u1, s.user)
-      Assert.assertFalse(s.isUserOwner)
-      Assert.assertTrue(s.achievements.isEmpty())
+      val s2 = viewModel.uiState.value
+      Assert.assertEquals(u1, s2.user)
+      Assert.assertFalse(s2.isUserOwner)
+      Assert.assertTrue(s2.achievements.isEmpty())
     }
   }
 
   @Test
-  fun refreshUIState_whenUserRepoThrows_fallsBackToDefaultUser() {
+  fun refreshUIState_error_paths_userRepo_then_achievementsRepo() {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
+      val e1 = viewModel.uiState.value
+      Assert.assertNull(e1.user)
+      Assert.assertEquals(false, e1.isUserOwner)
+      Assert.assertEquals("Unexpected error: boom", e1.errorMsg)
 
-      val s = viewModel.uiState.value
-      Assert.assertNotNull(s.user)
-      Assert.assertEquals("defaultUserId", s.user!!.userId)
-      Assert.assertEquals(listOf(a1), s.achievements)
-    }
-  }
-
-  @Test
-  fun refreshUIState_whenAchievementsRepoThrows_fallsBackToEmptyList() {
-    mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } throws
           RuntimeException("x")
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals(u1, s.user)
-      Assert.assertTrue(s.achievements.isEmpty())
+      val e2 = viewModel.uiState.value
+      Assert.assertEquals(u1, e2.user)
+      Assert.assertTrue(e2.achievements.isEmpty())
+      Assert.assertEquals("x", e2.errorMsg)
     }
   }
 
@@ -151,6 +140,38 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u2, s.user)
       Assert.assertEquals(listOf(a2), s.achievements)
       Assert.assertTrue(s.isUserOwner)
+    }
+  }
+
+  @Test
+  fun refreshUIState_withBlankUserId_setsErrorAndStopsLoading_and_clearErrorMsg() {
+    mainDispatcherRule.runTest {
+      viewModel.refreshUIState("")
+      advanceUntilIdle()
+      val s = viewModel.uiState.value
+      Assert.assertEquals("Empty user id", s.errorMsg)
+      Assert.assertFalse(s.isLoading)
+      Assert.assertNull(s.user)
+      Assert.assertFalse(s.isUserOwner)
+
+      viewModel.clearErrorMsg()
+      Assert.assertNull(viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshUIState_whenUnexpectedErrorAfterFetch_hitsOuterCatch() {
+    mainDispatcherRule.runTest {
+      val badUser = mockk<User>(relaxed = true)
+      io.mockk.every { badUser.userId } throws RuntimeException("kaboom")
+      coEvery { userRepository.getUser("uid-1") } returns badUser
+      coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
+
+      viewModel.refreshUIState("uid-1")
+      advanceUntilIdle()
+      val s = viewModel.uiState.value
+      Assert.assertTrue(s.errorMsg?.startsWith("Unexpected error: kaboom") == true)
+      Assert.assertFalse(s.isLoading)
     }
   }
 }

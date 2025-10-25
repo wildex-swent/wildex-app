@@ -1,6 +1,5 @@
 package com.android.wildex.model.achievement
 
-import com.android.wildex.model.utils.Id
 import com.android.wildex.utils.FirestoreTest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -15,9 +14,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-const val USER_ACHIEVEMENTS_COLLECTION_PATH = "userAchievements"
-
 class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_COLLECTION_PATH) {
+
   private var repository = UserAchievementsRepositoryFirestore(Firebase.firestore)
 
   @Before
@@ -30,9 +28,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     super.tearDown()
   }
 
-  suspend fun getUsersCount(): Int {
-    return super.getCount()
-  }
+  private suspend fun getUsersCount(): Int = super.getCount()
 
   @Test
   fun canInitializeUserAchievements() = runTest {
@@ -56,8 +52,8 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val userId = "testUser"
     repository.initializeUserAchievements(userId)
 
-    val listIds = listOf<Id>("mockPostId")
-    repository.updateUserAchievements(userId, listIds)
+    val listIds = listOf("mockPostId")
+    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
 
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isNotEmpty())
@@ -69,11 +65,12 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val userId = "testUser"
     repository.initializeUserAchievements(userId)
 
-    val listIds = listOf<Id>("mockPostId")
-    repository.updateUserAchievements(userId, listIds)
+    val listIds = listOf("mockPostId")
+    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
 
     val count = repository.getAchievementsCountOfUser(userId)
-    assertEquals(1, count)
+    // 2 because of the first post achievement
+    assertEquals(2, count)
   }
 
   @Test
@@ -83,7 +80,8 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
 
     val initialAchievements = repository.getAllAchievementsByUser(userId)
 
-    repository.updateUserAchievements(userId, listOf("RandomIdThatDoesNotExist"))
+    repository.updateUserAchievements(
+        userId, mapOf(InputKey.LIKE_IDS to listOf("RandomIdThatDoesNotExist")))
 
     val updatedAchievements = repository.getAllAchievementsByUser(userId)
     assertEquals(initialAchievements, updatedAchievements)
@@ -93,10 +91,8 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun getAllAchievementsByUserWhenUserNotInitializedThrowsException() =
       runTest(timeout = 60.seconds) {
         val userId = "nonExistentUser"
-
         val exception =
             runCatching { repository.getAllAchievementsByUser(userId) }.exceptionOrNull()
-
         assertTrue(exception is IllegalArgumentException)
       }
 
@@ -104,7 +100,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun getAllAchievementsByUserWhenEmptyAchievementsReturnsEmptyList() = runTest {
     val userId = "testUser"
     repository.initializeUserAchievements(userId)
-
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isEmpty())
   }
@@ -112,10 +107,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Test
   fun updateUserAchievementsWhenUserNotFoundThrowsException() = runTest {
     val userId = "nonExistentUser"
-    val listIds = listOf<Id>("mockPostId")
+    val listIds = listOf("mockPostId")
 
     val exception =
-        runCatching { repository.updateUserAchievements(userId, listIds) }.exceptionOrNull()
+        runCatching {
+              repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
+            }
+            .exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
   }
@@ -125,16 +123,19 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val userId = "testUser"
     repository.initializeUserAchievements(userId)
 
-    val listIds = listOf<Id>("mockPostId")
-    repository.updateUserAchievements(userId, listIds)
+    val listIds = listOf("mockPostId")
+    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
 
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isNotEmpty())
     assertEquals(Achievements.ALL.find { it.achievementId == "mockPostId" }, achievements[0])
-    val newListIds = listOf<Id>("mockPostId", "RandomId")
-    repository.updateUserAchievements(userId, newListIds)
+
+    val newListIds = listOf("mockPostId", "RandomId")
+    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to newListIds))
+
     val updatedAchievements = repository.getAllAchievementsByUser(userId)
-    assertEquals(1, updatedAchievements.size)
+    // 2 because of the first post achievement
+    assertEquals(2, updatedAchievements.size)
     assertFalse(updatedAchievements.any { it.achievementId == "mockPostId" })
     assertTrue(updatedAchievements.any { it.achievementId == "mockPostId2" })
   }
@@ -143,7 +144,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun updateUserAchievementsWhenEmptyListPassesWithoutError() = runTest {
     val userId = "testUser"
     repository.initializeUserAchievements(userId)
-    repository.updateUserAchievements(userId, emptyList())
+    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to emptyList()))
     val achievements = repository.getAllAchievementsByUser(userId)
     assertTrue(achievements.isEmpty())
   }
@@ -158,16 +159,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Test
   fun getAchievementsCountWhenUserNotInitializedThrowsException() = runTest {
     val userId = "nonExistentUser"
-
     val exception = runCatching { repository.getAchievementsCountOfUser(userId) }.exceptionOrNull()
-
     assertTrue(exception is IllegalArgumentException)
   }
 
   @Test
   fun getAllAchievementsByCurrentUserWhenNotLoggedInThrowsException() = runTest {
     val exception = runCatching { repository.getAllAchievementsByCurrentUser() }.exceptionOrNull()
-
     assertTrue(exception is Exception)
     assertEquals("UserAchievementsRepositoryFirestore: User not logged in.", exception?.message)
   }
@@ -183,11 +181,12 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Test
   fun updateUserAchievementsWhenUserNotFoundThrowsIllegalArgumentException() = runTest {
     val userId = "nonExistentUser"
-
     val exception =
-        runCatching { repository.updateUserAchievements(userId, listOf("mockPostId")) }
+        runCatching {
+              repository.updateUserAchievements(
+                  userId, mapOf(InputKey.POST_IDS to listOf("mockPostId")))
+            }
             .exceptionOrNull()
-
     assertTrue(exception is IllegalArgumentException)
   }
 }

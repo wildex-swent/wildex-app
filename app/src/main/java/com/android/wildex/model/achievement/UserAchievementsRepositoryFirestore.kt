@@ -13,6 +13,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     UserAchievementsRepository {
 
   override suspend fun initializeUserAchievements(userId: String) {
+    require(userId.isNotBlank()) { "User ID must not be blank" }
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
     if (!doc.exists()) {
@@ -41,38 +42,51 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     return getAllAchievementsByUser(userId)
   }
 
-  override suspend fun updateUserAchievements(userId: String, listIds: List<Id>) {
+  override suspend fun updateUserAchievements(userId: String, inputs: Map<InputKey, List<Id>>) {
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
     require(doc.exists())
-    val userAchievements =
+
+    val ua =
         doc.toObject(UserAchievements::class.java)
-            ?: throw IllegalArgumentException("UserAchievements with given userId not found")
+            ?: throw IllegalArgumentException("Malformed UserAchievements for userId=$userId")
 
-    // List to hold the IDs of achievements that the user qualifies for
-    val updatedAchievementIds = mutableListOf<Id>()
+    if (inputs.isEmpty() || inputs.values.all { it.isEmpty() }) return
 
-    for (achievement in Achievements.ALL) {
-      try {
-        if (achievement.condition(listIds)) {
-          updatedAchievementIds.add(achievement.achievementId)
-        }
-      } catch (e: IllegalArgumentException) {
-        // If the condition throws an exception
-        // (because the given listIds does not meet the expected format by the condition
-        // like for example giving a list of like IDs when the condition expects a list of post IDs)
-        // Skip this one and continue
-        continue
-      }
+    val updated = mutableListOf<Id>()
+
+    for (a in Achievements.ALL) {
+      val expects = a.expects
+
+      val ok: Boolean =
+          try {
+            when {
+              // Require all expected keys present, then evaluate multiCondition
+              expects.size > 1 && a.multiCondition != null -> {
+                val hasAll = expects.all { key -> inputs.containsKey(key) }
+                if (!hasAll) false else a.multiCondition.invoke(inputs)
+              }
+
+              // Evaluate condition on the single provided list
+              expects.size == 1 && a.condition != null -> {
+                val key = expects.first()
+                val list = inputs[key].orEmpty()
+                // If the required key isn't in inputs at all, skip
+                if (!inputs.containsKey(key)) false else a.condition.invoke(list)
+              }
+              else -> false
+            }
+          } catch (_: Exception) {
+            // If error is thrown, skip this achievement
+            false
+          }
+
+      if (ok) updated += a.achievementId
     }
-    // Only update if something changed
-    if (updatedAchievementIds.toSet() != userAchievements.achievementsId.toSet()) {
-      val updatedUserAchievements =
-          userAchievements.copy(
-              achievementsId = updatedAchievementIds,
-              achievementsCount = updatedAchievementIds.size,
-          )
-      docRef.set(updatedUserAchievements).await()
+
+    // No changes does not update
+    if (updated.toSet() != ua.achievementsId.toSet()) {
+      docRef.set(ua.copy(achievementsId = updated, achievementsCount = updated.size)).await()
     }
   }
 

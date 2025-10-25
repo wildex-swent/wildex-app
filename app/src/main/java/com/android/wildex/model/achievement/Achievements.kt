@@ -20,7 +20,7 @@ object Achievements {
   val postMaster =
       Achievement(
           achievementId = "achievement_1",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f3c6.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
           expects = setOf(InputKey.POST_IDS),
@@ -34,7 +34,7 @@ object Achievements {
   val socialButterfly =
       Achievement(
           achievementId = "achievement_2",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f98b.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "Like 50 posts",
           name = "Social Butterfly",
           expects = setOf(InputKey.LIKE_IDS),
@@ -47,7 +47,7 @@ object Achievements {
   val communityBuilder =
       Achievement(
           achievementId = "achievement_3",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f465.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
           expects = setOf(InputKey.COMMENT_IDS),
@@ -58,7 +58,7 @@ object Achievements {
   val influencer =
       Achievement(
           achievementId = "achievement_4",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e3.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
           expects = setOf(InputKey.POST_IDS),
@@ -69,7 +69,7 @@ object Achievements {
   val firstPost =
       Achievement(
           achievementId = "achievement_5",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/270f.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
           expects = setOf(InputKey.POST_IDS),
@@ -80,7 +80,7 @@ object Achievements {
   val risingStar =
       Achievement(
           achievementId = "achievement_6",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2b50.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616490.png",
           description = "Get 100 likes on a single post",
           name = "Rising Star",
           expects = setOf(InputKey.POST_IDS),
@@ -91,7 +91,7 @@ object Achievements {
   val conversationalist =
       Achievement(
           achievementId = "achievement_7",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4ac.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
           expects = setOf(InputKey.COMMENT_IDS),
@@ -107,7 +107,7 @@ object Achievements {
   val engagedCreator =
       Achievement(
           achievementId = "achievement_8",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f308.svg",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/4144/4144723.png",
           description = "Be active across Wildex: post, like, and comment regularly",
           name = "Engaged Creator",
           expects = setOf(InputKey.POST_IDS, InputKey.LIKE_IDS, InputKey.COMMENT_IDS),

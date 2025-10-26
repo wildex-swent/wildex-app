@@ -34,12 +34,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,8 +70,6 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -90,6 +91,7 @@ object ProfileScreenTestTags {
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
@@ -121,9 +123,11 @@ fun ProfileScreen(
       uiState.isLoading -> ProfileLoading(pd)
       uiState.user == null -> ProfileNotFound(pd)
       else -> {
-        val swipeState = rememberSwipeRefreshState(isRefreshing = false)
-        SwipeRefresh(
-            state = swipeState,
+        val pullState = rememberPullToRefreshState()
+
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = false,
             onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
         ) {
           ProfileContent(

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.android.wildex.ui.home
 
 /**
@@ -7,6 +9,7 @@ package com.android.wildex.ui.home
  * posts, profile picture, and notifications. Handles post interactions such as likes and navigation
  * to details.
  */
+import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -35,11 +38,14 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,8 +70,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -111,27 +117,40 @@ fun HomeScreen(
   val uiState by homeScreenViewModel.uiState.collectAsState()
   val user = uiState.currentUser
   val postStates = uiState.postStates
-  val isRefreshing = false
-  val swipeState = rememberSwipeRefreshState(isRefreshing)
+
+  val context = LocalContext.current
 
   LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      homeScreenViewModel.clearErrorMsg()
+    }
+  }
 
-  SwipeRefresh(
-      state = swipeState,
+  val pullState = rememberPullToRefreshState()
+
+  PullToRefreshBox(
+      state = pullState,
+      isRefreshing = false,
       onRefresh = { homeScreenViewModel.refreshUIState() },
   ) {
     Scaffold(
         topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
         bottomBar = { bottomBar() },
         content = { pd ->
-          if (postStates.isEmpty()) NoPostsView()
-          else
-              PostsView(
-                  postStates,
-                  pd,
-                  homeScreenViewModel::toggleLike,
-                  onPostClick,
-              )
+          when {
+            uiState.isLoading -> LoadingScreen(pd)
+            uiState.errorMsg != null && postStates.isEmpty() -> LoadingFail(pd)
+            postStates.isEmpty() -> NoPostsView()
+            else ->
+                PostsView(
+                    postStates,
+                    pd,
+                    homeScreenViewModel::toggleLike,
+                    onPostClick,
+                )
+          }
         },
     )
   }

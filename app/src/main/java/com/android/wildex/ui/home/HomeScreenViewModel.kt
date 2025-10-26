@@ -30,10 +30,14 @@ import kotlinx.coroutines.launch
  *
  * @property postStates List of post states currently displayed on screen.
  * @property currentUser The currently authenticated user.
+ * @property isLoading Indicates whether the screen is currently refreshing data.
+ * @property errorMsg Optional error message to display if refresh fails.
  */
 data class HomeUIState(
     val postStates: List<PostState> = emptyList(),
     val currentUser: SimpleUser = defaultUser,
+    val isLoading: Boolean = false,
+    val errorMsg: String? = null,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -106,16 +110,27 @@ class HomeScreenViewModel(
   /**
    * Refreshes the UI state by fetching posts and the current user. Updates [_uiState] with new
    * values.
+   *
+   * Also manages [HomeUIState.isLoading] and [HomeUIState.errorMsg] to allow UI feedback.
    */
   fun refreshUIState() {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val postStates = fetchPosts()
-        val user = fetchUser()
-        _uiState.value = HomeUIState(currentUser = user, postStates = postStates)
+        val user = userRepository.getSimpleUser(currentUserId)
+        _uiState.value =
+            _uiState.value.copy(
+                currentUser = user,
+                postStates = postStates,
+                isLoading = false,
+                errorMsg = null,
+            )
         Log.d("HomeScreenViewModel", "UI state refreshed with ${postStates.size} posts.")
       } catch (e: Exception) {
         Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
+        setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+        _uiState.value = _uiState.value.copy(isLoading = false)
       }
     }
   }
@@ -130,14 +145,6 @@ class HomeScreenViewModel(
             isLiked = likeRepository.getLikeForPost(post.postId) != null,
             author = userRepository.getSimpleUser(post.authorId),
         )
-      }
-
-  /** Fetches the current authenticated user’s information. */
-  private suspend fun fetchUser(): SimpleUser =
-      try {
-        userRepository.getSimpleUser(currentUserId)
-      } catch (_: Exception) {
-        defaultUser
       }
 
   /**
@@ -162,5 +169,15 @@ class HomeScreenViewModel(
         likeRepository.addLike(newLike)
       }
     }
+  }
+
+  /** Clears any existing error message from the UI state. */
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+
+  /** Sets a new error message in the UI state. */
+  private fun setErrorMsg(msg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 }

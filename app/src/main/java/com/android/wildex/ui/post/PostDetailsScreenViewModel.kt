@@ -43,6 +43,7 @@ data class PostDetailsUIState(
     val currentUserUsername: String = "",
     val likedByCurrentUser: Boolean = false,
     val errorMsg: String? = null,
+    val isLoading: Boolean = false,
 )
 
 data class CommentWithAuthorUI(
@@ -82,6 +83,8 @@ class PostDetailsScreenViewModel(
 
   fun loadPostDetails(postId: String) {
     viewModelScope.launch {
+      // start loading
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val post = postRepository.getPost(postId)
         val simpleAuthor = userRepository.getSimpleUser(post.authorId)
@@ -133,10 +136,12 @@ class PostDetailsScreenViewModel(
                 currentUserUsername = currentUser.username,
                 likedByCurrentUser = likedByCurrentUser,
                 errorMsg = localErrorMsg,
+                isLoading = false, // end loading on success
             )
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
         setErrorMsg("Failed to load post details: ${e.message}")
+        _uiState.value = _uiState.value.copy(isLoading = false) // end loading on failure
       }
     }
   }
@@ -169,11 +174,8 @@ class PostDetailsScreenViewModel(
               newValue = post.copy(likesCount = post.likesCount + 1),
           )
         } catch (e: Exception) {
-          // Not fatal for UI; server count may lag until next refresh
           Log.w(
-              "PostDetailsViewModel",
-              "Failed to increment post likesCount on server: ${e.message}",
-          )
+              "PostDetailsViewModel", "Failed to increment post likesCount on server: ${e.message}")
           setErrorMsg("Failed to update post likes: ${e.message}.")
         }
       } catch (e: Exception) {
@@ -215,11 +217,8 @@ class PostDetailsScreenViewModel(
               newValue = post.copy(likesCount = post.likesCount - 1),
           )
         } catch (e: Exception) {
-          // Not fatal for UI; server count may lag until next refresh
           Log.w(
-              "PostDetailsViewModel",
-              "Failed to decrement post likesCount on server: ${e.message}",
-          )
+              "PostDetailsViewModel", "Failed to decrement post likesCount on server: ${e.message}")
           setErrorMsg("Failed to update post likes: ${e.message}.")
         }
       } catch (e: Exception) {
@@ -282,18 +281,15 @@ class PostDetailsScreenViewModel(
               newValue = post.copy(commentsCount = post.commentsCount + 1),
           )
         } catch (e: Exception) {
-          // Not fatal for UI; server count may lag until next refresh
           Log.w(
               "PostDetailsViewModel",
-              "Failed to increment post commentsCount on server: ${e.message}",
-          )
+              "Failed to increment post commentsCount on server: ${e.message}")
           setErrorMsg("Failed to update post comments: ${e.message}.")
         }
       } catch (e: Exception) {
         // Rollback UI
         Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
         setErrorMsg("Failed to add comment: ${e.message}")
-        // remove the optimistic one and restore count
         val current = _uiState.value
         _uiState.value =
             current.copy(

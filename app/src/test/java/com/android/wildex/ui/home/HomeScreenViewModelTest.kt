@@ -82,6 +82,8 @@ class HomeScreenViewModelTest {
     val initialState = viewModel.uiState.value
     Assert.assertTrue(initialState.postStates.isEmpty())
     Assert.assertEquals(initialState.currentUser, defaultUser)
+    Assert.assertFalse(initialState.isLoading)
+    Assert.assertNull(initialState.errorMsg)
   }
 
   @Test
@@ -100,46 +102,43 @@ class HomeScreenViewModelTest {
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
       Assert.assertEquals(u1, updatedState.currentUser)
+      Assert.assertFalse(updatedState.isLoading)
+      Assert.assertNull(updatedState.errorMsg)
     }
   }
 
   @Test
-  fun refreshUIState_whenCurrentUserNull_usesDefaultUser() {
+  fun refreshUIState_whenUserRepoThrows_setsErrorAndKeepsEmptyPosts() {
+    mainDispatcherRule.runTest {
+      coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
+      coEvery { userRepository.getSimpleUser("uid-1") } throws RuntimeException("boom")
+
+      viewModel.refreshUIState()
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertTrue(s.postStates.isEmpty())
+      Assert.assertEquals(defaultUser, s.currentUser)
+      Assert.assertFalse(s.isLoading)
+      Assert.assertNotNull(s.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshUIState_whenCurrentUserFetchFails_keepsDefaultUserAndSetsError() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
       viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository)
-
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertEquals(listOf(PostState(p1, false, author1)), s.postStates)
-      Assert.assertNotNull(s.currentUser)
+      Assert.assertTrue(s.postStates.isEmpty())
       Assert.assertEquals("defaultUserId", s.currentUser.userId)
       Assert.assertEquals("defaultUsername", s.currentUser.username)
-    }
-  }
-
-  @Test
-  fun refreshUIState_whenUserRepoThrows_fallsBackToDefaultUser() {
-    mainDispatcherRule.runTest {
-      coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
-      coEvery { userRepository.getSimpleUser("uid-1") } throws RuntimeException("boom")
-      coEvery { likeRepository.getLikeForPost("p2") } returns like2
-
-      viewModel.refreshUIState()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      val expectedStates =
-          listOf(
-              PostState(p1, isLiked = false, author = author1),
-              PostState(p2, isLiked = true, author = author2),
-          )
-      Assert.assertEquals(expectedStates, s.postStates)
-      Assert.assertNotNull(s.currentUser)
-      Assert.assertEquals("defaultUserId", s.currentUser.userId)
+      Assert.assertFalse(s.isLoading)
+      Assert.assertNotNull(s.errorMsg)
     }
   }
 
@@ -148,6 +147,7 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+
       viewModel.refreshUIState()
       advanceUntilIdle()
       val s1 = viewModel.uiState.value
@@ -157,7 +157,10 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val s2 = viewModel.uiState.value
 
-      Assert.assertEquals(s1, s2)
+      Assert.assertEquals(s1.postStates, s2.postStates)
+      Assert.assertEquals(s1.currentUser, s2.currentUser)
+      Assert.assertNotNull(s2.errorMsg)
+      Assert.assertFalse(s2.isLoading)
     }
   }
 
@@ -223,6 +226,35 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       assert(isDeleted)
       coVerify(exactly = 0) { likeRepository.addLike(any()) }
+    }
+  }
+
+  @Test
+  fun refreshUIState_setsAndClears_isLoading_and_clearsErrorOnSuccess() {
+    mainDispatcherRule.runTest {
+      coEvery { postsRepository.getAllPosts() } returns listOf(p1)
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+
+      viewModel.refreshUIState()
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertFalse(s.isLoading)
+      Assert.assertNull(s.errorMsg)
+      Assert.assertEquals(listOf(PostState(p1, isLiked = false, author = author1)), s.postStates)
+    }
+  }
+
+  @Test
+  fun clearErrorMsg_resets_errorMsg_to_null() {
+    mainDispatcherRule.runTest {
+      coEvery { postsRepository.getAllPosts() } throws RuntimeException("boom")
+      viewModel.refreshUIState()
+      advanceUntilIdle()
+      Assert.assertNotNull(viewModel.uiState.value.errorMsg)
+
+      viewModel.clearErrorMsg()
+      Assert.assertNull(viewModel.uiState.value.errorMsg)
     }
   }
 }

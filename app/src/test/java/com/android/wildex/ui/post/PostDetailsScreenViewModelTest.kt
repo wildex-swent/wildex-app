@@ -343,4 +343,24 @@ class PostDetailsScreenViewModelTest {
         assertNotNull(state.errorMsg)
         assertTrue(state.errorMsg!!.contains("fail"))
       }
+
+  @Test
+  fun loadPostDetails_sets_isLoading_false_on_failure() =
+      mainDispatcherRule.runTest {
+        coEvery { postsRepository.getPost("post1") } throws Exception("boom")
+        viewModel.loadPostDetails("post1")
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNotNull(viewModel.uiState.value.errorMsg)
+      }
+
+  @Test
+  fun loadPostDetails_sets_isLoading_false_on_success() =
+      mainDispatcherRule.runTest {
+        coEvery { likeRepository.getLikeForPost("post1") } returns null
+        viewModel.loadPostDetails("post1")
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.errorMsg)
+      }
 }

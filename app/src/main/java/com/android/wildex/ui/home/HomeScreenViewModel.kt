@@ -45,9 +45,7 @@ val defaultUser: SimpleUser =
     SimpleUser(
         userId = "defaultUserId",
         username = "defaultUsername",
-        profilePictureURL =
-            "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
-                "social-media-profile-photos.jpg",
+        profilePictureURL = "",
     )
 
 /** Default placeholder animal used when no valid animal is associated with a post. */

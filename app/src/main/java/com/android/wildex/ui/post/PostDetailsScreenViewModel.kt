@@ -44,6 +44,7 @@ data class PostDetailsUIState(
     val likedByCurrentUser: Boolean = false,
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
+    val isError: Boolean = false,
 )
 
 data class CommentWithAuthorUI(
@@ -84,7 +85,7 @@ class PostDetailsScreenViewModel(
   fun loadPostDetails(postId: String) {
     viewModelScope.launch {
       // start loading
-      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
       try {
         val post = postRepository.getPost(postId)
         val simpleAuthor = userRepository.getSimpleUser(post.authorId)
@@ -136,12 +137,12 @@ class PostDetailsScreenViewModel(
                 currentUserUsername = currentUser.username,
                 likedByCurrentUser = likedByCurrentUser,
                 errorMsg = localErrorMsg,
-                isLoading = false, // end loading on success
-            )
+                isLoading = false,
+                isError = false)
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
         setErrorMsg("Failed to load post details: ${e.message}")
-        _uiState.value = _uiState.value.copy(isLoading = false) // end loading on failure
+        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
       }
     }
   }

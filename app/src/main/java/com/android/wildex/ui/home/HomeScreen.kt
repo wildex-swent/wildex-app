@@ -32,7 +32,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -128,31 +128,30 @@ fun HomeScreen(
     }
   }
 
-  val pullState = rememberPullToRefreshState()
+  Scaffold(
+      topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
+      bottomBar = { bottomBar() },
+  ) { pd ->
+    val pullState = rememberPullToRefreshState()
 
-  PullToRefreshBox(
-      state = pullState,
-      isRefreshing = false,
-      onRefresh = { homeScreenViewModel.refreshUIState() },
-  ) {
-    Scaffold(
-        topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
-        bottomBar = { bottomBar() },
-        content = { pd ->
-          when {
-            uiState.isLoading -> LoadingScreen(pd)
-            uiState.errorMsg != null && postStates.isEmpty() -> LoadingFail(pd)
-            postStates.isEmpty() -> NoPostsView()
-            else ->
-                PostsView(
-                    postStates,
-                    pd,
-                    homeScreenViewModel::toggleLike,
-                    onPostClick,
-                )
-          }
-        },
-    )
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = false,
+        modifier = Modifier.padding(pd),
+        onRefresh = { homeScreenViewModel.refreshUIState() },
+    ) {
+      when {
+        uiState.isLoading -> LoadingScreen(pd)
+        uiState.isError && postStates.isEmpty() -> LoadingFail(pd)
+        postStates.isEmpty() -> NoPostsView()
+        else ->
+            PostsView(
+                postStates = postStates,
+                onPostLike = homeScreenViewModel::toggleLike,
+                onPostClick = onPostClick,
+            )
+      }
+    }
   }
 }
 
@@ -187,19 +186,17 @@ fun NoPostsView() {
  * Displays a scrollable list of posts.
  *
  * @param postStates List of PostState objects representing UI data for each post.
- * @param pd Padding values from the Scaffold content.
  * @param onPostLike Lambda invoked when a post like action occurs.
  * @param onPostClick Callback when a post is clicked.
  */
 @Composable
 fun PostsView(
     postStates: List<PostState>,
-    pd: PaddingValues,
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
 ) {
   LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(pd).testTag(HomeScreenTestTags.POSTS_LIST),
+      modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.POSTS_LIST),
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {
@@ -379,7 +376,7 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
-            imageVector = Icons.Filled.Comment,
+            imageVector = Icons.AutoMirrored.Filled.Comment,
             contentDescription = "Comments",
             modifier = Modifier.size(20.dp),
             tint = colorScheme.onBackground,

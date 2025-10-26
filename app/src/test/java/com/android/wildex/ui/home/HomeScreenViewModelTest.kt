@@ -84,6 +84,7 @@ class HomeScreenViewModelTest {
     Assert.assertEquals(initialState.currentUser, defaultUser)
     Assert.assertFalse(initialState.isLoading)
     Assert.assertNull(initialState.errorMsg)
+    Assert.assertFalse(initialState.isError)
   }
 
   @Test

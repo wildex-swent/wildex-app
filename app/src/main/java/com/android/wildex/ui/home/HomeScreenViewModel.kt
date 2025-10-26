@@ -38,6 +38,7 @@ data class HomeUIState(
     val currentUser: SimpleUser = defaultUser,
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
+    val isError: Boolean = false,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -113,7 +114,7 @@ class HomeScreenViewModel(
    */
   fun refreshUIState() {
     viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
       try {
         val postStates = fetchPosts()
         val user = userRepository.getSimpleUser(currentUserId)
@@ -123,12 +124,12 @@ class HomeScreenViewModel(
                 postStates = postStates,
                 isLoading = false,
                 errorMsg = null,
-            )
+                isError = false)
         Log.d("HomeScreenViewModel", "UI state refreshed with ${postStates.size} posts.")
       } catch (e: Exception) {
         Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
         setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
-        _uiState.value = _uiState.value.copy(isLoading = false)
+        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
       }
     }
   }

@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -103,23 +103,24 @@ fun PostDetailsScreen(
         )
       },
   ) { pd ->
-    when {
-      uiState.isLoading -> {
-        LoadingScreen(pd)
-      }
-      uiState.errorMsg != null && uiState.postId.isBlank() -> {
-        LoadingFail(pd)
-      }
-      else -> {
+    val pullState = rememberPullToRefreshState()
 
-        Box(Modifier.fillMaxSize().padding(pd)) {
-          val pullState = rememberPullToRefreshState()
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = false,
+        modifier = Modifier.padding(pd),
+        onRefresh = { postDetailsScreenViewModel.loadPostDetails(postId) },
+    ) {
+      when {
+        uiState.isLoading -> {
+          LoadingScreen(pd)
+        }
+        uiState.isError && uiState.postId.isBlank() -> {
+          LoadingFail(pd)
+        }
+        else -> {
 
-          PullToRefreshBox(
-              state = pullState,
-              isRefreshing = false,
-              onRefresh = { postDetailsScreenViewModel.loadPostDetails(postId) },
-          ) {
+          Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(0.dp),
@@ -190,7 +191,7 @@ fun PostDetailsScreen(
               }
 
               // COMMENTS LIST – full-width, airy rows
-              itemsIndexed(uiState.commentsUI) { idx, commentUI ->
+              items(uiState.commentsUI) { commentUI ->
                 Comment(commentUI = commentUI, onProfile = onProfile)
               }
 

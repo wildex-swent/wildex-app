@@ -82,7 +82,6 @@ class ProfileScreenTest {
     var friends = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = owner.value,
           onAchievements = {},
@@ -123,7 +122,6 @@ class ProfileScreenTest {
     var map = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           onAchievements = { achievements++ },
@@ -153,7 +151,6 @@ class ProfileScreenTest {
     var requests = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = owner.value,
           onAchievements = {},
@@ -362,7 +359,6 @@ class ProfileScreenTest {
         }
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           achievements = items,
@@ -411,7 +407,6 @@ class ProfileScreenTest {
         }
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           achievements = items,

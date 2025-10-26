@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -119,19 +118,20 @@ fun ProfileScreen(
       modifier = Modifier.fillMaxSize(),
       topBar = { ProfileTopBar(uiState.isUserOwner, onGoBack, onSettings) },
   ) { pd ->
-    when {
-      uiState.isLoading -> ProfileLoading(pd)
-      uiState.user == null -> ProfileNotFound(pd)
-      else -> {
-        val pullState = rememberPullToRefreshState()
+    val pullState = rememberPullToRefreshState()
 
-        PullToRefreshBox(
-            state = pullState,
-            isRefreshing = false,
-            onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
-        ) {
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = false,
+        modifier = Modifier.padding(pd),
+        onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
+    ) {
+      when {
+        uiState.isLoading -> ProfileLoading(pd)
+        uiState.user == null -> ProfileNotFound(pd)
+        else -> {
+
           ProfileContent(
-              pd = pd,
               user = uiState.user!!,
               ownerProfile = uiState.isUserOwner,
               achievements = uiState.achievements,
@@ -150,7 +150,6 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileContent(
-    pd: PaddingValues,
     user: User,
     ownerProfile: Boolean,
     achievements: List<Achievement> = emptyList(),
@@ -166,7 +165,6 @@ fun ProfileContent(
   Column(
       modifier =
           Modifier.fillMaxSize()
-              .padding(pd)
               .verticalScroll(rememberScrollState())
               .testTag(ProfileScreenTestTags.SCROLL)) {
         Spacer(Modifier.height(6.dp))

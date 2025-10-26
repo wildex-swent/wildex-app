@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -52,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +64,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -107,23 +111,30 @@ fun HomeScreen(
   val uiState by homeScreenViewModel.uiState.collectAsState()
   val user = uiState.currentUser
   val postStates = uiState.postStates
+  val isRefreshing = false
+  val swipeState = rememberSwipeRefreshState(isRefreshing)
 
   LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
 
-  Scaffold(
-      topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
-      bottomBar = { bottomBar() },
-      content = { pd ->
-        if (postStates.isEmpty()) NoPostsView()
-        else
-            PostsView(
-                postStates,
-                pd,
-                homeScreenViewModel::toggleLike,
-                onPostClick,
-            )
-      },
-  )
+  SwipeRefresh(
+      state = swipeState,
+      onRefresh = { homeScreenViewModel.refreshUIState() },
+  ) {
+    Scaffold(
+        topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
+        bottomBar = { bottomBar() },
+        content = { pd ->
+          if (postStates.isEmpty()) NoPostsView()
+          else
+              PostsView(
+                  postStates,
+                  pd,
+                  homeScreenViewModel::toggleLike,
+                  onPostClick,
+              )
+        },
+    )
+  }
 }
 
 /** Displays a placeholder view when there are no posts available. */
@@ -142,7 +153,7 @@ fun NoPostsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = "No nearby posts.\nStart posting…",
+        text = LocalContext.current.getString(R.string.no_nearby_posts),
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
@@ -349,7 +360,7 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
-            painter = painterResource(R.drawable.comment_icon),
+            imageVector = Icons.Filled.Comment,
             contentDescription = "Comments",
             modifier = Modifier.size(20.dp),
             tint = colorScheme.onBackground,

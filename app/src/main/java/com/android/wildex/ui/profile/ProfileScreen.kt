@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -68,6 +67,8 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -120,18 +121,24 @@ fun ProfileScreen(
       uiState.isLoading -> ProfileLoading(pd)
       uiState.user == null -> ProfileNotFound(pd)
       else -> {
-        ProfileContent(
-            pd = pd,
-            user = uiState.user!!,
-            ownerProfile = uiState.isUserOwner,
-            achievements = uiState.achievements,
-            onAchievements = onAchievements,
-            animalCount = uiState.animalCount,
-            onCollection = onCollection,
-            onMap = onMap,
-            onFriends = onFriends,
-            onFriendRequest = onFriendRequest,
-        )
+        val swipeState = rememberSwipeRefreshState(isRefreshing = false)
+        SwipeRefresh(
+            state = swipeState,
+            onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
+        ) {
+          ProfileContent(
+              pd = pd,
+              user = uiState.user!!,
+              ownerProfile = uiState.isUserOwner,
+              achievements = uiState.achievements,
+              onAchievements = onAchievements,
+              animalCount = uiState.animalCount,
+              onCollection = onCollection,
+              onMap = onMap,
+              onFriends = onFriends,
+              onFriendRequest = onFriendRequest,
+          )
+        }
       }
     }
   }
@@ -418,9 +425,6 @@ private fun ProfileStatCard(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clickable(
-                    interactionSource = interaction,
-                    indication =
-                        rememberRipple(bounded = true, color = contentColor.copy(alpha = 0.25f)),
                     onClick = onClick,
                 ),
         verticalAlignment = Alignment.CenterVertically,

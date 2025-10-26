@@ -18,4 +18,5 @@
     <string name="default_description">No description yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
     <string name="no_achievements">No achievements yet!</string>
+    <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
 </resources>

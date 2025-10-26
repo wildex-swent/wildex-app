@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,10 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
@@ -63,10 +63,10 @@ fun HomeTopBar(
             modifier = Modifier.testTag(NOTIFICATION_BELL),
         ) {
           Icon(
-              painter = painterResource(R.drawable.notification_bell),
+              imageVector = Icons.Outlined.Notifications,
               contentDescription = "Notifications",
-              modifier = Modifier.size(30.dp),
-          )
+              tint = MaterialTheme.colorScheme.tertiary,
+              modifier = Modifier.size(30.dp))
         }
       },
       actions = {

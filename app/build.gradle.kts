@@ -234,6 +234,10 @@ dependencies {
   androidTestImplementation("io.coil-kt:coil:2.6.0")
   androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
   implementation(libs.compose.material.icons)
+
+  // Accompanist for swipe to refresh
+  implementation("com.google.accompanist:accompanist-swiperefresh:0.36.0")
+
 }
 
 tasks.withType<Test> {

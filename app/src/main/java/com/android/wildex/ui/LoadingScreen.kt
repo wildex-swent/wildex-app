@@ -14,15 +14,15 @@ import androidx.compose.ui.platform.LocalContext
 import com.android.wildex.R
 
 @Composable
-fun LoadingScreen(pd: PaddingValues) {
-  Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
+fun LoadingScreen(pd: PaddingValues, modifier: Modifier = Modifier) {
+  Box(modifier = modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
     CircularProgressIndicator()
   }
 }
 
 @Composable
-fun LoadingFail(pd: PaddingValues) {
-  Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
+fun LoadingFail(pd: PaddingValues, modifier: Modifier = Modifier) {
+  Box(modifier = modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
     Text(
         text = LocalContext.current.getString(R.string.fail_loading),
         color = colorScheme.onBackground)

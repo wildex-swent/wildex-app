@@ -69,6 +69,8 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -127,8 +129,8 @@ fun ProfileScreen(
         onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
     ) {
       when {
-        uiState.isLoading -> ProfileLoading(pd)
-        uiState.user == null -> ProfileNotFound(pd)
+        uiState.isLoading -> LoadingScreen(pd)
+        uiState.user == null -> LoadingFail(pd)
         else -> {
 
           ProfileContent(

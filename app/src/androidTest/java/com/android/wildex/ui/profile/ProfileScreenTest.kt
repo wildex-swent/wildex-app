@@ -25,6 +25,8 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -470,7 +472,7 @@ class ProfileScreenTest {
 
   @Test
   fun profileLoading_showsCircularProgress() {
-    composeRule.setContent { ProfileLoading(pd = PaddingValues(0.dp)) }
+    composeRule.setContent { LoadingScreen(pd = PaddingValues(0.dp)) }
     composeRule
         .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
         .assertIsDisplayed()
@@ -478,7 +480,7 @@ class ProfileScreenTest {
 
   @Test
   fun profileNotFound_showsErrorMessage() {
-    composeRule.setContent { ProfileNotFound(pd = PaddingValues(0.dp)) }
+    composeRule.setContent { LoadingFail(pd = PaddingValues(0.dp)) }
     composeRule.onNodeWithText("Loading failed. Please try again.").assertIsDisplayed()
   }
 }

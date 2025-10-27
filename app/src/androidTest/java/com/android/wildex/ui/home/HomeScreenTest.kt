@@ -258,6 +258,25 @@ class HomeScreenTest {
   }
 
   @Test
+  fun failScreenShown_whenAuthorLookupFails() {
+    val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
+    runBlocking {
+      postRepository.addPost(badPost)
+      homeScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.NO_POSTS, useUnmergedTree = true)
+        .assertIsNotDisplayed()
+  }
+
+  @Test
   fun likeAndCommentCountsAreDisplayedCorrectly() {
     val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
     val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)

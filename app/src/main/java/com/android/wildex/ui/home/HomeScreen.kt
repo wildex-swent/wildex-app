@@ -83,6 +83,10 @@ object HomeScreenTestTags {
   const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
 
+  const val LOADING = "HomeScreenLoading"
+  const val LOADING_FAIL = "HomeScreenFail"
+  const val NO_POSTS = "HomeScreenEmpty"
+
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
   fun likeTag(postId: Id): String = testTagForPost(postId, "LikeCount")
@@ -141,8 +145,10 @@ fun HomeScreen(
         onRefresh = { homeScreenViewModel.refreshUIState() },
     ) {
       when {
-        uiState.isLoading -> LoadingScreen(pd)
-        uiState.isError && postStates.isEmpty() -> LoadingFail(pd)
+        uiState.isLoading ->
+            LoadingScreen(pd, modifier = Modifier.testTag(HomeScreenTestTags.LOADING))
+        uiState.isError && postStates.isEmpty() ->
+            LoadingFail(pd, modifier = Modifier.testTag(HomeScreenTestTags.LOADING_FAIL))
         postStates.isEmpty() -> NoPostsView()
         else ->
             PostsView(
@@ -159,7 +165,7 @@ fun HomeScreen(
 @Composable
 fun NoPostsView() {
   Column(
-      modifier = Modifier.fillMaxSize().padding(24.dp),
+      modifier = Modifier.fillMaxSize().padding(24.dp).testTag(HomeScreenTestTags.NO_POSTS),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
   ) {

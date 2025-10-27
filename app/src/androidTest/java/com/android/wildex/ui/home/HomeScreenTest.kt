@@ -17,6 +17,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -64,7 +65,8 @@ class HomeScreenTest {
             creationDate = Timestamp.now(),
             country = "Testland",
             friendsCount = 0,
-        ))
+        )
+    )
     userRepository.addUser(
         User(
             userId = "poster0",
@@ -78,7 +80,8 @@ class HomeScreenTest {
             creationDate = Timestamp.now(),
             country = "Testland",
             friendsCount = 0,
-        ))
+        )
+    )
   }
 
   @After
@@ -315,6 +318,37 @@ class HomeScreenTest {
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1 comment"))
+  }
+
+  @Test
+  fun loadingScreen_showsWhileFetchingPosts() {
+    val fetchSignal = CompletableDeferred<Unit>()
+    val delayedPostsRepo =
+        object : LocalRepositories.PostsRepositoryImpl() {
+          override suspend fun getAllPosts(): List<Post> {
+            fetchSignal.await()
+            return super.getAllPosts()
+          }
+        }
+    runBlocking {
+      val vm =
+          HomeScreenViewModel(
+              delayedPostsRepo,
+              LocalRepositories.userRepository,
+              LocalRepositories.likeRepository,
+              "currentUserId-1",
+          )
+      vm.loadUIState()
+      composeTestRule.setContent { HomeScreen(vm) }
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.LOADING, useUnmergedTree = true)
+          .assertIsDisplayed()
+      fetchSignal.complete(Unit)
+      composeTestRule.waitForIdle()
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.LOADING, useUnmergedTree = true)
+          .assertIsNotDisplayed()
+    }
   }
 
   private fun scrollToPost(postId: String) {

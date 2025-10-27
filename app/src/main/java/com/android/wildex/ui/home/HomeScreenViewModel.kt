@@ -6,7 +6,6 @@ package com.android.wildex.ui.home
  * Provides data and state management for the Wildex Home Screen. Fetches posts, user information,
  * and manages like interactions.
  */
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -37,6 +36,7 @@ data class HomeUIState(
     val postStates: List<PostState> = emptyList(),
     val currentUser: SimpleUser = defaultUser,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
 )
@@ -107,31 +107,38 @@ class HomeScreenViewModel(
   val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
   /**
-   * Refreshes the UI state by fetching posts and the current user. Updates [_uiState] with new
-   * values.
+   * Loads the UI state by fetching posts and the current user. Updates [_uiState] with new values.
    *
-   * Also manages [HomeUIState.isLoading] and [HomeUIState.errorMsg] to allow UI feedback.
+   * Also manages [HomeUIState.isLoading], [HomeUIState.isRefreshing], [HomeUIState.isError] and
+   * [HomeUIState.errorMsg] to allow UI feedback.
    */
-  fun refreshUIState() {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-      try {
-        val postStates = fetchPosts()
-        val user = userRepository.getSimpleUser(currentUserId)
-        _uiState.value =
-            _uiState.value.copy(
-                currentUser = user,
-                postStates = postStates,
-                isLoading = false,
-                errorMsg = null,
-                isError = false)
-        Log.d("HomeScreenViewModel", "UI state refreshed with ${postStates.size} posts.")
-      } catch (e: Exception) {
-        Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
-        setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
-        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
-      }
+  private suspend fun updateUIState() {
+    try {
+      val postStates = fetchPosts()
+      val user = userRepository.getSimpleUser(currentUserId)
+      _uiState.value =
+          _uiState.value.copy(
+              currentUser = user,
+              postStates = postStates,
+              isRefreshing = false,
+              isLoading = false,
+              errorMsg = null,
+              isError = false,
+          )
+    } catch (e: Exception) {
+      setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+      _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
     }
+  }
+
+  fun loadUIState() {
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState() }
+  }
+
+  fun refreshUIState() {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState() }
   }
 
   /**

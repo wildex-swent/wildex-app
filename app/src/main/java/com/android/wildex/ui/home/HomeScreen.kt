@@ -82,7 +82,6 @@ object HomeScreenTestTags {
   const val PROFILE_PICTURE = "HomeScreenProfilePicture"
   const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
-
   const val LOADING = "HomeScreenLoading"
   const val LOADING_FAIL = "HomeScreenFail"
   const val NO_POSTS = "HomeScreenEmpty"
@@ -124,7 +123,7 @@ fun HomeScreen(
 
   val context = LocalContext.current
 
-  LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
+  LaunchedEffect(Unit) { homeScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -140,7 +139,7 @@ fun HomeScreen(
 
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = false,
+        isRefreshing = uiState.isRefreshing,
         modifier = Modifier.padding(pd),
         onRefresh = { homeScreenViewModel.refreshUIState() },
     ) {

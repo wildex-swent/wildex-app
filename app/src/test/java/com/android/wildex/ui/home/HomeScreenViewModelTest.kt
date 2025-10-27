@@ -14,8 +14,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.util.Calendar
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -82,6 +84,7 @@ class HomeScreenViewModelTest {
     val initialState = viewModel.uiState.value
     Assert.assertTrue(initialState.postStates.isEmpty())
     Assert.assertEquals(initialState.currentUser, defaultUser)
+    Assert.assertFalse(initialState.isRefreshing)
     Assert.assertFalse(initialState.isLoading)
     Assert.assertNull(initialState.errorMsg)
     Assert.assertFalse(initialState.isError)
@@ -90,10 +93,15 @@ class HomeScreenViewModelTest {
   @Test
   fun refreshUIState_updates_UI_state_success() {
     mainDispatcherRule.runTest {
-      coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
+      val deferred = CompletableDeferred<List<Post>>()
+      coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.refreshUIState()
+
+      Assert.assertTrue(viewModel.uiState.value.isRefreshing)
+      Assert.assertFalse(viewModel.uiState.value.isLoading)
+      deferred.complete(listOf(p1, p2))
       advanceUntilIdle()
       val expectedStates =
           listOf(
@@ -105,6 +113,34 @@ class HomeScreenViewModelTest {
       Assert.assertEquals(u1, updatedState.currentUser)
       Assert.assertFalse(updatedState.isLoading)
       Assert.assertNull(updatedState.errorMsg)
+      Assert.assertFalse(updatedState.isRefreshing)
+    }
+  }
+
+  @Test
+  fun loadUIState_updates_UI_state_success() {
+    mainDispatcherRule.runTest {
+      val deferred = CompletableDeferred<List<Post>>()
+      coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
+      coEvery { likeRepository.getLikeForPost("p1") } returns like1
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      viewModel.loadUIState()
+
+      Assert.assertTrue(viewModel.uiState.value.isLoading)
+      Assert.assertFalse(viewModel.uiState.value.isRefreshing)
+      deferred.complete(listOf(p1, p2))
+      advanceUntilIdle()
+      val expectedStates =
+        listOf(
+          PostState(p1, isLiked = true, author = author1),
+          PostState(p2, isLiked = false, author = author2),
+        )
+      val updatedState = viewModel.uiState.value
+      Assert.assertEquals(expectedStates, updatedState.postStates)
+      Assert.assertEquals(u1, updatedState.currentUser)
+      Assert.assertFalse(updatedState.isLoading)
+      Assert.assertNull(updatedState.errorMsg)
+      Assert.assertFalse(updatedState.isRefreshing)
     }
   }
 
@@ -121,6 +157,7 @@ class HomeScreenViewModelTest {
       Assert.assertTrue(s.postStates.isEmpty())
       Assert.assertEquals(defaultUser, s.currentUser)
       Assert.assertFalse(s.isLoading)
+      Assert.assertFalse(s.isRefreshing)
       Assert.assertNotNull(s.errorMsg)
     }
   }
@@ -139,6 +176,7 @@ class HomeScreenViewModelTest {
       Assert.assertEquals("defaultUserId", s.currentUser.userId)
       Assert.assertEquals("defaultUsername", s.currentUser.username)
       Assert.assertFalse(s.isLoading)
+      Assert.assertFalse(s.isRefreshing)
       Assert.assertNotNull(s.errorMsg)
     }
   }
@@ -162,6 +200,7 @@ class HomeScreenViewModelTest {
       Assert.assertEquals(s1.currentUser, s2.currentUser)
       Assert.assertNotNull(s2.errorMsg)
       Assert.assertFalse(s2.isLoading)
+      Assert.assertFalse(s2.isRefreshing)
     }
   }
 

@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollAction
@@ -25,10 +26,17 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -82,7 +90,6 @@ class ProfileScreenTest {
     var friends = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = owner.value,
           onAchievements = {},
@@ -123,7 +130,6 @@ class ProfileScreenTest {
     var map = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           onAchievements = { achievements++ },
@@ -153,7 +159,6 @@ class ProfileScreenTest {
     var requests = 0
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = owner.value,
           onAchievements = {},
@@ -362,7 +367,6 @@ class ProfileScreenTest {
         }
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           achievements = items,
@@ -411,7 +415,6 @@ class ProfileScreenTest {
         }
     composeRule.setContent {
       ProfileContent(
-          pd = PaddingValues(0.dp),
           user = sampleUser,
           ownerProfile = true,
           achievements = items,
@@ -475,7 +478,7 @@ class ProfileScreenTest {
 
   @Test
   fun profileLoading_showsCircularProgress() {
-    composeRule.setContent { ProfileLoading(pd = PaddingValues(0.dp)) }
+    composeRule.setContent { LoadingScreen(pd = PaddingValues(0.dp)) }
     composeRule
         .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
         .assertIsDisplayed()
@@ -483,7 +486,54 @@ class ProfileScreenTest {
 
   @Test
   fun profileNotFound_showsErrorMessage() {
-    composeRule.setContent { ProfileNotFound(pd = PaddingValues(0.dp)) }
+    composeRule.setContent { LoadingFail(pd = PaddingValues(0.dp)) }
     composeRule.onNodeWithText("Loading failed. Please try again.").assertIsDisplayed()
+  }
+
+  @Test
+  fun loadingScreen_showsWhileFetchingPosts() {
+    val fetchSignal = CompletableDeferred<Unit>()
+    val delayedUsersRepo =
+        object : LocalRepositories.UserRepositoryImpl() {
+          override suspend fun getUser(userId: Id): User {
+            fetchSignal.await()
+            return super.getUser(userId)
+          }
+        }
+    runBlocking {
+      delayedUsersRepo.addUser(user = sampleUser)
+      val vm =
+          ProfileScreenViewModel(
+              userRepository = delayedUsersRepo,
+              achievementRepository = FakeAchievementsRepo(),
+              currentUserId = "currentUserId-1",
+          )
+
+      composeRule.setContent { ProfileScreen(vm, "u-1") }
+      composeRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsDisplayed()
+      fetchSignal.complete(Unit)
+      composeRule.waitForIdle()
+      composeRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsNotDisplayed()
+    }
+  }
+
+  @Test
+  fun failScreenShown_whenUserLookupFails() {
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = LocalRepositories.UserRepositoryImpl(),
+            achievementRepository = FakeAchievementsRepo(),
+            currentUserId = "currentUserId-1",
+        )
+    composeRule.setContent { ProfileScreen(vm, "") }
+    composeRule.waitForIdle()
+
+    composeRule
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

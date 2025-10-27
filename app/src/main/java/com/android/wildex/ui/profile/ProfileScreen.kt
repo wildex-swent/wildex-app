@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -30,17 +29,19 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -68,6 +69,8 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -89,6 +92,7 @@ object ProfileScreenTestTags {
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
@@ -104,7 +108,7 @@ fun ProfileScreen(
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
+  LaunchedEffect(Unit) { profileScreenViewModel.loadUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -116,22 +120,31 @@ fun ProfileScreen(
       modifier = Modifier.fillMaxSize(),
       topBar = { ProfileTopBar(uiState.isUserOwner, onGoBack, onSettings) },
   ) { pd ->
-    when {
-      uiState.isLoading -> ProfileLoading(pd)
-      uiState.user == null -> ProfileNotFound(pd)
-      else -> {
-        ProfileContent(
-            pd = pd,
-            user = uiState.user!!,
-            ownerProfile = uiState.isUserOwner,
-            achievements = uiState.achievements,
-            onAchievements = onAchievements,
-            animalCount = uiState.animalCount,
-            onCollection = onCollection,
-            onMap = onMap,
-            onFriends = onFriends,
-            onFriendRequest = onFriendRequest,
-        )
+    val pullState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier = Modifier.padding(pd),
+        onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else -> {
+
+          ProfileContent(
+              user = uiState.user,
+              ownerProfile = uiState.isUserOwner,
+              achievements = uiState.achievements,
+              onAchievements = onAchievements,
+              animalCount = uiState.animalCount,
+              onCollection = onCollection,
+              onMap = onMap,
+              onFriends = onFriends,
+              onFriendRequest = onFriendRequest,
+          )
+        }
       }
     }
   }
@@ -139,7 +152,6 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileContent(
-    pd: PaddingValues,
     user: User,
     ownerProfile: Boolean,
     achievements: List<Achievement> = emptyList(),
@@ -155,7 +167,6 @@ fun ProfileContent(
   Column(
       modifier =
           Modifier.fillMaxSize()
-              .padding(pd)
               .verticalScroll(rememberScrollState())
               .testTag(ProfileScreenTestTags.SCROLL)) {
         Spacer(Modifier.height(6.dp))
@@ -418,9 +429,6 @@ private fun ProfileStatCard(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clickable(
-                    interactionSource = interaction,
-                    indication =
-                        rememberRipple(bounded = true, color = contentColor.copy(alpha = 0.25f)),
                     onClick = onClick,
                 ),
         verticalAlignment = Alignment.CenterVertically,

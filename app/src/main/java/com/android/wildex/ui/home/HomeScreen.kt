@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.android.wildex.ui.home
 
 /**
@@ -7,6 +9,7 @@ package com.android.wildex.ui.home
  * posts, profile picture, and notifications. Handles post interactions such as likes and navigation
  * to details.
  */
+import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -29,16 +32,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +70,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -72,6 +82,7 @@ object HomeScreenTestTags {
   const val PROFILE_PICTURE = "HomeScreenProfilePicture"
   const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
+  const val NO_POSTS = "HomeScreenEmpty"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -108,29 +119,48 @@ fun HomeScreen(
   val user = uiState.currentUser
   val postStates = uiState.postStates
 
-  LaunchedEffect(Unit) { homeScreenViewModel.refreshUIState() }
+  val context = LocalContext.current
+
+  LaunchedEffect(Unit) { homeScreenViewModel.loadUIState() }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      homeScreenViewModel.clearErrorMsg()
+    }
+  }
 
   Scaffold(
       topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
-      content = { pd ->
-        if (postStates.isEmpty()) NoPostsView()
-        else
+  ) { pd ->
+    val pullState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier = Modifier.padding(pd),
+        onRefresh = { homeScreenViewModel.refreshUIState() },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        postStates.isEmpty() -> NoPostsView()
+        else ->
             PostsView(
-                postStates,
-                pd,
-                homeScreenViewModel::toggleLike,
-                onPostClick,
+                postStates = postStates,
+                onPostLike = homeScreenViewModel::toggleLike,
+                onPostClick = onPostClick,
             )
-      },
-  )
+      }
+    }
+  }
 }
 
 /** Displays a placeholder view when there are no posts available. */
 @Composable
 fun NoPostsView() {
   Column(
-      modifier = Modifier.fillMaxSize().padding(24.dp),
+      modifier = Modifier.fillMaxSize().padding(24.dp).testTag(HomeScreenTestTags.NO_POSTS),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
   ) {
@@ -142,7 +172,7 @@ fun NoPostsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = "No nearby posts.\nStart posting…",
+        text = LocalContext.current.getString(R.string.no_nearby_posts),
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
@@ -157,19 +187,17 @@ fun NoPostsView() {
  * Displays a scrollable list of posts.
  *
  * @param postStates List of PostState objects representing UI data for each post.
- * @param pd Padding values from the Scaffold content.
  * @param onPostLike Lambda invoked when a post like action occurs.
  * @param onPostClick Callback when a post is clicked.
  */
 @Composable
 fun PostsView(
     postStates: List<PostState>,
-    pd: PaddingValues,
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
 ) {
   LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(pd).testTag(HomeScreenTestTags.POSTS_LIST),
+      modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.POSTS_LIST),
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {
@@ -349,7 +377,7 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
-            painter = painterResource(R.drawable.comment_icon),
+            imageVector = Icons.AutoMirrored.Filled.Comment,
             contentDescription = "Comments",
             modifier = Modifier.size(20.dp),
             tint = colorScheme.onBackground,

@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +32,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
 
-  object Collection : Tab("Collection", Icons.Filled.Search, Screen.Collection)
+  object Collection : Tab("Collection", Icons.Filled.EmojiEvents, Screen.Collection)
 
   object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }

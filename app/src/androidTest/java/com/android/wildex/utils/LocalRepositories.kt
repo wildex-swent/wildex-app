@@ -17,7 +17,7 @@ interface ClearableRepository {
 
 object LocalRepositories {
 
-  class PostsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class PostsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       PostsRepository, ClearableRepository {
     val listOfPosts = mutableListOf<Post>()
 
@@ -55,7 +55,7 @@ object LocalRepositories {
     }
   }
 
-  class LikeRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class LikeRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       LikeRepository, ClearableRepository {
     val listOfLikes = mutableListOf<Like>()
 
@@ -87,7 +87,7 @@ object LocalRepositories {
     }
   }
 
-  class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       UserRepository, ClearableRepository {
     val listOfUsers = mutableListOf<User>()
 
@@ -126,7 +126,7 @@ object LocalRepositories {
     }
   }
 
-  class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       CommentRepository, ClearableRepository {
     val listOfComments = mutableListOf<Comment>()
 

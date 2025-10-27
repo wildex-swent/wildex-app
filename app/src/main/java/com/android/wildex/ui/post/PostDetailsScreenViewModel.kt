@@ -44,6 +44,7 @@ data class PostDetailsUIState(
     val likedByCurrentUser: Boolean = false,
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isError: Boolean = false,
 )
 
@@ -82,68 +83,76 @@ class PostDetailsScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
-  fun loadPostDetails(postId: String) {
-    viewModelScope.launch {
-      // start loading
-      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-      try {
-        val post = postRepository.getPost(postId)
-        val simpleAuthor = userRepository.getSimpleUser(post.authorId)
-        val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }
+  fun refreshPostDetails(postId: Id) {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updatePostDetails(postId) }
+  }
 
-        var localErrorMsg: String? = null
-        val commentsUI =
-            try {
-              commentsToCommentsUI(comments)
-            } catch (e: Exception) {
-              Log.e("PostDetailsViewModel", "Error loading comments for post id $postId", e)
-              localErrorMsg = "Failed to load comments: ${e.message}"
-              emptyList()
-            }
+  fun loadPostDetails(postId: Id) {
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updatePostDetails(postId) }
+  }
 
-        val currentUser =
-            try {
-              userRepository.getSimpleUser(currentUserId)
-            } catch (e: Exception) {
-              Log.e("PostDetailsViewModel", "Error loading current user data", e)
-              if (localErrorMsg == null) localErrorMsg = "Failed to load user data: ${e.message}"
-              defaultUser
-            }
+  private suspend fun updatePostDetails(postId: Id) {
+    try {
+      val post = postRepository.getPost(postId)
+      val simpleAuthor = userRepository.getSimpleUser(post.authorId)
+      val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }
 
-        val likedByCurrentUser =
-            try {
-              likeRepository.getLikeForPost(postId) != null
-            } catch (e: Exception) {
-              Log.e("PostDetailsViewModel", "Error loading current user like", e)
-              if (localErrorMsg == null) localErrorMsg = "Failed to load user like: ${e.message}"
-              false
-            }
+      var localErrorMsg: String? = null
+      val commentsUI =
+          try {
+            commentsToCommentsUI(comments)
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading comments for post id $postId", e)
+            localErrorMsg = "Failed to load comments: ${e.message}"
+            emptyList()
+          }
 
-        _uiState.value =
-            PostDetailsUIState(
-                postId = postId,
-                pictureURL = post.pictureURL,
-                location = post.location?.name ?: "",
-                description = post.description,
-                date = formatDate(post.date),
-                likesCount = post.likesCount,
-                commentsCount = post.commentsCount,
-                authorId = post.authorId,
-                authorUsername = simpleAuthor.username,
-                authorProfilePictureURL = simpleAuthor.profilePictureURL,
-                commentsUI = commentsUI,
-                currentUserId = currentUserId,
-                currentUserProfilePictureURL = currentUser.profilePictureURL,
-                currentUserUsername = currentUser.username,
-                likedByCurrentUser = likedByCurrentUser,
-                errorMsg = localErrorMsg,
-                isLoading = false,
-                isError = false)
-      } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
-        setErrorMsg("Failed to load post details: ${e.message}")
-        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
-      }
+      val currentUser =
+          try {
+            userRepository.getSimpleUser(currentUserId)
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading current user data", e)
+            if (localErrorMsg == null) localErrorMsg = "Failed to load user data: ${e.message}"
+            defaultUser
+          }
+
+      val likedByCurrentUser =
+          try {
+            likeRepository.getLikeForPost(postId) != null
+          } catch (e: Exception) {
+            Log.e("PostDetailsViewModel", "Error loading current user like", e)
+            if (localErrorMsg == null) localErrorMsg = "Failed to load user like: ${e.message}"
+            false
+          }
+
+      _uiState.value =
+          PostDetailsUIState(
+              postId = postId,
+              pictureURL = post.pictureURL,
+              location = post.location?.name ?: "",
+              description = post.description,
+              date = formatDate(post.date),
+              likesCount = post.likesCount,
+              commentsCount = post.commentsCount,
+              authorId = post.authorId,
+              authorUsername = simpleAuthor.username,
+              authorProfilePictureURL = simpleAuthor.profilePictureURL,
+              commentsUI = commentsUI,
+              currentUserId = currentUserId,
+              currentUserProfilePictureURL = currentUser.profilePictureURL,
+              currentUserUsername = currentUser.username,
+              likedByCurrentUser = likedByCurrentUser,
+              errorMsg = localErrorMsg,
+              isLoading = false,
+              isRefreshing = false,
+              isError = false,
+          )
+    } catch (e: Exception) {
+      Log.e("PostDetailsViewModel", "Error loading post details by post id $postId", e)
+      setErrorMsg("Failed to load post details: ${e.message}")
+      _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
     }
   }
 
@@ -176,7 +185,9 @@ class PostDetailsScreenViewModel(
           )
         } catch (e: Exception) {
           Log.w(
-              "PostDetailsViewModel", "Failed to increment post likesCount on server: ${e.message}")
+              "PostDetailsViewModel",
+              "Failed to increment post likesCount on server: ${e.message}",
+          )
           setErrorMsg("Failed to update post likes: ${e.message}.")
         }
       } catch (e: Exception) {
@@ -219,7 +230,9 @@ class PostDetailsScreenViewModel(
           )
         } catch (e: Exception) {
           Log.w(
-              "PostDetailsViewModel", "Failed to decrement post likesCount on server: ${e.message}")
+              "PostDetailsViewModel",
+              "Failed to decrement post likesCount on server: ${e.message}",
+          )
           setErrorMsg("Failed to update post likes: ${e.message}.")
         }
       } catch (e: Exception) {
@@ -272,7 +285,8 @@ class PostDetailsScreenViewModel(
                 authorId = currentUserId,
                 text = text,
                 date = now,
-            ))
+            )
+        )
 
         // 3) Update count in the post (optional to keep server in sync)
         try {
@@ -284,7 +298,8 @@ class PostDetailsScreenViewModel(
         } catch (e: Exception) {
           Log.w(
               "PostDetailsViewModel",
-              "Failed to increment post commentsCount on server: ${e.message}")
+              "Failed to increment post commentsCount on server: ${e.message}",
+          )
           setErrorMsg("Failed to update post comments: ${e.message}.")
         }
       } catch (e: Exception) {

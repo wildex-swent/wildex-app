@@ -351,6 +351,7 @@ class PostDetailsScreenViewModelTest {
         viewModel.loadPostDetails("post1")
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isLoading)
+        assertFalse(viewModel.uiState.value.isRefreshing)
         assertNotNull(viewModel.uiState.value.errorMsg)
       }
 
@@ -361,6 +362,7 @@ class PostDetailsScreenViewModelTest {
         viewModel.loadPostDetails("post1")
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isLoading)
+        assertFalse(viewModel.uiState.value.isRefreshing)
         assertNull(viewModel.uiState.value.errorMsg)
       }
 }

@@ -129,8 +129,8 @@ fun ProfileScreen(
         onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
     ) {
       when {
-        uiState.isLoading -> LoadingScreen(pd)
-        uiState.user == null -> LoadingFail(pd)
+        uiState.isLoading -> LoadingScreen()
+        uiState.user == null -> LoadingFail()
         else -> {
 
           ProfileContent(

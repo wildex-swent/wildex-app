@@ -15,6 +15,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -265,14 +266,13 @@ class HomeScreenTest {
     val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
     runBlocking {
       postRepository.addPost(badPost)
-      homeScreenVM.refreshUIState()
     }
 
     composeTestRule.setContent { HomeScreen(homeScreenVM) }
     composeTestRule.waitForIdle()
 
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.NO_POSTS, useUnmergedTree = true)
@@ -341,12 +341,12 @@ class HomeScreenTest {
       vm.loadUIState()
       composeTestRule.setContent { HomeScreen(vm) }
       composeTestRule
-          .onNodeWithTag(HomeScreenTestTags.LOADING, useUnmergedTree = true)
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
       fetchSignal.complete(Unit)
       composeTestRule.waitForIdle()
       composeTestRule
-          .onNodeWithTag(HomeScreenTestTags.LOADING, useUnmergedTree = true)
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsNotDisplayed()
     }
   }

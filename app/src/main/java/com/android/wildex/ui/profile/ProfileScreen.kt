@@ -108,7 +108,7 @@ fun ProfileScreen(
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-  LaunchedEffect(Unit) { profileScreenViewModel.refreshUIState(userUid) }
+  LaunchedEffect(Unit) { profileScreenViewModel.loadUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -129,12 +129,12 @@ fun ProfileScreen(
         onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
     ) {
       when {
+        uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
-        uiState.user == null -> LoadingFail()
         else -> {
 
           ProfileContent(
-              user = uiState.user!!,
+              user = uiState.user,
               ownerProfile = uiState.isUserOwner,
               achievements = uiState.achievements,
               onAchievements = onAchievements,
@@ -168,56 +168,57 @@ fun ProfileContent(
       modifier =
           Modifier.fillMaxSize()
               .verticalScroll(rememberScrollState())
-              .testTag(ProfileScreenTestTags.SCROLL)) {
-        Spacer(Modifier.height(6.dp))
-        ProfileImageAndName(
-            name = user.name,
-            surname = user.surname,
-            username = user.username,
-            profilePicture = user.profilePictureURL,
-            country = user.country,
-            isProfessional = user.userType == UserType.PROFESSIONAL,
-        )
+              .testTag(ProfileScreenTestTags.SCROLL)
+  ) {
+    Spacer(Modifier.height(6.dp))
+    ProfileImageAndName(
+        name = user.name,
+        surname = user.surname,
+        username = user.username,
+        profilePicture = user.profilePictureURL,
+        country = user.country,
+        isProfessional = user.userType == UserType.PROFESSIONAL,
+    )
 
-        Spacer(modifier = Modifier.height(10.dp))
-        ProfileDescription(description = user.bio)
+    Spacer(modifier = Modifier.height(10.dp))
+    ProfileDescription(description = user.bio)
 
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-          ProfileAnimals(
-              modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
-              id = id,
-              onCollection = onCollection,
-              ownerProfile = ownerProfile,
-              animalCount = animalCount,
-          )
-          Spacer(modifier = Modifier.width(12.dp))
-          ProfileFriends(
-              modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
-              id = id,
-              onFriends = onFriends,
-              ownerProfile = ownerProfile,
-              friendCount = user.friendsCount,
-          )
-        }
+    Spacer(modifier = Modifier.height(14.dp))
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+      ProfileAnimals(
+          modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
+          id = id,
+          onCollection = onCollection,
+          ownerProfile = ownerProfile,
+          animalCount = animalCount,
+      )
+      Spacer(modifier = Modifier.width(12.dp))
+      ProfileFriends(
+          modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
+          id = id,
+          onFriends = onFriends,
+          ownerProfile = ownerProfile,
+          friendCount = user.friendsCount,
+      )
+    }
 
-        Spacer(modifier = Modifier.height(14.dp))
-        ProfileAchievements(
-            id = id,
-            onAchievements = onAchievements,
-            ownerProfile = ownerProfile,
-            listAchievement = achievements,
-        )
+    Spacer(modifier = Modifier.height(14.dp))
+    ProfileAchievements(
+        id = id,
+        onAchievements = onAchievements,
+        ownerProfile = ownerProfile,
+        listAchievement = achievements,
+    )
 
-        Spacer(modifier = Modifier.height(14.dp))
-        ProfileMap(id = id, onMap = onMap)
+    Spacer(modifier = Modifier.height(14.dp))
+    ProfileMap(id = id, onMap = onMap)
 
-        Spacer(modifier = Modifier.height(24.dp))
-        if (!ownerProfile) {
-          ProfileFriendRequest(id = id, onFriendRequest = onFriendRequest)
-        }
-        Spacer(Modifier.height(12.dp))
-      }
+    Spacer(modifier = Modifier.height(24.dp))
+    if (!ownerProfile) {
+      ProfileFriendRequest(id = id, onFriendRequest = onFriendRequest)
+    }
+    Spacer(Modifier.height(12.dp))
+  }
 }
 
 @Composable

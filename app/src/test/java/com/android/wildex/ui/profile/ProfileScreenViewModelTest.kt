@@ -59,9 +59,10 @@ class ProfileScreenViewModelTest {
   @Test
   fun viewModel_initializes_default_UI_state_isEmptyLoading() {
     val s = viewModel.uiState.value
-    Assert.assertNull(s.user)
+    Assert.assertFalse(s.isError)
     Assert.assertFalse(s.isUserOwner)
-    Assert.assertTrue(s.isLoading)
+    Assert.assertFalse(s.isLoading)
+    Assert.assertFalse(s.isRefreshing)
     Assert.assertTrue(s.achievements.isEmpty())
     Assert.assertNull(s.errorMsg)
   }
@@ -106,7 +107,7 @@ class ProfileScreenViewModelTest {
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
       val e1 = viewModel.uiState.value
-      Assert.assertNull(e1.user)
+      Assert.assertTrue(e1.isError)
       Assert.assertEquals(false, e1.isUserOwner)
       Assert.assertEquals("Unexpected error: boom", e1.errorMsg)
 
@@ -151,7 +152,7 @@ class ProfileScreenViewModelTest {
       val s = viewModel.uiState.value
       Assert.assertEquals("Empty user id", s.errorMsg)
       Assert.assertFalse(s.isLoading)
-      Assert.assertNull(s.user)
+      Assert.assertTrue(s.isError)
       Assert.assertFalse(s.isUserOwner)
 
       viewModel.clearErrorMsg()

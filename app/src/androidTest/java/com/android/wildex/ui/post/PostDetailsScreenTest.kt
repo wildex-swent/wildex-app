@@ -339,21 +339,7 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun failScreenShown_whenAuthorLookupFails() {
-    val badPost =
-        Post(
-            postId = "bad",
-            authorId = "unknown-author",
-            pictureURL = "",
-            location = Location(0.0, 0.0, ""),
-            description = "",
-            date = Timestamp.now(),
-            animalId = "",
-            likesCount = 0,
-            commentsCount = 0,
-        )
-    runBlocking { postRepository.addPost(badPost) }
-
+  fun failScreenShown_whenPostLookupFails() {
     composeRule.setContent { PostDetailsScreen("bad", postDetailsViewModel) }
     composeRule.waitForIdle()
 

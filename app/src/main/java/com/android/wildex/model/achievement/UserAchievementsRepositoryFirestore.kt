@@ -60,31 +60,19 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
       val ok: Boolean =
           try {
-            when {
-              // Require all expected keys present, then evaluate multiCondition
-              expects.size > 1 && a.multiCondition != null -> {
-                val hasAll = expects.all { key -> inputs.containsKey(key) }
-                if (!hasAll) false else a.multiCondition.invoke(inputs)
-              }
-
-              // Evaluate condition on the single provided list
-              expects.size == 1 && a.condition != null -> {
-                val key = expects.first()
-                val list = inputs[key].orEmpty()
-                // If the required key isn't in inputs at all, skip
-                if (!inputs.containsKey(key)) false else a.condition.invoke(list)
-              }
-              else -> false
+            if (a.condition != null) {
+              val hasAll = expects.all { key -> inputs.containsKey(key) }
+              if (!hasAll) false else a.condition.invoke(inputs)
+            } else {
+              false
             }
           } catch (_: Exception) {
-            // If error is thrown, skip this achievement
             false
           }
 
       if (ok) updated += a.achievementId
     }
 
-    // No changes does not update
     if (updated.toSet() != ua.achievementsId.toSet()) {
       docRef.set(ua.copy(achievementsId = updated, achievementsCount = updated.size)).await()
     }

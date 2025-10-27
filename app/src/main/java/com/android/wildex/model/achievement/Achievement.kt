@@ -19,8 +19,7 @@ data class Achievement(
     val description: String,
     val name: String,
     val expects: Set<InputKey>,
-    val condition: (suspend (List<Id>) -> Boolean)? = null,
-    val multiCondition: (suspend (Map<InputKey, List<Id>>) -> Boolean)? = null,
+    val condition: (suspend (Map<InputKey, List<Id>>) -> Boolean)? = null,
 )
 
 /** Indicates the type of input key used to evaluate achievement conditions. */

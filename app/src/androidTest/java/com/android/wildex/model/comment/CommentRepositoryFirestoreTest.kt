@@ -162,4 +162,26 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     val comments = repository.getAllCommentsByPost(comment1.postId)
     assertTrue(comments.isEmpty())
   }
+
+  @Test
+  fun getCommentByUserWhenNoCommentsExist() = runTest {
+    val userId = "noUser"
+    val comments = repository.getCommentByUser(userId)
+
+    assertTrue(comments.isEmpty())
+  }
+
+  @Test
+  fun getCommentByUserReturnsOnlyRequestedAuthorComments() = runTest {
+    repository.addComment(comment1)
+    repository.addComment(comment2)
+
+    val targetUserId = comment1.authorId
+    val expectedCount = listOf(comment1, comment2).count { it.authorId == targetUserId }
+
+    val comments = repository.getCommentByUser(targetUserId)
+
+    assertEquals(expectedCount, comments.size)
+    assertTrue(comments.all { it.authorId == targetUserId })
+  }
 }

@@ -24,7 +24,10 @@ object Achievements {
           description = "Reach 10 posts",
           name = "Post Master",
           expects = setOf(InputKey.POST_IDS),
-          condition = { postIds -> postIds.size >= 10 },
+          condition = { inputs ->
+            val postIds = inputs[InputKey.POST_IDS].orEmpty()
+            postIds.size >= 10
+          },
       )
 
   /**
@@ -38,7 +41,8 @@ object Achievements {
           description = "Like 50 posts",
           name = "Social Butterfly",
           expects = setOf(InputKey.LIKE_IDS),
-          condition = { likedPostIds ->
+          condition = { inputs ->
+            val likedPostIds = inputs[InputKey.LIKE_IDS].orEmpty()
             countDistinctLikedPostsVerified(likedPostIds, likeRepository) >= 50
           },
       )
@@ -51,7 +55,10 @@ object Achievements {
           description = "Write 20 comments",
           name = "Community Builder",
           expects = setOf(InputKey.COMMENT_IDS),
-          condition = { commentIds -> commentIds.size >= 20 },
+          condition = { inputs ->
+            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
+            commentIds.size >= 20
+          },
       )
 
   /** Influencer — awarded for receiving a total of 1000 likes across all posts. */
@@ -62,7 +69,10 @@ object Achievements {
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
           expects = setOf(InputKey.POST_IDS),
-          condition = { postIds -> sumLikesAcrossPosts(postIds, likeRepository) >= 1000 },
+          condition = { inputs ->
+            val postIds = inputs[InputKey.POST_IDS].orEmpty()
+            sumLikesAcrossPosts(postIds, likeRepository) >= 1000
+          },
       )
 
   /** First Post — awarded for creating the first post. */
@@ -73,7 +83,10 @@ object Achievements {
           description = "Create your first post",
           name = "First Post",
           expects = setOf(InputKey.POST_IDS),
-          condition = { postIds -> postIds.isNotEmpty() },
+          condition = { inputs ->
+            val postIds = inputs[InputKey.POST_IDS].orEmpty()
+            postIds.isNotEmpty()
+          },
       )
 
   /** Rising Star — awarded for a post that reaches at least 100 likes. */
@@ -84,7 +97,10 @@ object Achievements {
           description = "Get 100 likes on a single post",
           name = "Rising Star",
           expects = setOf(InputKey.POST_IDS),
-          condition = { postIds -> hasPostWithAtLeastLikes(postIds, likeRepository, 100) },
+          condition = { inputs ->
+            val postIds = inputs[InputKey.POST_IDS].orEmpty()
+            hasPostWithAtLeastLikes(postIds, likeRepository, 100)
+          },
       )
 
   /** Conversationalist — awarded for writing at least 50 comments overall. */
@@ -95,7 +111,10 @@ object Achievements {
           description = "Write 50 comments overall",
           name = "Conversationalist",
           expects = setOf(InputKey.COMMENT_IDS),
-          condition = { commentIds -> commentIds.size >= 50 },
+          condition = { inputs ->
+            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
+            commentIds.size >= 50
+          },
       )
 
   /**
@@ -111,7 +130,7 @@ object Achievements {
           description = "Be active across Wildex: post, like, and comment regularly",
           name = "Engaged Creator",
           expects = setOf(InputKey.POST_IDS, InputKey.LIKE_IDS, InputKey.COMMENT_IDS),
-          multiCondition = { inputs ->
+          condition = { inputs ->
             val postIds = inputs[InputKey.POST_IDS].orEmpty()
             val likedPostIds = inputs[InputKey.LIKE_IDS].orEmpty()
             val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
@@ -132,7 +151,10 @@ object Achievements {
           description = "This is a mock achievement for testing purposes",
           name = "Mock Achievement",
           expects = setOf(InputKey.TEST_IDS),
-          condition = { postIds -> postIds.size == 1 && postIds[0] == "mockPostId" },
+          condition = { inputs ->
+            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
+            testIds.size == 1 && testIds[0] == "mockPostId"
+          },
       )
 
   /** Mock Achievement 2 — used for repository testing. */
@@ -143,7 +165,10 @@ object Achievements {
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
           expects = setOf(InputKey.TEST_IDS),
-          condition = { postIds -> postIds.size == 2 },
+          condition = { inputs ->
+            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
+            testIds.size == 2
+          },
       )
 
   // ---------- Collections ----------

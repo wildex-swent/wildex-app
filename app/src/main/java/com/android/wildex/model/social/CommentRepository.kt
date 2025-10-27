@@ -17,4 +17,7 @@ interface CommentRepository {
 
   /** Deletes a Comment item from the repository. */
   suspend fun deleteComment(commentId: String)
+
+  /** Retrieves all Comment items authored by a specific user. */
+  suspend fun getCommentByUser(userId: String): List<Comment>
 }

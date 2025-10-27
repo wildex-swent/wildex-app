@@ -1,13 +1,10 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 /**
  * Use case: Refresh a user's achievements.
@@ -45,31 +42,17 @@ class UpdateUserAchievementsUseCase(
         }
 
     // 2) LIKE_IDS: posts liked BY the target user
-    val currentUid = Firebase.auth.currentUser?.uid
     val likePostIds: List<Id> =
         try {
-          if (currentUid == userId) {
-            likeRepository.getAllLikesByCurrentUser().map { it.postId }
-          } else {
-            emptyList()
-          }
+          likeRepository.getAllLikesByUser(userId).map { it.postId }
         } catch (_: Exception) {
           emptyList()
         }
 
     // 3) COMMENT_IDS: comments AUTHORED by the target user
-    // TODO: This is veery inefficient; consider adding a getCommentByUser to CommentRepository.
     val authoredCommentIds: List<Id> =
         try {
-          val userPosts = postsRepository.getAllPostsByGivenAuthor(userId)
-          val ids = mutableListOf<Id>()
-          for (p in userPosts) {
-            val comments = commentRepository.getAllCommentsByPost(p.postId)
-            for (c in comments) {
-              if (isAuthoredByUser(c, userId)) ids += c.commentId
-            }
-          }
-          ids
+          commentRepository.getCommentByUser(userId).map { it.commentId }
         } catch (_: Exception) {
           emptyList()
         }
@@ -81,14 +64,5 @@ class UpdateUserAchievementsUseCase(
             InputKey.COMMENT_IDS to authoredCommentIds)
 
     userAchievementsRepository.updateUserAchievements(userId, inputs)
-  }
-
-  private fun isAuthoredByUser(comment: Comment, userId: Id): Boolean {
-    // Adjust if your Comment model uses a different property name.
-    return try {
-      comment.authorId == userId
-    } catch (_: Throwable) {
-      false
-    }
   }
 }

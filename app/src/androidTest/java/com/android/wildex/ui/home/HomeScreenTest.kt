@@ -66,8 +66,7 @@ class HomeScreenTest {
             creationDate = Timestamp.now(),
             country = "Testland",
             friendsCount = 0,
-        )
-    )
+        ))
     userRepository.addUser(
         User(
             userId = "poster0",
@@ -81,8 +80,7 @@ class HomeScreenTest {
             creationDate = Timestamp.now(),
             country = "Testland",
             friendsCount = 0,
-        )
-    )
+        ))
   }
 
   @After
@@ -264,9 +262,7 @@ class HomeScreenTest {
   @Test
   fun failScreenShown_whenAuthorLookupFails() {
     val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
-    runBlocking {
-      postRepository.addPost(badPost)
-    }
+    runBlocking { postRepository.addPost(badPost) }
 
     composeTestRule.setContent { HomeScreen(homeScreenVM) }
     composeTestRule.waitForIdle()

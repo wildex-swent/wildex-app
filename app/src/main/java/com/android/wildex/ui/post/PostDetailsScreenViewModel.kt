@@ -285,8 +285,7 @@ class PostDetailsScreenViewModel(
                 authorId = currentUserId,
                 text = text,
                 date = now,
-            )
-        )
+            ))
 
         // 3) Update count in the post (optional to keep server in sync)
         try {

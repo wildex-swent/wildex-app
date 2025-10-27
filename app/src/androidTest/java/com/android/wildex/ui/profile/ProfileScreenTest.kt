@@ -30,7 +30,6 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.ui.home.HomeScreen
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
@@ -524,11 +523,12 @@ class ProfileScreenTest {
 
   @Test
   fun failScreenShown_whenUserLookupFails() {
-    val vm = ProfileScreenViewModel(
-        userRepository = LocalRepositories.UserRepositoryImpl(),
-        achievementRepository = FakeAchievementsRepo(),
-        currentUserId = "currentUserId-1",
-    )
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = LocalRepositories.UserRepositoryImpl(),
+            achievementRepository = FakeAchievementsRepo(),
+            currentUserId = "currentUserId-1",
+        )
     composeRule.setContent { ProfileScreen(vm, "") }
     composeRule.waitForIdle()
 

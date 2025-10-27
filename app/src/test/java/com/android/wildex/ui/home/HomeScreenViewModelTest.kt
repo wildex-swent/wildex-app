@@ -17,7 +17,6 @@ import java.util.Calendar
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -131,10 +130,10 @@ class HomeScreenViewModelTest {
       deferred.complete(listOf(p1, p2))
       advanceUntilIdle()
       val expectedStates =
-        listOf(
-          PostState(p1, isLiked = true, author = author1),
-          PostState(p2, isLiked = false, author = author2),
-        )
+          listOf(
+              PostState(p1, isLiked = true, author = author1),
+              PostState(p2, isLiked = false, author = author2),
+          )
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
       Assert.assertEquals(u1, updatedState.currentUser)

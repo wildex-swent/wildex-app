@@ -162,8 +162,7 @@ class PostDetailsScreenTest {
             authorId = commenter1.userId,
             text = "Amazing shot!",
             date = Timestamp.now(),
-        )
-    )
+        ))
     commentRepository.addComment(
         Comment(
             commentId = "comment2",
@@ -171,8 +170,7 @@ class PostDetailsScreenTest {
             authorId = commenter2.userId,
             text = "Love this!",
             date = Timestamp.now(),
-        )
-    )
+        ))
 
     postDetailsViewModel =
         PostDetailsScreenViewModel(
@@ -307,17 +305,18 @@ class PostDetailsScreenTest {
           }
         }
     runBlocking {
-        delayedPostsRepo.addPost(Post(
-            postId = "post1",
-            authorId = "poster1",
-            pictureURL = "",
-            location = Location(0.0, 0.0, ""),
-            description = "",
-            date = Timestamp.now(),
-            animalId = "",
-            likesCount = 0,
-            commentsCount = 0,
-        ))
+      delayedPostsRepo.addPost(
+          Post(
+              postId = "post1",
+              authorId = "poster1",
+              pictureURL = "",
+              location = Location(0.0, 0.0, ""),
+              description = "",
+              date = Timestamp.now(),
+              animalId = "",
+              likesCount = 0,
+              commentsCount = 0,
+          ))
       val vm =
           PostDetailsScreenViewModel(
               delayedPostsRepo,

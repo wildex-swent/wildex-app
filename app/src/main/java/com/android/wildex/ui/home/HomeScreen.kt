@@ -142,8 +142,8 @@ fun HomeScreen(
         onRefresh = { homeScreenViewModel.refreshUIState() },
     ) {
       when {
-          uiState.isError -> LoadingFail()
-          uiState.isLoading -> LoadingScreen()
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
         postStates.isEmpty() -> NoPostsView()
         else ->
             PostsView(
@@ -160,10 +160,7 @@ fun HomeScreen(
 @Composable
 fun NoPostsView() {
   Column(
-      modifier = Modifier
-          .fillMaxSize()
-          .padding(24.dp)
-          .testTag(HomeScreenTestTags.NO_POSTS),
+      modifier = Modifier.fillMaxSize().padding(24.dp).testTag(HomeScreenTestTags.NO_POSTS),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
   ) {
@@ -171,9 +168,7 @@ fun NoPostsView() {
         painter = painterResource(R.drawable.nothing_found),
         contentDescription = "Nothing Found",
         tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .size(96.dp)
-            .testTag(HomeScreenTestTags.NO_POST_ICON),
+        modifier = Modifier.size(96.dp).testTag(HomeScreenTestTags.NO_POST_ICON),
     )
     Spacer(Modifier.height(12.dp))
     Text(
@@ -202,9 +197,7 @@ fun PostsView(
     onPostClick: (Id) -> Unit,
 ) {
   LazyColumn(
-      modifier = Modifier
-          .fillMaxSize()
-          .testTag(HomeScreenTestTags.POSTS_LIST),
+      modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.POSTS_LIST),
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {
@@ -243,23 +236,18 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
       border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
       elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
   ) {
     // Header: avatar + title + date
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
       AsyncImage(
           model = author.profilePictureURL,
           contentDescription = "Author profile picture",
           modifier =
-              Modifier
-                  .size(40.dp)
+              Modifier.size(40.dp)
                   .clip(CircleShape)
                   .testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
           contentScale = ContentScale.Crop,
@@ -288,17 +276,13 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
           if (post.location?.name?.isNotBlank() == true) {
             Row(
                 modifier =
-                    Modifier
-                        .fillMaxWidth(.4f)
-                        .testTag(HomeScreenTestTags.locationTag(post.postId)),
+                    Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
               Icon(
                   imageVector = Icons.Default.LocationOn,
                   contentDescription = "Location",
-                  modifier = Modifier
-                      .size(13.dp)
-                      .offset(y = (-1).dp),
+                  modifier = Modifier.size(13.dp).offset(y = (-1).dp),
                   tint = colorScheme.tertiary,
               )
               Spacer(Modifier.width(2.dp))
@@ -316,15 +300,12 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
     }
 
     // Image
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onPostClick(post.postId) }) {
+    Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick(post.postId) }) {
       AsyncImage(
           model = post.pictureURL,
           contentDescription = "Post picture",
           modifier =
-              Modifier
-                  .fillMaxWidth()
+              Modifier.fillMaxWidth()
                   .height(220.dp)
                   .clip(RoundedCornerShape(0.dp))
                   .testTag(HomeScreenTestTags.imageTag(post.postId)),
@@ -337,20 +318,17 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
             onPostLike(post.postId)
           },
           modifier =
-              Modifier
-                  .align(Alignment.TopStart)
+              Modifier.align(Alignment.TopStart)
                   .testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
       ) {
         Icon(
             imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Like button",
             modifier =
-                Modifier
-                    .size(28.dp)
-                    .graphicsLayer {
-                        scaleX = heartScale
-                        scaleY = heartScale
-                    },
+                Modifier.size(28.dp).graphicsLayer {
+                  scaleX = heartScale
+                  scaleY = heartScale
+                },
             tint = if (liked) colorScheme.tertiary else colorScheme.onBackground,
         )
       }
@@ -358,22 +336,18 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
 
     // Actions: likes & comments & location
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
       // Likes
       Row(
           modifier =
-              Modifier
-                  .testTag(HomeScreenTestTags.likeTag(post.postId))
-                  .clickable {
-                      liked = !liked
-                      likeCount = if (liked) likeCount + 1 else likeCount - 1
-                      onPostLike(post.postId)
-                  },
+              Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
+                liked = !liked
+                likeCount = if (liked) likeCount + 1 else likeCount - 1
+                onPostLike(post.postId)
+              },
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
@@ -397,11 +371,9 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
       // Comments
       Row(
           modifier =
-              Modifier
-                  .testTag(HomeScreenTestTags.commentTag(post.postId))
-                  .clickable {
-                      onPostClick(post.postId)
-                  },
+              Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
+                onPostClick(post.postId)
+              },
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(

@@ -26,8 +26,7 @@ class StorageRepositoryFirebaseTest {
   fun setUp() {
     if (!FirebaseEmulator.isRunning) {
       throw IllegalStateException(
-          "Firebase Emulator must be running to execute these tests. Run 'firebase emulators:start' first."
-      )
+          "Firebase Emulator must be running to execute these tests. Run 'firebase emulators:start' first.")
     }
 
     storageRepository = StorageRepositoryFirebase(FirebaseEmulator.storage)

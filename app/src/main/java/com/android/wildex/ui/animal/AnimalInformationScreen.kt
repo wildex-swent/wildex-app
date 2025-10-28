@@ -11,7 +11,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.model.utils.Id
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalInformationScreen(
@@ -19,19 +18,18 @@ fun AnimalInformationScreen(
     animalInformationScreenViewModel: AnimalInformationScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
 ) {
-    val uiState by animalInformationScreenViewModel.uiState.collectAsState()
-    val context = LocalContext.current
+  val uiState by animalInformationScreenViewModel.uiState.collectAsState()
+  val context = LocalContext.current
 
-    LaunchedEffect(Unit) { animalInformationScreenViewModel.loadAnimalInformation(animalId)}
+  LaunchedEffect(Unit) { animalInformationScreenViewModel.loadAnimalInformation(animalId) }
 
-    LaunchedEffect(uiState.errorMsg) {
-        uiState.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            animalInformationScreenViewModel.clearErrorMsg()
-        }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      animalInformationScreenViewModel.clearErrorMsg()
     }
+  }
 
-    // TODO: Implement the UI
-    Text("Animal Information Screen")
-
+  // TODO: Implement the UI
+  Text("Animal Information Screen")
 }

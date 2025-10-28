@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-
 data class AnimalInformationUIState(
     val animalId: Id = "",
     val pictureURL: URL = "",
@@ -21,33 +20,30 @@ data class AnimalInformationUIState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
-    )
-
+)
 
 class AnimalInformationScreenViewModel(
     // TODO: Add animal repository once implemented
     private val currentUserId: Id =
         try {
-            Firebase.auth.uid
+          Firebase.auth.uid
         } catch (_: Exception) {
-            defaultUser.userId
+          defaultUser.userId
         } ?: defaultUser.userId,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AnimalInformationUIState())
-    val uiState: StateFlow<AnimalInformationUIState> = _uiState.asStateFlow()
+  private val _uiState = MutableStateFlow(AnimalInformationUIState())
+  val uiState: StateFlow<AnimalInformationUIState> = _uiState.asStateFlow()
 
-    fun clearErrorMsg() {
-        _uiState.value = _uiState.value.copy(errorMsg = null)
-    }
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
 
-    private fun setErrorMsg(errorMsg: String) {
-        _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
-    }
+  private fun setErrorMsg(errorMsg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
+  }
 
-    fun loadAnimalInformation(animalId: Id){
-        // TODO: set up the UI state
-    }
-
-
+  fun loadAnimalInformation(animalId: Id) {
+    // TODO: set up the UI state
+  }
 }

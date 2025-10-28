@@ -1,5 +1,7 @@
 package com.android.wildex.dataClasses
 
+import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.BoundingBox
@@ -19,6 +21,8 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
 import junit.framework.TestCase
+import junit.framework.TestCase.assertFalse
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
@@ -229,5 +233,19 @@ class DataClassesTest {
     TestCase.assertEquals(50.0, location.latitude)
     TestCase.assertEquals(8.0, location.longitude)
     TestCase.assertEquals("Test Location", location.name)
+  }
+
+  @Test
+  fun testAchievementCondition() = runTest {
+    val achievement =
+        Achievement(
+            achievementId = "ach1",
+            pictureURL = "https://example.com/ach_pic",
+            description = "Achievement description",
+            name = "Achievement Name",
+            expects = setOf(InputKey.TEST_IDS),
+            condition = { _ -> false })
+
+    assertFalse(achievement.condition(emptyMap()))
   }
 }

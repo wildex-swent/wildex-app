@@ -187,4 +187,43 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             .exceptionOrNull()
     assertTrue(exception is IllegalArgumentException)
   }
+
+  @Test
+  fun testMalformedUserAchievementDocument() = runTest {
+    val userId = "testEmptyListUser"
+
+    // create an empty invalid document (so .exists() is true but no valid fields)
+    FirebaseEmulator.firestore
+        .collection(USER_ACHIEVEMENTS_COLLECTION_PATH)
+        .document(userId)
+        .set(mapOf<Int, Any>())
+        .await()
+
+    // call the method to this will trigger the `?: emptyList()` branch
+    val achievements = repository.getAllAchievementsByUser(userId)
+
+    assertTrue(achievements.isEmpty())
+    assertEquals(0, repository.getAchievementsCountOfUser(userId))
+  }
+
+  @Test
+  fun updateUserAchievements_returnsWhenInputsEmptyOrAllValuesEmpty() = runTest {
+    val userId1 = "testEmptyInputs"
+    val userId2 = "testAllValuesEmpty"
+
+    repository.initializeUserAchievements(userId1)
+    repository.initializeUserAchievements(userId2)
+
+    // --- Case 1: inputs.isEmpty() ---
+    repository.updateUserAchievements(userId1, emptyMap())
+
+    val achievements1 = repository.getAllAchievementsByUser(userId1)
+    assertTrue(achievements1.isEmpty())
+
+    // --- Case 2: inputs.values.all { it.isEmpty() } ---
+    repository.updateUserAchievements(userId2, mapOf(InputKey.POST_IDS to emptyList()))
+
+    val achievements2 = repository.getAllAchievementsByUser(userId2)
+    assertTrue(achievements2.isEmpty())
+  }
 }

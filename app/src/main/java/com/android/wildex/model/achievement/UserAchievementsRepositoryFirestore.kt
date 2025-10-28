@@ -48,9 +48,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     val doc = docRef.get().await()
     require(doc.exists())
 
-    val ua =
-        doc.toObject(UserAchievements::class.java)
-            ?: throw IllegalArgumentException("Malformed UserAchievements for userId=$userId")
+    val ua = doc.toObject(UserAchievements::class.java) ?: throw IllegalArgumentException()
 
     if (inputs.isEmpty() || inputs.values.all { it.isEmpty() }) return
 

@@ -30,7 +30,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     // If an ID does not match any Achievement, it is ignored
     // If matches, add to the list of the user's achievements to be returned
     val achievements =
-        userAchievements?.achievementsId?.mapNotNull { id -> Achievements.achievement_by_id[id] }
+        userAchievements?.achievementsId?.mapNotNull { id -> Achievements.achievementById[id] }
             ?: emptyList()
     return achievements
   }
@@ -53,25 +53,11 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
     if (inputs.isEmpty() || inputs.values.all { it.isEmpty() }) return
 
-    val updated = mutableListOf<Id>()
-
-    for (a in Achievements.ALL) {
-      val expects = a.expects
-
-      val ok: Boolean =
-          try {
-            if (a.condition != null) {
-              val hasAll = expects.all { key -> inputs.containsKey(key) }
-              if (!hasAll) false else a.condition.invoke(inputs)
-            } else {
-              false
+    val updated =
+        Achievements.ALL.filter {
+              it.expects.all { key -> inputs.containsKey(key) } && it.condition(inputs)
             }
-          } catch (_: Exception) {
-            false
-          }
-
-      if (ok) updated += a.achievementId
-    }
+            .map { it.achievementId }
 
     if (updated.toSet() != ua.achievementsId.toSet()) {
       docRef.set(ua.copy(achievementsId = updated, achievementsCount = updated.size)).await()

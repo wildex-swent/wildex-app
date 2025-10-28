@@ -43,7 +43,7 @@ object Achievements {
           expects = setOf(InputKey.LIKE_IDS),
           condition = { inputs ->
             val likedPostIds = inputs[InputKey.LIKE_IDS].orEmpty()
-            countDistinctLikedPostsVerified(likedPostIds, likeRepository) >= 50
+            countDistinctLikedPostsVerified(likedPostIds) >= 50
           },
       )
 
@@ -71,7 +71,7 @@ object Achievements {
           expects = setOf(InputKey.POST_IDS),
           condition = { inputs ->
             val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            sumLikesAcrossPosts(postIds, likeRepository) >= 1000
+            sumLikesAcrossPosts(postIds) >= 1000
           },
       )
 
@@ -99,7 +99,7 @@ object Achievements {
           expects = setOf(InputKey.POST_IDS),
           condition = { inputs ->
             val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            hasPostWithAtLeastLikes(postIds, likeRepository, 100)
+            hasPostWithAtLeastLikes(postIds, 100)
           },
       )
 
@@ -136,7 +136,7 @@ object Achievements {
             val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
 
             val postsOk = postIds.size >= 5
-            val likesOk = countDistinctLikedPostsVerified(likedPostIds, likeRepository) >= 10
+            val likesOk = countDistinctLikedPostsVerified(likedPostIds) >= 10
             val commentsOk = commentIds.size >= 10
 
             postsOk && likesOk && commentsOk
@@ -187,28 +187,24 @@ object Achievements {
           engagedCreator,
       )
 
-  val achievement_by_id: Map<Id, Achievement> = ALL.associateBy { it.achievementId }
+  val achievementById: Map<Id, Achievement> = ALL.associateBy { it.achievementId }
 
   // ---------- Focused helpers ----------
 
   /** Sums likes received across all posts. */
-  private suspend fun sumLikesAcrossPosts(postIds: List<Id>, likeRepo: LikeRepository): Int {
+  private suspend fun sumLikesAcrossPosts(postIds: List<Id>): Int {
     var total = 0
     for (pid in postIds) {
-      total += likeRepo.getLikesForPost(pid).size
+      total += likeRepository.getLikesForPost(pid).size
       if (total >= 1000) return total
     }
     return total
   }
 
   /** Returns true if any post has at least [threshold] likes. */
-  private suspend fun hasPostWithAtLeastLikes(
-      postIds: List<Id>,
-      likeRepo: LikeRepository,
-      threshold: Int
-  ): Boolean {
+  private suspend fun hasPostWithAtLeastLikes(postIds: List<Id>, threshold: Int): Boolean {
     for (pid in postIds) {
-      if (likeRepo.getLikesForPost(pid).size >= threshold) return true
+      if (likeRepository.getLikesForPost(pid).size >= threshold) return true
     }
     return false
   }
@@ -219,11 +215,10 @@ object Achievements {
    */
   private suspend fun countDistinctLikedPostsVerified(
       likedPostIds: List<Id>,
-      likeRepo: LikeRepository
   ): Int {
     val verified = HashSet<Id>()
     for (pid in likedPostIds) {
-      val like = likeRepo.getLikeForPost(pid)
+      val like = likeRepository.getLikeForPost(pid)
       if (like != null) verified += pid
       if (verified.size >= 50) return verified.size
     }

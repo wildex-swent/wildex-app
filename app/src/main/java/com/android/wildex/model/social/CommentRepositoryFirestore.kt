@@ -83,7 +83,7 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
    * @param userId The ID of the user whose comments are to be retrieved.
    * @return A list of [Comment] items authored by the specified user.
    */
-  override suspend fun getCommentByUser(userId: String): List<Comment> {
+  override suspend fun getCommentsByUser(userId: String): List<Comment> {
     return collection
         .whereEqualTo(CommentsFields.AUTHOR_ID, userId)
         .get()

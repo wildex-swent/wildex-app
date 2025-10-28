@@ -1,6 +1,8 @@
-package com.android.wildex.model.achievement
+package com.android.wildex.usecase.achievement
 
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.achievement.InputKey
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
@@ -52,7 +54,7 @@ class UpdateUserAchievementsUseCase(
     // 3) COMMENT_IDS: comments AUTHORED by the target user
     val authoredCommentIds: List<Id> =
         try {
-          commentRepository.getCommentByUser(userId).map { it.commentId }
+          commentRepository.getCommentsByUser(userId).map { it.commentId }
         } catch (_: Exception) {
           emptyList()
         }

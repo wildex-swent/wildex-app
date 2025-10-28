@@ -1,8 +1,8 @@
 package com.android.wildex.model.achievement
 
+import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -16,7 +16,7 @@ import org.junit.Test
 
 class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_COLLECTION_PATH) {
 
-  private var repository = UserAchievementsRepositoryFirestore(Firebase.firestore)
+  private var repository = UserAchievementsRepositoryFirestore(FirebaseEmulator.firestore)
 
   @Before
   override fun setUp() {

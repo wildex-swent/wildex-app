@@ -156,7 +156,7 @@ object LocalRepositories {
       listOfComments.removeIf { it.commentId == commentId }
     }
 
-    override suspend fun getCommentByUser(userId: String): List<Comment> =
+    override suspend fun getCommentsByUser(userId: String): List<Comment> =
         listOfComments.filter { it.authorId == userId }
 
     override fun clear() {

@@ -166,7 +166,7 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
   @Test
   fun getCommentByUserWhenNoCommentsExist() = runTest {
     val userId = "noUser"
-    val comments = repository.getCommentByUser(userId)
+    val comments = repository.getCommentsByUser(userId)
 
     assertTrue(comments.isEmpty())
   }
@@ -179,7 +179,7 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     val targetUserId = comment1.authorId
     val expectedCount = listOf(comment1, comment2).count { it.authorId == targetUserId }
 
-    val comments = repository.getCommentByUser(targetUserId)
+    val comments = repository.getCommentsByUser(targetUserId)
 
     assertEquals(expectedCount, comments.size)
     assertTrue(comments.all { it.authorId == targetUserId })

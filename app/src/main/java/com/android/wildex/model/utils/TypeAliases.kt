@@ -12,4 +12,4 @@ typealias URL = String
 typealias Input = Map<InputKey, List<Id>>
 
 /** Type alias for condition functions used in achievements. */
-typealias Condition = suspend (Map<InputKey, List<Id>>) -> Boolean
+typealias Condition = suspend (Input) -> Boolean

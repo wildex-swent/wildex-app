@@ -30,7 +30,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
-class AnimalRepositoryHttp(val client: OkHttpClient): AnimalRepository {
+class AnimalRepositoryHttp(val client: OkHttpClient) : AnimalRepository {
   private val adApikey = BuildConfig.ANIMALDETECT_API_KEY
 
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY
@@ -49,10 +49,7 @@ class AnimalRepositoryHttp(val client: OkHttpClient): AnimalRepository {
    * @return List<AnimalDetectResponse> containing detected labels and confidence scores, or empty
    *   list if the request fails or the response is invalid.
    */
-  override suspend fun detectAnimal(
-      context: Context,
-      imageUri: Uri
-  ): List<AnimalDetectResponse> =
+  override suspend fun detectAnimal(context: Context, imageUri: Uri): List<AnimalDetectResponse> =
       withContext(Dispatchers.IO) {
         var tempFile: File? = null
         try {
@@ -164,7 +161,7 @@ class AnimalRepositoryHttp(val client: OkHttpClient): AnimalRepository {
         }
       }
 
-    /**
+  /**
    * Requests a short descriptive paragraph for a given animal from a HuggingFace LLM.
    *
    * This function sends a POST request to the LLM API with a system prompt instructing the model to

@@ -73,7 +73,7 @@ fun CameraScreen(
 
 @Composable
 fun CameraPermissionRequest(requestPermission: () -> Unit) {
-    LaunchedEffect(Unit) { requestPermission() }
+  LaunchedEffect(Unit) { requestPermission() }
   /* Camera permission request UI, eg. Request Button */
 }
 

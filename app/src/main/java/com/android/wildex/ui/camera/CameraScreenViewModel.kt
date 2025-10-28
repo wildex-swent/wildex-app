@@ -47,7 +47,7 @@ class CameraScreenViewModel(
 
   fun createPost(location: Location, onPost: () -> Unit) {
     /* calls `registerAnimal` and creates a post with the detected animal and current user,
-     with the location taken from the composable, and triggers onPost when it is posted */
+    with the location taken from the composable, and triggers onPost when it is posted */
   }
 
   /** Clears any existing error message from the UI state. */

@@ -80,7 +80,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val initialAchievements = repository.getAllAchievementsByUser(userId)
 
     repository.updateUserAchievements(
-        userId, mapOf(InputKey.LIKE_IDS to listOf("RandomIdThatDoesNotExist")))
+        userId, mapOf(InputKey.TEST_IDS to listOf("RandomIdThatDoesNotExist")))
 
     val updatedAchievements = repository.getAllAchievementsByUser(userId)
     assertEquals(initialAchievements, updatedAchievements)

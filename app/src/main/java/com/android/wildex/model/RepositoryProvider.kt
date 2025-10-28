@@ -12,11 +12,14 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.LikeRepositoryFirestore
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.social.PostsRepositoryFirestore
+import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.storage.StorageRepositoryFirebase
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 
 /** Provides a single instance of all the repository in the app. */
 object RepositoryProvider {
@@ -33,4 +36,5 @@ object RepositoryProvider {
   val animalDetectRepository: AnimalDetectRepository by lazy {
     AnimalDetectRepository(HttpClientProvider.client)
   }
+  val storageRepository: StorageRepository by lazy { StorageRepositoryFirebase(Firebase.storage) }
 }

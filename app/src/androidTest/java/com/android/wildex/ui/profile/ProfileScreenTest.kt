@@ -22,11 +22,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Input
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.LoadingScreenTestTags
@@ -187,9 +189,9 @@ class ProfileScreenTest {
 
           override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = emptyList()
 
-          override suspend fun initializeUserAchievements(userId: String) {}
+          override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
 
-          override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
+          override suspend fun initializeUserAchievements(userId: String) {}
 
           override suspend fun getAchievementsCountOfUser(userId: String): Int = 0
         }
@@ -217,9 +219,9 @@ class ProfileScreenTest {
 
     override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = achievements
 
-    override suspend fun initializeUserAchievements(userId: String) {}
+    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
 
-    override suspend fun updateUserAchievements(userId: String, listIds: List<String>) {}
+    override suspend fun initializeUserAchievements(userId: String) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
   }

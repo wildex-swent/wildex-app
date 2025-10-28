@@ -2,6 +2,7 @@ package com.android.wildex.model.achievement
 
 import com.android.wildex.model.user.UserAchievements
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Input
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
@@ -12,7 +13,7 @@ const val USER_ACHIEVEMENTS_COLLECTION_PATH = "userAchievements"
 class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     UserAchievementsRepository {
 
-  override suspend fun initializeUserAchievements(userId: String) {
+  override suspend fun initializeUserAchievements(userId: Id) {
     require(userId.isNotBlank()) { "User ID must not be blank" }
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
@@ -22,7 +23,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     }
   }
 
-  override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> {
+  override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
     val collection = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId).get().await()
     require(collection.exists())
     val userAchievements = collection.toObject(UserAchievements::class.java)
@@ -42,7 +43,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     return getAllAchievementsByUser(userId)
   }
 
-  override suspend fun updateUserAchievements(userId: String, inputs: Map<InputKey, List<Id>>) {
+  override suspend fun updateUserAchievements(userId: Id, inputs: Input) {
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
     require(doc.exists())
@@ -64,7 +65,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     }
   }
 
-  override suspend fun getAchievementsCountOfUser(userId: String): Int {
+  override suspend fun getAchievementsCountOfUser(userId: Id): Int {
     val collection = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId).get().await()
     require(collection.exists())
     val userAchievements = collection.toObject(UserAchievements::class.java)

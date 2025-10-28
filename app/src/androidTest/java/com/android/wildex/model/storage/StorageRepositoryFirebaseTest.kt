@@ -13,6 +13,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -44,6 +45,15 @@ class StorageRepositoryFirebaseTest {
       output.write(testData)
     }
     return Uri.fromFile(testFile)
+  }
+
+  @Test
+  fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runTest {
+    // This test covers the default constructor (with default parameter)
+    // which uses Firebase.storage by default
+    val defaultRepository = StorageRepositoryFirebase()
+
+    assertNotNull("Repository should be created with default constructor", defaultRepository)
   }
 
   @Test
@@ -241,6 +251,102 @@ class StorageRepositoryFirebaseTest {
       storageRepository.deleteAnimalPicture(animalId)
 
       assertFalse(FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").exists())
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
+  fun uploadUserProfilePicture_returnsNull_whenInvalidUriProvided() = runTest {
+    val userId = "invalidUriTest"
+    val invalidUri = Uri.parse("invalid://path/to/nowhere")
+
+    try {
+      val result = storageRepository.uploadUserProfilePicture(userId, invalidUri)
+
+      assertNull("Upload should return null for invalid URI", result)
+    } finally {
+      runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
+    }
+  }
+
+  @Test
+  fun uploadPostImage_returnsNull_whenInvalidUriProvided() = runTest {
+    val postId = "invalidUriTest"
+    val invalidUri = Uri.parse("invalid://path/to/nowhere")
+
+    try {
+      val result = storageRepository.uploadPostImage(postId, invalidUri)
+
+      assertNull("Upload should return null for invalid URI", result)
+    } finally {
+      runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
+    }
+  }
+
+  @Test
+  fun uploadAnimalPicture_returnsNull_whenInvalidUriProvided() = runTest {
+    val animalId = "invalidUriTest"
+    val invalidUri = Uri.parse("invalid://path/to/nowhere")
+
+    try {
+      val result = storageRepository.uploadAnimalPicture(animalId, invalidUri)
+
+      assertNull("Upload should return null for invalid URI", result)
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
+  fun deleteUserProfilePicture_catchesException_whenFileDoesNotExist() = runTest {
+    val userId = "nonExistentUserDelete"
+
+    try {
+      // Attempt to delete non-existent file - should catch exception and log it
+      storageRepository.deleteUserProfilePicture(userId)
+
+      // If we reach here, exception was caught (not propagated)
+      assertFalse(
+          "File should not exist",
+          FirebaseEmulator.storage.reference.child("users/$userId.jpg").exists())
+    } finally {
+      runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
+    }
+  }
+
+  @Test
+  fun deletePostImage_catchesException_whenFileDoesNotExist() = runTest {
+    val postId = "nonExistentPostDelete"
+
+    try {
+      // Attempt to delete non-existent file - should catch exception and log it
+      storageRepository.deletePostImage(postId)
+
+      // If we reach here, exception was caught (not propagated)
+      assertFalse(
+          "File should not exist",
+          FirebaseEmulator.storage.reference.child("posts/$postId.jpg").exists())
+    } finally {
+      runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
+    }
+  }
+
+  @Test
+  fun deleteAnimalPicture_catchesException_whenFileDoesNotExist() = runTest {
+    val animalId = "nonExistentAnimalDelete"
+
+    try {
+      storageRepository.deleteAnimalPicture(animalId)
+
+      // If we reach here, exception was caught (not propagated)
+      assertFalse(
+          "File should not exist",
+          FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").exists())
     } finally {
       runCatching {
         FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()

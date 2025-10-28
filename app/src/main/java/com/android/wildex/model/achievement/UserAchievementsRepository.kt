@@ -1,6 +1,7 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Input
 
 /** Represents a repository that manages Achievement items. */
 interface UserAchievementsRepository {
@@ -10,7 +11,7 @@ interface UserAchievementsRepository {
    *
    * @param userId The unique identifier of the user to initialize achievements for.
    */
-  suspend fun initializeUserAchievements(userId: String)
+  suspend fun initializeUserAchievements(userId: Id)
 
   /**
    * Retrieves all Achievements associated with a specific user
@@ -18,7 +19,7 @@ interface UserAchievementsRepository {
    * @param userId The unique identifier of the user whose achievements are to be retrieved.
    * @return A list of Achievement items associated with the specified user.
    */
-  suspend fun getAllAchievementsByUser(userId: String): List<Achievement>
+  suspend fun getAllAchievementsByUser(userId: Id): List<Achievement>
 
   /**
    * Retrieves all Achievement items associated with the currently authenticated user.
@@ -28,16 +29,16 @@ interface UserAchievementsRepository {
   suspend fun getAllAchievementsByCurrentUser(): List<Achievement>
 
   /**
-   * Takes a list of all the user's posts IDs and updates the user's achievements accordingly.
-   * Useful when a new post is added or an existing post is deleted. For example, if a user reaches
-   * a milestone in the number of posts, this function will update their achievements to reflect
-   * that. and if he deletes a post and falls below a milestone, the corresponding achievement will
-   * be removed.
+   * Takes a map of input keys to lists of IDs and updates the user's achievements accordingly.
+   * Useful when multiple types of user activities need to be considered for achievement updates.
+   * For example, if a user reaches milestones in different categories (like posts, likes,
+   * comments), this function will update their achievements to reflect that.
    *
    * @param userId The unique identifier of the user whose achievements are to be updated.
-   * @param listIds A list of post IDs that may influence the user's achievements.
+   * @param inputs A map where keys are input types and values are lists of IDs associated with
+   *   those input types.
    */
-  suspend fun updateUserAchievements(userId: String, listIds: List<Id>)
+  suspend fun updateUserAchievements(userId: String, inputs: Input)
 
   /**
    * get achievement count of the user
@@ -45,5 +46,5 @@ interface UserAchievementsRepository {
    * @param userId The unique identifier of the user whose achievements counts are to be retrieved.
    * @return The count of Achievement items associated with the specified user.
    */
-  suspend fun getAchievementsCountOfUser(userId: String): Int
+  suspend fun getAchievementsCountOfUser(userId: Id): Int
 }

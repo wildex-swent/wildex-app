@@ -78,6 +78,21 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
   }
 
   /**
+   * Retrieves all Comment items authored by a specific user.
+   *
+   * @param userId The ID of the user whose comments are to be retrieved.
+   * @return A list of [Comment] items authored by the specified user.
+   */
+  override suspend fun getCommentsByUser(userId: String): List<Comment> {
+    return collection
+        .whereEqualTo(CommentsFields.AUTHOR_ID, userId)
+        .get()
+        .await()
+        .documents
+        .mapNotNull { documentToComment(it) }
+  }
+
+  /**
    * Ensures no Comment item in the document reference has a specific commentId.
    *
    * @param docRef The document reference containing all comments.

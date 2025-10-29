@@ -35,7 +35,13 @@ class StorageRepositoryFirebaseTest {
     testImageUri = createTestImageFile()
   }
 
-  @After fun tearDown() {}
+  @After
+  fun tearDown() = runTest {
+    // Optional: clean up cache
+    val file =
+        File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "test_image.jpg")
+    if (file.exists()) file.delete()
+  }
 
   private fun createTestImageFile(): Uri {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -49,20 +55,15 @@ class StorageRepositoryFirebaseTest {
 
   @Test
   fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runTest {
-    // This test covers the default constructor (with default parameter)
-    // which uses Firebase.storage by default
     val defaultRepository = StorageRepositoryFirebase()
-
     assertNotNull("Repository should be created with default constructor", defaultRepository)
   }
 
   @Test
   fun uploadUserProfilePicture_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val userId = "user123"
-
     try {
       val result = storageRepository.uploadUserProfilePicture(userId, testImageUri)
-
       assertNotNull("Upload should return a URL", result)
       assertTrue("URL should contain userId", result!!.contains(userId))
       assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
@@ -74,10 +75,8 @@ class StorageRepositoryFirebaseTest {
   @Test
   fun uploadUserProfilePicture_createsFileAtCorrectPath() = runTest {
     val userId = "testUser456"
-
     try {
       val url = storageRepository.uploadUserProfilePicture(userId, testImageUri)
-
       assertNotNull("Upload should succeed", url)
       val expectedPathSegment = "users%2F$userId.jpg"
       assertTrue(
@@ -92,7 +91,6 @@ class StorageRepositoryFirebaseTest {
   @Test
   fun uploadPostImage_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val postId = "post789"
-
     try {
       val result = storageRepository.uploadPostImage(postId, testImageUri)
 
@@ -107,7 +105,6 @@ class StorageRepositoryFirebaseTest {
   @Test
   fun uploadPostImage_createsFileAtCorrectPath() = runTest {
     val postId = "testPost123"
-
     try {
       val url = storageRepository.uploadPostImage(postId, testImageUri)
 
@@ -313,7 +310,8 @@ class StorageRepositoryFirebaseTest {
       // If we reach here, exception was caught (not propagated)
       assertFalse(
           "File should not exist",
-          FirebaseEmulator.storage.reference.child("users/$userId.jpg").exists())
+          FirebaseEmulator.storage.reference.child("users/$userId.jpg").exists(),
+      )
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
     }
@@ -330,7 +328,8 @@ class StorageRepositoryFirebaseTest {
       // If we reach here, exception was caught (not propagated)
       assertFalse(
           "File should not exist",
-          FirebaseEmulator.storage.reference.child("posts/$postId.jpg").exists())
+          FirebaseEmulator.storage.reference.child("posts/$postId.jpg").exists(),
+      )
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
     }
@@ -346,7 +345,8 @@ class StorageRepositoryFirebaseTest {
       // If we reach here, exception was caught (not propagated)
       assertFalse(
           "File should not exist",
-          FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").exists())
+          FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").exists(),
+      )
     } finally {
       runCatching {
         FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
@@ -355,7 +355,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   private fun StorageReference.exists(): Boolean = runBlocking {
-    return@runBlocking try {
+    try {
       metadata.await()
       true
     } catch (_: Exception) {

@@ -155,4 +155,23 @@ class LikeRepositoryFirestoreTest : FirestoreTest(LIKE_COLLECTION_PATH) {
     val like = repository.getLikeForPost("nonExistentPostId")
     assertEquals(null, like)
   }
+
+  @Test
+  fun testGetAllLikesByUser() = runTest {
+    val userId = "author1"
+    val like1ForUser = like1.copy(userId = userId)
+    val like2ForUser = like2.copy(userId = userId)
+    val like3ForOtherUser = like3.copy(userId = "author2")
+
+    repository.addLike(like1ForUser)
+    repository.addLike(like2ForUser)
+    repository.addLike(like3ForOtherUser)
+
+    val likesByUser = repository.getAllLikesByUser(userId)
+
+    assertEquals(2, likesByUser.size)
+    val expectedLikes = setOf(like1ForUser, like2ForUser)
+    val storedLikes = likesByUser.toSet()
+    assertEquals(expectedLikes, storedLikes)
+  }
 }

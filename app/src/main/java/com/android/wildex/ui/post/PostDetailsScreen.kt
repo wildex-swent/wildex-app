@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +38,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +64,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 
 fun testTagForProfilePicture(profileId: String, role: String = ""): String {
   return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
@@ -99,84 +103,99 @@ fun PostDetailsScreen(
         )
       },
   ) { pd ->
-    Box(Modifier.fillMaxSize().padding(pd)) {
-      // Full scroll: hero image + content sheet + comments
-      LazyColumn(
-          modifier = Modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.spacedBy(0.dp),
-      ) {
-        // HERO IMAGE with soft gradient top and bottom
-        item { PostPicture(uiState.pictureURL) }
+    val pullState = rememberPullToRefreshState()
 
-        // CONTENT SHEET (rounded top), contains info + description + "Comments" header
-        item {
-          Surface(
-              color = colorScheme.background,
-              shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-              modifier = Modifier.fillMaxWidth(),
-          ) {
-            Column(Modifier.fillMaxWidth()) {
-              // make the sheet overlap a bit with the image to look continuous
-              Spacer(Modifier.height(8.dp))
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier = Modifier.padding(pd),
+        onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else -> {
 
-              LocationSpeciesLikeBar(
-                  location = uiState.location,
-                  species = uiState.animalSpecies,
-                  likedByCurrentUser = uiState.likedByCurrentUser,
-                  likesCount = uiState.likesCount,
-                  onLike = { postDetailsScreenViewModel.addLike() },
-                  onUnlike = { postDetailsScreenViewModel.removeLike() },
-              )
+          Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+              // HERO IMAGE with soft gradient top and bottom
+              item { PostPicture(uiState.pictureURL) }
 
-              // INFO BAR
-              PostInfoBar(
-                  authorId = uiState.authorId,
-                  authorProfilePictureURL = uiState.authorProfilePictureURL,
-                  authorUserName = uiState.authorUsername,
-                  animalName = uiState.animalName,
-                  date = uiState.date,
-                  onProfile = onProfile,
-              )
-
-              // DESCRIPTION – clean card with subtle border
-              if (uiState.description.isNotBlank()) {
-                Card(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                    border = BorderStroke(1.dp, colorScheme.tertiary),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+              // CONTENT SHEET (rounded top), contains info + description + "Comments" header
+              item {
+                Surface(
+                    color = colorScheme.background,
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                  Text(
-                      text = uiState.description,
-                      color = colorScheme.onBackground,
-                      modifier = Modifier.padding(14.dp),
-                      style = typography.bodyMedium,
-                  )
+                  Column(Modifier.fillMaxWidth()) {
+                    // make the sheet overlap a bit with the image to look continuous
+                    Spacer(Modifier.height(8.dp))
+
+                    LocationSpeciesLikeBar(
+                        location = uiState.location,
+                        species = uiState.animalSpecies,
+                        likedByCurrentUser = uiState.likedByCurrentUser,
+                        likesCount = uiState.likesCount,
+                        onLike = { postDetailsScreenViewModel.addLike() },
+                        onUnlike = { postDetailsScreenViewModel.removeLike() },
+                    )
+
+                    // INFO BAR
+                    PostInfoBar(
+                        authorId = uiState.authorId,
+                        authorProfilePictureURL = uiState.authorProfilePictureURL,
+                        authorUserName = uiState.authorUsername,
+                        animalName = uiState.animalName,
+                        date = uiState.date,
+                        onProfile = onProfile,
+                    )
+
+                    // DESCRIPTION – clean card with subtle border
+                    if (uiState.description.isNotBlank()) {
+                      Card(
+                          modifier =
+                              Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                          shape = RoundedCornerShape(32.dp),
+                          colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+                          border = BorderStroke(1.dp, colorScheme.tertiary),
+                          elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                      ) {
+                        Text(
+                            text = uiState.description,
+                            color = colorScheme.onBackground,
+                            modifier = Modifier.padding(14.dp),
+                            style = typography.bodyMedium,
+                        )
+                      }
+                    }
+                    // COMMENTS HEADER
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                      Text(
+                          text =
+                              if (uiState.commentsUI.size == 1) "1 Comment"
+                              else "${uiState.commentsUI.size} Comments",
+                          style = typography.titleSmall,
+                          color = colorScheme.onBackground,
+                      )
+                    }
+                  }
                 }
               }
-              // COMMENTS HEADER
-              Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text(
-                    text =
-                        if (uiState.commentsUI.size == 1) "1 Comment"
-                        else "${uiState.commentsUI.size} Comments",
-                    style = typography.titleSmall,
-                    color = colorScheme.onBackground,
-                )
+
+              // COMMENTS LIST – full-width, airy rows
+              items(uiState.commentsUI) { commentUI ->
+                Comment(commentUI = commentUI, onProfile = onProfile)
               }
+
+              // Spacer so the last comment clears the bottom input
+              item { Spacer(Modifier.height(96.dp)) }
             }
           }
         }
-
-        // COMMENTS LIST – full-width, airy rows
-        itemsIndexed(uiState.commentsUI) { idx, commentUI ->
-          Comment(commentUI = commentUI, onProfile = onProfile)
-        }
-
-        // Spacer so the last comment clears the bottom input
-        item { Spacer(Modifier.height(96.dp)) }
       }
     }
   }

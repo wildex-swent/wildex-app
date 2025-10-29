@@ -1,6 +1,7 @@
 package com.android.wildex.ui.post
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -19,9 +20,12 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -288,5 +292,58 @@ class PostDetailsScreenTest {
         .onNodeWithTag(testTagForProfilePicture("currentUserId-1", "comment_input"))
         .performClick()
     Assert.assertEquals("currentUserId-1", profileClicked)
+  }
+
+  @Test
+  fun loadingScreen_showsWhileFetchingPosts() {
+    val fetchSignal = CompletableDeferred<Unit>()
+    val delayedPostsRepo =
+        object : LocalRepositories.PostsRepositoryImpl() {
+          override suspend fun getPost(postId: Id): Post {
+            fetchSignal.await()
+            return super.getPost(postId)
+          }
+        }
+    runBlocking {
+      delayedPostsRepo.addPost(
+          Post(
+              postId = "post1",
+              authorId = "poster1",
+              pictureURL = "",
+              location = Location(0.0, 0.0, ""),
+              description = "",
+              date = Timestamp.now(),
+              animalId = "",
+              likesCount = 0,
+              commentsCount = 0,
+          ))
+      val vm =
+          PostDetailsScreenViewModel(
+              delayedPostsRepo,
+              LocalRepositories.userRepository,
+              LocalRepositories.commentRepository,
+              LocalRepositories.likeRepository,
+              "currentUserId-1",
+          )
+      composeRule.setContent { PostDetailsScreen("post1", vm) }
+      composeRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsDisplayed()
+      fetchSignal.complete(Unit)
+      composeRule.waitForIdle()
+      composeRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsNotDisplayed()
+    }
+  }
+
+  @Test
+  fun failScreenShown_whenPostLookupFails() {
+    composeRule.setContent { PostDetailsScreen("bad", postDetailsViewModel) }
+    composeRule.waitForIdle()
+
+    composeRule
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

@@ -17,7 +17,7 @@ interface ClearableRepository {
 
 object LocalRepositories {
 
-  class PostsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class PostsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       PostsRepository, ClearableRepository {
     val listOfPosts = mutableListOf<Post>()
 
@@ -55,7 +55,7 @@ object LocalRepositories {
     }
   }
 
-  class LikeRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class LikeRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       LikeRepository, ClearableRepository {
     val listOfLikes = mutableListOf<Like>()
 
@@ -82,12 +82,16 @@ object LocalRepositories {
       listOfLikes.removeIf { it.likeId == likeId }
     }
 
+    override suspend fun getAllLikesByUser(userId: Id): List<Like> {
+      return listOfLikes.filter { it.userId == userId }
+    }
+
     override fun clear() {
       listOfLikes.clear()
     }
   }
 
-  class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       UserRepository, ClearableRepository {
     val listOfUsers = mutableListOf<User>()
 
@@ -126,7 +130,7 @@ object LocalRepositories {
     }
   }
 
-  class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+  open class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       CommentRepository, ClearableRepository {
     val listOfComments = mutableListOf<Comment>()
 
@@ -151,6 +155,9 @@ object LocalRepositories {
     override suspend fun deleteComment(commentId: String) {
       listOfComments.removeIf { it.commentId == commentId }
     }
+
+    override suspend fun getCommentsByUser(userId: String): List<Comment> =
+        listOfComments.filter { it.authorId == userId }
 
     override fun clear() {
       listOfComments.clear()

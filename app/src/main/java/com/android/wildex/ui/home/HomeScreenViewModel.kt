@@ -6,7 +6,6 @@ package com.android.wildex.ui.home
  * Provides data and state management for the Wildex Home Screen. Fetches posts, user information,
  * and manages like interactions.
  */
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -30,10 +29,16 @@ import kotlinx.coroutines.launch
  *
  * @property postStates List of post states currently displayed on screen.
  * @property currentUser The currently authenticated user.
+ * @property isLoading Indicates whether the screen is currently refreshing data.
+ * @property errorMsg Optional error message to display if refresh fails.
  */
 data class HomeUIState(
     val postStates: List<PostState> = emptyList(),
     val currentUser: SimpleUser = defaultUser,
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val errorMsg: String? = null,
+    val isError: Boolean = false,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -41,9 +46,7 @@ val defaultUser: SimpleUser =
     SimpleUser(
         userId = "defaultUserId",
         username = "defaultUsername",
-        profilePictureURL =
-            "https://cdn.expertphotography.com/wp-content/uploads/2020/08/" +
-                "social-media-profile-photos.jpg",
+        profilePictureURL = "",
     )
 
 /** Default placeholder animal used when no valid animal is associated with a post. */
@@ -104,20 +107,38 @@ class HomeScreenViewModel(
   val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
   /**
-   * Refreshes the UI state by fetching posts and the current user. Updates [_uiState] with new
-   * values.
+   * Loads the UI state by fetching posts and the current user. Updates [_uiState] with new values.
+   *
+   * Also manages [HomeUIState.isLoading], [HomeUIState.isRefreshing], [HomeUIState.isError] and
+   * [HomeUIState.errorMsg] to allow UI feedback.
    */
-  fun refreshUIState() {
-    viewModelScope.launch {
-      try {
-        val postStates = fetchPosts()
-        val user = fetchUser()
-        _uiState.value = HomeUIState(currentUser = user, postStates = postStates)
-        Log.d("HomeScreenViewModel", "UI state refreshed with ${postStates.size} posts.")
-      } catch (e: Exception) {
-        Log.e("HomeScreenViewModel", "Error refreshing UI state", e)
-      }
+  private suspend fun updateUIState() {
+    try {
+      val postStates = fetchPosts()
+      val user = userRepository.getSimpleUser(currentUserId)
+      _uiState.value =
+          _uiState.value.copy(
+              currentUser = user,
+              postStates = postStates,
+              isRefreshing = false,
+              isLoading = false,
+              errorMsg = null,
+              isError = false,
+          )
+    } catch (e: Exception) {
+      setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+      _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
     }
+  }
+
+  fun loadUIState() {
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState() }
+  }
+
+  fun refreshUIState() {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState() }
   }
 
   /**
@@ -130,14 +151,6 @@ class HomeScreenViewModel(
             isLiked = likeRepository.getLikeForPost(post.postId) != null,
             author = userRepository.getSimpleUser(post.authorId),
         )
-      }
-
-  /** Fetches the current authenticated user’s information. */
-  private suspend fun fetchUser(): SimpleUser =
-      try {
-        userRepository.getSimpleUser(currentUserId)
-      } catch (_: Exception) {
-        defaultUser
       }
 
   /**
@@ -162,5 +175,15 @@ class HomeScreenViewModel(
         likeRepository.addLike(newLike)
       }
     }
+  }
+
+  /** Clears any existing error message from the UI state. */
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+
+  /** Sets a new error message in the UI state. */
+  private fun setErrorMsg(msg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 }

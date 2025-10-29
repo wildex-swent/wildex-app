@@ -1,6 +1,7 @@
 package com.android.wildex.model.social
 
 import android.util.Log
+import com.android.wildex.model.utils.Id
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,20 +20,17 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
     val currentUserId =
         Firebase.auth.currentUser?.uid
             ?: throw Exception("LikeRepositoryFirestore: User not logged in.")
-    val collection =
-        db.collection(LIKE_COLLECTION_PATH).whereEqualTo("userId", currentUserId).get().await()
-    val docs = collection.documents
-    return docs.mapNotNull { convertToLike(it) }
+    return getAllLikesByUser(currentUserId)
   }
 
-  override suspend fun getLikesForPost(postId: String): List<Like> {
+  override suspend fun getLikesForPost(postId: Id): List<Like> {
     val collection =
         db.collection(LIKE_COLLECTION_PATH).whereEqualTo("postId", postId).get().await()
     val docs = collection.documents
     return docs.mapNotNull { convertToLike(it) }
   }
 
-  override suspend fun getLikeForPost(postId: String): Like? {
+  override suspend fun getLikeForPost(postId: Id): Like? {
     val currentUserId =
         Firebase.auth.currentUser?.uid
             ?: throw Exception("LikeRepositoryFirestore: User not logged in.")
@@ -55,7 +53,7 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
     docRef.set(like).await()
   }
 
-  override suspend fun deleteLike(likeId: String) {
+  override suspend fun deleteLike(likeId: Id) {
     val docRef = db.collection(LIKE_COLLECTION_PATH).document(likeId)
     val doc = docRef.get().await()
 
@@ -64,6 +62,13 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
     }
 
     docRef.delete().await()
+  }
+
+  override suspend fun getAllLikesByUser(userId: Id): List<Like> {
+    val collection =
+        db.collection(LIKE_COLLECTION_PATH).whereEqualTo("userId", userId).get().await()
+    val docs = collection.documents
+    return docs.mapNotNull { convertToLike(it) }
   }
 
   private fun convertToLike(doc: DocumentSnapshot): Like? {

@@ -8,7 +8,9 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,13 +18,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private val emptyUser = User("", "", "", "", "", "", UserType.REGULAR, Timestamp(0, 0), "", 0)
+
 data class ProfileUIState(
-    val user: User? = null,
+    val user: User = emptyUser,
     val isUserOwner: Boolean = false,
     val achievements: List<Achievement> = emptyList(),
     val animalCount: Int = 17,
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
+    val isError: Boolean = false,
 )
 
 class ProfileScreenViewModel(
@@ -35,41 +41,46 @@ class ProfileScreenViewModel(
   private val _uiState = MutableStateFlow(ProfileUIState())
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
 
-  fun refreshUIState(userId: String) {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+  fun refreshUIState(userId: Id) {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null)
+    viewModelScope.launch { updateUIState(userId) }
+  }
 
-      if (userId.isBlank()) {
-        setErrorMsg("Empty user id")
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                user = null,
-                isUserOwner = false,
-            )
-        return@launch
-      }
+  fun loadUIState(userId: Id) {
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+    viewModelScope.launch { updateUIState(userId) }
+  }
 
-      try {
-        val user = userRepository.getUser(userId)
-        val achievements = fetchAchievements(userId)
-        _uiState.value =
-            _uiState.value.copy(
-                user = user,
-                isUserOwner = (currentUserId != null && user?.userId == currentUserId),
-                achievements = achievements,
-                isLoading = false,
-                errorMsg = _uiState.value.errorMsg,
-            )
-      } catch (e: Exception) {
-        Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
-        setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
-        _uiState.value =
-            _uiState.value.copy(
-                user = null,
-                isLoading = false,
-            )
-      }
+  private suspend fun updateUIState(userId: Id) {
+    if (userId.isBlank()) {
+      setErrorMsg("Empty user id")
+      _uiState.value =
+          _uiState.value.copy(
+              isLoading = false,
+              isRefreshing = false,
+              isUserOwner = false,
+              isError = true,
+          )
+      return
+    }
+
+    try {
+      val user = userRepository.getUser(userId)
+      val achievements = fetchAchievements(userId)
+      _uiState.value =
+          _uiState.value.copy(
+              user = user,
+              isUserOwner = (currentUserId != null && user.userId == currentUserId),
+              achievements = achievements,
+              isLoading = false,
+              isRefreshing = false,
+              errorMsg = _uiState.value.errorMsg,
+              isError = false,
+          )
+    } catch (e: Exception) {
+      Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
+      setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
+      _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
     }
   }
 

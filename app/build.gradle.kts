@@ -223,17 +223,22 @@ dependencies {
   androidTestImplementation(libs.mockk.agent)
   androidTestImplementation(libs.mockito.android)
   androidTestImplementation(libs.mockito.kotlin)
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
   // Coil for image loading
-  implementation("io.coil-kt:coil:2.6.0")
-  implementation("io.coil-kt:coil-compose:2.6.0")
-  testImplementation("io.coil-kt:coil:2.6.0")
-  testImplementation("io.coil-kt:coil-compose:2.6.0")
+  implementation(libs.coil)
+  implementation(libs.coil.compose)
 
-  androidTestImplementation("io.coil-kt:coil:2.6.0")
-  androidTestImplementation("io.coil-kt:coil-compose:2.6.0")
+  // Tests
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.coil)
+  testImplementation(libs.coil.compose)
+
+  androidTestImplementation(libs.coil)
+  androidTestImplementation(libs.coil.compose)
+
+ // Compose Material Icons
   implementation(libs.compose.material.icons)
+
 }
 
 tasks.withType<Test> {

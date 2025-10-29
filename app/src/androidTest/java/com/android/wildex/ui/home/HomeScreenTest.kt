@@ -15,8 +15,10 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -258,6 +260,22 @@ class HomeScreenTest {
   }
 
   @Test
+  fun failScreenShown_whenAuthorLookupFails() {
+    val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
+    runBlocking { postRepository.addPost(badPost) }
+
+    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.NO_POSTS, useUnmergedTree = true)
+        .assertIsNotDisplayed()
+  }
+
+  @Test
   fun likeAndCommentCountsAreDisplayedCorrectly() {
     val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
     val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)
@@ -296,6 +314,37 @@ class HomeScreenTest {
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1 comment"))
+  }
+
+  @Test
+  fun loadingScreen_showsWhileFetchingPosts() {
+    val fetchSignal = CompletableDeferred<Unit>()
+    val delayedPostsRepo =
+        object : LocalRepositories.PostsRepositoryImpl() {
+          override suspend fun getAllPosts(): List<Post> {
+            fetchSignal.await()
+            return super.getAllPosts()
+          }
+        }
+    runBlocking {
+      val vm =
+          HomeScreenViewModel(
+              delayedPostsRepo,
+              LocalRepositories.userRepository,
+              LocalRepositories.likeRepository,
+              "currentUserId-1",
+          )
+      vm.loadUIState()
+      composeTestRule.setContent { HomeScreen(vm) }
+      composeTestRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsDisplayed()
+      fetchSignal.complete(Unit)
+      composeTestRule.waitForIdle()
+      composeTestRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsNotDisplayed()
+    }
   }
 
   private fun scrollToPost(postId: String) {

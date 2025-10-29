@@ -76,9 +76,7 @@ fun ProfileAchievements(
         shape = RoundedCornerShape(14.dp),
     ) {
       Column(
-          modifier =
-              Modifier.border(1.dp, cs.background, shape = RoundedCornerShape(14.dp))
-                  .padding(12.dp),
+          modifier = Modifier.padding(12.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         if (ownerProfile) {

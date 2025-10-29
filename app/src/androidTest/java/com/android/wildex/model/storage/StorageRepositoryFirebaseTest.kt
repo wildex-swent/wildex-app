@@ -24,7 +24,7 @@ class StorageRepositoryFirebaseTest {
 
   @Before
   fun setUp() {
-    assert(!FirebaseEmulator.isRunning) {
+    assert(FirebaseEmulator.isRunning) {
       "Firebase Emulator must be running to execute these tests."
     }
 

@@ -169,8 +169,8 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
 
   // ------------------- Mapbox SDK -------------------
-  implementation("com.mapbox.maps:android-ndk27:11.15.2")
-  implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
+  implementation(libs.mapbox.android)
+  implementation(libs.mapbox.compose)
 
   // ------------- Jetpack Compose ------------------
   val composeBom = platform(libs.compose.bom)

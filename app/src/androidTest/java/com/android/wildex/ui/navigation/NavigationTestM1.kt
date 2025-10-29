@@ -9,9 +9,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
+import com.android.wildex.BuildConfig
 import com.android.wildex.WildexApp
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FirebaseEmulator
+import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -33,6 +35,7 @@ class NavigationTestM1 {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
     }
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     composeRule.setContent {
       navController =
           TestNavHostController(LocalContext.current).apply {

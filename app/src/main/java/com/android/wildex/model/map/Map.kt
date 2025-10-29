@@ -25,20 +25,18 @@ sealed class MapPin {
       override val authorId: Id,
       override val location: Location,
       override val imageURL: URL,
-  ) : MapPin() {
-    override val kind = PinKind.POST
-  }
+      override val kind: PinKind = PinKind.POST
+  ) : MapPin()
 
   data class ReportPin(
       override val id: Id,
       override val authorId: Id,
       override val location: Location,
       override val imageURL: URL,
+      override val kind: PinKind = PinKind.REPORT,
       val status: ReportStatus,
-      val assigneeId: Id?
-  ) : MapPin() {
-    override val kind = PinKind.REPORT
-  }
+      val assigneeId: Id?,
+  ) : MapPin()
 }
 
 sealed interface PinDetails {

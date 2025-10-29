@@ -8,7 +8,6 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,9 +24,8 @@ class StorageRepositoryFirebaseTest {
 
   @Before
   fun setUp() {
-    if (!FirebaseEmulator.isRunning) {
-      throw IllegalStateException(
-          "Firebase Emulator must be running to execute these tests. Run 'firebase emulators:start' first.")
+    assert(!FirebaseEmulator.isRunning) {
+      "Firebase Emulator must be running to execute these tests."
     }
 
     storageRepository = StorageRepositoryFirebase(FirebaseEmulator.storage)
@@ -36,7 +34,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @After
-  fun tearDown() = runTest {
+  fun tearDown() {
     // Optional: clean up cache
     val file =
         File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "test_image.jpg")
@@ -54,13 +52,13 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runTest {
+  fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runBlocking {
     val defaultRepository = StorageRepositoryFirebase()
     assertNotNull("Repository should be created with default constructor", defaultRepository)
   }
 
   @Test
-  fun uploadUserProfilePicture_returnsDownloadUrl_whenUploadSucceeds() = runTest {
+  fun uploadUserProfilePicture_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
     val userId = "user123"
     try {
       val result = storageRepository.uploadUserProfilePicture(userId, testImageUri)
@@ -73,7 +71,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadUserProfilePicture_createsFileAtCorrectPath() = runTest {
+  fun uploadUserProfilePicture_createsFileAtCorrectPath() = runBlocking {
     val userId = "testUser456"
     try {
       val url = storageRepository.uploadUserProfilePicture(userId, testImageUri)
@@ -89,7 +87,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadPostImage_returnsDownloadUrl_whenUploadSucceeds() = runTest {
+  fun uploadPostImage_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
     val postId = "post789"
     try {
       val result = storageRepository.uploadPostImage(postId, testImageUri)
@@ -103,7 +101,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadPostImage_createsFileAtCorrectPath() = runTest {
+  fun uploadPostImage_createsFileAtCorrectPath() = runBlocking {
     val postId = "testPost123"
     try {
       val url = storageRepository.uploadPostImage(postId, testImageUri)
@@ -120,7 +118,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadAnimalPicture_returnsDownloadUrl_whenUploadSucceeds() = runTest {
+  fun uploadAnimalPicture_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
     val animalId = "animal123"
 
     try {
@@ -137,7 +135,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadAnimalPicture_createsFileAtCorrectPath() = runTest {
+  fun uploadAnimalPicture_createsFileAtCorrectPath() = runBlocking {
     val animalId = "testAnimal789"
 
     try {
@@ -157,7 +155,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadMultipleUserProfilePictures_eachReturnsUniqueUrl() = runTest {
+  fun uploadMultipleUserProfilePictures_eachReturnsUniqueUrl() = runBlocking {
     val userId1 = "user001"
     val userId2 = "user002"
     val userId3 = "user003"
@@ -185,7 +183,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadUserProfilePicture_overwritesExistingImage() = runTest {
+  fun uploadUserProfilePicture_overwritesExistingImage() = runBlocking {
     val userId = "userOverwrite"
 
     try {
@@ -209,7 +207,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteUserProfilePicture_succeeds_afterUpload() = runTest {
+  fun deleteUserProfilePicture_succeeds_afterUpload() = runBlocking {
     val userId = "userToDelete"
 
     try {
@@ -224,7 +222,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deletePostImage_succeeds_afterUpload() = runTest {
+  fun deletePostImage_succeeds_afterUpload() = runBlocking {
     val postId = "postToDelete"
 
     try {
@@ -239,7 +237,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteAnimalPicture_succeeds_afterUpload() = runTest {
+  fun deleteAnimalPicture_succeeds_afterUpload() = runBlocking {
     val animalId = "animalToDelete"
 
     try {
@@ -256,7 +254,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadUserProfilePicture_returnsNull_whenInvalidUriProvided() = runTest {
+  fun uploadUserProfilePicture_returnsNull_whenInvalidUriProvided() = runBlocking {
     val userId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
 
@@ -270,7 +268,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadPostImage_returnsNull_whenInvalidUriProvided() = runTest {
+  fun uploadPostImage_returnsNull_whenInvalidUriProvided() = runBlocking {
     val postId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
 
@@ -284,7 +282,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadAnimalPicture_returnsNull_whenInvalidUriProvided() = runTest {
+  fun uploadAnimalPicture_returnsNull_whenInvalidUriProvided() = runBlocking {
     val animalId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
 
@@ -300,7 +298,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteUserProfilePicture_catchesException_whenFileDoesNotExist() = runTest {
+  fun deleteUserProfilePicture_catchesException_whenFileDoesNotExist() = runBlocking {
     val userId = "nonExistentUserDelete"
 
     try {
@@ -318,7 +316,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deletePostImage_catchesException_whenFileDoesNotExist() = runTest {
+  fun deletePostImage_catchesException_whenFileDoesNotExist() = runBlocking {
     val postId = "nonExistentPostDelete"
 
     try {
@@ -336,7 +334,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteAnimalPicture_catchesException_whenFileDoesNotExist() = runTest {
+  fun deleteAnimalPicture_catchesException_whenFileDoesNotExist() = runBlocking {
     val animalId = "nonExistentAnimalDelete"
 
     try {

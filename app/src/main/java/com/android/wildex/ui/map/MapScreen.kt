@@ -1,8 +1,6 @@
 package com.android.wildex.ui.map
 
 import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -34,6 +34,7 @@ object MapScreenTestTags {
   const val MAP = "MapScreen"
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
     bottomBar: @Composable () -> Unit,
@@ -52,18 +53,15 @@ fun MapScreen(
   // LaunchedEffect(currentUserId) { viewModel.loadUIState() }
 
   // Ask location permission, then notify VM
-  val permissionLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res
-        ->
-        val granted =
-            res[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                res[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        viewModel.onLocationPermissionResult(granted)
-      }
-  LaunchedEffect(Unit) {
-    permissionLauncher.launch(
-        arrayOf(
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+  val locationPermissions =
+      rememberMultiplePermissionsState(
+          listOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+
+  LaunchedEffect(Unit) { locationPermissions.launchMultiplePermissionRequest() }
+
+  LaunchedEffect(locationPermissions.allPermissionsGranted) {
+    viewModel.onLocationPermissionResult(locationPermissions.allPermissionsGranted)
   }
 
   // Map reference + latest position from the puck

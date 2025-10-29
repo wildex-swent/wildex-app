@@ -246,6 +246,10 @@ dependencies {
  // Compose Material Icons
   implementation(libs.compose.material.icons)
 
+  // Accompanist
+  implementation(libs.accompanist)
+
+
 }
 
 tasks.withType<Test> {

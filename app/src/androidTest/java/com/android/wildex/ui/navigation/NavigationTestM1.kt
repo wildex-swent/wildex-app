@@ -1,11 +1,12 @@
 package com.android.wildex.ui.navigation
 
 import android.Manifest
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
@@ -28,7 +29,7 @@ import org.junit.Test
 
 class NavigationTestM1 {
 
-  @get:Rule val composeRule = createComposeRule()
+  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
   private lateinit var navController: TestNavHostController
 
@@ -50,7 +51,10 @@ class NavigationTestM1 {
   @get:Rule
   val permissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
-          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+          Manifest.permission.ACCESS_FINE_LOCATION,
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.CAMERA,
+      )
 
   @After
   fun teardown() {

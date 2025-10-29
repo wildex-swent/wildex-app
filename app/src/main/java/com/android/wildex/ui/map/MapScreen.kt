@@ -20,8 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.android.wildex.model.utils.Id
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -39,16 +38,18 @@ object MapScreenTestTags {
 fun MapScreen(
     bottomBar: @Composable () -> Unit,
     viewModel: MapViewModel = viewModel(),
+    onPost: (Id) -> Unit = {},
+    onReport: (Id) -> Unit = {},
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val render by viewModel.renderState.collectAsState()
-  val currentUserId = Firebase.auth.uid!!
+
   val isDark = isSystemInDarkTheme()
   val context = LocalContext.current
   val style = context.getString(R.string.map_style)
   val standardImportId = context.getString(R.string.map_standard_import)
 
-  // LaunchedEffect(currentUserId) { viewModel.loadUIState(currentUserId) }
+  // LaunchedEffect(currentUserId) { viewModel.loadUIState() }
 
   // Ask location permission, then notify VM
   val permissionLauncher =

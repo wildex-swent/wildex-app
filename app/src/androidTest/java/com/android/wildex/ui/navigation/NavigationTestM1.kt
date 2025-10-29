@@ -1,5 +1,6 @@
 package com.android.wildex.ui.navigation
 
+import android.Manifest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
+import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
 import com.android.wildex.WildexApp
 import com.android.wildex.ui.theme.WildexTheme
@@ -44,6 +46,11 @@ class NavigationTestM1 {
       WildexTheme { WildexApp(context = LocalContext.current, navController = navController) }
     }
   }
+
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   @After
   fun teardown() {

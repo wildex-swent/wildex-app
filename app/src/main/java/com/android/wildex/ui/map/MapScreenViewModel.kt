@@ -9,6 +9,8 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +40,7 @@ data class MapRenderState(
 )
 
 class MapViewModel(
+    private val currentUserId: Id = Firebase.auth.uid!!,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
@@ -49,21 +52,21 @@ class MapViewModel(
   private val _renderState = MutableStateFlow(MapRenderState())
   val renderState: StateFlow<MapRenderState> = _renderState.asStateFlow()
 
-  fun loadUIState(currentUserId: Id) {
+  fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, selected = null)
-    viewModelScope.launch { updateUIState(currentUserId) }
+    viewModelScope.launch { updateUIState() }
   }
 
-  fun refreshUIState(currentUserId: Id) {
+  fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null)
-    viewModelScope.launch { updateUIState(currentUserId) }
+    viewModelScope.launch { updateUIState() }
   }
 
-  private suspend fun updateUIState(currentUserId: Id) {
+  private suspend fun updateUIState() {
     // TODO: implement
   }
 
-  fun onTabSelected(tab: MapTab, currentUserId: Id) {
+  fun onTabSelected(tab: MapTab) {
     // TODO: implement
   }
 
@@ -88,8 +91,6 @@ class MapViewModel(
     // TODO when ReportsRepository exists
     return emptyList()
   }
-
-  // render intents the Composable will apply
 
   /** Call from UI when Android permission dialog resolves. */
   fun onLocationPermissionResult(granted: Boolean) {

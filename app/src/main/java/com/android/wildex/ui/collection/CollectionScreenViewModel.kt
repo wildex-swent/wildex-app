@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,12 @@ data class CollectionUIState(
     val isRefreshing: Boolean = false
 )
 
-data class AnimalState(val animal: Animal = defaultAnimal, val isUnlocked: Boolean = false)
+data class AnimalState(
+    val animalId: Id = "defaultAnimalId",
+    val pictureURL: URL = "",
+    val name: String = "Default Animal",
+    val isUnlocked: Boolean = false
+)
 
 class CollectionScreenViewModel(
     // private val userAnimalsRepository : UserAnimalsRepository =

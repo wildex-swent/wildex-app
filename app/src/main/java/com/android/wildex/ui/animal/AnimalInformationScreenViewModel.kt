@@ -18,7 +18,6 @@ data class AnimalInformationUIState(
     val description: String = "",
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
     val isError: Boolean = false,
 )
 

@@ -15,7 +15,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
  * @property isError Indicates whether there was an error during loading.
  * @property isRefreshing Indicates whether a refresh operation is in progress.
  */
-data class AchievementUIState(
+data class AchievementsUIState(
     val unlocked: List<Achievement> = emptyList(),
     val locked: List<Achievement> = emptyList(),
     val isLoading: Boolean = false,

@@ -69,6 +69,7 @@ fun SelectionBottomCard(
               ui = ui,
               onPost = onPost,
               onToggleLike = onToggleLike,
+              activeTab = activeTab,
           )
         }
         is PinDetails.ReportDetails -> {
@@ -88,6 +89,7 @@ private fun PostSelectionCard(
     ui: MapUiColors,
     onPost: (Id) -> Unit,
     onToggleLike: (Id) -> Unit,
+    activeTab: MapTab = MapTab.Posts,
 ) {
   Row(
       Modifier.padding(start = 12.dp, top = 10.dp, end = 10.dp, bottom = 10.dp),
@@ -124,7 +126,10 @@ private fun PostSelectionCard(
         )
 
         Text(
-            text = "${details.author?.username ?: "Someone"} saw an animal",
+            text =
+                if (activeTab == MapTab.MyPosts) "You saw ${articleWithWord(details.animalName)}"
+                else
+                    "${details.author?.username ?: "Someone"} saw ${articleWithWord(details.animalName)}",
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -324,4 +329,11 @@ private fun ReportSelectionCard(
       }
     }
   }
+}
+
+fun articleWithWord(word: String): String {
+  if (word.isBlank()) return "a"
+  val first = word.trim().first().lowercaseChar()
+  val article = if (first in listOf('a', 'e', 'i', 'o', 'u')) "an" else "a"
+  return "$article $word"
 }

@@ -37,7 +37,6 @@ fun MapTabBar(
 ) {
   if (tabs.isEmpty()) return
 
-  val cs = MaterialTheme.colorScheme
   val ty = MaterialTheme.typography
   val density = LocalDensity.current
   val measurer = rememberTextMeasurer()

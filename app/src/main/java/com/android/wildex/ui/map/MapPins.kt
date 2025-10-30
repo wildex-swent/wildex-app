@@ -1,74 +1,57 @@
 package com.android.wildex.ui.map
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Rect
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.WorkerThread
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withClip
 import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.android.wildex.R
 import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.utils.Id
 import com.google.gson.JsonPrimitive
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
 import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.OnPointAnnotationClickListener
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
-import kotlin.collections.forEach
-import kotlin.collections.set
-import kotlinx.coroutines.launch
+import com.mapbox.maps.plugin.annotation.generated.*
 
 @Composable
 fun PinsOverlay(
     modifier: Modifier,
     mapView: MapView?,
     pins: List<MapPin>,
+    currentTab: MapTab,
+    selectedId: Id?,
     onPinClick: (Id) -> Unit,
 ) {
   val ctx = LocalContext.current
+  val cs = MaterialTheme.colorScheme
+  val ui = colorsForMapTab(currentTab, cs)
+  val fallbackUrl = ctx.getString(R.string.fallback_url)
 
-  // fallback URL for any missing/failed photos
-  val fallbackUrl =
-      "https://media.istockphoto.com/id/1223671392/vector/default-profile-picture-avatar-photo-placeholder-vector-illustration.jpg?s=612x612&w=0&k=20&c=s0aTdmT5aU6b8ot7VKm11DeID6NctRCpB755rA1BIP0="
-
-  // caches
-  val iconCache = remember { mutableStateMapOf<String, Bitmap>() } // url -> bitmap (circular)
-  val annotationById = remember {
-    mutableStateMapOf<Id, com.mapbox.maps.plugin.annotation.generated.PointAnnotation>()
-  }
-
+  val annotationById = remember { mutableStateMapOf<Id, PointAnnotation>() }
   var manager by remember(mapView) { mutableStateOf<PointAnnotationManager?>(null) }
+  var previousSelectedId by remember { mutableStateOf<Id?>(null) }
 
-  // lifecycle: create / dispose annotation manager
+  // Create and dispose annotation manager
   DisposableEffect(mapView) {
     if (mapView != null) {
       manager =
           mapView.annotations.createPointAnnotationManager().apply {
-            addClickListener(
-                OnPointAnnotationClickListener { annotation ->
-                  annotation.getData()?.asString?.let(onPinClick)
-                  true
-                })
+            addClickListener { annotation ->
+              annotation.getData()?.asString?.let(onPinClick)
+              true
+            }
           }
     }
     onDispose {
@@ -80,7 +63,8 @@ fun PinsOverlay(
     }
   }
 
-  LaunchedEffect(manager, pins) {
+  // Create or update annotations
+  LaunchedEffect(manager, pins, currentTab) {
     val mgr = manager ?: return@LaunchedEffect
 
     val currentIds = pins.map { it.id }.toSet()
@@ -88,91 +72,134 @@ fun PinsOverlay(
     toRemove.forEach { id -> annotationById.remove(id)?.let { runCatching { mgr.delete(it) } } }
 
     pins.forEach { pin ->
-      // 1) get or create fallback circular bitmap (cache by fallbackUrl)
-      val fallback =
-          iconCache.getOrPut(fallbackUrl) {
-            val bmp = fetchBitmapViaCoil(ctx, fallbackUrl)
-            makeCircularBitmap(bmp) // returns non-null circular 128x128 or a generated circle
+      val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+      val bmp = fetchBitmapViaCoil(ctx, targetUrl)
+      if (bmp == null) return@forEach
+
+      // 👇 determine color intensity based on pin type
+      val borderColor =
+          when (pin) {
+            is MapPin.ReportPin ->
+                if (pin.assigneeId != null)
+                    ui.bg.copy(alpha = 0.4f).toArgb() // duller tone for assigned reports
+                else ui.bg.toArgb() // normal color for unassigned
+            else -> ui.bg.toArgb() // regular posts
           }
 
-      // 2) if annotation missing, create it immediately with fallback
+      val icon =
+          makeRoundPin(
+              src = bmp,
+              borderColor = borderColor,
+              scale = if (pin.id == selectedId) 1.25f else 1.0f)
+
       val existing = annotationById[pin.id]
       if (existing == null) {
         val pt = Point.fromLngLat(pin.location.longitude, pin.location.latitude)
-        val opts =
-            PointAnnotationOptions()
-                .withPoint(pt)
-                .withIconImage(fallback)
-                .withData(JsonPrimitive(pin.id))
-        val created = mgr.create(opts)
+        val created =
+            mgr.create(
+                PointAnnotationOptions()
+                    .withPoint(pt)
+                    .withIconImage(icon)
+                    .withData(JsonPrimitive(pin.id)))
         annotationById[pin.id] = created
-      }
-
-      // 3) fetch/upgrade to real photo (circular); skip if already cached
-      val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
-      val cached = iconCache[targetUrl]
-      if (cached != null) {
-        // update annotation icon if it’s still using the fallback
-        val ann = annotationById[pin.id]
-        if (ann != null && ann.iconImageBitmap != cached) {
-          ann.iconImageBitmap = cached
-          runCatching { mgr.update(ann) }
-        }
       } else {
-        // load asynchronously, then cache + update
-        launch {
-          val raw = fetchBitmapViaCoil(ctx, targetUrl)
-          val rounded = makeCircularBitmap(raw)
-          iconCache[targetUrl] = rounded
-          val ann = annotationById[pin.id]
-          if (ann != null) {
-            ann.iconImageBitmap = rounded
-            runCatching { mgr.update(ann) }
-          }
-        }
+        existing.iconImageBitmap = icon
+        runCatching { mgr.update(existing) }
       }
     }
+  }
+
+  // Animate size change when selecting/deselecting pins
+  LaunchedEffect(selectedId) {
+    val mgr = manager ?: return@LaunchedEffect
+
+    // Shrink old
+    previousSelectedId?.let { oldId ->
+      val ann = annotationById[oldId] ?: return@let
+      val pin = pins.firstOrNull { it.id == oldId } ?: return@let
+      val bmp = fetchBitmapViaCoil(ctx, pin.imageURL.ifBlank { fallbackUrl }) ?: return@let
+      ann.iconImageBitmap = makeRoundPin(bmp, ui.bg.toArgb(), 1.0f)
+      runCatching { mgr.update(ann) }
+    }
+
+    // Grow new
+    selectedId?.let { newId ->
+      val ann = annotationById[newId] ?: return@let
+      val pin = pins.firstOrNull { it.id == newId } ?: return@let
+      val bmp = fetchBitmapViaCoil(ctx, pin.imageURL.ifBlank { fallbackUrl }) ?: return@let
+      ann.iconImageBitmap = makeRoundPin(bmp, ui.bg.toArgb(), 1.25f)
+      runCatching { mgr.update(ann) }
+    }
+
+    previousSelectedId = selectedId
   }
 
   Box(modifier = modifier)
 }
 
+/** Draws a circular post/author image with a colored ring and stem. */
 @WorkerThread
-private fun makeCircularBitmap(src: Bitmap?): Bitmap {
-  // if null, make a simple colored circle (128x128)
-  val size = 128
-  val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-  val c = Canvas(out)
-  val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+private fun makeRoundPin(src: Bitmap?, borderColor: Int, scale: Float = 1.0f): Bitmap {
+  val baseCircle = 100
+  val padding = 12
+  val barWidth = 10
+  val barHeight = 80
 
-  if (src == null) {
-    paint.color = Color.rgb(200, 200, 200)
-    c.drawCircle(size / 2f, size / 2f, size * 0.5f, paint)
-    return out
+  val circleBox = (baseCircle * scale).toInt()
+  val width = circleBox
+  val height = circleBox + (barHeight * scale).toInt()
+
+  val out = createBitmap(width, height)
+  val c = Canvas(out)
+  val p = Paint(Paint.ANTI_ALIAS_FLAG)
+
+  val cx = width / 2f
+  val cy = circleBox / 2f
+  val imgRadius = (circleBox / 2f) - padding * scale
+  val strokeWidth = 10f * scale
+
+  if (src != null) {
+    val minSide = minOf(src.width, src.height)
+    val srcRect =
+        Rect(
+            (src.width - minSide) / 2,
+            (src.height - minSide) / 2,
+            (src.width + minSide) / 2,
+            (src.height + minSide) / 2,
+        )
+    val dst = RectF(cx - imgRadius, cy - imgRadius, cx + imgRadius, cy + imgRadius)
+    val clip = Path().apply { addCircle(cx, cy, imgRadius, Path.Direction.CW) }
+    c.withClip(clip) { drawBitmap(src, srcRect, dst, null) }
+  } else {
+    p.color = Color.LTGRAY
+    c.drawCircle(cx, cy, imgRadius, p)
   }
 
-  // scale to square
-  val minSide = minOf(src.width, src.height)
-  val srcRect =
-      Rect(
-          (src.width - minSide) / 2,
-          (src.height - minSide) / 2,
-          (src.width + minSide) / 2,
-          (src.height + minSide) / 2,
-      )
-  val dstRect = Rect(0, 0, size, size)
+  val circleBottom = cy + imgRadius
 
-  // draw circle mask
-  val path = Path().apply { addCircle(size / 2f, size / 2f, size / 2f, Path.Direction.CW) }
-  c.save()
-  c.clipPath(path)
-  c.drawBitmap(src, srcRect, dstRect, null)
-  c.restore()
+  // stem
+  p.style = Paint.Style.FILL
+  p.color = borderColor
+  val stickWidth = barWidth * scale
+  val overlap = 3f * scale
+  val barRect =
+      RectF(
+          cx - stickWidth / 2f,
+          circleBottom - overlap,
+          cx + stickWidth / 2f,
+          circleBottom - overlap + barHeight * scale)
+  c.drawRoundRect(barRect, stickWidth / 2f, stickWidth / 2f, p)
+
+  // ring
+  p.style = Paint.Style.STROKE
+  p.color = borderColor
+  p.strokeWidth = strokeWidth
+  c.drawCircle(cx, cy, imgRadius, p)
 
   return out
 }
 
-/* ---------- Image helper (fetch only; no custom drawing) ---------- */
+/** Loads an image using Coil. Coil already caches images in memory and disk. */
 private suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? {
   return try {
     val loader =
@@ -180,18 +207,13 @@ private suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? {
             .diskCachePolicy(CachePolicy.ENABLED)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .build()
-    val req = ImageRequest.Builder(ctx).data(url).allowHardware(false).size(128).build()
+    val req = ImageRequest.Builder(ctx).data(url).allowHardware(false).size(256).build()
     val result = loader.execute(req)
     if (result is SuccessResult) {
       val d = result.drawable
       if (d is BitmapDrawable) d.bitmap
       else {
-        val bmp =
-            Bitmap.createBitmap(
-                maxOf(1, d.intrinsicWidth),
-                maxOf(1, d.intrinsicHeight),
-                Bitmap.Config.ARGB_8888,
-            )
+        val bmp = createBitmap(maxOf(1, d.intrinsicWidth), maxOf(1, d.intrinsicHeight))
         val c = Canvas(bmp)
         d.setBounds(0, 0, c.width, c.height)
         d.draw(c)

@@ -26,7 +26,7 @@ sealed class MapPin {
       override val location: Location,
       override val imageURL: URL,
       override val kind: PinKind = PinKind.POST,
-      val isFriend: Boolean = false
+      val isFriend: Boolean = false,
   ) : MapPin()
 
   data class ReportPin(
@@ -41,8 +41,12 @@ sealed class MapPin {
 }
 
 sealed interface PinDetails {
-  data class PostDetails(val post: Post, val author: SimpleUser?, val likedByMe: Boolean) :
-      PinDetails
+  data class PostDetails(
+      val post: Post,
+      val author: SimpleUser?,
+      val likedByMe: Boolean,
+      val animalName: String = "animal"
+  ) : PinDetails
 
   data class ReportDetails(val report: Report, val author: SimpleUser?, val assignee: SimpleUser?) :
       PinDetails

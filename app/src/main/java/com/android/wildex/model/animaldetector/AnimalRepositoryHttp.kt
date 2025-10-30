@@ -30,7 +30,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
-class AnimalRepositoryHttp(val client: OkHttpClient) : AnimalRepository {
+class AnimalRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository {
   private val adApikey = BuildConfig.ANIMALDETECT_API_KEY
 
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY

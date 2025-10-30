@@ -1,17 +1,22 @@
 package com.android.wildex.ui.navigation
 
+import android.Manifest
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
+import androidx.test.rule.GrantPermissionRule
+import com.android.wildex.BuildConfig
 import com.android.wildex.WildexApp
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FirebaseEmulator
+import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -24,7 +29,7 @@ import org.junit.Test
 
 class NavigationTestM1 {
 
-  @get:Rule val composeRule = createComposeRule()
+  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
   private lateinit var navController: TestNavHostController
 
@@ -33,6 +38,7 @@ class NavigationTestM1 {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
     }
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     composeRule.setContent {
       navController =
           TestNavHostController(LocalContext.current).apply {
@@ -41,6 +47,14 @@ class NavigationTestM1 {
       WildexTheme { WildexApp(context = LocalContext.current, navController = navController) }
     }
   }
+
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION,
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.CAMERA,
+      )
 
   @After
   fun teardown() {

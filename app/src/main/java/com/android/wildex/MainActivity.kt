@@ -36,6 +36,7 @@ import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.FirebaseAuth
+import com.mapbox.common.MapboxOptions
 import okhttp3.OkHttpClient
 
 /** Provide an OkHttpClient client for network requests. */
@@ -46,6 +47,7 @@ object HttpClientProvider {
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
   }
 }

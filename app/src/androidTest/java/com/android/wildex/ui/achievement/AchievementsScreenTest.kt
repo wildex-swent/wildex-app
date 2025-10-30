@@ -170,7 +170,7 @@ class AchievementsScreenTest {
       composeTestRule
           .onNodeWithTag(AchievementsScreenTestTags.LOADING, useUnmergedTree = true)
           .assertIsDisplayed()
-      // The LoadingScreen composable also exposes its own tag; ensure it's present inside
+
       composeTestRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
@@ -185,7 +185,6 @@ class AchievementsScreenTest {
           .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
           .assertExists()
 
-      // Scroll to each unlocked achievement and assert it's present
       unlockedAchievement.forEach { achievement ->
         composeTestRule
             .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
@@ -193,7 +192,6 @@ class AchievementsScreenTest {
         composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
       }
 
-      // Scroll to each locked achievement and assert it's present
       lockedAchievement.forEach { achievement ->
         composeTestRule
             .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
@@ -240,7 +238,6 @@ class AchievementsScreenTest {
           .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
           .assertExists()
 
-      // Scroll to unlocked achievements and assert presence
       unlockedAchievement.forEach { achievement ->
         composeTestRule
             .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
@@ -248,7 +245,6 @@ class AchievementsScreenTest {
         composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
       }
 
-      // Scroll to locked achievements and assert presence
       lockedAchievement.forEach { achievement ->
         composeTestRule
             .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
@@ -280,7 +276,6 @@ class AchievementsScreenTest {
   @Test
   fun achievementOpacity_matchesLockedState() {
     runBlocking {
-      // Arrange: make first three unlocked and rest locked
       fakeRepo.unlocked = unlockedAchievement
       fakeRepo.all = achievements
 
@@ -288,7 +283,6 @@ class AchievementsScreenTest {
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
 
-      // Ensure target items are composed by scrolling their grids
       unlockedAchievement.forEach { achievement ->
         composeTestRule
             .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
@@ -306,7 +300,6 @@ class AchievementsScreenTest {
                   AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)
               .fetchSemanticsNodes()
 
-      // Find unlocked node by achievementId and assert alpha
       val unlockedNode =
           nodes.firstOrNull {
             it.config.getOrNull(AchievementIdKey) == unlockedAchievement[0].achievementId
@@ -314,7 +307,6 @@ class AchievementsScreenTest {
       val unlockedAlpha = unlockedNode.config.getOrNull(AchievementAlphaKey)
       check(unlockedAlpha == 1f) { "Expected unlocked alpha 1f but was $unlockedAlpha" }
 
-      // Find locked node by achievementId and assert alpha
       val lockedNode =
           nodes.firstOrNull {
             it.config.getOrNull(AchievementIdKey) == lockedAchievement[0].achievementId
@@ -327,21 +319,16 @@ class AchievementsScreenTest {
   @Test
   fun topAppBar_and_labeledDivider_showCorrectText() {
     runBlocking {
-      // Arrange: provide immediate empty lists
       fakeRepo.unlocked = emptyList()
       fakeRepo.all = emptyList()
 
-      // Act: set content (rendering the screen with an empty loaded state from the repo)
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
 
-      // Assert: top app bar is present (we don't assert title text because it's not emitted as a
-      // Text node)
       composeTestRule
           .onNodeWithTag(AchievementsScreenTestTags.TOP_APP_BAR, useUnmergedTree = true)
           .assertIsDisplayed()
 
-      // Labeled divider text (unlocked and to_discover) should be present via resource strings
       val ctx = ApplicationProvider.getApplicationContext<Context>()
       val unlockedLabel = ctx.getString(com.android.wildex.R.string.unlocked_achievements)
       val toDiscover = ctx.getString(com.android.wildex.R.string.to_discover)

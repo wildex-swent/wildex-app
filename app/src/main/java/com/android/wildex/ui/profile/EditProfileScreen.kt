@@ -25,12 +25,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 object EditProfileScreenTestTags {
   const val GO_BACK = "edit_profile_screen_go_back_button"
+  const val SAVE = "edit_profile_screen_go_save_button"
 }
 
 @Composable
 fun EditProfileScreen(
     editScreenViewModel: EditProfileViewModel = viewModel(),
     onGoBack: () -> Unit = {},
+    onSave: () -> Unit = {},
+    isNewUser: Boolean = false,
 ) {
   val cs = colorScheme
   Scaffold(
@@ -39,12 +42,16 @@ fun EditProfileScreen(
   ) { pd ->
     Box(modifier = Modifier.fillMaxSize().padding(pd)) {
       Button(
-          onClick = {},
+          onClick = {
+            if (isNewUser) {
+              onSave()
+            }
+          },
       ) {
         Row {
           Icon(
               imageVector = Icons.Filled.SaveAlt,
-              contentDescription = "Professional badge",
+              contentDescription = "Save",
               tint = cs.tertiary,
               modifier = Modifier.fillMaxSize(),
           )

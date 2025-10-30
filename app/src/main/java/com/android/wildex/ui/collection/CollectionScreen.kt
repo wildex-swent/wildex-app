@@ -1,5 +1,6 @@
 package com.android.wildex.ui.collection
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,6 +40,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 import kotlin.math.ceil
 
 
@@ -80,6 +84,14 @@ fun CollectionScreen(
   val uiState by collectionScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
+  LaunchedEffect(Unit) { collectionScreenViewModel.loadUIState(userUid) }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      collectionScreenViewModel.clearErrorMsg()
+    }
+  }
+
   Scaffold(
     modifier = Modifier.fillMaxSize(),
     bottomBar = { bottomBar() },
@@ -94,10 +106,16 @@ fun CollectionScreen(
     }
   ) { innerPadding ->
     Box(modifier = Modifier.padding(innerPadding)) {
-      AnimalsView(
-        animalsStates = uiState.animals,
-        onAnimalClick = onAnimalClick
-      )
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.animals.isEmpty() -> NoAnimalsView()
+        else ->
+          AnimalsView(
+            animalsStates = uiState.animals,
+            onAnimalClick = onAnimalClick
+          )
+      }
     }
   }
 }
@@ -202,6 +220,21 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
         .fillMaxSize()
         .clip(RoundedCornerShape(8.dp))
         .background(color = colorScheme.primary)
+    )
+  }
+}
+
+@Composable
+fun NoAnimalsView() {
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(16.dp),
+    contentAlignment = Alignment.Center
+  ) {
+    Text(
+      text = LocalContext.current.getString(R.string.empty_collection),
+      color = colorScheme.onBackground
     )
   }
 }

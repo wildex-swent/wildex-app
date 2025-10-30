@@ -17,6 +17,7 @@
     <string name="default_description">No description yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
     <string name="no_achievements">No achievements yet!</string>
+    <string name="empty_collection">No animals in your collection yet.\nStart exploring…</string>
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>

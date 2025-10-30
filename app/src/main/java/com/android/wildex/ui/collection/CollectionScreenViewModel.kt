@@ -1,6 +1,7 @@
 package com.android.wildex.ui.collection
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animaldetector.AnimalRepository
 import com.android.wildex.model.user.SimpleUser
@@ -13,41 +14,68 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /** Default placeholder user used when no valid user is loaded. */
 val defaultUser: SimpleUser =
-    SimpleUser(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        profilePictureURL = "",
-    )
+  SimpleUser(
+    userId = "defaultUserId",
+    username = "defaultUsername",
+    profilePictureURL = "",
+  )
 
 data class CollectionUIState(
-    val user: SimpleUser = defaultUser,
-    val isUserOwner: Boolean = false,
-    val animals: List<AnimalState> = emptyList(),
-    val isLoading: Boolean = false,
-    val isError: Boolean = false,
-    val errorMsg: String? = null,
-    val isRefreshing: Boolean = false
+  val user: SimpleUser = defaultUser,
+  val isUserOwner: Boolean = false,
+  val animals: List<AnimalState> = emptyList(),
+  val isLoading: Boolean = false,
+  val isError: Boolean = false,
+  val errorMsg: String? = null
 )
 
 data class AnimalState(
-    val animalId: Id = "defaultAnimalId",
-    val pictureURL: URL = "",
-    val name: String = "Default Animal",
-    val isUnlocked: Boolean = false
+  val animalId: Id = "defaultAnimalId",
+  val pictureURL: URL = "",
+  val name: String = "Default Animal",
+  val isUnlocked: Boolean = false
 )
 
 class CollectionScreenViewModel(
-    private val userAnimalsRepository : UserAnimalsRepository,
-    //= RepositoryProvider.userAnimalsRepository,
-    private val animalRepository : AnimalRepository = RepositoryProvider.animalRepository,
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id? = Firebase.auth.uid
+  private val userAnimalsRepository : UserAnimalsRepository,
+  //= RepositoryProvider.userAnimalsRepository,
+  private val animalRepository : AnimalRepository = RepositoryProvider.animalRepository,
+  private val userRepository: UserRepository = RepositoryProvider.userRepository,
+  private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
 
   /** Backing property for the collection screen state. */
   private val _uiState = MutableStateFlow(CollectionUIState())
+
+  /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<CollectionUIState> = _uiState.asStateFlow()
+
+  private suspend fun updateUIState(userUid: String) {
+    try {
+      val user = userRepository.getSimpleUser(userUid)
+      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid)
+    } catch (e: Exception) {
+      setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+      _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
+    }
+  }
+
+  fun loadUIState(userUid: String) {
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState(userUid) }
+  }
+
+  /** Clears any existing error message from the UI state. */
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+
+  /** Sets a new error message in the UI state. */
+  private fun setErrorMsg(msg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = msg)
+  }
 }

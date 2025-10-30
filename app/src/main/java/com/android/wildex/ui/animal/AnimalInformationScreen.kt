@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +31,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,7 +38,6 @@ import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
-import com.android.wildex.ui.theme.WildexTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,14 +65,6 @@ fun AnimalInformationScreen(
       else -> {
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
           Box(Modifier.fillMaxWidth()) {
-
-            //            Placeholder image to preview
-            //            Image(
-            //                painter = painterResource(id = R.drawable.golden_retriever),
-            //                contentDescription = "Golden Retriever Placeholder",
-            //                contentScale = ContentScale.Crop,
-            //                modifier = Modifier.height(350.dp))
-
             AsyncImage(
                 model = uiState.pictureURL,
                 contentDescription = "Animal picture",
@@ -150,13 +139,5 @@ fun AnimalInformationScreen(
         }
       }
     }
-  }
-}
-
-@Preview
-@Composable
-fun AnimalInformationScreenPreview() {
-  WildexTheme {
-    Surface(modifier = Modifier.fillMaxSize()) { AnimalInformationScreen("fakeAnimalId") }
   }
 }

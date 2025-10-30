@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
@@ -108,5 +109,21 @@ class AnimalInformationScreenTest {
     }
     composeRule.onNodeWithContentDescription("Back to Collection").performClick()
     Assert.assertEquals(1, backClicked)
+  }
+
+  @Test
+  fun animalInformationScreen_showsAnimalInformation() {
+    runBlocking { animalInformationScreenViewModel.loadAnimalInformation("animalId1") }
+    composeRule.setContent {
+      AnimalInformationScreen(
+          animalId = "animalId1",
+          animalInformationScreenViewModel = animalInformationScreenViewModel,
+          onGoBack = {},
+      )
+    }
+    composeRule.waitForIdle()
+    composeRule.onNodeWithText("animalName1").assertIsDisplayed()
+    composeRule.onNodeWithText("animalType1").assertIsDisplayed()
+    composeRule.onNodeWithText("animalDescription1").assertIsDisplayed()
   }
 }

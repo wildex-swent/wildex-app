@@ -1,5 +1,6 @@
 package com.android.wildex.ui.achievement
 
+import android.content.Context
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
@@ -9,10 +10,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.utils.FirebaseEmulator
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -143,7 +147,13 @@ class AchievementsScreenTest {
     viewModel = AchievementsScreenViewModel(fakeRepo)
   }
 
-  @After fun tearDown() {}
+  @After
+  fun tearDown() {
+    if (FirebaseEmulator.isRunning) {
+      FirebaseEmulator.auth.signOut()
+      FirebaseEmulator.clearAuthEmulator()
+    }
+  }
 
   @Test
   fun loadingScreen_shownWhileFetchingAchievements() {
@@ -159,6 +169,10 @@ class AchievementsScreenTest {
 
       composeTestRule
           .onNodeWithTag(AchievementsScreenTestTags.LOADING, useUnmergedTree = true)
+          .assertIsDisplayed()
+      // The LoadingScreen composable also exposes its own tag; ensure it's present inside
+      composeTestRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
 
       fetchSignal.complete(Unit)
@@ -274,7 +288,18 @@ class AchievementsScreenTest {
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
 
-      // Fetch semantics nodes for all achievement images
+      // Ensure target items are composed by scrolling their grids
+      unlockedAchievement.forEach { achievement ->
+        composeTestRule
+            .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+            .performScrollToNode(hasText(achievement.name))
+      }
+      lockedAchievement.forEach { achievement ->
+        composeTestRule
+            .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
+            .performScrollToNode(hasText(achievement.name))
+      }
+
       val nodes =
           composeTestRule
               .onAllNodesWithTag(
@@ -285,19 +310,43 @@ class AchievementsScreenTest {
       val unlockedNode =
           nodes.firstOrNull {
             it.config.getOrNull(AchievementIdKey) == unlockedAchievement[0].achievementId
-          }
-      check(unlockedNode != null) { "Unlocked achievement node not found in semantics" }
-      val unlockedAlpha = unlockedNode!!.config.getOrNull(AchievementAlphaKey)
+          } ?: error("Unlocked achievement node not found in semantics")
+      val unlockedAlpha = unlockedNode.config.getOrNull(AchievementAlphaKey)
       check(unlockedAlpha == 1f) { "Expected unlocked alpha 1f but was $unlockedAlpha" }
 
       // Find locked node by achievementId and assert alpha
       val lockedNode =
           nodes.firstOrNull {
             it.config.getOrNull(AchievementIdKey) == lockedAchievement[0].achievementId
-          }
-      check(lockedNode != null) { "Locked achievement node not found in semantics" }
-      val lockedAlpha = lockedNode!!.config.getOrNull(AchievementAlphaKey)
+          } ?: error("Locked achievement node not found in semantics")
+      val lockedAlpha = lockedNode.config.getOrNull(AchievementAlphaKey)
       check(lockedAlpha == 0.3f) { "Expected locked alpha 0.3f but was $lockedAlpha" }
+    }
+  }
+
+  @Test
+  fun topAppBar_and_labeledDivider_showCorrectText() {
+    runBlocking {
+      // Arrange: provide immediate empty lists
+      fakeRepo.unlocked = emptyList()
+      fakeRepo.all = emptyList()
+
+      // Act: set content (rendering the screen with an empty loaded state from the repo)
+      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
+      composeTestRule.waitForIdle()
+
+      // Assert: top app bar is present (we don't assert title text because it's not emitted as a
+      // Text node)
+      composeTestRule
+          .onNodeWithTag(AchievementsScreenTestTags.TOP_APP_BAR, useUnmergedTree = true)
+          .assertIsDisplayed()
+
+      // Labeled divider text (unlocked and to_discover) should be present via resource strings
+      val ctx = ApplicationProvider.getApplicationContext<Context>()
+      val unlockedLabel = ctx.getString(com.android.wildex.R.string.unlocked_achievements)
+      val toDiscover = ctx.getString(com.android.wildex.R.string.to_discover)
+      composeTestRule.onNodeWithText(unlockedLabel, useUnmergedTree = true).assertIsDisplayed()
+      composeTestRule.onNodeWithText(toDiscover, useUnmergedTree = true).assertIsDisplayed()
     }
   }
 }

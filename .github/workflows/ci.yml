@@ -124,7 +124,7 @@ jobs:
         run: |
           if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
             echo "Starting Firebase emulators for instrumentation tests..."
-            firebase emulators:start --only auth,firestore --project demo-project &
+            firebase emulators:start --project demo-project &
             echo "Firebase emulators started"
           else
             echo "Firebase emulators not configured, skipping emulator startup..."
@@ -140,7 +140,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache
+          script: ./gradlew connectedCheck --parallel --build-cache --stacktrace
 
       # This step generates the coverage report which will be uploaded to sonar
       - name: Generate Coverage Report

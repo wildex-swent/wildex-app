@@ -1,14 +1,16 @@
 package com.android.wildex.ui.animal
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
-import com.android.wildex.ui.home.defaultUser
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class AnimalInformationUIState(
     val animalId: Id = "",
@@ -22,13 +24,7 @@ data class AnimalInformationUIState(
 )
 
 class AnimalInformationScreenViewModel(
-    // TODO: Add animal repository once implemented
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(AnimalInformationUIState())
@@ -43,6 +39,28 @@ class AnimalInformationScreenViewModel(
   }
 
   fun loadAnimalInformation(animalId: Id) {
-    // TODO: set up the UI state
+    _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateAnimalInformation(animalId) }
+  }
+
+  private suspend fun updateAnimalInformation(animalId: Id) {
+    try {
+      val animal = animalRepository.getAnimal(animalId)
+
+      _uiState.value =
+          AnimalInformationUIState(
+              animalId = animalId,
+              pictureURL = animal.pictureURL,
+              name = animal.name,
+              species = animal.species,
+              description = animal.description,
+              errorMsg = null,
+              isLoading = false,
+              isError = false)
+    } catch (e: Exception) {
+      Log.e("AnimalInformationViewModel", "Error loading animal information for $animalId", e)
+      setErrorMsg("Failed to load animal information: ${e.message}")
+      _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
+    }
   }
 }

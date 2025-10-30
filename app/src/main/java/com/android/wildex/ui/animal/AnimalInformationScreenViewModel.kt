@@ -7,9 +7,6 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
-import com.android.wildex.ui.home.defaultUser
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,12 +25,6 @@ data class AnimalInformationUIState(
 
 class AnimalInformationScreenViewModel(
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId,
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(AnimalInformationUIState())

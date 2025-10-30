@@ -51,17 +51,17 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.ui.LoadingScreen
 
 object AchievementsScreenTestTags {
-    const val ACHIEVEMENT_ITEM = "achievementItem"
-    const val UNLOCKED_SECTION = "unlockedSection"
-    const val LOCKED_SECTION = "lockedSection"
+  const val ACHIEVEMENT_ITEM = "achievementItem"
+  const val UNLOCKED_SECTION = "unlockedSection"
+  const val LOCKED_SECTION = "lockedSection"
 
-    // Added test tags
-    const val LOADING = "achievements_loading"
-    const val ERROR = "achievements_error"
-    const val TOP_APP_BAR = "achievements_top_app_bar"
-    const val ACHIEVEMENT_IMAGE = "achievement_image"
-    const val ACHIEVEMENT_NAME = "achievement_name"
-    const val BACK_BUTTON = "achievements_back_button"
+  // Added test tags
+  const val LOADING = "achievements_loading"
+  const val ERROR = "achievements_error"
+  const val TOP_APP_BAR = "achievements_top_app_bar"
+  const val ACHIEVEMENT_IMAGE = "achievement_image"
+  const val ACHIEVEMENT_NAME = "achievement_name"
+  const val BACK_BUTTON = "achievements_back_button"
 }
 
 val AchievementAlphaKey = SemanticsPropertyKey<Float>("AchievementAlpha")
@@ -80,89 +80,89 @@ var SemanticsPropertyReceiver.achievementId by AchievementIdKey
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsState()
+  val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.loadAchievements() }
+  LaunchedEffect(Unit) { viewModel.loadAchievements() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.testTag(AchievementsScreenTestTags.TOP_APP_BAR),
-                title = { LocalContext.current.getString(R.string.trophies) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onGoBack,
-                        modifier = Modifier.testTag(AchievementsScreenTestTags.BACK_BUTTON)) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                })
-        },
-        content = { paddingValues ->
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxSize()
-                                .padding(paddingValues)
-                                .testTag(AchievementsScreenTestTags.LOADING),
-                        contentAlignment = Alignment.Center) {
-                        LoadingScreen()
-                    }
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            modifier = Modifier.testTag(AchievementsScreenTestTags.TOP_APP_BAR),
+            title = { LocalContext.current.getString(R.string.trophies) },
+            navigationIcon = {
+              IconButton(
+                  onClick = onGoBack,
+                  modifier = Modifier.testTag(AchievementsScreenTestTags.BACK_BUTTON)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                  }
+            })
+      },
+      content = { paddingValues ->
+        when {
+          uiState.isLoading -> {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(paddingValues)
+                        .testTag(AchievementsScreenTestTags.LOADING),
+                contentAlignment = Alignment.Center) {
+                  LoadingScreen()
                 }
-                uiState.isError -> {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxSize()
-                                .padding(paddingValues)
-                                .testTag(AchievementsScreenTestTags.ERROR),
-                        contentAlignment = Alignment.Center) {
-                        Text(
-                            text =
-                                uiState.errorMsg ?: LocalContext.current.getString(R.string.prev_arrow),
-                            color = MaterialTheme.colorScheme.error)
-                    }
+          }
+          uiState.isError -> {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(paddingValues)
+                        .testTag(AchievementsScreenTestTags.ERROR),
+                contentAlignment = Alignment.Center) {
+                  Text(
+                      text =
+                          uiState.errorMsg ?: LocalContext.current.getString(R.string.prev_arrow),
+                      color = MaterialTheme.colorScheme.error)
                 }
-                else -> {
-                    Column(
-                        modifier =
-                            Modifier.padding(paddingValues).padding(horizontal = 16.dp).fillMaxSize()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+          }
+          else -> {
+            Column(
+                modifier =
+                    Modifier.padding(paddingValues).padding(horizontal = 16.dp).fillMaxSize()) {
+                  Spacer(modifier = Modifier.height(8.dp))
 
-                        LabeledDivider(
-                            text = LocalContext.current.getString(R.string.unlocked_achievements),
-                            color = MaterialTheme.colorScheme.primary)
+                  LabeledDivider(
+                      text = LocalContext.current.getString(R.string.unlocked_achievements),
+                      color = MaterialTheme.colorScheme.primary)
 
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier =
-                                Modifier.heightIn(max = 200.dp)
-                                    .testTag(AchievementsScreenTestTags.UNLOCKED_SECTION)) {
-                            items(uiState.unlocked) { achievement ->
-                                AchievementItem(achievement = achievement, unlocked = true)
-                            }
+                  LazyVerticalGrid(
+                      columns = GridCells.Fixed(3),
+                      verticalArrangement = Arrangement.spacedBy(16.dp),
+                      horizontalArrangement = Arrangement.spacedBy(16.dp),
+                      modifier =
+                          Modifier.heightIn(max = 200.dp)
+                              .testTag(AchievementsScreenTestTags.UNLOCKED_SECTION)) {
+                        items(uiState.unlocked) { achievement ->
+                          AchievementItem(achievement = achievement, unlocked = true)
                         }
+                      }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                  Spacer(modifier = Modifier.height(24.dp))
 
-                        LabeledDivider(
-                            text = LocalContext.current.getString(R.string.to_discover),
-                            color = MaterialTheme.colorScheme.primary)
+                  LabeledDivider(
+                      text = LocalContext.current.getString(R.string.to_discover),
+                      color = MaterialTheme.colorScheme.primary)
 
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.testTag(AchievementsScreenTestTags.LOCKED_SECTION)) {
-                            items(uiState.locked) { achievement ->
-                                AchievementItem(achievement = achievement, unlocked = false)
-                            }
+                  LazyVerticalGrid(
+                      columns = GridCells.Fixed(3),
+                      verticalArrangement = Arrangement.spacedBy(16.dp),
+                      horizontalArrangement = Arrangement.spacedBy(16.dp),
+                      modifier = Modifier.testTag(AchievementsScreenTestTags.LOCKED_SECTION)) {
+                        items(uiState.locked) { achievement ->
+                          AchievementItem(achievement = achievement, unlocked = false)
                         }
-                    }
+                      }
                 }
-            }
-        })
+          }
+        }
+      })
 }
 
 /**
@@ -177,9 +177,9 @@ fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> U
  */
 @Composable
 fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(90.dp).testTag(AchievementsScreenTestTags.ACHIEVEMENT_ITEM)) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.width(90.dp).testTag(AchievementsScreenTestTags.ACHIEVEMENT_ITEM)) {
         Image(
             painter = rememberAsyncImagePainter(achievement.pictureURL),
             contentDescription = achievement.name,
@@ -189,8 +189,8 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
                     .clip(CircleShape)
                     .alpha(if (unlocked) 1f else 0.3f)
                     .semantics {
-                        achievementAlpha = if (unlocked) 1f else 0.3f
-                        achievementId = achievement.achievementId
+                      achievementAlpha = if (unlocked) 1f else 0.3f
+                      achievementId = achievement.achievementId
                     }
                     .testTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE))
         Text(
@@ -203,7 +203,7 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
             color =
                 if (unlocked) MaterialTheme.colorScheme.onBackground
                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-    }
+      }
 }
 
 /**
@@ -216,14 +216,14 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
  */
 @Composable
 fun LabeledDivider(text: String, color: Color, thickness: Dp = 2.dp, padding: Dp = 8.dp) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalDivider(modifier = Modifier.weight(1f).height(thickness), color = color)
-        Text(
-            text = text,
-            color = color,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = padding))
-        HorizontalDivider(modifier = Modifier.weight(4f).height(thickness), color = color)
-    }
-    Spacer(modifier = Modifier.height(8.dp))
+  Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    HorizontalDivider(modifier = Modifier.weight(1f).height(thickness), color = color)
+    Text(
+        text = text,
+        color = color,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        modifier = Modifier.padding(horizontal = padding))
+    HorizontalDivider(modifier = Modifier.weight(4f).height(thickness), color = color)
+  }
+  Spacer(modifier = Modifier.height(8.dp))
 }

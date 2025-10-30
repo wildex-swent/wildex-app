@@ -2,6 +2,8 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.report.Report
+import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
@@ -193,4 +195,26 @@ open class FirestoreTest(val collectionPath: String) {
           species = "animalType2",
           description = "animalDescription2",
       )
+
+  open val report1 =
+      Report(
+          reportId = "reportId1",
+          imageURL = "imageURL1",
+          location = Location(0.3, 0.3),
+          date = Timestamp.fromDate(2017, 4, 29),
+          description = "description1",
+          authorId = "authorId1",
+          assigneeId = "assigneeId1",
+          status = ReportStatus.PENDING)
+
+  open val report2 =
+      Report(
+          reportId = "reportId2",
+          imageURL = "imageURL2",
+          location = Location(0.8, 0.8),
+          date = Timestamp.now(),
+          description = "description2",
+          authorId = "authorId2",
+          assigneeId = "assigneeId2",
+          status = ReportStatus.RESOLVED)
 }

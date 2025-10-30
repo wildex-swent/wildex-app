@@ -24,7 +24,7 @@ interface ReportRepository {
   suspend fun addReport(report: Report)
 
   /** Edits an existing Report item in the repository. */
-  suspend fun editPost(reportId: Id, newValue: Report)
+  suspend fun editReport(reportId: Id, newValue: Report)
 
   /** Deletes a Report item from the repository. */
   suspend fun deleteReport(reportId: Id)

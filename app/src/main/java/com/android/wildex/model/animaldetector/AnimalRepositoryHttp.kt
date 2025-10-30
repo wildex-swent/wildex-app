@@ -30,7 +30,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
-class AnimalDetectRepository(val client: OkHttpClient) {
+class AnimalRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository {
   private val adApikey = BuildConfig.ANIMALDETECT_API_KEY
 
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY
@@ -49,11 +49,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
    * @return List<AnimalDetectResponse> containing detected labels and confidence scores, or empty
    *   list if the request fails or the response is invalid.
    */
-  suspend fun detectAnimal(
-      context: Context,
-      imageUri: Uri,
-      countryCode: String = "KEN",
-  ): List<AnimalDetectResponse> =
+  override suspend fun detectAnimal(context: Context, imageUri: Uri): List<AnimalDetectResponse> =
       withContext(Dispatchers.IO) {
         var tempFile: File? = null
         try {
@@ -75,7 +71,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
                       tempFile.name,
                       tempFile.asRequestBody(mimeType.toMediaTypeOrNull()),
                   )
-                  .addFormDataPart("country", countryCode)
+                  .addFormDataPart("country", "KEN")
                   .build()
 
           val request =
@@ -177,7 +173,7 @@ class AnimalDetectRepository(val client: OkHttpClient) {
    *   null if an error occurs, the response body is empty, or the expected content is missing.
    * @throws IOException Internally caught; any network or parsing errors result in null.
    */
-  suspend fun getAnimalDescription(animalName: String): String? =
+  override suspend fun getAnimalDescription(animalName: String): String? =
       withContext(Dispatchers.IO) {
         try {
           val payload =

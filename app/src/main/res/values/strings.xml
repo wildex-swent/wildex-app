@@ -4,8 +4,6 @@
     <string name="default_web_client_id">55923703889-g4po1sphfo9peea096muat5e44rr5l90.apps.googleusercontent.com</string>
     <string name="google_logo">Google Logo</string>
     <string name="sign_in">Sign in with Google</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_second">SecondActivity</string>
     <string name="welcome">Welcome to Wildex!</string>
     <string name="profile">My Profile</string>
     <string name="user_profile">User Profile</string>
@@ -19,4 +17,6 @@
     <string name="send_friend_request">Send Friend Request</string>
     <string name="no_achievements">No achievements yet!</string>
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
+    <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
+    <string name="map_standard_import">basemap</string>
 </resources>

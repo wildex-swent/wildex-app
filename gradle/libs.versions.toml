@@ -1,5 +1,5 @@
 [versions]
-agp = "8.3.0"
+agp = "8.6.0"
 kotlin = "1.9.10"
 coreKtx = "1.12.0"
 ktfmt = "0.17.0"
@@ -46,6 +46,9 @@ mockk = "1.13.7"
 mockkAgent = "1.13.7"
 mockkAndroid = "1.13.7"
 navigationCompose = "2.7.7"
+
+# Play Services
+playServicesLocation = "21.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -108,6 +111,8 @@ mapbox-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapb
 mapbox-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
 
 accompanist = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist"}
+
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

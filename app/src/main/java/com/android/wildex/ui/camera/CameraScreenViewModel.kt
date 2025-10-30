@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
-import com.android.wildex.model.animaldetector.AnimalRepository
+import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
@@ -25,7 +25,7 @@ data class CameraUiState(
 
 class CameraScreenViewModel(
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
-    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val animalRepository: AnimalInfoRepository = RepositoryProvider.animalInfoRepository,
     // private val collectionRepository: CollectionRepository =
     // RepositoryProvider.collectionRepository,
     private val currentUserId: Id? = Firebase.auth.uid,

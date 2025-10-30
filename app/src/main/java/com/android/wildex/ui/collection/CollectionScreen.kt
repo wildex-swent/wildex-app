@@ -1,20 +1,37 @@
 package com.android.wildex.ui.collection
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
+
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object CollectionScreenTestTags {
@@ -52,13 +69,77 @@ fun CollectionScreen(
     bottomBar: @Composable () -> Unit = {}
 ) {
   val uiState by collectionScreenViewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-  Scaffold(bottomBar = { bottomBar() }) { innerPadding ->
+  Scaffold(
+      modifier = Modifier.fillMaxSize(),
+      bottomBar = { bottomBar() },
+      topBar = {
+          CollectionTopBar(
+              uiState.isUserOwner,
+              uiState.user.profilePictureURL,
+              onGoBack,
+              onProfileClick,
+              onNotificationClick
+          )
+      }
+  ) { innerPadding ->
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.padding(innerPadding).fillMaxSize(),
+        modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize(),
     ) {
-      Text(stringResource(R.string.not_implemented), textAlign = TextAlign.Center)
+
     }
   }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CollectionTopBar(
+    isUserOwner: Boolean,
+    userProfilePictureURL: String = "",
+    onGoBack: () -> Unit,
+    onProfileClick: () -> Unit,
+    onNotificationClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onBackground)
+        },
+        navigationIcon = {
+            IconButton(
+                modifier = Modifier,
+                onClick = { if (isUserOwner) onNotificationClick() else onGoBack() },
+            ) {
+                Icon(
+                    imageVector = if (isUserOwner) Icons.Default.Notifications else Icons.Default.ArrowBack,
+                    contentDescription = if (isUserOwner) "Notifications" else "Back",
+                    tint = colorScheme.onBackground,
+                )
+            }
+        },
+        actions = {
+            if (isUserOwner) {
+                IconButton(
+                    onClick = { onProfileClick() },
+                    modifier = Modifier.testTag(CollectionScreenTestTags.PROFILE_BUTTON),
+                ) {
+                    AsyncImage(
+                        model = userProfilePictureURL,
+                        contentDescription = "Profile picture",
+                        modifier =
+                            Modifier.size(40.dp)
+                                .clip(CircleShape)
+                                .border(1.dp, colorScheme.primary, CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+            }
+        }
+    )
 }

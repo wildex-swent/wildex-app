@@ -121,7 +121,7 @@ fun WildexApp(
         CollectionScreen(
           userUid = userId,
           onAnimalClick = { animalId ->
-            //navigationActions.navigateTo(AnimalDetailsScreen(animalId))
+            //navigationActions.navigateTo(Screen.AnimalInformationScreen(animalId))
           },
           onProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: "")) },
           onNotificationClick = {},
@@ -173,6 +173,7 @@ fun WildexApp(
         ProfileScreen(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
+          onCollection = { navigationActions.navigateTo(Screen.Collection(it)) }
         )
       } else {
         Log.e("ProfileScreen", "User UID is null")

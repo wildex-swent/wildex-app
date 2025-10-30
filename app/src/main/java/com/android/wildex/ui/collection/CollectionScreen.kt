@@ -47,7 +47,6 @@ import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object CollectionScreenTestTags {
-  const val BOTTOM_BAR = "collection_screen_bottom_bar"
   const val GO_BACK_BUTTON = "collection_screen_go_back_button"
   const val NOTIFICATION_BUTTON = "collection_screen_notification_button"
   const val PROFILE_BUTTON = "collection_screen_profile_button"
@@ -120,6 +119,15 @@ fun CollectionScreen(
   }
 }
 
+/**
+ * Composable for the top app bar in the Collection Screen.
+ *
+ * @param isUserOwner Boolean indicating if the displayed collection belongs to the current user.
+ * @param userProfilePictureURL URL of the user's profile picture, used when displaying the current user's collection.
+ * @param onGoBack Callback invoked when the go back button is clicked.
+ * @param onProfileClick Callback invoked when the profile button is clicked.
+ * @param onNotificationClick Callback invoked when the notification button is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionTopBar(
@@ -138,7 +146,7 @@ fun CollectionTopBar(
     },
     navigationIcon = {
       IconButton(
-        modifier = Modifier,
+        modifier = Modifier.testTag(if (isUserOwner) CollectionScreenTestTags.NOTIFICATION_BUTTON else CollectionScreenTestTags.GO_BACK_BUTTON),
         onClick = { if (isUserOwner) onNotificationClick() else onGoBack() },
       ) {
         Icon(
@@ -170,6 +178,12 @@ fun CollectionTopBar(
   )
 }
 
+/**
+ * Composable displaying a list of animals in a two-column grid layout.
+ *
+ * @param animalsStates List of AnimalState objects representing the animals to display.
+ * @param onAnimalClick Callback invoked when an animal is selected.
+ */
 @Composable
 fun AnimalsView(
   animalsStates: List<AnimalState>,
@@ -195,6 +209,12 @@ fun AnimalsView(
   }
 }
 
+/**
+ * Composable representing a single animal item in the collection.
+ *
+ * @param animalState AnimalState object representing the animal to display.
+ * @param onAnimalClick Callback invoked when the animal is selected.
+ */
 @Composable
 fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
   val animalName = animalState.name
@@ -202,7 +222,8 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
   Card(
     onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
     shape = RoundedCornerShape(8.dp),
-    enabled = animalState.isUnlocked
+    enabled = animalState.isUnlocked,
+    modifier = Modifier.testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))
   ) {
     AsyncImage(
       model = animalPictureURL,
@@ -224,6 +245,9 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
   }
 }
 
+/**
+ * Composable displayed when the user's collection is empty.
+ */
 @Composable
 fun NoAnimalsView() {
   Box(

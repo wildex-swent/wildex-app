@@ -3,7 +3,7 @@ package com.android.wildex.ui.collection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.animaldetector.AnimalRepository
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
@@ -57,9 +57,27 @@ class CollectionScreenViewModel(
   private suspend fun updateUIState(userUid: String) {
     try {
       val user = userRepository.getSimpleUser(userUid)
-      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid)
+      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { animal -> animal.animalId }
+      val animals = animalRepository.getAllAnimals()
+      val animalStates = animals.map { animal ->
+        AnimalState(
+          animalId = animal.animalId,
+          pictureURL = animal.pictureURL,
+          name = animal.name,
+          isUnlocked = userAnimals.contains(animal.animalId)
+        )
+      }
+      _uiState.value =
+        _uiState.value.copy(
+          user = user,
+          isUserOwner = userUid == currentUserId,
+          animals = animalStates,
+          isLoading = false,
+          errorMsg = null,
+          isError = false,
+        )
     } catch (e: Exception) {
-      setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+      setErrorMsg(e.localizedMessage ?: "Failed to load collection.")
       _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
     }
   }

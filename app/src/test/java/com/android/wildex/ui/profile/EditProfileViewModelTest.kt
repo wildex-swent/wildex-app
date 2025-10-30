@@ -1,4 +1,3 @@
-// Kotlin
 package com.android.wildex.ui.profile
 
 import android.net.Uri
@@ -74,7 +73,7 @@ class EditProfileViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
 
-      viewModel.loadUIState("ignored")
+      viewModel.loadUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -95,7 +94,7 @@ class EditProfileViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
 
-      viewModel.loadUIState("ignored")
+      viewModel.loadUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -115,7 +114,7 @@ class EditProfileViewModelTest {
               currentUserId = "",
           )
 
-      viewModel.loadUIState("ignored")
+      viewModel.loadUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
@@ -306,7 +305,7 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun saveProfileChanges_uploadReturnsNull_setsEmptyUrl() {
+  fun saveProfileChanges_uploadReturnsNull_keepsExistingUrl() {
     mainDispatcherRule.runTest {
       viewModel.setName("A")
       viewModel.setSurname("B")
@@ -330,7 +329,7 @@ class EditProfileViewModelTest {
       coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
       confirmVerified(userRepository, storageRepository)
 
-      Assert.assertEquals("", captured.captured.profilePictureURL)
+      Assert.assertEquals("oldPic", captured.captured.profilePictureURL)
     }
   }
 

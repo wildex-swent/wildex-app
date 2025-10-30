@@ -57,7 +57,7 @@ class EditProfileViewModel(
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
 
-  fun loadUIState(userId: Id) {
+  fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
     viewModelScope.launch { updateUIState() }
   }
@@ -83,7 +83,7 @@ class EditProfileViewModel(
               country = user.country,
               profileImageUrl = user.profilePictureURL,
               isLoading = false,
-              errorMsg = _uiState.value.errorMsg,
+              errorMsg = null,
               isError = false,
           )
     } catch (e: Exception) {
@@ -114,7 +114,9 @@ class EditProfileViewModel(
         val newURL: URL
         if (profileImageUri != null) {
           storageRepository.deleteUserProfilePicture(currentUserId)
-          newURL = storageRepository.uploadUserProfilePicture(currentUserId, profileImageUri) ?: ""
+          newURL =
+              storageRepository.uploadUserProfilePicture(currentUserId, profileImageUri)
+                  ?: user.profilePictureURL
         } else {
           newURL = user.profilePictureURL
         }
@@ -125,12 +127,7 @@ class EditProfileViewModel(
                 name = _uiState.value.name,
                 surname = _uiState.value.surname,
                 bio = _uiState.value.description,
-                profilePictureURL =
-                    try {
-                      newURL
-                    } catch (_: Exception) {
-                      ""
-                    } ?: "",
+                profilePictureURL = newURL,
                 userType = user.userType,
                 creationDate = user.creationDate,
                 country = _uiState.value.country,

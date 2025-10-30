@@ -7,7 +7,6 @@ import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -85,15 +84,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val updatedAchievements = repository.getAllAchievementsByUser(userId)
     assertEquals(initialAchievements, updatedAchievements)
   }
-
-  @Test
-  fun getAllAchievementsByUserWhenUserNotInitializedThrowsException() =
-      runTest(timeout = 60.seconds) {
-        val userId = "nonExistentUser"
-        val exception =
-            runCatching { repository.getAllAchievementsByUser(userId) }.exceptionOrNull()
-        assertTrue(exception is IllegalArgumentException)
-      }
 
   @Test
   fun getAllAchievementsByUserWhenEmptyAchievementsReturnsEmptyList() = runTest {

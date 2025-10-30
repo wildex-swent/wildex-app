@@ -1,3 +1,4 @@
+// Kotlin
 package com.android.wildex.ui.profile
 
 import android.net.Uri
@@ -86,6 +87,21 @@ class EditProfileViewModelTest {
       Assert.assertFalse(s.isLoading)
       Assert.assertFalse(s.isError)
       Assert.assertNull(s.errorMsg)
+    }
+  }
+
+  @Test
+  fun loadUIState_error_setsError_andStopsLoading() {
+    mainDispatcherRule.runTest {
+      coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
+
+      viewModel.loadUIState("ignored")
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertTrue(s.isError)
+      Assert.assertEquals("Unexpected error: boom", s.errorMsg)
+      Assert.assertFalse(s.isLoading)
     }
   }
 
@@ -199,7 +215,7 @@ class EditProfileViewModelTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-      viewModel.saveProfileChanges() // pas d'Uri -> pas de suppression/upload
+      viewModel.saveProfileChanges()
       advanceUntilIdle()
 
       val captured = slot<User>()
@@ -210,8 +226,120 @@ class EditProfileViewModelTest {
       confirmVerified(userRepository, storageRepository)
 
       val edited = captured.captured
-      Assert.assertEquals("oldPic", edited.profilePictureURL) // conservé
+      Assert.assertEquals("oldPic", edited.profilePictureURL)
       Assert.assertNull(viewModel.uiState.value.errorMsg)
     }
+  }
+
+  @Test
+  fun setters_validation_toggle_and_isValid_true_when_all_fields_non_blank() {
+    viewModel.setName("")
+    Assert.assertEquals("Name cannot be empty", viewModel.uiState.value.invalidNameMsg)
+    viewModel.setName("John")
+    Assert.assertNull(viewModel.uiState.value.invalidNameMsg)
+
+    viewModel.setSurname("")
+    Assert.assertEquals("Surname cannot be empty", viewModel.uiState.value.invalidSurnameMsg)
+    viewModel.setSurname("Doe")
+    Assert.assertNull(viewModel.uiState.value.invalidSurnameMsg)
+
+    viewModel.setUsername("")
+    Assert.assertEquals("Username cannot be empty", viewModel.uiState.value.invalidUsernameMsg)
+    viewModel.setUsername("jdoe")
+    Assert.assertNull(viewModel.uiState.value.invalidUsernameMsg)
+
+    viewModel.setDescription("")
+    Assert.assertEquals("Bio cannot be empty", viewModel.uiState.value.invalidDescriptionMsg)
+    viewModel.setDescription("desc")
+    Assert.assertNull(viewModel.uiState.value.invalidDescriptionMsg)
+
+    Assert.assertTrue(viewModel.uiState.value.isValid)
+  }
+
+  @Test
+  fun saveProfileChanges_whenGetUserFails_setsError_andNoStorageOrEdit() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+
+      coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertEquals("Failed to save profile changes: boom", s.errorMsg)
+
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
+      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
+      coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
+      confirmVerified(userRepository, storageRepository)
+    }
+  }
+
+  @Test
+  fun saveProfileChanges_whenEditUserFails_setsError() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.editUser(any(), any()) } throws RuntimeException("edit-failed")
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertEquals("Failed to save profile changes: edit-failed", s.errorMsg)
+
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 1) { userRepository.editUser("uid-1", any()) }
+      coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
+      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
+      confirmVerified(userRepository, storageRepository)
+    }
+  }
+
+  @Test
+  fun saveProfileChanges_uploadReturnsNull_setsEmptyUrl() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+
+      val anyUri = mockk<Uri>(relaxed = true)
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { storageRepository.deleteUserProfilePicture("uid-1") } returns Unit
+      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
+      coEvery { userRepository.editUser(any(), any()) } returns Unit
+
+      viewModel.saveProfileChanges(anyUri)
+      advanceUntilIdle()
+
+      val captured = slot<User>()
+      coVerify(exactly = 1) { storageRepository.deleteUserProfilePicture("uid-1") }
+      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+      confirmVerified(userRepository, storageRepository)
+
+      Assert.assertEquals("", captured.captured.profilePictureURL)
+    }
+  }
+
+  @Test
+  fun clearErrorMsg_clearsPreviousError() {
+    viewModel.saveProfileChanges()
+    Assert.assertNotNull(viewModel.uiState.value.errorMsg)
+
+    viewModel.clearErrorMsg()
+    Assert.assertNull(viewModel.uiState.value.errorMsg)
   }
 }

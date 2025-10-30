@@ -94,7 +94,7 @@ fun AnimalInformationScreen(
                   horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = "Back to Collection",
                         tint = colorScheme.primary,
                     )
 

@@ -12,7 +12,7 @@ plugins {
 
 android {
   namespace = "com.android.wildex"
-  compileSdk = 34
+  compileSdk = 36
 
   // Load the API key from local.properties
   val localProperties = Properties()
@@ -251,6 +251,16 @@ dependencies {
 
   // Play Services location
   implementation(libs.play.services.location)
+
+
+  // CameraX
+  implementation(libs.camera.core)
+  implementation(libs.camera.compose)
+  implementation(libs.camera.camera2)
+  implementation(libs.camera.lifecycle)
+
+  // Lottie
+  implementation(libs.lottie.compose)
 
 }
 

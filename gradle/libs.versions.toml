@@ -47,6 +47,12 @@ mockkAgent = "1.13.7"
 mockkAndroid = "1.13.7"
 navigationCompose = "2.7.7"
 
+# CameraX
+cameraX = "1.5.1"
+
+# Lottie Animations
+lottie = "6.4.0"
+
 # Play Services
 playServicesLocation = "21.0.1"
 
@@ -113,6 +119,13 @@ mapbox-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.r
 accompanist = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist"}
 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
+camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraX" }
+camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraX" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraX" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
+
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

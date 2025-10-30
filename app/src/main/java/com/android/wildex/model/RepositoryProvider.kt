@@ -3,7 +3,9 @@ package com.android.wildex.model
 import com.android.wildex.HttpClientProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.achievement.UserAchievementsRepositoryFirestore
-import com.android.wildex.model.animaldetector.AnimalRepository
+import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.animal.AnimalRepositoryFirestore
+import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.AnimalRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
@@ -35,6 +37,9 @@ object RepositoryProvider {
   val userAchievementsRepository: UserAchievementsRepository by lazy {
     UserAchievementsRepositoryFirestore(Firebase.firestore)
   }
-  val animalRepository: AnimalRepository by lazy { AnimalRepositoryHttp(HttpClientProvider.client) }
+  val animalInfoRepository: AnimalInfoRepository by lazy {
+    AnimalRepositoryHttp(HttpClientProvider.client)
+  }
   val storageRepository: StorageRepository by lazy { StorageRepositoryFirebase(Firebase.storage) }
+  val animalRepository: AnimalRepository by lazy { AnimalRepositoryFirestore(Firebase.firestore) }
 }

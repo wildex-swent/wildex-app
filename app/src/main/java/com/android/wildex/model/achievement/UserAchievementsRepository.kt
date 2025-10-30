@@ -29,6 +29,13 @@ interface UserAchievementsRepository {
   suspend fun getAllAchievementsByCurrentUser(): List<Achievement>
 
   /**
+   * Retrieves all available Achievement items in the system.
+   *
+   * @return A list of all Achievement items.
+   */
+  suspend fun getAllAchievements(): List<Achievement>
+
+  /**
    * Takes a map of input keys to lists of IDs and updates the user's achievements accordingly.
    * Useful when multiple types of user activities need to be considered for achievement updates.
    * For example, if a user reaches milestones in different categories (like posts, likes,

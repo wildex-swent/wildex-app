@@ -49,6 +49,7 @@ class MapViewModel(
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     // private val reportsRepository: ReportsRepository = RepositoryProvider.reportsRepository,
+    // private val animalsRepository: AnimalsRepository = RepositoryProvider.animalsRepository,
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(MapUIState())
@@ -77,10 +78,20 @@ class MapViewModel(
 
       val active = _uiState.value.activeTab.let { cur -> if (cur in tabs) cur else MapTab.Posts }
 
-      val pins =
+      val pins: List<MapPin> =
           when (active) {
+            // 1) POSTS → everybody’s posts, but show *my* avatar for ALL pins
             MapTab.Posts -> loadPostPins(all = true, currentUserId = currentUserId)
-            MapTab.MyPosts -> loadPostPins(all = false, currentUserId = currentUserId)
+
+            // 2) MY POSTS → only my posts, show the *post* picture
+            MapTab.MyPosts ->
+                loadPostPins(
+                    all = false,
+                    currentUserId = currentUserId,
+                    myPosts = true,
+                )
+
+            // 3) REPORTS → later
             MapTab.Reports -> loadReportPins()
           }
 
@@ -143,22 +154,30 @@ class MapViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
-  private suspend fun loadPostPins(all: Boolean, currentUserId: Id): List<MapPin> {
+  private suspend fun loadPostPins(
+      all: Boolean,
+      currentUserId: Id,
+      myPosts: Boolean = false,
+  ): List<MapPin> {
     val posts: List<Post> =
-        if (all) postsRepository.getAllPosts() else postsRepository.getAllPostsByAuthor()
+        if (all) postsRepository.getAllPosts()
+        else postsRepository.getAllPostsByGivenAuthor(currentUserId)
+
     return posts
         .filter { it.location != null }
         .map { p ->
-          val markerUrl: URL =
-              if (p.authorId == currentUserId) p.pictureURL
-              else
-                  runCatching { userRepository.getSimpleUser(p.authorId).profilePictureURL }
-                      .getOrNull() ?: p.pictureURL
+          var imageURL: URL
+          if (myPosts) {
+            imageURL = p.pictureURL
+          } else {
+            val user = userRepository.getUser(p.authorId)
+            imageURL = user.profilePictureURL
+          }
           MapPin.PostPin(
               id = p.postId,
               authorId = p.authorId,
               location = p.location!!,
-              imageURL = markerUrl,
+              imageURL = imageURL,
           )
         }
   }
@@ -203,7 +222,8 @@ class MapViewModel(
                         sel.post.copy(
                             likesCount =
                                 if (newLiked) sel.post.likesCount + 1
-                                else (sel.post.likesCount - 1).coerceAtLeast(0)))
+                                else (sel.post.likesCount - 1).coerceAtLeast(0)),
+                )
               } else sel
           else -> sel
         }
@@ -240,7 +260,8 @@ class MapViewModel(
                             sel.post.copy(
                                 likesCount =
                                     if (newLiked) sel.post.likesCount + 1
-                                    else (sel.post.likesCount - 1).coerceAtLeast(0)))
+                                    else (sel.post.likesCount - 1).coerceAtLeast(0)),
+                    )
                   } else sel
               else -> sel
             }

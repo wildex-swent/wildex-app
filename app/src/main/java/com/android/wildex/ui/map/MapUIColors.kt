@@ -11,7 +11,7 @@ data class MapUiColors(
 /** One source of truth for Map tab/card colors. */
 fun colorsForMapTab(tab: MapTab, cs: ColorScheme): MapUiColors =
     when (tab) {
-      MapTab.Posts -> MapUiColors(cs.secondary, cs.onSecondary)
-      MapTab.MyPosts -> MapUiColors(cs.primary, cs.onPrimary)
+      MapTab.Posts -> MapUiColors(cs.primary, cs.onSecondary)
+      MapTab.MyPosts -> MapUiColors(cs.secondary, cs.onPrimary)
       MapTab.Reports -> MapUiColors(cs.tertiary, cs.onTertiary)
     }

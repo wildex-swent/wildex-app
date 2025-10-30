@@ -1,9 +1,11 @@
 package com.android.wildex.ui.map
 
 import android.Manifest
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mapbox.common.toValue
@@ -59,6 +63,7 @@ fun MapScreen(
   val styleUri = context.getString(R.string.map_style)
   val standardImportId = context.getString(R.string.map_standard_import)
 
+  // Permissions
   val locationPermissions =
       rememberMultiplePermissionsState(
           listOf(
@@ -69,9 +74,12 @@ fun MapScreen(
   LaunchedEffect(locationPermissions.allPermissionsGranted) {
     viewModel.onLocationPermissionResult(locationPermissions.allPermissionsGranted)
   }
+  val isLocationGranted = locationPermissions.allPermissionsGranted
 
+  // Load UI
   LaunchedEffect(Unit) { viewModel.loadUIState() }
 
+  // Map state
   var mapView by remember { mutableStateOf<MapView?>(null) }
   var lastPosition by remember { mutableStateOf<Point?>(null) }
 
@@ -83,13 +91,19 @@ fun MapScreen(
     onDispose { mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener) }
   }
 
+  // Track when the map style is loaded
+  var isMapReady by remember { mutableStateOf(false) }
+  LaunchedEffect(mapView) { mapView?.mapboxMap?.addOnMapLoadedListener { isMapReady = true } }
+
+  // Combined loading state
+  val showLoading = uiState.isLoading || !isMapReady
+
   Scaffold(
       modifier = Modifier.fillMaxSize().semantics { contentDescription = MapScreenTestTags.ROOT },
       bottomBar = bottomBar,
-  ) { inner ->
-    Box(Modifier.padding(inner).fillMaxSize()) {
-
-      // Map
+  ) { pd ->
+    Box(Modifier.padding(pd).fillMaxSize()) {
+      // Map canvas
       MapCanvas(
           modifier =
               Modifier.fillMaxSize().semantics { contentDescription = MapScreenTestTags.MAP },
@@ -101,17 +115,27 @@ fun MapScreen(
           indicatorListener = indicatorListener,
       )
 
+      // Pins
       PinsOverlay(
           modifier =
               Modifier.fillMaxSize().semantics { contentDescription = MapScreenTestTags.PIN_LAYER },
           mapView = mapView,
           pins = uiState.pins,
+          currentTab = uiState.activeTab,
+          selectedId =
+              when (val s = uiState.selected) {
+                is PinDetails.PostDetails -> s.post.postId
+                is PinDetails.ReportDetails -> s.report.reportId
+                else -> null
+              },
           onPinClick = { id -> viewModel.onPinSelected(id) },
       )
 
+      // Tap to clear selection
       MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
 
-      MapTabBar(
+      // Alternative to tab switcher, I prefer the switcher but this is the one on figma
+      /*MapTabBar(
           modifier =
               Modifier.align(Alignment.TopStart).padding(top = 32.dp, start = 10.dp).semantics {
                 contentDescription = MapScreenTestTags.TAB_BAR
@@ -124,16 +148,34 @@ fun MapScreen(
           onNext = {
             nextOf(uiState.availableTabs, uiState.activeTab)?.let(viewModel::onTabSelected)
           },
+      )*/
+
+      // Tab switcher
+      MapTabSwitcher(
+          modifier = Modifier.align(Alignment.TopEnd).padding(top = 118.dp, end = 8.dp),
+          activeTab = uiState.activeTab,
+          availableTabs = uiState.availableTabs,
+          onTabSelected = { viewModel.onTabSelected(it) },
       )
 
+      // Recenter button
       RecenterFab(
           modifier =
               Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics {
                 contentDescription = MapScreenTestTags.FAB_RECENTER
               },
-          onClick = { viewModel.requestRecenter() },
-      )
+          isLocationGranted = isLocationGranted,
+          current = uiState.activeTab,
+          onRecenter = { viewModel.requestRecenter() },
+          onAskLocation = { locationPermissions.launchMultiplePermissionRequest() })
 
+      MapRefreshButton(
+          modifier = Modifier.align(Alignment.TopEnd).padding(top = 64.dp, end = 8.dp),
+          isRefreshing = uiState.isRefreshing,
+          currentTab = uiState.activeTab,
+          onRefresh = { viewModel.refreshUIState() },
+      )
+      // Bottom card for selection
       if (uiState.selected != null) {
         SelectionBottomCard(
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
@@ -144,6 +186,16 @@ fun MapScreen(
             onToggleLike = viewModel::toggleLike,
             onDismiss = { viewModel.clearSelection() },
         )
+      }
+
+      // Transparent loading overlay (only when data or map is not ready)
+      if (showLoading) {
+        Box(
+            Modifier.fillMaxSize()
+                .align(Alignment.Center)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))) {
+              LoadingScreen(modifier = Modifier.align(Alignment.Center))
+            }
       }
 
       // Recenter camera when asked
@@ -205,14 +257,35 @@ private fun MapCanvas(
 
 /* ---------- Recenter FAB ---------- */
 @Composable
-private fun RecenterFab(modifier: Modifier, onClick: () -> Unit) {
+private fun RecenterFab(
+    modifier: Modifier,
+    isLocationGranted: Boolean,
+    current: MapTab,
+    onRecenter: () -> Unit,
+    onAskLocation: () -> Unit,
+) {
+  val cs = MaterialTheme.colorScheme
+  val ui = colorsForMapTab(current, cs)
+
   FloatingActionButton(
       modifier = modifier,
-      onClick = onClick,
-      containerColor = MaterialTheme.colorScheme.primaryContainer,
-      contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+      onClick = {
+        if (isLocationGranted) {
+          onRecenter()
+        } else {
+          onAskLocation()
+        }
+      },
+      containerColor = cs.background,
+      contentColor = ui.bg,
   ) {
-    Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
+    if (isLocationGranted) {
+      Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
+    } else {
+      Icon(
+          imageVector = Icons.Default.LocationOff, // ← add this import
+          contentDescription = "Enable location")
+    }
   }
 }
 
@@ -227,17 +300,4 @@ private fun MapTapToClearSelection(mapView: MapView?, onDismiss: () -> Unit) {
     mapView?.gestures?.addOnMapClickListener(listener)
     onDispose { mapView?.gestures?.removeOnMapClickListener(listener) }
   }
-}
-
-/* ---------- Utilities ---------- */
-private fun prevOf(list: List<MapTab>, current: MapTab): MapTab? {
-  if (list.isEmpty()) return null
-  val i = list.indexOf(current).let { if (it == -1) 0 else it }
-  return list[(i - 1 + list.size) % list.size]
-}
-
-private fun nextOf(list: List<MapTab>, current: MapTab): MapTab? {
-  if (list.isEmpty()) return null
-  val i = list.indexOf(current).let { if (it == -1) 0 else it }
-  return list[(i + 1) % list.size]
 }

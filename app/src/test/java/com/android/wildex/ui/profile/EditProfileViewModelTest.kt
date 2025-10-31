@@ -132,14 +132,13 @@ class EditProfileViewModelTest {
     Assert.assertEquals("At least one field is not valid", s.errorMsg)
 
     coVerify(exactly = 0) { userRepository.getUser(any()) }
-    coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
     coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
     coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
     confirmVerified(userRepository, storageRepository)
   }
 
   @Test
-  fun saveProfileChanges_success_deletesUploadsAndEditsUser_andClearsError() {
+  fun saveProfileChanges_success_uploadsAndEditsUser_andClearsError() {
     mainDispatcherRule.runTest {
       viewModel.setName("A")
       viewModel.setSurname("B")
@@ -150,7 +149,6 @@ class EditProfileViewModelTest {
       val anyUri = mockk<Uri>(relaxed = true)
 
       coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.deleteUserProfilePicture("uid-1") } returns Unit
       coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
       coEvery { userRepository.editUser(any(), any()) } returns Unit
 
@@ -158,7 +156,6 @@ class EditProfileViewModelTest {
       advanceUntilIdle()
 
       val captured = slot<User>()
-      coVerify(exactly = 1) { storageRepository.deleteUserProfilePicture("uid-1") }
       coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
       coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
@@ -185,7 +182,6 @@ class EditProfileViewModelTest {
       val anyUri = mockk<Uri>(relaxed = true)
 
       coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.deleteUserProfilePicture("uid-1") } returns Unit
       coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
           RuntimeException("x")
 
@@ -196,7 +192,6 @@ class EditProfileViewModelTest {
       Assert.assertEquals("Failed to save profile changes: x", s.errorMsg)
 
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { storageRepository.deleteUserProfilePicture("uid-1") }
       coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
       coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
       confirmVerified(userRepository, storageRepository)
@@ -218,7 +213,6 @@ class EditProfileViewModelTest {
       advanceUntilIdle()
 
       val captured = slot<User>()
-      coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
       coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
       coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
@@ -272,7 +266,6 @@ class EditProfileViewModelTest {
       Assert.assertEquals("Failed to save profile changes: boom", s.errorMsg)
 
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
       coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
       coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
       confirmVerified(userRepository, storageRepository)
@@ -298,7 +291,6 @@ class EditProfileViewModelTest {
 
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
       coVerify(exactly = 1) { userRepository.editUser("uid-1", any()) }
-      coVerify(exactly = 0) { storageRepository.deleteUserProfilePicture(any()) }
       coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
       confirmVerified(userRepository, storageRepository)
     }
@@ -315,7 +307,6 @@ class EditProfileViewModelTest {
       val anyUri = mockk<Uri>(relaxed = true)
 
       coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.deleteUserProfilePicture("uid-1") } returns Unit
       coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
       coEvery { userRepository.editUser(any(), any()) } returns Unit
 
@@ -323,7 +314,6 @@ class EditProfileViewModelTest {
       advanceUntilIdle()
 
       val captured = slot<User>()
-      coVerify(exactly = 1) { storageRepository.deleteUserProfilePicture("uid-1") }
       coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
       coVerify(exactly = 1) { userRepository.getUser("uid-1") }
       coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }

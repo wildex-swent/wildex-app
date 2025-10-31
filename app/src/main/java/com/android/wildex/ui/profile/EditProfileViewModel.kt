@@ -114,7 +114,6 @@ class EditProfileViewModel(
         val user = userRepository.getUser(currentUserId)
         val newURL: URL
         if (profileImageUri != null) {
-          storageRepository.deleteUserProfilePicture(currentUserId)
           newURL =
               storageRepository.uploadUserProfilePicture(currentUserId, profileImageUri)
                   ?: user.profilePictureURL

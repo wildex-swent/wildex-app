@@ -6,9 +6,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,9 +39,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
@@ -144,9 +155,12 @@ fun CollectionTopBar(
   TopAppBar(
       title = {
         Text(
-            text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onBackground)
+          modifier = Modifier.fillMaxWidth(),
+          text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
+          fontWeight = FontWeight.SemiBold,
+          color = colorScheme.onBackground,
+          textAlign = TextAlign.Center
+        )
       },
       navigationIcon = {
         IconButton(
@@ -197,13 +211,17 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
     items(nbRows) { index ->
       val rowStartIndex = index * 2
       Row(
-          horizontalArrangement = Arrangement.Center,
-          verticalAlignment = Alignment.CenterVertically) {
-            AnimalView(animalsStates[rowStartIndex], onAnimalClick)
-            // Check if there is another animal to display when we are at the last row
-            if (rowStartIndex + 1 <= animalsStates.size - 1)
-                AnimalView(animalsStates[rowStartIndex + 1], onAnimalClick)
-          }
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+      ) {
+        AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
+        // Check if there is another animal to display when we are at the last row
+        if (rowStartIndex + 1 <= animalsStates.size - 1) {
+          AnimalView(animalsStates[rowStartIndex + 1], onAnimalClick, modifier = Modifier.weight(1f))
+        } else {
+          Spacer(modifier = Modifier.weight(1f))
+        }
+      }
     }
   }
 }
@@ -215,30 +233,39 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
  * @param onAnimalClick Callback invoked when the animal is selected.
  */
 @Composable
-fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
+fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: Modifier) {
   val animalName = animalState.name
   val animalPictureURL = animalState.pictureURL
   Card(
       onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(16.dp),
       enabled = animalState.isUnlocked,
-      modifier =
-          Modifier.testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))) {
+      modifier = modifier
+        .testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))
+  ) {
         AsyncImage(
-            model = animalPictureURL,
-            contentDescription = animalName,
-            modifier = Modifier.size(150.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop,
+          model = animalPictureURL,
+          contentDescription = animalName,
+          modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
+          contentScale = ContentScale.Crop,
         )
         Text(
-            text = animalName,
-            fontWeight = FontWeight.Medium,
-            color = colorScheme.onBackground,
-            modifier =
-                Modifier.fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(color = colorScheme.primary))
-      }
+          text = animalName,
+          fontWeight = FontWeight.Medium,
+          color = colorScheme.background,
+          textAlign = TextAlign.Center,
+          fontSize = 17.sp,
+          style = TextStyle(lineHeight = 2.2.em,
+            lineHeightStyle = LineHeightStyle(
+              alignment = LineHeightStyle.Alignment.Center,
+              trim = LineHeightStyle.Trim.None
+            )
+          ),
+          modifier =
+              Modifier.fillMaxSize()
+                  .background(color = colorScheme.primary)
+        )
+  }
 }
 
 /** Composable displayed when the user's collection is empty. */
@@ -247,7 +274,8 @@ fun NoAnimalsView() {
   Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
     Text(
         text = LocalContext.current.getString(R.string.empty_collection),
-        color = colorScheme.onBackground)
+        color = colorScheme.onBackground,
+      textAlign = TextAlign.Center)
   }
 }
 
@@ -356,11 +384,12 @@ fun CollectionScreenPreview() {
         description = "Biggest mammal on Earth"
       )
     )
+
+    userAnimalsRepository.initializeUserAnimals("otherUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-1")
     userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-3")
     userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-7")
-    userAnimalsRepository.initializeUserAnimals("otherUserId")
     userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-2")
     userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-4")
     userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-3")

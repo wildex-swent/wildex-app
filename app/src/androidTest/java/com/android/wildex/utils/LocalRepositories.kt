@@ -1,5 +1,7 @@
 package com.android.wildex.utils
 
+import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
@@ -164,15 +166,38 @@ object LocalRepositories {
     }
   }
 
+  open class AnimalRepositoryImpl() : AnimalRepository, ClearableRepository {
+    val listOfAnimals = mutableListOf<Animal>()
+
+    init {
+      clear()
+    }
+
+    override suspend fun getAnimal(animalId: Id): Animal =
+        listOfAnimals.find { it.animalId == animalId }!!
+
+    override suspend fun getAllAnimals(): List<Animal> = listOfAnimals
+
+    override suspend fun addAnimal(animal: Animal) {
+      listOfAnimals.add(animal)
+    }
+
+    override fun clear() {
+      listOfAnimals.clear()
+    }
+  }
+
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
+  val animalRepository: AnimalRepository = AnimalRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
     (likeRepository as ClearableRepository).clear()
     (userRepository as ClearableRepository).clear()
     (commentRepository as ClearableRepository).clear()
+    (animalRepository as ClearableRepository).clear()
   }
 }

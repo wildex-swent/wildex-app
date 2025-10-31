@@ -1,19 +1,17 @@
 package com.android.wildex.ui.collection
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,12 +37,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -236,35 +234,54 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
 fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: Modifier) {
   val animalName = animalState.name
   val animalPictureURL = animalState.pictureURL
-  Card(
+  Box(
+    modifier = modifier
+      .clip(RoundedCornerShape(16.dp))
+  ) {
+    Card(
       onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
-      shape = RoundedCornerShape(16.dp),
       enabled = animalState.isUnlocked,
       modifier = modifier
         .testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))
-  ) {
-        AsyncImage(
-          model = animalPictureURL,
-          contentDescription = animalName,
-          modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
-          contentScale = ContentScale.Crop,
+    ) {
+      AsyncImage(
+        model = animalPictureURL,
+        contentDescription = animalName,
+        modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
+        contentScale = ContentScale.Crop,
+      )
+      Text(
+        text = animalName,
+        fontWeight = FontWeight.Medium,
+        color = colorScheme.background,
+        textAlign = TextAlign.Center,
+        fontSize = 17.sp,
+        style = TextStyle(
+          lineHeight = 2.2.em,
+          lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None
+          )
+        ),
+        modifier =
+          Modifier.fillMaxSize()
+            .background(color = colorScheme.primary)
+      )
+    }
+    if (!animalState.isUnlocked) {
+      Box(
+        modifier = Modifier
+          .matchParentSize()
+          .background(color = colorScheme.onBackground.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+      ){
+        Image(
+          painter = painterResource(id = R.drawable.lock),
+          contentDescription = "Locked animal",
+          modifier = Modifier.size(90.dp)
         )
-        Text(
-          text = animalName,
-          fontWeight = FontWeight.Medium,
-          color = colorScheme.background,
-          textAlign = TextAlign.Center,
-          fontSize = 17.sp,
-          style = TextStyle(lineHeight = 2.2.em,
-            lineHeightStyle = LineHeightStyle(
-              alignment = LineHeightStyle.Alignment.Center,
-              trim = LineHeightStyle.Trim.None
-            )
-          ),
-          modifier =
-              Modifier.fillMaxSize()
-                  .background(color = colorScheme.primary)
-        )
+      }
+    }
   }
 }
 

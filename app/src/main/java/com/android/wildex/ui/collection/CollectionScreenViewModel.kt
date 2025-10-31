@@ -66,7 +66,7 @@ class CollectionScreenViewModel(
                 pictureURL = animal.pictureURL,
                 name = animal.name,
                 isUnlocked = userAnimals.contains(animal.animalId))
-          }
+          }.sortedBy { !it.isUnlocked }
       _uiState.value =
           _uiState.value.copy(
               user = user,

@@ -21,8 +21,8 @@ data class EditProfileUIState(
     val name: String = "",
     val surname: String = "",
     val username: String = "",
-    val description: String = "",
-    val country: String = "",
+    val description: String = "I am ...",
+    val country: String = "Switzerland",
     val profileImageUrl: URL = "",
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
@@ -48,9 +48,9 @@ class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
     private val currentUserId: Id =
-        try {
+        if (Firebase.auth.currentUser != null) {
           Firebase.auth.uid
-        } catch (_: Exception) {
+        } else {
           ""
         } ?: "",
 ) : ViewModel() {
@@ -110,6 +110,7 @@ class EditProfileViewModel(
     }
     viewModelScope.launch {
       try {
+        _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
         val newURL: URL
         if (profileImageUri != null) {
@@ -138,6 +139,7 @@ class EditProfileViewModel(
             newUser = newUser,
         )
         clearErrorMsg()
+        _uiState.value = _uiState.value.copy(isLoading = false, isError = false)
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")

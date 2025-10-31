@@ -113,14 +113,14 @@ class CollectionScreenTest {
             species = "Cetacean",
             description = "Biggest mammal on Earth"))
     userAnimalsRepository.initializeUserAnimals("currentUserId")
-    userAnimalsRepository.addUserAnimals("currentUserId", "animalId-1")
-    userAnimalsRepository.addUserAnimals("currentUserId", "animalId-3")
-    userAnimalsRepository.addUserAnimals("currentUserId", "animalId-7")
+    userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-1")
+    userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-3")
+    userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-7")
     userAnimalsRepository.initializeUserAnimals("otherUserId")
-    userAnimalsRepository.addUserAnimals("otherUserId", "animalId-2")
-    userAnimalsRepository.addUserAnimals("otherUserId", "animalId-4")
-    userAnimalsRepository.addUserAnimals("otherUserId", "animalId-3")
-    userAnimalsRepository.addUserAnimals("otherUserId", "animalId-6")
+    userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-2")
+    userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-4")
+    userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-3")
+    userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-6")
   }
 
   @After

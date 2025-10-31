@@ -41,11 +41,10 @@ data class AnimalState(
 )
 
 class CollectionScreenViewModel(
-    private val userAnimalsRepository: UserAnimalsRepository,
-    // = RepositoryProvider.userAnimalsRepository,
-    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+  private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+  private val userAnimalsRepository: UserAnimalsRepository = RepositoryProvider.userAnimalsRepository,
+  private val userRepository: UserRepository = RepositoryProvider.userRepository,
+  private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
 
   /** Backing property for the collection screen state. */

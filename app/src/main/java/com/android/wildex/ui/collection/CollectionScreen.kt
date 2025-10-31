@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -41,6 +43,7 @@ import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.theme.WildexTheme
 import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -238,4 +241,12 @@ fun NoAnimalsView() {
         text = LocalContext.current.getString(R.string.empty_collection),
         color = colorScheme.onBackground)
   }
+}
+
+@Preview
+@Composable
+fun CollectionScreenPreview() {
+  WildexTheme { Surface(modifier = Modifier.fillMaxSize()){CollectionScreen(
+    //CollectionScreenViewModel()
+  )} }
 }

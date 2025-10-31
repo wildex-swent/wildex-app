@@ -44,7 +44,7 @@ private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Rep
 @Composable
 fun BottomNavigationMenu(
     selectedTab: Tab,
-    onTabSelected: (Tab) -> Unit,
+    onTabSelected: (Tab) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
   val cs = MaterialTheme.colorScheme

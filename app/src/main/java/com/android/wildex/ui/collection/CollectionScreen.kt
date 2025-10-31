@@ -68,6 +68,8 @@ object CollectionScreenTestTags {
   const val GO_BACK_BUTTON = "collection_screen_go_back_button"
   const val NOTIFICATION_BUTTON = "collection_screen_notification_button"
   const val PROFILE_BUTTON = "collection_screen_profile_button"
+  const val NO_ANIMAL_TEXT = "no_animal_text"
+  const val SCREEN_TITLE = "collection_screen_title"
   const val ANIMAL_LIST = "collection_screen_animal_list"
 
   fun testTagForAnimal(animalId: Id) = "collection_screen_animal_$animalId"
@@ -124,7 +126,7 @@ fun CollectionScreen(
           when {
             uiState.isError -> LoadingFail()
             uiState.isLoading -> LoadingScreen()
-            uiState.animals.isEmpty() -> NoAnimalsView()
+            uiState.animals.isEmpty() -> NoAnimalsView(uiState.isUserOwner)
             else -> AnimalsView(animalsStates = uiState.animals, onAnimalClick = onAnimalClick)
           }
         }
@@ -153,7 +155,7 @@ fun CollectionTopBar(
   TopAppBar(
       title = {
         Text(
-          modifier = Modifier.fillMaxWidth(),
+          modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
           text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
           fontWeight = FontWeight.SemiBold,
           color = colorScheme.onBackground,
@@ -287,12 +289,13 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
 
 /** Composable displayed when the user's collection is empty. */
 @Composable
-fun NoAnimalsView() {
+fun NoAnimalsView(isUserOwner: Boolean) {
   Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
     Text(
-        text = LocalContext.current.getString(R.string.empty_collection),
-        color = colorScheme.onBackground,
-      textAlign = TextAlign.Center)
+      text = LocalContext.current.getString(if (isUserOwner) R.string.empty_current_collection else R.string.empty_other_collection),
+      color = colorScheme.onBackground,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT))
   }
 }
 

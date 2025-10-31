@@ -15,7 +15,7 @@ interface ReportRepository {
   suspend fun getAllReportsByAuthor(authorId: Id): List<Report>
 
   /** Retrieves all Reports items associated with a specific assignee. */
-  suspend fun getAllReportsByAssignee(assigneeId: Id): List<Report>
+  suspend fun getAllReportsByAssignee(assigneeId: Id?): List<Report>
 
   /** Retrieves a specific Report item by its unique identifier. */
   suspend fun getReport(reportId: Id): Report

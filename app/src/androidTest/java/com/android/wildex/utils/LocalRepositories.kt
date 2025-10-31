@@ -2,6 +2,8 @@ package com.android.wildex.utils
 
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.report.Report
+import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
@@ -187,11 +189,53 @@ object LocalRepositories {
     }
   }
 
+  open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+      ReportRepository, ClearableRepository {
+
+    val listOfReports = mutableListOf<Report>()
+
+    init {
+      clear()
+    }
+
+    override fun getNewReportId(): String = "newReportId"
+
+    override suspend fun getAllReports(): List<Report> = listOfReports
+
+    override suspend fun getAllReportsByAuthor(authorId: Id): List<Report> =
+        listOfReports.filter { it.authorId == authorId }
+
+    override suspend fun getAllReportsByAssignee(assigneeId: Id?): List<Report> =
+        listOfReports.filter { it.assigneeId == assigneeId }
+
+    override suspend fun getReport(reportId: Id): Report =
+        listOfReports.find { it.reportId == reportId }!!
+
+    override suspend fun addReport(report: Report) {
+      listOfReports.add(report)
+    }
+
+    override suspend fun editReport(reportId: Id, newValue: Report) {
+      listOfReports.removeIf { it.reportId == reportId }
+      listOfReports.add(newValue)
+    }
+
+    override suspend fun deleteReport(reportId: Id) {
+      listOfReports.removeIf { it.reportId == reportId }
+    }
+
+    override fun clear() {
+      listOfReports.clear()
+    }
+  }
+
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
   val animalRepository: AnimalRepository = AnimalRepositoryImpl()
+
+  val reportRepository: ReportRepository = ReportRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -199,5 +243,6 @@ object LocalRepositories {
     (userRepository as ClearableRepository).clear()
     (commentRepository as ClearableRepository).clear()
     (animalRepository as ClearableRepository).clear()
+    (reportRepository as ClearableRepository).clear()
   }
 }

@@ -191,8 +191,8 @@ object LocalRepositories {
     }
   }
 
-  open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository)
-    : UserAnimalsRepository, ClearableRepository {
+  open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository) :
+      UserAnimalsRepository, ClearableRepository {
     val mapUserToAnimals = mutableMapOf<Id, MutableList<Animal>>()
 
     init {
@@ -211,19 +211,13 @@ object LocalRepositories {
       return getAllAnimalsByUser(userId).size
     }
 
-    override suspend fun addUserAnimals(
-      userId: Id,
-      animalId: Id
-    ) {
+    override suspend fun addUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.add(animalRepository.getAnimal(animalId))
       mapUserToAnimals.put(userId, oldList)
     }
 
-    override suspend fun deleteUserAnimals(
-      userId: Id,
-      animalId: Id
-    ) {
+    override suspend fun deleteUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.removeIf { it.animalId == animalId }
       mapUserToAnimals.put(userId, oldList)
@@ -239,8 +233,8 @@ object LocalRepositories {
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
   val animalRepository: AnimalRepository = AnimalRepositoryImpl()
-  val userAnimalsRepository: UserAnimalsRepository = UserAnimalsRepositoryImpl(
-      animalRepository = animalRepository)
+  val userAnimalsRepository: UserAnimalsRepository =
+      UserAnimalsRepositoryImpl(animalRepository = animalRepository)
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()

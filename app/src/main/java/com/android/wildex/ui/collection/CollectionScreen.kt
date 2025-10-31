@@ -34,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -43,7 +42,6 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import kotlin.math.ceil
-
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object CollectionScreenTestTags {
@@ -72,13 +70,13 @@ object CollectionScreenTestTags {
  */
 @Composable
 fun CollectionScreen(
-  collectionScreenViewModel: CollectionScreenViewModel = viewModel(),
-  userUid: String = "",
-  onAnimalClick: (Id) -> Unit = {},
-  onProfileClick: () -> Unit = {},
-  onNotificationClick: () -> Unit = {},
-  onGoBack: () -> Unit = {},
-  bottomBar: @Composable () -> Unit = {}
+    collectionScreenViewModel: CollectionScreenViewModel = viewModel(),
+    userUid: String = "",
+    onAnimalClick: (Id) -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onGoBack: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {}
 ) {
   val uiState by collectionScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -92,38 +90,33 @@ fun CollectionScreen(
   }
 
   Scaffold(
-    modifier = Modifier.fillMaxSize(),
-    bottomBar = { bottomBar() },
-    topBar = {
-      CollectionTopBar(
-        uiState.isUserOwner,
-        uiState.user.profilePictureURL,
-        onGoBack,
-        onProfileClick,
-        onNotificationClick
-      )
-    }
-  ) { innerPadding ->
-    Box(modifier = Modifier.padding(innerPadding)) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.animals.isEmpty() -> NoAnimalsView()
-        else ->
-          AnimalsView(
-            animalsStates = uiState.animals,
-            onAnimalClick = onAnimalClick
-          )
+      modifier = Modifier.fillMaxSize(),
+      bottomBar = { bottomBar() },
+      topBar = {
+        CollectionTopBar(
+            uiState.isUserOwner,
+            uiState.user.profilePictureURL,
+            onGoBack,
+            onProfileClick,
+            onNotificationClick)
+      }) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            uiState.animals.isEmpty() -> NoAnimalsView()
+            else -> AnimalsView(animalsStates = uiState.animals, onAnimalClick = onAnimalClick)
+          }
+        }
       }
-    }
-  }
 }
 
 /**
  * Composable for the top app bar in the Collection Screen.
  *
  * @param isUserOwner Boolean indicating if the displayed collection belongs to the current user.
- * @param userProfilePictureURL URL of the user's profile picture, used when displaying the current user's collection.
+ * @param userProfilePictureURL URL of the user's profile picture, used when displaying the current
+ *   user's collection.
  * @param onGoBack Callback invoked when the go back button is clicked.
  * @param onProfileClick Callback invoked when the profile button is clicked.
  * @param onNotificationClick Callback invoked when the notification button is clicked.
@@ -131,51 +124,53 @@ fun CollectionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionTopBar(
-  isUserOwner: Boolean,
-  userProfilePictureURL: String = "",
-  onGoBack: () -> Unit,
-  onProfileClick: () -> Unit,
-  onNotificationClick: () -> Unit
+    isUserOwner: Boolean,
+    userProfilePictureURL: String = "",
+    onGoBack: () -> Unit,
+    onProfileClick: () -> Unit,
+    onNotificationClick: () -> Unit
 ) {
   TopAppBar(
-    title = {
-      Text(
-        text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
-        fontWeight = FontWeight.SemiBold,
-        color = colorScheme.onBackground)
-    },
-    navigationIcon = {
-      IconButton(
-        modifier = Modifier.testTag(if (isUserOwner) CollectionScreenTestTags.NOTIFICATION_BUTTON else CollectionScreenTestTags.GO_BACK_BUTTON),
-        onClick = { if (isUserOwner) onNotificationClick() else onGoBack() },
-      ) {
-        Icon(
-          imageVector = if (isUserOwner) Icons.Default.Notifications else Icons.Default.ArrowBack,
-          contentDescription = if (isUserOwner) "Notifications" else "Back",
-          tint = colorScheme.onBackground,
-        )
-      }
-    },
-    actions = {
-      if (isUserOwner) {
+      title = {
+        Text(
+            text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
+            fontWeight = FontWeight.SemiBold,
+            color = colorScheme.onBackground)
+      },
+      navigationIcon = {
         IconButton(
-          onClick = { onProfileClick() },
-          modifier = Modifier.testTag(CollectionScreenTestTags.PROFILE_BUTTON),
-        ) {
-          AsyncImage(
-            model = userProfilePictureURL,
-            contentDescription = "Profile picture",
             modifier =
-              Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .border(1.dp, colorScheme.primary, CircleShape),
-            contentScale = ContentScale.Crop,
+                Modifier.testTag(
+                    if (isUserOwner) CollectionScreenTestTags.NOTIFICATION_BUTTON
+                    else CollectionScreenTestTags.GO_BACK_BUTTON),
+            onClick = { if (isUserOwner) onNotificationClick() else onGoBack() },
+        ) {
+          Icon(
+              imageVector =
+                  if (isUserOwner) Icons.Default.Notifications else Icons.Default.ArrowBack,
+              contentDescription = if (isUserOwner) "Notifications" else "Back",
+              tint = colorScheme.onBackground,
           )
         }
-      }
-    }
-  )
+      },
+      actions = {
+        if (isUserOwner) {
+          IconButton(
+              onClick = { onProfileClick() },
+              modifier = Modifier.testTag(CollectionScreenTestTags.PROFILE_BUTTON),
+          ) {
+            AsyncImage(
+                model = userProfilePictureURL,
+                contentDescription = "Profile picture",
+                modifier =
+                    Modifier.size(40.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, colorScheme.primary, CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+          }
+        }
+      })
 }
 
 /**
@@ -185,26 +180,19 @@ fun CollectionTopBar(
  * @param onAnimalClick Callback invoked when an animal is selected.
  */
 @Composable
-fun AnimalsView(
-  animalsStates: List<AnimalState>,
-  onAnimalClick: (Id) -> Unit
-) {
-  LazyColumn (
-    modifier = Modifier
-      .fillMaxSize()
-      .testTag(CollectionScreenTestTags.ANIMAL_LIST)
-  ) {
+fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
+  LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
     items(nbRows) { index ->
       val rowStartIndex = index * 2
-      Row (
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        AnimalView(animalsStates[rowStartIndex], onAnimalClick)
-        // Check if there is another animal to display when we are at the last row
-        if (rowStartIndex + 1 <= animalsStates.size - 1) AnimalView(animalsStates[rowStartIndex + 1], onAnimalClick)
-      }
+      Row(
+          horizontalArrangement = Arrangement.Center,
+          verticalAlignment = Alignment.CenterVertically) {
+            AnimalView(animalsStates[rowStartIndex], onAnimalClick)
+            // Check if there is another animal to display when we are at the last row
+            if (rowStartIndex + 1 <= animalsStates.size - 1)
+                AnimalView(animalsStates[rowStartIndex + 1], onAnimalClick)
+          }
     }
   }
 }
@@ -220,45 +208,34 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit) {
   val animalName = animalState.name
   val animalPictureURL = animalState.pictureURL
   Card(
-    onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
-    shape = RoundedCornerShape(8.dp),
-    enabled = animalState.isUnlocked,
-    modifier = Modifier.testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))
-  ) {
-    AsyncImage(
-      model = animalPictureURL,
-      contentDescription = animalName,
-      modifier = Modifier
-        .size(150.dp)
-        .clip(RoundedCornerShape(8.dp)),
-      contentScale = ContentScale.Crop,
-    )
-    Text(
-      text = animalName,
-      fontWeight = FontWeight.Medium,
-      color = colorScheme.onBackground,
-      modifier = Modifier
-        .fillMaxSize()
-        .clip(RoundedCornerShape(8.dp))
-        .background(color = colorScheme.primary)
-    )
-  }
+      onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
+      shape = RoundedCornerShape(8.dp),
+      enabled = animalState.isUnlocked,
+      modifier =
+          Modifier.testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))) {
+        AsyncImage(
+            model = animalPictureURL,
+            contentDescription = animalName,
+            modifier = Modifier.size(150.dp).clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop,
+        )
+        Text(
+            text = animalName,
+            fontWeight = FontWeight.Medium,
+            color = colorScheme.onBackground,
+            modifier =
+                Modifier.fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color = colorScheme.primary))
+      }
 }
 
-/**
- * Composable displayed when the user's collection is empty.
- */
+/** Composable displayed when the user's collection is empty. */
 @Composable
 fun NoAnimalsView() {
-  Box(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(16.dp),
-    contentAlignment = Alignment.Center
-  ) {
+  Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
     Text(
-      text = LocalContext.current.getString(R.string.empty_collection),
-      color = colorScheme.onBackground
-    )
+        text = LocalContext.current.getString(R.string.empty_collection),
+        color = colorScheme.onBackground)
   }
 }

@@ -18,34 +18,34 @@ import kotlinx.coroutines.launch
 
 /** Default placeholder user used when no valid user is loaded. */
 val defaultUser: SimpleUser =
-  SimpleUser(
-    userId = "defaultUserId",
-    username = "defaultUsername",
-    profilePictureURL = "",
-  )
+    SimpleUser(
+        userId = "defaultUserId",
+        username = "defaultUsername",
+        profilePictureURL = "",
+    )
 
 data class CollectionUIState(
-  val user: SimpleUser = defaultUser,
-  val isUserOwner: Boolean = false,
-  val animals: List<AnimalState> = emptyList(),
-  val isLoading: Boolean = false,
-  val isError: Boolean = false,
-  val errorMsg: String? = null
+    val user: SimpleUser = defaultUser,
+    val isUserOwner: Boolean = false,
+    val animals: List<AnimalState> = emptyList(),
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val errorMsg: String? = null
 )
 
 data class AnimalState(
-  val animalId: Id = "defaultAnimalId",
-  val pictureURL: URL = "",
-  val name: String = "Default Animal",
-  val isUnlocked: Boolean = false
+    val animalId: Id = "defaultAnimalId",
+    val pictureURL: URL = "",
+    val name: String = "Default Animal",
+    val isUnlocked: Boolean = false
 )
 
 class CollectionScreenViewModel(
-  private val userAnimalsRepository : UserAnimalsRepository,
-  //= RepositoryProvider.userAnimalsRepository,
-  private val animalRepository : AnimalRepository = RepositoryProvider.animalRepository,
-  private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val userAnimalsRepository: UserAnimalsRepository,
+    // = RepositoryProvider.userAnimalsRepository,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
 
   /** Backing property for the collection screen state. */
@@ -57,25 +57,26 @@ class CollectionScreenViewModel(
   private suspend fun updateUIState(userUid: String) {
     try {
       val user = userRepository.getSimpleUser(userUid)
-      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { animal -> animal.animalId }
+      val userAnimals =
+          userAnimalsRepository.getAllAnimalsByUser(userUid).map { animal -> animal.animalId }
       val animals = animalRepository.getAllAnimals()
-      val animalStates = animals.map { animal ->
-        AnimalState(
-          animalId = animal.animalId,
-          pictureURL = animal.pictureURL,
-          name = animal.name,
-          isUnlocked = userAnimals.contains(animal.animalId)
-        )
-      }
+      val animalStates =
+          animals.map { animal ->
+            AnimalState(
+                animalId = animal.animalId,
+                pictureURL = animal.pictureURL,
+                name = animal.name,
+                isUnlocked = userAnimals.contains(animal.animalId))
+          }
       _uiState.value =
-        _uiState.value.copy(
-          user = user,
-          isUserOwner = userUid == currentUserId,
-          animals = animalStates,
-          isLoading = false,
-          errorMsg = null,
-          isError = false,
-        )
+          _uiState.value.copy(
+              user = user,
+              isUserOwner = userUid == currentUserId,
+              animals = animalStates,
+              isLoading = false,
+              errorMsg = null,
+              isError = false,
+          )
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load collection.")
       _uiState.value = _uiState.value.copy(isLoading = false, isError = true)

@@ -28,7 +28,8 @@ sealed class Screen(
 
   object Camera : Screen(route = "camera", name = "Camera", isTopLevelDestination = true)
 
-  data class Collection(val userUid: String) : Screen(route = "collection/${userUid}", name = "Collection") {
+  data class Collection(val userUid: String) :
+      Screen(route = "collection/${userUid}", name = "Collection") {
     companion object {
       const val PATH = "collection"
     }

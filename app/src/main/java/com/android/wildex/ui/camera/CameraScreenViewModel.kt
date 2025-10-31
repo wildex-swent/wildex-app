@@ -7,11 +7,14 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.google.android.gms.location.LocationServices
@@ -37,9 +40,10 @@ data class CameraUiState(
 class CameraScreenViewModel(
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val animalRepository: AnimalInfoRepository = RepositoryProvider.animalInfoRepository,
-    // private val collectionRepository: CollectionRepository =
-    // RepositoryProvider.collectionRepository,
+    private val animalInfoRepository: AnimalInfoRepository =
+        RepositoryProvider.animalInfoRepository,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val userAnimalsRepository: UserAnimalsRepository,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(CameraUiState())
@@ -52,16 +56,12 @@ class CameraScreenViewModel(
 
   /* detects animal in the image */
   fun detectAnimalImage(imageUri: Uri, context: Context) {
-    _uiState.value = _uiState.value.copy(isDetecting = true)
+    _uiState.value = _uiState.value.copy(isDetecting = true, currentImageUri = imageUri)
     viewModelScope.launch {
       try {
-        val animalDetectResponse = animalRepository.detectAnimal(context, imageUri).first()
+        val animalDetectResponse = animalInfoRepository.detectAnimal(context, imageUri).first()
         _uiState.value =
-            _uiState.value.copy(
-                animalDetectResponse = animalDetectResponse,
-                currentImageUri = imageUri,
-                isDetecting = false,
-            )
+            _uiState.value.copy(animalDetectResponse = animalDetectResponse, isDetecting = false)
         Log.d("CameraScreenViewModel", "Animal detected: ${animalDetectResponse.animalType}")
       } catch (e: Exception) {
         setErrorMsg("Failed to detect animal and start post creation : ${e.message}")
@@ -137,19 +137,19 @@ class CameraScreenViewModel(
   /* registers the animal from the animal response in the repository if not already there */
   private suspend fun registerAnimal(animalId: Id) {
     val detection = uiState.value.animalDetectResponse ?: return
-    val animalDescription = animalRepository.getAnimalDescription(detection.animalType)
-    /*
-    val animalPicture = animalRepository.getAnimalPicture(detection.animalType)
-    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId,
-    animalPic)
-    val animal = Animal(
-        animalId,
-        animalPictureId,
-        detection.animalType,
-        detection.taxonomy.species,
-        animalDescription
-    )
-    collectionRepository.addAnimalIfNotExists(animal)
-    */
+    val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType) ?: ""
+
+    val animalPicture = Uri.EMPTY // animalRepository.getAnimalPicture(detection.animalType)
+    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
+    val animal =
+        Animal(
+            animalId,
+            animalPictureURL,
+            detection.animalType,
+            detection.taxonomy.species,
+            animalDescription,
+        )
+    animalRepository.addAnimal(animal)
+    userAnimalsRepository.addUserAnimals(currentUserId!!, animalId)
   }
 }

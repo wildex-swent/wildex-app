@@ -24,7 +24,7 @@ data class Report(
     val date: Timestamp,
     val description: String,
     val authorId: Id,
-    val assigneeId: Id,
+    val assigneeId: Id?,
     val status: ReportStatus,
 )
 

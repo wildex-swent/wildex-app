@@ -25,7 +25,6 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
   override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
     val collection = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId).get().await()
-    require(collection.exists())
     val userAchievements = collection.toObject(UserAchievements::class.java)
     // Map achievement IDs to Achievements
     // If an ID does not match any Achievement, it is ignored
@@ -41,6 +40,10 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
         Firebase.auth.currentUser?.uid
             ?: throw Exception("UserAchievementsRepositoryFirestore: User not logged in.")
     return getAllAchievementsByUser(userId)
+  }
+
+  override suspend fun getAllAchievements(): List<Achievement> {
+    return Achievements.ALL
   }
 
   override suspend fun updateUserAchievements(userId: Id, inputs: Input) {

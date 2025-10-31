@@ -174,16 +174,13 @@ object LocalRepositories {
       clear()
     }
 
-    override suspend fun getAllAnimals(): List<Animal> {
-      return listOfAnimals
-    }
+    override suspend fun getAnimal(animalId: Id): Animal =
+        listOfAnimals.find { it.animalId == animalId }!!
+
+    override suspend fun getAllAnimals(): List<Animal> = listOfAnimals
 
     override suspend fun addAnimal(animal: Animal) {
-      if (!listOfAnimals.contains(animal)) listOfAnimals.add(animal)
-    }
-
-    override suspend fun getAnimal(animalId: Id): Animal {
-      return listOfAnimals.find { it.animalId == animalId }!!
+      listOfAnimals.add(animal)
     }
 
     override fun clear() {
@@ -211,13 +208,19 @@ object LocalRepositories {
       return getAllAnimalsByUser(userId).size
     }
 
-    override suspend fun addUserAnimals(userId: Id, animalId: Id) {
+    override suspend fun addAnimalToUserAnimals(
+      userId: Id,
+      animalId: Id
+    ) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.add(animalRepository.getAnimal(animalId))
       mapUserToAnimals.put(userId, oldList)
     }
 
-    override suspend fun deleteUserAnimals(userId: Id, animalId: Id) {
+    override suspend fun deleteAnimalToUserAnimals(
+      userId: Id,
+      animalId: Id
+    ) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.removeIf { it.animalId == animalId }
       mapUserToAnimals.put(userId, oldList)

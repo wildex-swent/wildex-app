@@ -189,6 +189,8 @@ class ProfileScreenTest {
 
           override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = emptyList()
 
+          override suspend fun getAllAchievements(): List<Achievement> = emptyList()
+
           override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
 
           override suspend fun initializeUserAchievements(userId: String) {}
@@ -218,6 +220,8 @@ class ProfileScreenTest {
     override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> = achievements
 
     override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = achievements
+
+    override suspend fun getAllAchievements(): List<Achievement> = achievements
 
     override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
 

@@ -12,7 +12,7 @@ plugins {
 
 android {
   namespace = "com.android.wildex"
-  compileSdk = 34
+  compileSdk = 36
 
   // Load the API key from local.properties
   val localProperties = Properties()
@@ -24,7 +24,6 @@ android {
   val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
   val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
   val mbApiKey: String = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
-
 
   defaultConfig {
     applicationId = "com.android.wildex"
@@ -90,6 +89,7 @@ android {
       excludes += "META-INF/NOTICE"
       excludes += "META-INF/NOTICE.txt"
     }
+    jniLibs { useLegacyPackaging = true }
   }
 
   testOptions {
@@ -97,7 +97,6 @@ android {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
     }
-    packagingOptions { jniLibs { useLegacyPackaging = true } }
   }
 
   // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
@@ -244,11 +243,25 @@ dependencies {
   androidTestImplementation(libs.coil)
   androidTestImplementation(libs.coil.compose)
 
- // Compose Material Icons
+  // Compose Material Icons
   implementation(libs.compose.material.icons)
 
   // Permission Accompanist
   implementation(libs.accompanist)
+
+  // Play Services location
+  implementation(libs.play.services.location)
+
+
+  // CameraX
+  implementation(libs.camera.core)
+  implementation(libs.camera.compose)
+  implementation(libs.camera.camera2)
+  implementation(libs.camera.lifecycle)
+
+  // Lottie
+  implementation(libs.lottie.compose)
+
 }
 
 tasks.withType<Test> {

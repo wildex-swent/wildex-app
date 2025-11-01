@@ -249,10 +249,6 @@ dependencies {
   // Permission Accompanist
   implementation(libs.accompanist)
 
-  // Play Services location
-  implementation(libs.play.services.location)
-
-
   // CameraX
   implementation(libs.camera.core)
   implementation(libs.camera.compose)
@@ -261,6 +257,10 @@ dependencies {
 
   // Lottie
   implementation(libs.lottie.compose)
+
+
+  // Play Services location
+  implementation(libs.play.services.location)
 
 }
 

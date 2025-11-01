@@ -5,7 +5,6 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.achievement.UserAchievementsRepositoryFirestore
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animal.AnimalRepositoryFirestore
-import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.AnimalRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
@@ -18,6 +17,7 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.storage.StorageRepositoryFirebase
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserAnimalsRepositoryFirestore
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore

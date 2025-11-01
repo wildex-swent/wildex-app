@@ -130,10 +130,10 @@ fun WildexApp(
             onGoBack = { navigationActions.goBack() },
             bottomBar = {
               if (userId == currentUser?.uid)
-                BottomNavigationMenu(
-                    Tab.Collection,
-                    onTabSelected = { navigationActions.navigateTo(it.destination) },
-                )
+                  BottomNavigationMenu(
+                      Tab.Collection,
+                      onTabSelected = { navigationActions.navigateTo(it.destination) },
+                  )
             })
       } else {
         Log.e("CollectionScreen", "User UID is null")

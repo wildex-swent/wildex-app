@@ -41,10 +41,11 @@ data class AnimalState(
 )
 
 class CollectionScreenViewModel(
-  private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-  private val userAnimalsRepository: UserAnimalsRepository = RepositoryProvider.userAnimalsRepository,
-  private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val userAnimalsRepository: UserAnimalsRepository =
+        RepositoryProvider.userAnimalsRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
 
   /** Backing property for the collection screen state. */
@@ -60,13 +61,15 @@ class CollectionScreenViewModel(
           userAnimalsRepository.getAllAnimalsByUser(userUid).map { animal -> animal.animalId }
       val animals = animalRepository.getAllAnimals()
       val animalStates =
-          animals.map { animal ->
-            AnimalState(
-                animalId = animal.animalId,
-                pictureURL = animal.pictureURL,
-                name = animal.name,
-                isUnlocked = userAnimals.contains(animal.animalId))
-          }.sortedBy { !it.isUnlocked }
+          animals
+              .map { animal ->
+                AnimalState(
+                    animalId = animal.animalId,
+                    pictureURL = animal.pictureURL,
+                    name = animal.name,
+                    isUnlocked = userAnimals.contains(animal.animalId))
+              }
+              .sortedBy { !it.isUnlocked }
       _uiState.value =
           _uiState.value.copy(
               user = user,

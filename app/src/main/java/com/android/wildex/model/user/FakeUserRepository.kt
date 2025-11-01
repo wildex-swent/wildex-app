@@ -16,24 +16,21 @@ class FakeUserRepository : UserRepository {
 
   override suspend fun getSimpleUser(userId: Id): SimpleUser {
     return users
-      .find { it.userId == userId }
-      ?.let {
-        SimpleUser(
-          userId = it.userId,
-          username = it.username,
-          profilePictureURL = it.profilePictureURL,
-        )
-      }!!
+        .find { it.userId == userId }
+        ?.let {
+          SimpleUser(
+              userId = it.userId,
+              username = it.username,
+              profilePictureURL = it.profilePictureURL,
+          )
+        }!!
   }
 
   override suspend fun addUser(user: User) {
     users.add(user)
   }
 
-  override suspend fun editUser(
-    userId: Id,
-    newUser: User
-  ) {
+  override suspend fun editUser(userId: Id, newUser: User) {
     users.removeIf { it.userId == userId }
     users.add(newUser)
   }

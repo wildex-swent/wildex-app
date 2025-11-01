@@ -60,8 +60,8 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.runBlocking
 import kotlin.math.ceil
+import kotlinx.coroutines.runBlocking
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object CollectionScreenTestTags {
@@ -73,8 +73,8 @@ object CollectionScreenTestTags {
   const val ANIMAL_LIST = "collection_screen_animal_list"
 
   fun testTagForAnimal(animalId: Id, isUnlocked: Boolean) =
-    if (isUnlocked) "collection_screen_animal_${animalId}_unlocked"
-    else "collection_screen_animal_${animalId}_locked"
+      if (isUnlocked) "collection_screen_animal_${animalId}_unlocked"
+      else "collection_screen_animal_${animalId}_locked"
 }
 
 /**
@@ -158,14 +158,11 @@ fun CollectionTopBar(
       title = {
         if (isUserOwner) {
           Text(
-            modifier = Modifier
-              .fillMaxWidth()
-              .testTag(CollectionScreenTestTags.SCREEN_TITLE),
-            text = LocalContext.current.getString(R.string.collection),
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onBackground,
-            textAlign = TextAlign.Center
-          )
+              modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
+              text = LocalContext.current.getString(R.string.collection),
+              fontWeight = FontWeight.SemiBold,
+              color = colorScheme.onBackground,
+              textAlign = TextAlign.Center)
         }
       },
       navigationIcon = {
@@ -194,10 +191,9 @@ fun CollectionTopBar(
                 model = userProfilePictureURL,
                 contentDescription = "Profile picture",
                 modifier =
-                    Modifier
-                      .size(40.dp)
-                      .clip(CircleShape)
-                      .border(1.dp, colorScheme.primary, CircleShape),
+                    Modifier.size(40.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, colorScheme.primary, CircleShape),
                 contentScale = ContentScale.Crop,
             )
           }
@@ -213,22 +209,19 @@ fun CollectionTopBar(
  */
 @Composable
 fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
-  LazyColumn(modifier = Modifier
-    .fillMaxSize()
-    .testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
+  LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
     items(nbRows) { index ->
       val rowStartIndex = index * 2
       Row(
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 20.dp, vertical = 10.dp),
+          horizontalArrangement = Arrangement.spacedBy(20.dp),
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
       ) {
         AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
         // Check if there is another animal to display when we are at the last row
         if (rowStartIndex + 1 <= animalsStates.size - 1) {
-          AnimalView(animalsStates[rowStartIndex + 1], onAnimalClick, modifier = Modifier.weight(1f))
+          AnimalView(
+              animalsStates[rowStartIndex + 1], onAnimalClick, modifier = Modifier.weight(1f))
         } else {
           Spacer(modifier = Modifier.weight(1f))
         }
@@ -247,59 +240,46 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
 fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: Modifier) {
   val animalName = animalState.name
   val animalPictureURL = animalState.pictureURL
-  Box(
-    modifier = modifier
-      .clip(RoundedCornerShape(16.dp))
-  ) {
+  Box(modifier = modifier.clip(RoundedCornerShape(16.dp))) {
     Card(
-      onClick = {
-        if (animalState.isUnlocked)
-          onAnimalClick(animalState.animalId)
-      },
-      enabled = animalState.isUnlocked,
-      modifier = modifier
-        .testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId, animalState.isUnlocked))
-    ) {
-      AsyncImage(
-        model = animalPictureURL,
-        contentDescription = animalName,
-        modifier = Modifier
-          .size(180.dp)
-          .clip(RoundedCornerShape(8.dp)),
-        contentScale = ContentScale.Crop,
-      )
-      Text(
-        text = animalName,
-        fontWeight = FontWeight.Medium,
-        color = colorScheme.background,
-        textAlign = TextAlign.Center,
-        fontSize = 17.sp,
-        style = TextStyle(
-          lineHeight = 2.2.em,
-          lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None
-          )
-        ),
+        onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
+        enabled = animalState.isUnlocked,
         modifier =
-          Modifier
-            .fillMaxSize()
-            .background(color = colorScheme.primary)
-      )
-    }
+            modifier.testTag(
+                CollectionScreenTestTags.testTagForAnimal(
+                    animalState.animalId, animalState.isUnlocked))) {
+          AsyncImage(
+              model = animalPictureURL,
+              contentDescription = animalName,
+              modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
+              contentScale = ContentScale.Crop,
+          )
+          Text(
+              text = animalName,
+              fontWeight = FontWeight.Medium,
+              color = colorScheme.background,
+              textAlign = TextAlign.Center,
+              fontSize = 17.sp,
+              style =
+                  TextStyle(
+                      lineHeight = 2.2.em,
+                      lineHeightStyle =
+                          LineHeightStyle(
+                              alignment = LineHeightStyle.Alignment.Center,
+                              trim = LineHeightStyle.Trim.None)),
+              modifier = Modifier.fillMaxSize().background(color = colorScheme.primary))
+        }
     if (!animalState.isUnlocked) {
       Box(
-        modifier = Modifier
-          .matchParentSize()
-          .background(color = colorScheme.onBackground.copy(alpha = 0.4f)),
-        contentAlignment = Alignment.Center
-      ){
-        Image(
-          painter = painterResource(id = R.drawable.lock),
-          contentDescription = "Locked animal",
-          modifier = Modifier.size(90.dp)
-        )
-      }
+          modifier =
+              Modifier.matchParentSize()
+                  .background(color = colorScheme.onBackground.copy(alpha = 0.4f)),
+          contentAlignment = Alignment.Center) {
+            Image(
+                painter = painterResource(id = R.drawable.lock),
+                contentDescription = "Locked animal",
+                modifier = Modifier.size(90.dp))
+          }
     }
   }
 }
@@ -307,14 +287,15 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
 /** Composable displayed when the user's collection is empty. */
 @Composable
 fun NoAnimalsView(isUserOwner: Boolean) {
-  Box(modifier = Modifier
-    .fillMaxSize()
-    .padding(16.dp), contentAlignment = Alignment.Center) {
+  Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
     Text(
-      text = LocalContext.current.getString(if (isUserOwner) R.string.empty_current_collection else R.string.empty_other_collection),
-      color = colorScheme.onBackground,
-      textAlign = TextAlign.Center,
-      modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT))
+        text =
+            LocalContext.current.getString(
+                if (isUserOwner) R.string.empty_current_collection
+                else R.string.empty_other_collection),
+        color = colorScheme.onBackground,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT))
   }
 }
 
@@ -326,103 +307,85 @@ fun CollectionScreenPreview() {
   val userRepository = FakeUserRepository()
   runBlocking {
     userRepository.addUser(
-      User(
-        userId = "currentUserId",
-        username = "currentUsername",
-        name = "John",
-        surname = "Doe",
-        bio = "This is a bio",
-        profilePictureURL =
-          "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "France",
-        friendsCount = 3
-      )
-    )
+        User(
+            userId = "currentUserId",
+            username = "currentUsername",
+            name = "John",
+            surname = "Doe",
+            bio = "This is a bio",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "France",
+            friendsCount = 3))
     userRepository.addUser(
-      User(
-        userId = "otherUserId",
-        username = "otherUsername",
-        name = "Bob",
-        surname = "Smith",
-        bio = "This is my bob bio",
-        profilePictureURL =
-          "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "France",
-        friendsCount = 3
-      )
-    )
+        User(
+            userId = "otherUserId",
+            username = "otherUsername",
+            name = "Bob",
+            surname = "Smith",
+            bio = "This is my bob bio",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "France",
+            friendsCount = 3))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-1",
-        pictureURL =
-          "https://media.istockphoto.com/id/1796374503/photo/the-lion-king.webp?b=1&s=612x612&w=0&k=20&c=wbgXbIrm_qtaLcDKF6_Ay8d4ECaYQ5t5UVVzYk1WNS4=",
-        name = "Lion",
-        species = "Panthera leo",
-        description = "King of the Jungle"
-      )
-    )
+        Animal(
+            animalId = "animalId-1",
+            pictureURL =
+                "https://media.istockphoto.com/id/1796374503/photo/the-lion-king.webp?b=1&s=612x612&w=0&k=20&c=wbgXbIrm_qtaLcDKF6_Ay8d4ECaYQ5t5UVVzYk1WNS4=",
+            name = "Lion",
+            species = "Panthera leo",
+            description = "King of the Jungle"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-2",
-        pictureURL =
-          "https://cdn.pixabay.com/photo/2016/02/19/15/46/labrador-retriever-1210559_1280.jpg",
-        name = "Labrador",
-        species = "Dog",
-        description = "Man's best friend"
-      )
-    )
+        Animal(
+            animalId = "animalId-2",
+            pictureURL =
+                "https://cdn.pixabay.com/photo/2016/02/19/15/46/labrador-retriever-1210559_1280.jpg",
+            name = "Labrador",
+            species = "Dog",
+            description = "Man's best friend"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-3",
-        pictureURL =
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cat_November_2010-1a.jpg/250px-Cat_November_2010-1a.jpg",
-        name = "Tabby Cat",
-        species = "Cat",
-        description = "Man's best frenemy"
-      )
-    )
+        Animal(
+            animalId = "animalId-3",
+            pictureURL =
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cat_November_2010-1a.jpg/250px-Cat_November_2010-1a.jpg",
+            name = "Tabby Cat",
+            species = "Cat",
+            description = "Man's best frenemy"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-4",
-        pictureURL = "https://www.assuropoil.fr/wp-content/uploads/husky-de-siberie.jpg",
-        name = "Husky",
-        species = "Dog",
-        description = "Biggest howler"
-      )
-    )
+        Animal(
+            animalId = "animalId-4",
+            pictureURL = "https://www.assuropoil.fr/wp-content/uploads/husky-de-siberie.jpg",
+            name = "Husky",
+            species = "Dog",
+            description = "Biggest howler"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-5",
-        pictureURL =
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg/960px-Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg",
-        name = "Gorilla",
-        species = "Monkey",
-        description = "Donkey Kong's cousin"
-      )
-    )
+        Animal(
+            animalId = "animalId-5",
+            pictureURL =
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg/960px-Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg",
+            name = "Gorilla",
+            species = "Monkey",
+            description = "Donkey Kong's cousin"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-6",
-        pictureURL =
-          "https://cdn.britannica.com/35/3635-050-96241EC1/Scarlet-macaw-ara-macao.jpg",
-        name = "Ara Macao",
-        species = "Bird",
-        description = "Welcome to Rio de Janeiro!"
-      )
-    )
+        Animal(
+            animalId = "animalId-6",
+            pictureURL =
+                "https://cdn.britannica.com/35/3635-050-96241EC1/Scarlet-macaw-ara-macao.jpg",
+            name = "Ara Macao",
+            species = "Bird",
+            description = "Welcome to Rio de Janeiro!"))
     animalRepository.addAnimal(
-      Animal(
-        animalId = "animalId-7",
-        pictureURL = "https://realaquatics.co.uk/cdn/shop/articles/5.png?v=1634043062",
-        name = "Blue Whale",
-        species = "Cetacean",
-        description = "Biggest mammal on Earth"
-      )
-    )
+        Animal(
+            animalId = "animalId-7",
+            pictureURL = "https://realaquatics.co.uk/cdn/shop/articles/5.png?v=1634043062",
+            name = "Blue Whale",
+            species = "Cetacean",
+            description = "Biggest mammal on Earth"))
 
     userAnimalsRepository.initializeUserAnimals("otherUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
@@ -435,12 +398,16 @@ fun CollectionScreenPreview() {
     userAnimalsRepository.addAnimalToUserAnimals("otherUserId", "animalId-6")
   }
 
-  WildexTheme { Surface(modifier = Modifier.fillMaxSize()){CollectionScreen(
-    userUid = "currentUserId",
-    collectionScreenViewModel = CollectionScreenViewModel(animalRepository = animalRepository,
-      userAnimalsRepository = userAnimalsRepository,
-      userRepository = userRepository,
-      currentUserId = "currentUserId"
-    )
-  )} }
+  WildexTheme {
+    Surface(modifier = Modifier.fillMaxSize()) {
+      CollectionScreen(
+          userUid = "currentUserId",
+          collectionScreenViewModel =
+              CollectionScreenViewModel(
+                  animalRepository = animalRepository,
+                  userAnimalsRepository = userAnimalsRepository,
+                  userRepository = userRepository,
+                  currentUserId = "currentUserId"))
+    }
+  }
 }

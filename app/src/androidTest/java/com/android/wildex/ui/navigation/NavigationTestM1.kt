@@ -155,7 +155,9 @@ class NavigationTestM1 {
         .assertIsSelected()
     composeRule.waitForIdle()
 
-    assertEquals(Screen.Collection(Firebase.auth.uid ?: "").route, navController.currentBackStackEntry?.destination?.route)
+    assertEquals(
+        Screen.Collection(Firebase.auth.uid ?: "").route,
+        navController.currentBackStackEntry?.destination?.route)
   }
 
   @Test

@@ -208,19 +208,13 @@ object LocalRepositories {
       return getAllAnimalsByUser(userId).size
     }
 
-    override suspend fun addAnimalToUserAnimals(
-      userId: Id,
-      animalId: Id
-    ) {
+    override suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.add(animalRepository.getAnimal(animalId))
       mapUserToAnimals.put(userId, oldList)
     }
 
-    override suspend fun deleteAnimalToUserAnimals(
-      userId: Id,
-      animalId: Id
-    ) {
+    override suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.removeIf { it.animalId == animalId }
       mapUserToAnimals.put(userId, oldList)

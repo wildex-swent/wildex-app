@@ -4,7 +4,8 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.utils.Id
 
-class FakeUserAnimalsRepository(private val animalRepository: AnimalRepository) : UserAnimalsRepository {
+class FakeUserAnimalsRepository(private val animalRepository: AnimalRepository) :
+    UserAnimalsRepository {
   val mapUserToAnimals = mutableMapOf<Id, MutableList<Animal>>()
 
   override suspend fun initializeUserAnimals(userId: Id) {
@@ -19,19 +20,13 @@ class FakeUserAnimalsRepository(private val animalRepository: AnimalRepository) 
     return getAllAnimalsByUser(userId).size
   }
 
-  override suspend fun addAnimalToUserAnimals(
-    userId: Id,
-    animalId: Id
-  ) {
+  override suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id) {
     val oldList = mapUserToAnimals.getValue(userId)
     oldList.add(animalRepository.getAnimal(animalId))
     mapUserToAnimals.put(userId, oldList)
   }
 
-  override suspend fun deleteAnimalToUserAnimals(
-    userId: Id,
-    animalId: Id
-  ) {
+  override suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id) {
     val oldList = mapUserToAnimals.getValue(userId)
     oldList.removeIf { it.animalId == animalId }
     mapUserToAnimals.put(userId, oldList)

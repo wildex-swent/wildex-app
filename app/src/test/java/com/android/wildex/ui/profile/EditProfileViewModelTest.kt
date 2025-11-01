@@ -60,7 +60,7 @@ class EditProfileViewModelTest {
     Assert.assertEquals("", s.name)
     Assert.assertEquals("", s.surname)
     Assert.assertEquals("", s.username)
-    Assert.assertEquals("I am ...", s.description)
+    Assert.assertEquals("", s.description)
     Assert.assertEquals("Switzerland", s.country)
     Assert.assertEquals("", s.profileImageUrl)
     Assert.assertFalse(s.isLoading)
@@ -225,7 +225,7 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun setters_validation_toggle_and_isValid_true_when_all_fields_non_blank() {
+  fun setters_validation_toggle_and_isValid_true_when_name_surname_username_non_blank() {
     viewModel.setName("")
     Assert.assertEquals("Name cannot be empty", viewModel.uiState.value.invalidNameMsg)
     viewModel.setName("John")
@@ -240,11 +240,6 @@ class EditProfileViewModelTest {
     Assert.assertEquals("Username cannot be empty", viewModel.uiState.value.invalidUsernameMsg)
     viewModel.setUsername("jdoe")
     Assert.assertNull(viewModel.uiState.value.invalidUsernameMsg)
-
-    viewModel.setDescription("")
-    Assert.assertEquals("Bio cannot be empty", viewModel.uiState.value.invalidDescriptionMsg)
-    viewModel.setDescription("desc")
-    Assert.assertNull(viewModel.uiState.value.invalidDescriptionMsg)
 
     Assert.assertTrue(viewModel.uiState.value.isValid)
   }

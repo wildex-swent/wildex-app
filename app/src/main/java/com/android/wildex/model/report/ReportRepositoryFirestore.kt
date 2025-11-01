@@ -58,12 +58,13 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
   }
 
   /**
-   * Retrieves all Reports items associated with a specific assignee.
+   * Retrieves all Reports items associated with a specific assignee. If given a null assigneeId, it
+   * retrieves all unassigned reports.
    *
    * @param assigneeId The ID of the assignee of the reports to retrieve.
    * @return A list of [Report] items associated with the specified assignee.
    */
-  override suspend fun getAllReportsByAssignee(assigneeId: Id): List<Report> {
+  override suspend fun getAllReportsByAssignee(assigneeId: Id?): List<Report> {
     return collection
         .whereEqualTo(ReportsFields.ASSIGNEE_ID, assigneeId)
         .get()
@@ -171,9 +172,7 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
       val authorId =
           document.getString(ReportsFields.AUTHOR_ID)
               ?: throwMissingFieldException(ReportsFields.AUTHOR_ID)
-      val assigneeId =
-          document.getString(ReportsFields.ASSIGNEE_ID)
-              ?: throwMissingFieldException(ReportsFields.ASSIGNEE_ID)
+      val assigneeId = document.getString(ReportsFields.ASSIGNEE_ID)
       val statusData =
           document.getString(ReportsFields.STATUS)
               ?: throwMissingFieldException(ReportsFields.STATUS)

@@ -6,6 +6,7 @@
     <string name="sign_in">Sign in with Google</string>
     <string name="welcome">Welcome to Wildex!</string>
     <string name="profile">My Profile</string>
+    <string name="collection">My Collection</string>
     <string name="user_profile">User Profile</string>
     <string name="not_implemented">Coming soon …</string>
     <string name="view_achievements">View all achievements →</string>
@@ -16,6 +17,8 @@
     <string name="default_description">No description yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
     <string name="no_achievements">No achievements yet!</string>
+    <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
+    <string name="empty_other_collection">No animals in this collection.</string>
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>

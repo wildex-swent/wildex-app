@@ -115,14 +115,31 @@ fun WildexApp(
     }
 
     // Collection
-    composable(Screen.Collection.route) {
-      CollectionScreen(
-          bottomBar = {
-            BottomNavigationMenu(
-                Tab.Collection,
-                onTabSelected = { navigationActions.navigateTo(it.destination) },
-            )
-          })
+    composable("${Screen.Collection.PATH}/{userUid}") { backStackEntry ->
+      val userId = backStackEntry.arguments?.getString("userUid")
+      if (userId != null) {
+        CollectionScreen(
+            userUid = userId,
+            onAnimalClick = { animalId ->
+              // navigationActions.navigateTo(Screen.AnimalInformationScreen(animalId))
+            },
+            onProfileClick = {
+              navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: ""))
+            },
+            onNotificationClick = {},
+            onGoBack = { navigationActions.goBack() },
+            bottomBar = {
+              if (userId == currentUser?.uid)
+                  BottomNavigationMenu(
+                      Tab.Collection,
+                      onTabSelected = { navigationActions.navigateTo(it.destination) },
+                  )
+            })
+      } else {
+        Log.e("CollectionScreen", "User UID is null")
+        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        navController.popBackStack()
+      }
     }
 
     // Reports
@@ -159,7 +176,7 @@ fun WildexApp(
         ProfileScreen(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
-        )
+            onCollection = { navigationActions.navigateTo(Screen.Collection(it)) })
       } else {
         Log.e("ProfileScreen", "User UID is null")
         Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()

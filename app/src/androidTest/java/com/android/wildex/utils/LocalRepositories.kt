@@ -12,6 +12,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 
@@ -189,14 +190,47 @@ object LocalRepositories {
     }
   }
 
-  open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      ReportRepository, ClearableRepository {
-
-    val listOfReports = mutableListOf<Report>()
+  open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository) :
+      UserAnimalsRepository, ClearableRepository {
+    val mapUserToAnimals = mutableMapOf<Id, MutableList<Animal>>()
 
     init {
       clear()
     }
+
+    override suspend fun initializeUserAnimals(userId: Id) {
+      mapUserToAnimals.put(userId, mutableListOf())
+    }
+
+    override suspend fun getAllAnimalsByUser(userId: Id): List<Animal> {
+      return mapUserToAnimals[userId]?.toList() ?: throw Exception("User not found")
+    }
+
+    override suspend fun getAnimalsCountOfUser(userId: Id): Int {
+      return getAllAnimalsByUser(userId).size
+    }
+
+    override suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id) {
+      val oldList = mapUserToAnimals.getValue(userId)
+      oldList.add(animalRepository.getAnimal(animalId))
+      mapUserToAnimals.put(userId, oldList)
+    }
+
+    override suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id) {
+      val oldList = mapUserToAnimals.getValue(userId)
+      oldList.removeIf { it.animalId == animalId }
+      mapUserToAnimals.put(userId, oldList)
+    }
+
+    override fun clear() {
+      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
+    }
+  }
+
+  open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+      ReportRepository, ClearableRepository {
+
+    val listOfReports = mutableListOf<Report>()
 
     override fun getNewReportId(): String = "newReportId"
 
@@ -234,7 +268,8 @@ object LocalRepositories {
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
   val animalRepository: AnimalRepository = AnimalRepositoryImpl()
-
+  val userAnimalsRepository: UserAnimalsRepository =
+      UserAnimalsRepositoryImpl(animalRepository = animalRepository)
   val reportRepository: ReportRepository = ReportRepositoryImpl()
 
   fun clearAll() {
@@ -243,6 +278,12 @@ object LocalRepositories {
     (userRepository as ClearableRepository).clear()
     (commentRepository as ClearableRepository).clear()
     (animalRepository as ClearableRepository).clear()
+    (userAnimalsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
+  }
+
+  fun clearUserAnimalsAndAnimals() {
+    (userAnimalsRepository as ClearableRepository).clear()
+    (animalRepository as ClearableRepository).clear()
   }
 }

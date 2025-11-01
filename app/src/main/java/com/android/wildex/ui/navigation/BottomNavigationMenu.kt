@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
   object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
@@ -32,7 +34,11 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
 
-  object Collection : Tab("Collection", Icons.Filled.EmojiEvents, Screen.Collection)
+  object Collection :
+      Tab(
+          "Collection",
+          Icons.Filled.EmojiEvents,
+          Screen.Collection(userUid = Firebase.auth.currentUser?.uid ?: ""))
 
   object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }
@@ -42,7 +48,7 @@ private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Rep
 @Composable
 fun BottomNavigationMenu(
     selectedTab: Tab,
-    onTabSelected: (Tab) -> Unit,
+    onTabSelected: (Tab) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
   val cs = MaterialTheme.colorScheme

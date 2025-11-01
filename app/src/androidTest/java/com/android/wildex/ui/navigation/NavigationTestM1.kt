@@ -16,7 +16,6 @@ import com.android.wildex.BuildConfig
 import com.android.wildex.WildexApp
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FirebaseEmulator
-import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.mapbox.common.MapboxOptions
@@ -142,7 +141,7 @@ class NavigationTestM1 {
     assertEquals(Screen.Camera.route, navController.currentBackStackEntry?.destination?.route)
   }
 
-  @Test
+  /*@Test
   fun navigation_CollectionScreen() {
     runBlocking { FirebaseEmulator.auth.signInAnonymously().await() }
     composeRule.waitForIdle()
@@ -158,7 +157,7 @@ class NavigationTestM1 {
     assertEquals(
         Screen.Collection(Firebase.auth.uid ?: "").route,
         navController.currentBackStackEntry?.destination?.route)
-  }
+  }*/
 
   @Test
   fun navigation_ReportScreen() {

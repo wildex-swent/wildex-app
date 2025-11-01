@@ -23,10 +23,10 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 
 object CameraScreenTestTags {
-    const val CAMERA_PERMISSION_SCREEN = "camera_permission_screen"
-    const val CAMERA_PREVIEW_SCREEN = "camera_preview_screen"
-    const val DETECTING_SCREEN = "detecting_screen"
-    const val POST_CREATION_SCREEN = "post_creation_screen"
+  const val CAMERA_PERMISSION_SCREEN = "camera_permission_screen"
+  const val CAMERA_PREVIEW_SCREEN = "camera_preview_screen"
+  const val DETECTING_SCREEN = "detecting_screen"
+  const val POST_CREATION_SCREEN = "post_creation_screen"
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -36,81 +36,86 @@ fun CameraScreen(
     onPost: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
 ) {
-    val uiState by cameraScreenViewModel.uiState.collectAsState()
-    val context = LocalContext.current
+  val uiState by cameraScreenViewModel.uiState.collectAsState()
+  val context = LocalContext.current
 
-    LaunchedEffect(uiState.errorMsg) {
-        uiState.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            cameraScreenViewModel.clearErrorMsg()
-        }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      cameraScreenViewModel.clearErrorMsg()
     }
+  }
 
-    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-    val hasCameraPermission = cameraPermissionState.status.isGranted
+  val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+  val hasCameraPermission = cameraPermissionState.status.isGranted
 
-    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
-    val hasLocationPermission = locationPermissionState.status.isGranted
+  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+  val hasLocationPermission = locationPermissionState.status.isGranted
 
-    val imagePickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent(),
-        ) { uri ->
-            uri?.let {
-                cameraScreenViewModel.updateImageUri(it)
-                cameraScreenViewModel.detectAnimalImage(it, context)
-            }
+  val imagePickerLauncher =
+      rememberLauncherForActivityResult(
+          contract = ActivityResultContracts.GetContent(),
+      ) { uri ->
+        uri?.let {
+          cameraScreenViewModel.updateImageUri(it)
+          cameraScreenViewModel.detectAnimalImage(it, context)
         }
+      }
 
-    Scaffold(bottomBar = bottomBar) { innerPadding ->
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(innerPadding).fillMaxSize(),
-        ) {
-            when {
-                uiState.currentImageUri == null ->
-                    if (hasCameraPermission) {
-                        CameraPreviewScreen(
-                            onPhotoTaken = {
-                                cameraScreenViewModel.updateImageUri(it)
-                                cameraScreenViewModel.detectAnimalImage(it, context)
-                            },
-                            onUploadClick = { imagePickerLauncher.launch("image/*") },
-                            modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN)
-                        )
-                    } else {
-                        CameraPermissionScreen(
-                            onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
-                            onUploadClick = { imagePickerLauncher.launch("image/*") },
-                            modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN)
-                        )
-                    }
-                uiState.isDetecting -> DetectingScreen(photoUri = uiState.currentImageUri!!,
-                    modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN))
-                uiState.animalDetectResponse != null ->
-                    PostCreationScreen(
-                        description = uiState.description,
-                        onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
-                        useLocation = uiState.addLocation,
-                        onLocationToggle = {
-                            if (!hasLocationPermission) {
-                                locationPermissionState.launchPermissionRequest()
-                                if (locationPermissionState.status.isGranted)
-                                    cameraScreenViewModel.toggleAddLocation()
-                            } else {
-                                cameraScreenViewModel.toggleAddLocation()
-                            }
-                        },
-                        photoUri = uiState.currentImageUri!!,
-                        detectionResponse = uiState.animalDetectResponse!!,
-                        onConfirm = {
-                            cameraScreenViewModel.createPost(context = context, onPost = onPost)
-                        },
-                        onCancel = { cameraScreenViewModel.resetState() },
-                        modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
-                    )
-                uiState.isLoading -> LoadingScreen()
+  Scaffold(bottomBar = bottomBar) { innerPadding ->
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.padding(innerPadding).fillMaxSize(),
+    ) {
+      when {
+        uiState.currentImageUri == null ->
+            if (hasCameraPermission) {
+              CameraPreviewScreen(
+                  onPhotoTaken = {
+                    cameraScreenViewModel.updateImageUri(it)
+                    cameraScreenViewModel.detectAnimalImage(it, context)
+                  },
+                  onUploadClick = { imagePickerLauncher.launch("image/*") },
+                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
+              )
+            } else {
+              CameraPermissionScreen(
+                  onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
+                  onUploadClick = { imagePickerLauncher.launch("image/*") },
+                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
+              )
             }
-        }
+        uiState.isDetecting ->
+            DetectingScreen(
+                photoUri = uiState.currentImageUri!!,
+                modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
+            )
+        uiState.animalDetectResponse != null ->
+            PostCreationScreen(
+                description = uiState.description,
+                onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
+                useLocation = uiState.addLocation,
+                onLocationToggle = {
+                  if (!hasLocationPermission) {
+                    locationPermissionState.launchPermissionRequest()
+                    if (locationPermissionState.status.isGranted)
+                        cameraScreenViewModel.toggleAddLocation()
+                  } else {
+                    cameraScreenViewModel.toggleAddLocation()
+                  }
+                },
+                photoUri = uiState.currentImageUri!!,
+                detectionResponse = uiState.animalDetectResponse!!,
+                onConfirm = {
+                  cameraScreenViewModel.createPost(context = context, onPost = onPost)
+                },
+                onCancel = {
+                    cameraScreenViewModel.resetState()
+                           },
+                modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
+            )
+        uiState.isLoading -> LoadingScreen()
+      }
     }
+  }
 }

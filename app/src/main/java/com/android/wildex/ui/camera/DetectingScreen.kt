@@ -147,28 +147,25 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
                   .height(6.dp)
                   .clip(RoundedCornerShape(3.dp))
                   .background(colorScheme.primaryContainer.copy(alpha = 0.5f))
-                  .testTag(DetectingScreenTestTags.DETECTING_SCREEN_LOADING_BAR)
-      ) {
-        Box(
-            modifier =
-                Modifier.fillMaxHeight()
-                    .fillMaxWidth(0.6f)
-                    .offset(x = ((loadingProgress - 0.3f) * 1.6f * 300).dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors =
-                                listOf(
-                                    colorScheme.primaryContainer,
-                                    colorScheme.primary,
-                                    colorScheme.onPrimaryContainer,
-                                    colorScheme.primary,
-                                    colorScheme.primaryContainer,
-                                )
-                        ),
-                        shape = RoundedCornerShape(3.dp),
-                    )
-        )
-      }
+                  .testTag(DetectingScreenTestTags.DETECTING_SCREEN_LOADING_BAR)) {
+            Box(
+                modifier =
+                    Modifier.fillMaxHeight()
+                        .fillMaxWidth(0.6f)
+                        .offset(x = ((loadingProgress - 0.3f) * 1.6f * 300).dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                colors =
+                                    listOf(
+                                        colorScheme.primaryContainer,
+                                        colorScheme.primary,
+                                        colorScheme.onPrimaryContainer,
+                                        colorScheme.primary,
+                                        colorScheme.primaryContainer,
+                                    )),
+                            shape = RoundedCornerShape(3.dp),
+                        ))
+          }
     }
   }
 }

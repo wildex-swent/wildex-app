@@ -284,30 +284,30 @@ object LocalRepositories {
 
     val storage = mutableMapOf<Id, Uri>()
 
-    override suspend fun uploadUserProfilePicture(userId: String, imageUri: Uri): URL? {
-      storage.put(userId, imageUri)
-      return imageUri.toString()
+    override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL? {
+      storage[userId] = imageUri
+      return "imageUrl:$userId"
     }
 
-    override suspend fun uploadPostImage(postId: String, imageUri: Uri): URL? {
-      storage.put(postId, imageUri)
-      return imageUri.toString()
+    override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL? {
+      storage[postId] = imageUri
+      return "imageUrl:$postId"
     }
 
-    override suspend fun uploadAnimalPicture(animalId: String, imageUri: Uri): URL? {
-      storage.put(animalId, imageUri)
-      return imageUri.toString()
+    override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
+      storage[animalId] = imageUri
+      return "imageUrl:$animalId"
     }
 
-    override suspend fun deleteUserProfilePicture(userId: String) {
+    override suspend fun deleteUserProfilePicture(userId: Id) {
       storage.remove(userId)
     }
 
-    override suspend fun deletePostImage(postId: String) {
+    override suspend fun deletePostImage(postId: Id) {
       storage.remove(postId)
     }
 
-    override suspend fun deleteAnimalPicture(animalId: String) {
+    override suspend fun deleteAnimalPicture(animalId: Id) {
       storage.remove(animalId)
     }
 
@@ -353,7 +353,6 @@ object LocalRepositories {
   val reportRepository: ReportRepository = ReportRepositoryImpl()
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
-
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()

@@ -2,6 +2,7 @@ package com.android.wildex.model.storage
 
 import android.net.Uri
 import android.util.Log
+import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -22,32 +23,32 @@ import kotlinx.coroutines.tasks.await
 class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.storage) :
     StorageRepository {
 
-  override suspend fun uploadUserProfilePicture(userId: String, imageUri: Uri): URL? {
+  override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL? {
     val path = getUserProfilePicturePath(userId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun uploadPostImage(postId: String, imageUri: Uri): URL? {
+  override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL? {
     val path = getPostImagePath(postId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun uploadAnimalPicture(animalId: String, imageUri: Uri): URL? {
+  override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
     val path = getAnimalPicturePath(animalId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun deleteUserProfilePicture(userId: String) {
+  override suspend fun deleteUserProfilePicture(userId: Id) {
     val path = getUserProfilePicturePath(userId)
     deleteImageFromStorage(path)
   }
 
-  override suspend fun deletePostImage(postId: String) {
+  override suspend fun deletePostImage(postId: Id) {
     val path = getPostImagePath(postId)
     deleteImageFromStorage(path)
   }
 
-  override suspend fun deleteAnimalPicture(animalId: String) {
+  override suspend fun deleteAnimalPicture(animalId: Id) {
     val path = getAnimalPicturePath(animalId)
     deleteImageFromStorage(path)
   }
@@ -98,7 +99,7 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @param userId The user's ID
    * @return The storage path (e.g., "users/userId.jpg")
    */
-  private fun getUserProfilePicturePath(userId: String): String = "$USERS_PATH/$userId.jpg"
+  private fun getUserProfilePicturePath(userId: Id): String = "$USERS_PATH/$userId.jpg"
 
   /**
    * Helper function to generate a storage path for a post image.
@@ -106,7 +107,7 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @param postId The post's ID
    * @return The storage path (e.g., "posts/postId.jpg")
    */
-  private fun getPostImagePath(postId: String): String = "$POSTS_PATH/$postId.jpg"
+  private fun getPostImagePath(postId: Id): String = "$POSTS_PATH/$postId.jpg"
 
   /**
    * Helper function to generate a storage path for an animal picture.
@@ -114,5 +115,5 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @param animalId The animal's ID
    * @return The storage path (e.g., "animals/animalId.jpg")
    */
-  private fun getAnimalPicturePath(animalId: String): String = "$ANIMALS_PATH/$animalId.jpg"
+  private fun getAnimalPicturePath(animalId: Id): String = "$ANIMALS_PATH/$animalId.jpg"
 }

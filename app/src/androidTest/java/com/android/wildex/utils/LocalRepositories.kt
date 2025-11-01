@@ -193,7 +193,7 @@ object LocalRepositories {
   open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository) :
       UserAnimalsRepository, ClearableRepository {
     val mapUserToAnimals = mutableMapOf<Id, MutableList<Animal>>()
-    
+
     init {
       clear()
     }
@@ -223,15 +223,15 @@ object LocalRepositories {
     }
 
     override fun clear() {
-      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) 
+      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
+    }
   }
-      
+
   open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       ReportRepository, ClearableRepository {
 
     val listOfReports = mutableListOf<Report>()
 
-   
     override fun getNewReportId(): String = "newReportId"
 
     override suspend fun getAllReports(): List<Report> = listOfReports

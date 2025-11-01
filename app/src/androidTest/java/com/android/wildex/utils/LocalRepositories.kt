@@ -227,7 +227,7 @@ object LocalRepositories {
     }
 
     override fun clear() {
-      mapUserToAnimals.clear()
+      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
     }
   }
 
@@ -246,5 +246,10 @@ object LocalRepositories {
     (commentRepository as ClearableRepository).clear()
     (animalRepository as ClearableRepository).clear()
     (userAnimalsRepository as ClearableRepository).clear()
+  }
+
+  fun clearUserAnimalsAndAnimals() {
+    (userAnimalsRepository as ClearableRepository).clear()
+    (animalRepository as ClearableRepository).clear()
   }
 }

@@ -72,7 +72,9 @@ object CollectionScreenTestTags {
   const val SCREEN_TITLE = "collection_screen_title"
   const val ANIMAL_LIST = "collection_screen_animal_list"
 
-  fun testTagForAnimal(animalId: Id) = "collection_screen_animal_$animalId"
+  fun testTagForAnimal(animalId: Id, isUnlocked: Boolean) =
+    if (isUnlocked) "collection_screen_animal_${animalId}_unlocked"
+    else "collection_screen_animal_${animalId}_locked"
 }
 
 /**
@@ -154,13 +156,17 @@ fun CollectionTopBar(
 ) {
   TopAppBar(
       title = {
-        Text(
-          modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
-          text = if (isUserOwner) LocalContext.current.getString(R.string.collection) else "",
-          fontWeight = FontWeight.SemiBold,
-          color = colorScheme.onBackground,
-          textAlign = TextAlign.Center
-        )
+        if (isUserOwner) {
+          Text(
+            modifier = Modifier
+              .fillMaxWidth()
+              .testTag(CollectionScreenTestTags.SCREEN_TITLE),
+            text = LocalContext.current.getString(R.string.collection),
+            fontWeight = FontWeight.SemiBold,
+            color = colorScheme.onBackground,
+            textAlign = TextAlign.Center
+          )
+        }
       },
       navigationIcon = {
         IconButton(
@@ -188,9 +194,10 @@ fun CollectionTopBar(
                 model = userProfilePictureURL,
                 contentDescription = "Profile picture",
                 modifier =
-                    Modifier.size(40.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, colorScheme.primary, CircleShape),
+                    Modifier
+                      .size(40.dp)
+                      .clip(CircleShape)
+                      .border(1.dp, colorScheme.primary, CircleShape),
                 contentScale = ContentScale.Crop,
             )
           }
@@ -206,13 +213,17 @@ fun CollectionTopBar(
  */
 @Composable
 fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
-  LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
+  LazyColumn(modifier = Modifier
+    .fillMaxSize()
+    .testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
     items(nbRows) { index ->
       val rowStartIndex = index * 2
       Row(
         horizontalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 20.dp, vertical = 10.dp),
       ) {
         AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
         // Check if there is another animal to display when we are at the last row
@@ -241,15 +252,20 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
       .clip(RoundedCornerShape(16.dp))
   ) {
     Card(
-      onClick = { if (animalState.isUnlocked) onAnimalClick(animalState.animalId) },
+      onClick = {
+        if (animalState.isUnlocked)
+          onAnimalClick(animalState.animalId)
+      },
       enabled = animalState.isUnlocked,
       modifier = modifier
-        .testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId))
+        .testTag(CollectionScreenTestTags.testTagForAnimal(animalState.animalId, animalState.isUnlocked))
     ) {
       AsyncImage(
         model = animalPictureURL,
         contentDescription = animalName,
-        modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
+        modifier = Modifier
+          .size(180.dp)
+          .clip(RoundedCornerShape(8.dp)),
         contentScale = ContentScale.Crop,
       )
       Text(
@@ -266,7 +282,8 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
           )
         ),
         modifier =
-          Modifier.fillMaxSize()
+          Modifier
+            .fillMaxSize()
             .background(color = colorScheme.primary)
       )
     }
@@ -290,7 +307,9 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
 /** Composable displayed when the user's collection is empty. */
 @Composable
 fun NoAnimalsView(isUserOwner: Boolean) {
-  Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+  Box(modifier = Modifier
+    .fillMaxSize()
+    .padding(16.dp), contentAlignment = Alignment.Center) {
     Text(
       text = LocalContext.current.getString(if (isUserOwner) R.string.empty_current_collection else R.string.empty_other_collection),
       color = colorScheme.onBackground,

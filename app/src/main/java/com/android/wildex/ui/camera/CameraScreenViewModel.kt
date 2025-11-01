@@ -40,10 +40,11 @@ data class CameraUiState(
 class CameraScreenViewModel(
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
+    private val userAnimalsRepository: UserAnimalsRepository =
+        RepositoryProvider.userAnimalsRepository,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val animalInfoRepository: AnimalInfoRepository =
         RepositoryProvider.animalInfoRepository,
-    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val userAnimalsRepository: UserAnimalsRepository,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(CameraUiState())
@@ -150,6 +151,6 @@ class CameraScreenViewModel(
             animalDescription,
         )
     animalRepository.addAnimal(animal)
-    userAnimalsRepository.addUserAnimals(currentUserId!!, animalId)
+    userAnimalsRepository.addAnimalToUserAnimals(currentUserId!!, animalId)
   }
 }

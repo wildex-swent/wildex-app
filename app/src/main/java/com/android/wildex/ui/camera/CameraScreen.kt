@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -52,19 +51,8 @@ fun CameraScreen(
                 requestPermission = { cameraPermissionState.launchPermissionRequest() },
             )
         uiState.animalDetectResponse == null ->
-            CameraPreview(onPhotoTaken = { cameraScreenViewModel.detectAnimalImage(it) })
+            CameraPreview(onPhotoTaken = { cameraScreenViewModel.detectAnimalImage(it, context) })
         uiState.isDetecting -> DetectionLoadingScreen()
-        uiState.postInConstruction != null ->
-            PostCreationPrompt(
-                onDescUpdate = { cameraScreenViewModel.updateDescription(it) },
-                onPost = {
-                  cameraScreenViewModel.createPost(
-                      location = Location(0.0, 0.0), /* placeholder */
-                      onPost = { onPost() },
-                  )
-                },
-                onCancel = { cameraScreenViewModel.resetState() },
-            )
         uiState.isLoading -> LoadingScreen()
       }
     }

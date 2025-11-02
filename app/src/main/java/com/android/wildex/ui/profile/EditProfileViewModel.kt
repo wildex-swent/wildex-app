@@ -168,6 +168,10 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(description = description)
   }
 
+  fun setCountry(country: String) {
+    _uiState.value = _uiState.value.copy(country = country)
+  }
+
   fun setNewProfileImageUrl(url: URL) {
     _uiState.value = _uiState.value.copy(profileImageUrl = url)
   }

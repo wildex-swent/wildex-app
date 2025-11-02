@@ -326,4 +326,35 @@ class EditProfileViewModelTest {
     viewModel.clearErrorMsg()
     Assert.assertNull(viewModel.uiState.value.errorMsg)
   }
+
+  @Test
+  fun setCountry_metAJour_lEtatUI() {
+    viewModel.setCountry("France")
+    Assert.assertEquals("France", viewModel.uiState.value.country)
+  }
+
+  @Test
+  fun saveProfileChanges_utilise_leCountry_duUIState() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+      viewModel.setCountry("France")
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.editUser(any(), any()) } returns Unit
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      val captured = slot<User>()
+      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+      confirmVerified(userRepository, storageRepository)
+
+      Assert.assertEquals("France", captured.captured.country)
+    }
+  }
 }

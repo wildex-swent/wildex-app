@@ -38,7 +38,7 @@ object MapScreenTestTags {
 @Composable
 fun MapScreen(
     bottomBar: @Composable () -> Unit,
-    viewModel: MapViewModel = viewModel(),
+    viewModel: MapScreenViewModel = viewModel(),
     onPost: (Id) -> Unit = {},
     onReport: (Id) -> Unit = {},
 ) {

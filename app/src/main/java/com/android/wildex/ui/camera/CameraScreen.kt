@@ -90,6 +90,7 @@ fun CameraScreen(
                 photoUri = uiState.currentImageUri!!,
                 modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
             )
+        uiState.isLoading -> LoadingScreen()
         uiState.animalDetectResponse != null ->
             PostCreationScreen(
                 description = uiState.description,
@@ -109,12 +110,9 @@ fun CameraScreen(
                 onConfirm = {
                   cameraScreenViewModel.createPost(context = context, onPost = onPost)
                 },
-                onCancel = {
-                    cameraScreenViewModel.resetState()
-                           },
+                onCancel = { cameraScreenViewModel.resetState() },
                 modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
             )
-        uiState.isLoading -> LoadingScreen()
       }
     }
   }

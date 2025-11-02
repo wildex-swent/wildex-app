@@ -112,10 +112,7 @@ private fun CameraOverlay() {
                               colorScheme.surface.copy(alpha = 0.2f),
                               Color.Transparent,
                               colorScheme.surface.copy(alpha = 0.4f),
-                          )
-                  )
-              )
-  )
+                          ))))
 }
 
 @Composable
@@ -131,7 +128,8 @@ private fun CameraControls(
     UploadButton(
         onClick = onUploadClick,
         modifier =
-            Modifier.align(Alignment.CenterStart).testTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON),
+            Modifier.align(Alignment.CenterStart)
+                .testTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON),
     )
 
     // Capture button - main action (larger)

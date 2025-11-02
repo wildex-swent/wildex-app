@@ -66,7 +66,7 @@ class CameraScreenViewModel(
         Log.d("CameraScreenViewModel", "Animal detected: ${animalDetectResponse.animalType}")
       } catch (e: Exception) {
         setErrorMsg("Failed to detect animal and start post creation : ${e.message}")
-        resetState()
+        _uiState.value = _uiState.value.copy(isDetecting = false, currentImageUri = null)
       }
     }
   }
@@ -99,9 +99,11 @@ class CameraScreenViewModel(
         val imageUrl = storageRepository.uploadPostImage(postId, uri)!!
         val animalId = response.taxonomy.id
         val location =
-            LocationServices.getFusedLocationProviderClient(context).lastLocation.await().let {
-              Location(it.latitude, it.longitude)
-            }
+            if (_uiState.value.addLocation) {
+              LocationServices.getFusedLocationProviderClient(context).lastLocation.await().let {
+                Location(it.latitude, it.longitude)
+              }
+            } else null
         val finalPost =
             Post(
                 postId = postId,
@@ -140,8 +142,9 @@ class CameraScreenViewModel(
     val detection = uiState.value.animalDetectResponse ?: return
     val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType) ?: ""
 
-    val animalPicture = Uri.EMPTY // animalRepository.getAnimalPicture(detection.animalType)
-    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
+    // val animalPicture = animalRepository.getAnimalPicture(detection.animalType)
+    val animalPictureURL =
+        "" // storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
     val animal =
         Animal(
             animalId,

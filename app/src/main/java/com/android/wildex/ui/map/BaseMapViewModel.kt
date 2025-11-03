@@ -245,12 +245,17 @@ abstract class BaseMapViewModel(
 
   protected suspend fun loadAllReportsAsPins(): List<MapPin> {
     val reports = reportRepository.getAllReports()
+    val authorCache = mutableMapOf<Id, URL>()
     return reports.map { r ->
+      val avatar =
+          authorCache.getOrPut(r.authorId) {
+            userRepository.getSimpleUser(r.authorId).profilePictureURL
+          }
       MapPin.ReportPin(
           id = r.reportId,
           authorId = r.authorId,
           location = r.location,
-          imageURL = r.imageURL,
+          imageURL = avatar,
           status = r.status,
           assigneeId = r.assigneeId,
       )

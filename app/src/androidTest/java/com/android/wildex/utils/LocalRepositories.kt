@@ -334,8 +334,7 @@ object LocalRepositories {
                   "animalGenus",
                   "animalSpecies",
               ),
-          )
-      )
+          ))
     }
 
     override suspend fun getAnimalDescription(animalName: String): String? {

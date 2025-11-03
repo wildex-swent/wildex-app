@@ -12,7 +12,7 @@ plugins {
 
 android {
   namespace = "com.android.wildex"
-  compileSdk = 36
+  compileSdk = 35
 
   // Load the API key from local.properties
   val localProperties = Properties()

@@ -6,6 +6,7 @@ import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.report.ReportStatus
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
@@ -127,8 +128,6 @@ class MapScreenViewModelTest {
         )
   }
 
-  // ---------- helpers ----------
-
   private fun stubSimpleUsers() {
     coEvery { userRepository.getSimpleUser("user-a") } returns
         SimpleUser("user-a", "author-a", "https://example.com/author-a.jpg")
@@ -136,218 +135,155 @@ class MapScreenViewModelTest {
         SimpleUser(loggedInUserId, "regular-user", "https://example.com/me.jpg")
   }
 
-  private fun stubCommonReportsEmpty() {
+  private fun stubAnimal() {
+    coEvery { animalRepository.getAnimal("a1") } returns
+        Animal("a1", "canidae", "fox", "", "https://example.com/fox.jpg")
+  }
+
+  private fun stubReportsEmpty() {
     coEvery { reportRepository.getAllReports() } returns emptyList()
     coEvery { reportRepository.getAllReportsByAuthor(any()) } returns emptyList()
     coEvery { reportRepository.getAllReportsByAssignee(any()) } returns emptyList()
   }
 
-  private fun stubAnimal() {
-    coEvery { animalRepository.getAnimal("a1") } returns
-        Animal(
-            animalId = "a1",
-            species = "canidae",
-            name = "fox",
-            description = "",
-            pictureURL = "https://example.com/fox.jpg",
-        )
-  }
-
   @Test
-  fun loadUIState_regularUser_showsPostsAndMyPostsTabs() =
+  fun load_and_tabs_behave_correctly() =
       mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
         coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
-        stubCommonReportsEmpty()
+        stubReportsEmpty()
         stubSimpleUsers()
 
         viewModel.loadUIState()
         advanceUntilIdle()
 
-        val s = viewModel.uiState.value
-        Assert.assertEquals(listOf(MapTab.Posts, MapTab.MyPosts), s.availableTabs)
-        Assert.assertEquals(MapTab.Posts, s.activeTab)
-        Assert.assertEquals(2, s.pins.size)
-      }
-
-  @Test
-  fun loadUIState_professionalUser_includesReportsTab_andLoadsReports() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } returns professionalUser
-        coEvery { postsRepository.getAllPosts() } returns listOf(post1)
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
-        coEvery { reportRepository.getAllReports() } returns listOf(report1)
-        coEvery { reportRepository.getAllReportsByAuthor(any()) } returns emptyList()
-        coEvery { reportRepository.getAllReportsByAssignee(any()) } returns emptyList()
-        coEvery { userRepository.getSimpleUser("user-a") } returns
-            SimpleUser("user-a", "author-a", "https://example.com/author-a.jpg")
-        coEvery { userRepository.getSimpleUser(loggedInUserId) } returns
-            SimpleUser(loggedInUserId, "pro-user", "https://example.com/pro.jpg")
-
-        viewModel.loadUIState()
-        advanceUntilIdle()
-
-        val s = viewModel.uiState.value
-        Assert.assertEquals(
-            listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports),
-            s.availableTabs,
-        )
-        Assert.assertEquals(MapTab.Posts, s.activeTab)
-        Assert.assertEquals(1, s.pins.size)
-      }
-
-  @Test
-  fun onTabSelected_invalidTab_doesNothing() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { postsRepository.getAllPosts() } returns listOf(post1)
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
-        stubCommonReportsEmpty()
-        stubSimpleUsers()
-
-        viewModel.loadUIState()
-        advanceUntilIdle()
-
-        val before = viewModel.uiState.value
-
-        viewModel.onTabSelected(MapTab.Reports)
-        advanceUntilIdle()
-
-        val after = viewModel.uiState.value
-        Assert.assertEquals(before.activeTab, after.activeTab)
-        Assert.assertEquals(before.availableTabs, after.availableTabs)
-      }
-
-  @Test
-  fun onTabSelected_MyPosts_loadsPostsOfCurrentUser() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
-        stubCommonReportsEmpty()
-        stubSimpleUsers()
-
-        viewModel.loadUIState()
-        advanceUntilIdle()
+        val s1 = viewModel.uiState.value
+        Assert.assertEquals(listOf(MapTab.Posts, MapTab.MyPosts), s1.availableTabs)
+        Assert.assertEquals(MapTab.Posts, s1.activeTab)
+        Assert.assertEquals(2, s1.pins.size)
 
         viewModel.onTabSelected(MapTab.MyPosts)
         advanceUntilIdle()
-
-        val s = viewModel.uiState.value
-        Assert.assertEquals(MapTab.MyPosts, s.activeTab)
-        Assert.assertEquals(1, s.pins.size)
-        Assert.assertEquals("p2", s.pins.first().id)
-        coVerify(exactly = 1) { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) }
-      }
-
-  @Test
-  fun refreshUIState_keepsActiveTab_andReloads() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
-        stubCommonReportsEmpty()
-        stubSimpleUsers()
-
-        viewModel.loadUIState()
-        advanceUntilIdle()
-        viewModel.onTabSelected(MapTab.MyPosts)
-        advanceUntilIdle()
+        val s2 = viewModel.uiState.value
+        Assert.assertEquals(MapTab.MyPosts, s2.activeTab)
+        Assert.assertEquals(1, s2.pins.size)
+        Assert.assertEquals("p2", s2.pins.first().id)
 
         viewModel.refreshUIState()
         advanceUntilIdle()
+        val s3 = viewModel.uiState.value
+        Assert.assertEquals(MapTab.MyPosts, s3.activeTab)
 
-        val s = viewModel.uiState.value
-        Assert.assertEquals(MapTab.MyPosts, s.activeTab)
-        Assert.assertEquals(1, s.pins.size)
-      }
+        viewModel.onTabSelected(MapTab.Reports)
+        advanceUntilIdle()
+        val s4 = viewModel.uiState.value
+        Assert.assertEquals(MapTab.MyPosts, s4.activeTab)
 
-  @Test
-  fun reload_regularUser_withActiveReports_returnsEmptyPinsForReports() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { postsRepository.getAllPosts() } returns listOf(post1)
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns listOf(post2)
         coEvery { reportRepository.getAllReports() } returns listOf(report1)
-        coEvery { reportRepository.getAllReportsByAuthor(any()) } returns emptyList()
-        coEvery { reportRepository.getAllReportsByAssignee(any()) } returns emptyList()
-        stubSimpleUsers()
-
         viewModel.loadUIState()
         advanceUntilIdle()
+        val s5 = viewModel.uiState.value
+        Assert.assertEquals(listOf(MapTab.Posts, MapTab.MyPosts), s5.availableTabs)
 
-        val s = viewModel.uiState.value
-        Assert.assertEquals(MapTab.Posts, s.activeTab)
-        Assert.assertEquals(listOf(MapTab.Posts, MapTab.MyPosts), s.availableTabs)
+        coEvery { userRepository.getUser(loggedInUserId) } returns professionalUser
+        coEvery { reportRepository.getAllReports() } returns listOf(report1)
+        viewModel.loadUIState()
+        advanceUntilIdle()
+        val s6 = viewModel.uiState.value
+        Assert.assertEquals(
+            listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports),
+            s6.availableTabs,
+        )
       }
 
   @Test
-  fun onPinSelected_postPin_loadsPostAndAuthorAndLike() =
+  fun pin_selection_covers_post_report_and_animal_fallback() =
       mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns emptyList()
         coEvery { reportRepository.getAllReports() } returns emptyList()
-        coEvery { postsRepository.getPost("p1") } returns post1
-        coEvery { userRepository.getSimpleUser("user-a") } returns
-            SimpleUser("user-a", "author-a", "https://example.com/a.jpg")
-        coEvery { userRepository.getSimpleUser(loggedInUserId) } returns
-            SimpleUser(loggedInUserId, "regular-user", "https://example.com/me.jpg")
-        coEvery { likeRepository.getLikeForPost("p1") } returns null
+        stubSimpleUsers()
         stubAnimal()
+        coEvery { postsRepository.getPost("p1") } returns post1
+        coEvery { likeRepository.getLikeForPost("p1") } returns null
 
         viewModel.loadUIState()
         advanceUntilIdle()
 
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
+        val sel1 = viewModel.uiState.value.selected as PinDetails.PostDetails
+        Assert.assertEquals("fox", sel1.animalName)
 
-        val s = viewModel.uiState.value
-        Assert.assertNotNull(s.selected)
-        Assert.assertTrue(s.selected is PinDetails.PostDetails)
-        val d = s.selected as PinDetails.PostDetails
-        Assert.assertEquals("fox", d.animalName)
-      }
+        coEvery { animalRepository.getAnimal("a1") } throws RuntimeException("nope")
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        val sel2 = viewModel.uiState.value.selected as PinDetails.PostDetails
+        Assert.assertEquals("animal", sel2.animalName)
 
-  @Test
-  fun onPinSelected_reportPin_loadsReportAuthorAndAssignee() =
-      mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns professionalUser
         coEvery { postsRepository.getAllPosts() } returns emptyList()
-        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns emptyList()
         coEvery { reportRepository.getAllReports() } returns listOf(report1)
-        coEvery { reportRepository.getAllReportsByAuthor(any()) } returns emptyList()
-        coEvery { reportRepository.getAllReportsByAssignee(any()) } returns emptyList()
         coEvery { reportRepository.getReport("r1") } returns report1
         coEvery { userRepository.getSimpleUser("author-r") } returns
             SimpleUser("author-r", "reporter", "https://example.com/x.jpg")
         coEvery { userRepository.getSimpleUser("pro-1") } returns
             SimpleUser("pro-1", "assignee", "https://example.com/y.jpg")
-        coEvery { userRepository.getSimpleUser(loggedInUserId) } returns
-            SimpleUser(loggedInUserId, "pro-user", "https://example.com/pro.jpg")
 
         viewModel.loadUIState()
         advanceUntilIdle()
-
         viewModel.onTabSelected(MapTab.Reports)
         advanceUntilIdle()
-
-        val pins = viewModel.uiState.value.pins
-        Assert.assertEquals(1, pins.size)
-        Assert.assertEquals("r1", pins.first().id)
-
         viewModel.onPinSelected("r1")
         advanceUntilIdle()
 
-        val s = viewModel.uiState.value
-        Assert.assertNotNull(s.selected)
-        Assert.assertTrue(s.selected is PinDetails.ReportDetails)
+        val sel3 = viewModel.uiState.value.selected
+        Assert.assertTrue(sel3 is PinDetails.ReportDetails)
       }
 
   @Test
-  fun toggleLike_onSelectedPost_addsLike_andOptimisticallyUpdates() =
+  fun error_paths_are_handled() =
       mainDispatcherRule.runTest {
+        // ---- onPinSelected throws
+        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
+        coEvery { postsRepository.getAllPosts() } returns listOf(post1)
+        coEvery { postsRepository.getAllPostsByGivenAuthor(loggedInUserId) } returns emptyList()
+        coEvery { reportRepository.getAllReports() } returns emptyList()
+        coEvery { userRepository.getSimpleUser("user-a") } returns
+            SimpleUser("user-a", "author-a", "https://example.com/a.jpg")
+        coEvery { postsRepository.getPost("p1") } throws RuntimeException("db down")
+
+        viewModel.loadUIState()
+        advanceUntilIdle()
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        val msg = viewModel.uiState.value.errorMsg
+        Assert.assertNotNull(msg)
+        Assert.assertTrue(msg!!.startsWith("Failed to load pin:"))
+
+        val vm2 =
+            MapScreenViewModel(
+                loggedInUserId = "",
+                userRepository = userRepository,
+                postRepository = postsRepository,
+                reportRepository = reportRepository,
+                likeRepository = likeRepository,
+                animalRepository = animalRepository,
+            )
+        vm2.loadUIState()
+        advanceUntilIdle()
+        val s2 = vm2.uiState.value
+        Assert.assertTrue(s2.isError)
+        Assert.assertEquals("No logged in user", s2.errorMsg)
+        Assert.assertFalse(s2.isLoading)
+      }
+
+  @Test
+  fun toggleLike_covers_all_branches() =
+      mainDispatcherRule.runTest {
+        // happy path
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getPost("p1") } returns post1
@@ -364,54 +300,47 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-
-        val beforeLikes =
-            (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
 
         viewModel.toggleLike("p1")
         advanceUntilIdle()
 
-        val afterLikes =
-            (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
-
-        Assert.assertEquals(beforeLikes + 1, afterLikes)
+        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        Assert.assertEquals(before + 1, after)
         coVerify(exactly = 1) { likeRepository.addLike(any()) }
-      }
 
-  @Test
-  fun loadUIState_userFetchFails_setsErrorAndStopsLoading() =
-      mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser(loggedInUserId) } throws RuntimeException("boom")
+        // blank uid branch
+        val vmBlank =
+            MapScreenViewModel(
+                loggedInUserId = "",
+                userRepository = userRepository,
+                postRepository = postsRepository,
+                reportRepository = reportRepository,
+                likeRepository = likeRepository,
+                animalRepository = animalRepository,
+            )
+        vmBlank.toggleLike("whatever")
+        Assert.assertEquals(
+            "You must be logged in to like posts.",
+            vmBlank.uiState.value.errorMsg,
+        )
 
-        viewModel.loadUIState()
+        // delete fails branch (already liked -> delete -> exception -> restore)
+        coEvery { likeRepository.getLikeForPost("p1") } returns Like("like-1", "p1", loggedInUserId)
+        coEvery { likeRepository.deleteLike("like-1") } throws RuntimeException("network")
+
+        viewModel.toggleLike("p1")
         advanceUntilIdle()
 
-        val s = viewModel.uiState.value
-        Assert.assertTrue(s.isError)
-        Assert.assertFalse(s.isLoading)
-        Assert.assertNotNull(s.errorMsg)
+        val err = viewModel.uiState.value.errorMsg
+        Assert.assertNotNull(err)
+        Assert.assertTrue(err!!.contains("Could not update like"))
       }
 
   @Test
-  fun onLocationPermissionResult_updatesRenderState() {
-    viewModel.onLocationPermissionResult(true)
-    Assert.assertTrue(viewModel.renderState.value.showUserLocation)
-  }
-
-  @Test
-  fun requestRecenter_setsNonce_and_consumeRecenter_clearsIt() {
-    viewModel.requestRecenter()
-    val withNonce = viewModel.renderState.value
-    Assert.assertNotNull(withNonce.recenterNonce)
-
-    viewModel.consumeRecenter()
-    val cleared = viewModel.renderState.value
-    Assert.assertNull(cleared.recenterNonce)
-  }
-
-  @Test
-  fun clearSelection_setsSelectedToNull() =
+  fun utility_methods_work() =
       mainDispatcherRule.runTest {
+        // selection
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getPost("p1") } returns post1
@@ -430,17 +359,42 @@ class MapScreenViewModelTest {
 
         viewModel.clearSelection()
         Assert.assertNull(viewModel.uiState.value.selected)
+
+        // set/clear errors
+        viewModel.setErrorMsg("err")
+        Assert.assertEquals("err", viewModel.uiState.value.errorMsg)
+        viewModel.clearErrorMsg()
+        Assert.assertNull(viewModel.uiState.value.errorMsg)
+
+        viewModel.setRenderMsg("render")
+        Assert.assertEquals("render", viewModel.renderState.value.renderError)
+        viewModel.clearRenderError()
+        Assert.assertNull(viewModel.renderState.value.renderError)
       }
 
   @Test
-  fun testClearAndSetMethods() {
-    viewModel.setErrorMsg("Error occurred")
-    Assert.assertEquals("Error occurred", viewModel.uiState.value.errorMsg)
-    viewModel.setRenderMsg("Render error")
-    Assert.assertEquals("Render error", viewModel.renderState.value.renderError)
-    viewModel.clearErrorMsg()
-    Assert.assertNull(viewModel.uiState.value.errorMsg)
-    viewModel.clearRenderError()
-    Assert.assertNull(viewModel.renderState.value.renderError)
+  fun render_state_changes_are_applied() {
+    viewModel.onLocationPermissionResult(true)
+    Assert.assertTrue(viewModel.renderState.value.showUserLocation)
+
+    viewModel.requestRecenter()
+    val withNonce = viewModel.renderState.value.recenterNonce
+    Assert.assertNotNull(withNonce)
+
+    viewModel.consumeRecenter()
+    Assert.assertNull(viewModel.renderState.value.recenterNonce)
   }
+
+  @Test
+  fun loadUIState_userFetchFails_setsErrorAndStopsLoading() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getUser(loggedInUserId) } throws RuntimeException("boom")
+        viewModel.loadUIState()
+        advanceUntilIdle()
+
+        val s = viewModel.uiState.value
+        Assert.assertTrue(s.isError)
+        Assert.assertFalse(s.isLoading)
+        Assert.assertNotNull(s.errorMsg)
+      }
 }

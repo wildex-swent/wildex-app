@@ -309,7 +309,6 @@ class MapScreenViewModelTest {
         Assert.assertEquals(before + 1, after)
         coVerify(exactly = 1) { likeRepository.addLike(any()) }
 
-        // blank uid branch
         val vmBlank =
             MapScreenViewModel(
                 loggedInUserId = "",
@@ -396,5 +395,30 @@ class MapScreenViewModelTest {
         Assert.assertTrue(s.isError)
         Assert.assertFalse(s.isLoading)
         Assert.assertNotNull(s.errorMsg)
+      }
+
+  @Test
+  fun toggleLike_deleteSucceeds_thenDeleteFailsWithoutSelection_setsGlobalError() =
+      mainDispatcherRule.runTest {
+        coEvery { likeRepository.getLikeForPost("p1") } returns
+            Like(
+                likeId = "like-1",
+                postId = "p1",
+                userId = loggedInUserId,
+            )
+        coEvery { likeRepository.deleteLike("like-1") } returns Unit
+        viewModel.toggleLike("p1")
+        advanceUntilIdle()
+        coEvery { likeRepository.getLikeForPost("p1") } returns
+            Like(
+                likeId = "like-2",
+                postId = "p1",
+                userId = loggedInUserId,
+            )
+        coEvery { likeRepository.deleteLike("like-2") } throws RuntimeException("network")
+        viewModel.toggleLike("p1")
+        advanceUntilIdle()
+        val s = viewModel.uiState.value
+        Assert.assertEquals("Could not update like: network", s.errorMsg)
       }
 }

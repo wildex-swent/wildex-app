@@ -328,13 +328,13 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun setCountry_metAJour_lEtatUI() {
+  fun setCountry_updates_UIState() {
     viewModel.setCountry("France")
     Assert.assertEquals("France", viewModel.uiState.value.country)
   }
 
   @Test
-  fun saveProfileChanges_utilise_leCountry_duUIState() {
+  fun saveProfileChanges_uses_UIState_country() {
     mainDispatcherRule.runTest {
       viewModel.setName("A")
       viewModel.setSurname("B")

@@ -21,7 +21,7 @@ data class EditProfileUIState(
     val name: String = "",
     val surname: String = "",
     val username: String = "",
-    val description: String = "I am ...",
+    val description: String = "",
     val country: String = "Switzerland",
     val profileImageUrl: URL = "",
     val isLoading: Boolean = false,
@@ -29,19 +29,16 @@ data class EditProfileUIState(
     val isError: Boolean = false,
     val invalidNameMsg: String? = null,
     val invalidSurnameMsg: String? = null,
-    val invalidUsernameMsg: String? = null,
-    val invalidDescriptionMsg: String? = null
+    val invalidUsernameMsg: String? = null
 ) {
   val isValid: Boolean
     get() =
         invalidNameMsg == null &&
             invalidSurnameMsg == null &&
             invalidUsernameMsg == null &&
-            invalidDescriptionMsg == null &&
             name.isNotBlank() &&
             surname.isNotBlank() &&
-            username.isNotBlank() &&
-            description.isNotBlank()
+            username.isNotBlank()
 }
 
 class EditProfileViewModel(
@@ -142,6 +139,7 @@ class EditProfileViewModel(
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")
+        _uiState.value = _uiState.value.copy(isError = true, isLoading = false)
       }
     }
   }
@@ -167,10 +165,11 @@ class EditProfileViewModel(
   }
 
   fun setDescription(description: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            description = description,
-            invalidDescriptionMsg = if (description.isBlank()) "Bio cannot be empty" else null)
+    _uiState.value = _uiState.value.copy(description = description)
+  }
+
+  fun setCountry(country: String) {
+    _uiState.value = _uiState.value.copy(country = country)
   }
 
   fun setNewProfileImageUrl(url: URL) {

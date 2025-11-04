@@ -60,7 +60,7 @@ class EditProfileViewModelTest {
     Assert.assertEquals("", s.name)
     Assert.assertEquals("", s.surname)
     Assert.assertEquals("", s.username)
-    Assert.assertEquals("I am ...", s.description)
+    Assert.assertEquals("", s.description)
     Assert.assertEquals("Switzerland", s.country)
     Assert.assertEquals("", s.profileImageUrl)
     Assert.assertFalse(s.isLoading)
@@ -225,7 +225,7 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun setters_validation_toggle_and_isValid_true_when_all_fields_non_blank() {
+  fun setters_validation_toggle_and_isValid_true_when_name_surname_username_non_blank() {
     viewModel.setName("")
     Assert.assertEquals("Name cannot be empty", viewModel.uiState.value.invalidNameMsg)
     viewModel.setName("John")
@@ -240,11 +240,6 @@ class EditProfileViewModelTest {
     Assert.assertEquals("Username cannot be empty", viewModel.uiState.value.invalidUsernameMsg)
     viewModel.setUsername("jdoe")
     Assert.assertNull(viewModel.uiState.value.invalidUsernameMsg)
-
-    viewModel.setDescription("")
-    Assert.assertEquals("Bio cannot be empty", viewModel.uiState.value.invalidDescriptionMsg)
-    viewModel.setDescription("desc")
-    Assert.assertNull(viewModel.uiState.value.invalidDescriptionMsg)
 
     Assert.assertTrue(viewModel.uiState.value.isValid)
   }
@@ -330,5 +325,36 @@ class EditProfileViewModelTest {
 
     viewModel.clearErrorMsg()
     Assert.assertNull(viewModel.uiState.value.errorMsg)
+  }
+
+  @Test
+  fun setCountry_updates_UIState() {
+    viewModel.setCountry("France")
+    Assert.assertEquals("France", viewModel.uiState.value.country)
+  }
+
+  @Test
+  fun saveProfileChanges_uses_UIState_country() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+      viewModel.setCountry("France")
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { userRepository.editUser(any(), any()) } returns Unit
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      val captured = slot<User>()
+      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+      confirmVerified(userRepository, storageRepository)
+
+      Assert.assertEquals("France", captured.captured.country)
+    }
   }
 }

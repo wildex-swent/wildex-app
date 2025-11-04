@@ -29,29 +29,29 @@ class EditProfileViewModelTest {
   private lateinit var viewModel: EditProfileViewModel
 
   private val u1 =
-      User(
-          userId = "uid-1",
-          username = "user_one",
-          name = "First",
-          surname = "User",
-          bio = "bio",
-          profilePictureURL = "oldPic",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "X",
-          friendsCount = 1,
-      )
+    User(
+      userId = "uid-1",
+      username = "user_one",
+      name = "First",
+      surname = "User",
+      bio = "bio",
+      profilePictureURL = "oldPic",
+      userType = UserType.REGULAR,
+      creationDate = Timestamp.now(),
+      country = "X",
+      friendsCount = 1,
+    )
 
   @Before
   fun setUp() {
     userRepository = mockk()
     storageRepository = mockk()
     viewModel =
-        EditProfileViewModel(
-            userRepository = userRepository,
-            storageRepository = storageRepository,
-            currentUserId = "uid-1",
-        )
+      EditProfileViewModel(
+        userRepository = userRepository,
+        storageRepository = storageRepository,
+        currentUserId = "uid-1",
+      )
   }
 
   @Test
@@ -108,11 +108,11 @@ class EditProfileViewModelTest {
   fun loadUIState_withBlankCurrentUserId_setsError_andStopsLoading() {
     mainDispatcherRule.runTest {
       viewModel =
-          EditProfileViewModel(
-              userRepository = userRepository,
-              storageRepository = storageRepository,
-              currentUserId = "",
-          )
+        EditProfileViewModel(
+          userRepository = userRepository,
+          storageRepository = storageRepository,
+          currentUserId = "",
+        )
 
       viewModel.loadUIState()
       advanceUntilIdle()
@@ -183,7 +183,7 @@ class EditProfileViewModelTest {
 
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
-          RuntimeException("x")
+              RuntimeException("x")
 
       viewModel.saveProfileChanges(anyUri)
       advanceUntilIdle()
@@ -355,6 +355,62 @@ class EditProfileViewModelTest {
       confirmVerified(userRepository, storageRepository)
 
       Assert.assertEquals("France", captured.captured.country)
+    }
+  }
+
+  @Test
+  fun saveProfileChanges_usesPendingUri_whenParamNull() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+
+      val pending = mockk<Uri>(relaxed = true)
+      viewModel.setNewProfileImageUri(pending)
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
+      coEvery { userRepository.editUser(any(), any()) } returns Unit
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      val captured = slot<User>()
+      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", pending) }
+      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+      confirmVerified(userRepository, storageRepository)
+
+      Assert.assertEquals("newPic", captured.captured.profilePictureURL)
+    }
+  }
+
+  @Test
+  fun saveProfileChanges_clearsPendingUri_afterSuccess() {
+    mainDispatcherRule.runTest {
+      viewModel.setName("A")
+      viewModel.setSurname("B")
+      viewModel.setUsername("C")
+      viewModel.setDescription("D")
+
+      val pending = mockk<Uri>(relaxed = true)
+      viewModel.setNewProfileImageUri(pending)
+
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
+      coEvery { userRepository.editUser(any(), any()) } returns Unit
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      viewModel.saveProfileChanges()
+      advanceUntilIdle()
+
+      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", pending) }
+      coVerify(exactly = 2) { userRepository.getUser("uid-1") }
+      coVerify(exactly = 2) { userRepository.editUser("uid-1", any()) }
+      confirmVerified(userRepository, storageRepository)
     }
   }
 }

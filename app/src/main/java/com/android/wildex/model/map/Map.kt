@@ -26,7 +26,7 @@ sealed class MapPin {
       override val location: Location,
       override val imageURL: URL,
       override val kind: PinKind = PinKind.POST,
-      val isFriend: Boolean = false,
+      val isFriend: Boolean = false
   ) : MapPin()
 
   data class ReportPin(

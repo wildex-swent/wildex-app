@@ -1,5 +1,6 @@
 package com.android.wildex.ui.map
 
+import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.map.MapPin
@@ -12,6 +13,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 class MapScreenViewModel(
     loggedInUserId: Id = Firebase.auth.uid ?: "",
@@ -30,53 +32,55 @@ class MapScreenViewModel(
         animalRepository = animalRepository,
     ) {
 
-  override suspend fun reload() {
-    val currentUid = loggedInUserId
-    if (currentUid.isBlank()) {
-      _uiState.value =
-          _uiState.value.copy(
-              isError = true,
-              isLoading = false,
-              isRefreshing = false,
-              errorMsg = "No logged in user",
-          )
-      return
-    }
-    try {
-      val me = userRepository.getUser(currentUid)
-      val isPro = me.userType == UserType.PROFESSIONAL
+  override fun reload() {
+    viewModelScope.launch {
+      val currentUid = loggedInUserId
+      if (currentUid.isBlank()) {
+        _uiState.value =
+            _uiState.value.copy(
+                isError = true,
+                isLoading = false,
+                isRefreshing = false,
+                errorMsg = "No logged in user",
+            )
+        return@launch
+      }
+      try {
+        val me = userRepository.getUser(currentUid)
+        val isPro = me.userType == UserType.PROFESSIONAL
 
-      val tabs =
-          if (isPro) listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports)
-          else listOf(MapTab.Posts, MapTab.MyPosts)
+        val tabs =
+            if (isPro) listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports)
+            else listOf(MapTab.Posts, MapTab.MyPosts)
 
-      val active = uiState.value.activeTab.let { if (it in tabs) it else MapTab.Posts }
+        val active = uiState.value.activeTab.let { if (it in tabs) it else MapTab.Posts }
 
-      val pins =
-          when (active) {
-            MapTab.Posts -> loadAllPostsWithAuthorAvatar()
-            MapTab.MyPosts -> loadPostsOfUserWithPostImage(currentUid)
-            MapTab.Reports -> loadAllReportsAsPins()
-          }
+        val pins =
+            when (active) {
+              MapTab.Posts -> loadAllPostsWithAuthorAvatar()
+              MapTab.MyPosts -> loadPostsOfUserWithPostImage(currentUid)
+              MapTab.Reports -> loadAllReportsAsPins()
+            }
 
-      _uiState.value =
-          _uiState.value.copy(
-              availableTabs = tabs,
-              activeTab = active,
-              pins = pins,
-              isLoading = false,
-              isRefreshing = false,
-              isError = false,
-              errorMsg = null,
-          )
-    } catch (e: Exception) {
-      _uiState.value =
-          _uiState.value.copy(
-              isError = true,
-              isLoading = false,
-              isRefreshing = false,
-              errorMsg = e.message ?: "Failed to load self map",
-          )
+        _uiState.value =
+            _uiState.value.copy(
+                availableTabs = tabs,
+                activeTab = active,
+                pins = pins,
+                isLoading = false,
+                isRefreshing = false,
+                isError = false,
+                errorMsg = null,
+            )
+      } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                isError = true,
+                isLoading = false,
+                isRefreshing = false,
+                errorMsg = e.message ?: "Failed to load self map",
+            )
+      }
     }
   }
 

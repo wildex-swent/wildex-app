@@ -73,7 +73,7 @@ abstract class BaseMapViewModel(
     viewModelScope.launch { reload() }
   }
 
-  protected abstract suspend fun reload()
+  protected abstract fun reload()
 
   fun onTabSelected(tab: MapTab) {
     if (tab !in _uiState.value.availableTabs) return

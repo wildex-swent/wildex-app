@@ -41,7 +41,7 @@ data class MapUIState(
 data class MapRenderState(
     val showUserLocation: Boolean = false,
     val recenterNonce: Long? = null,
-    val renderError: String? = null,
+    val renderError: String? = null
 )
 
 /** Base VM shared by all map screens. */

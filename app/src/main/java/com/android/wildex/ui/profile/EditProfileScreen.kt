@@ -214,9 +214,9 @@ fun EditProfileScreen(
           Button(
               onClick = {
                 if (isNewUser) {
-                  editScreenViewModel.saveProfileChanges()
                   onSave()
                 }
+                editScreenViewModel.saveProfileChanges()
               },
               colors =
                   ButtonDefaults.buttonColors(

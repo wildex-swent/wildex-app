@@ -60,11 +60,11 @@ class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
     private val currentUserId: Id =
-        if (Firebase.auth.currentUser != null) {
+        if (Firebase.auth.uid != null) {
           Firebase.auth.uid
         } else {
           ""
-        } ?: "",
+        } ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()

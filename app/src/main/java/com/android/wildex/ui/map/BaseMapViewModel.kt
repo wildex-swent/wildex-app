@@ -13,7 +13,6 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
-import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +35,7 @@ data class MapUIState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
-    val errorMsg: String? = null,
+    val errorMsg: String? = null
 )
 
 data class MapRenderState(
@@ -68,7 +67,9 @@ abstract class BaseMapViewModel(
   }
 
   fun refreshUIState() {
-    _uiState.value = _uiState.value.copy(isRefreshing = true, isError = false, errorMsg = null)
+    _uiState.value =
+        _uiState.value.copy(
+            isRefreshing = true, isError = false, errorMsg = null, isLoading = false)
     viewModelScope.launch { reload() }
   }
 
@@ -205,60 +206,6 @@ abstract class BaseMapViewModel(
           setErrorMsg("Could not update like: ${e.message}")
         }
       }
-    }
-  }
-
-  /* ---------- Reusable loaders ---------- */
-
-  protected suspend fun loadAllPostsWithAuthorAvatar(): List<MapPin> {
-    val posts = postRepository.getAllPosts()
-    val authorCache = mutableMapOf<Id, URL>()
-    return posts
-        .filter { it.location != null }
-        .map { p ->
-          val avatar =
-              authorCache.getOrPut(p.authorId) {
-                userRepository.getSimpleUser(p.authorId).profilePictureURL
-              }
-          MapPin.PostPin(
-              id = p.postId,
-              authorId = p.authorId,
-              location = p.location!!,
-              imageURL = avatar,
-          )
-        }
-  }
-
-  protected suspend fun loadPostsOfUserWithPostImage(userId: Id): List<MapPin> {
-    val posts = postRepository.getAllPostsByGivenAuthor(userId)
-    return posts
-        .filter { it.location != null }
-        .map { p ->
-          MapPin.PostPin(
-              id = p.postId,
-              authorId = p.authorId,
-              location = p.location!!,
-              imageURL = p.pictureURL,
-          )
-        }
-  }
-
-  protected suspend fun loadAllReportsAsPins(): List<MapPin> {
-    val reports = reportRepository.getAllReports()
-    val authorCache = mutableMapOf<Id, URL>()
-    return reports.map { r ->
-      val avatar =
-          authorCache.getOrPut(r.authorId) {
-            userRepository.getSimpleUser(r.authorId).profilePictureURL
-          }
-      MapPin.ReportPin(
-          id = r.reportId,
-          authorId = r.authorId,
-          location = r.location,
-          imageURL = avatar,
-          status = r.status,
-          assigneeId = r.assigneeId,
-      )
     }
   }
 }

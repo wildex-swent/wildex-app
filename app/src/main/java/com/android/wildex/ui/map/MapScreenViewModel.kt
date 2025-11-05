@@ -2,12 +2,14 @@ package com.android.wildex.ui.map
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -75,6 +77,58 @@ class MapScreenViewModel(
               isRefreshing = false,
               errorMsg = e.message ?: "Failed to load self map",
           )
+    }
+  }
+
+  private suspend fun loadAllPostsWithAuthorAvatar(): List<MapPin> {
+    val posts = postRepository.getAllPosts()
+    val authorCache = mutableMapOf<Id, URL>()
+    return posts
+        .filter { it.location != null }
+        .map { p ->
+          val avatar =
+              authorCache.getOrPut(p.authorId) {
+                userRepository.getSimpleUser(p.authorId).profilePictureURL
+              }
+          MapPin.PostPin(
+              id = p.postId,
+              authorId = p.authorId,
+              location = p.location!!,
+              imageURL = avatar,
+          )
+        }
+  }
+
+  private suspend fun loadPostsOfUserWithPostImage(userId: Id): List<MapPin> {
+    val posts = postRepository.getAllPostsByGivenAuthor(userId)
+    return posts
+        .filter { it.location != null }
+        .map { p ->
+          MapPin.PostPin(
+              id = p.postId,
+              authorId = p.authorId,
+              location = p.location!!,
+              imageURL = p.pictureURL,
+          )
+        }
+  }
+
+  private suspend fun loadAllReportsAsPins(): List<MapPin> {
+    val reports = reportRepository.getAllReports()
+    val authorCache = mutableMapOf<Id, URL>()
+    return reports.map { r ->
+      val avatar =
+          authorCache.getOrPut(r.authorId) {
+            userRepository.getSimpleUser(r.authorId).profilePictureURL
+          }
+      MapPin.ReportPin(
+          id = r.reportId,
+          authorId = r.authorId,
+          location = r.location,
+          imageURL = avatar,
+          status = r.status,
+          assigneeId = r.assigneeId,
+      )
     }
   }
 }

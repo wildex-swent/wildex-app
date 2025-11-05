@@ -23,7 +23,7 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    val countryList: List<String> = //TODO update related functions
+    val countryList: List<String> = // TODO update related functions
         listOf(
             "Switzerland",
             "United States",
@@ -69,8 +69,8 @@ class EditProfileViewModel(
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
 
-    // Saves selected Uri
-    private var pendingProfileImageUri: Uri? = null
+  // Saves selected Uri
+  private var pendingProfileImageUri: Uri? = null
 
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
@@ -127,7 +127,7 @@ class EditProfileViewModel(
       try {
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
-          val effectiveUri = profileImageUri ?: pendingProfileImageUri
+        val effectiveUri = profileImageUri ?: pendingProfileImageUri
         val newURL: URL
         if (effectiveUri != null) {
           newURL =
@@ -153,8 +153,8 @@ class EditProfileViewModel(
             userId = currentUserId,
             newUser = newUser,
         )
-          // Reset the pending Uri after successful upload
-          pendingProfileImageUri = null
+        // Reset the pending Uri after successful upload
+        pendingProfileImageUri = null
         clearErrorMsg()
         _uiState.value = _uiState.value.copy(isLoading = false, isError = false)
       } catch (e: Exception) {
@@ -197,7 +197,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(profileImageUrl = url)
   }
 
-    fun setNewProfileImageUri(uri: Uri?) {
-        pendingProfileImageUri = uri
-    }
+  fun setNewProfileImageUri(uri: Uri?) {
+    pendingProfileImageUri = uri
+  }
 }

@@ -17,9 +17,9 @@ data class BoundingBox(val x: Float, val y: Float, val width: Float, val height:
 
 data class Taxonomy(
     val id: String,
-    val animalClass: String,
-    val order: String,
-    val family: String,
-    val genus: String,
-    val species: String,
+    val animalClass: String = "",
+    val order: String = "",
+    val family: String = "",
+    val genus: String = "",
+    val species: String = "",
 )

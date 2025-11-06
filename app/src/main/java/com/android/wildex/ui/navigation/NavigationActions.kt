@@ -24,12 +24,21 @@ sealed class Screen(
     }
   }
 
-  object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
+  data class Map(val userUid: String) :
+      Screen(route = "map/${userUid}", name = "Map", isTopLevelDestination = true) {
+    companion object {
+      const val PATH = "map"
+    }
+  }
 
   object Camera : Screen(route = "camera", name = "Camera", isTopLevelDestination = true)
 
-  object Collection :
-      Screen(route = "collection", name = "Collection", isTopLevelDestination = true)
+  data class Collection(val userUid: String) :
+      Screen(route = "collection/${userUid}", name = "Collection") {
+    companion object {
+      const val PATH = "collection"
+    }
+  }
 
   object Report : Screen(route = "report", name = "Report", isTopLevelDestination = true)
 }

@@ -16,8 +16,8 @@ interface UserAnimalsRepository {
   suspend fun getAnimalsCountOfUser(userId: Id): Int
 
   /** Add an Animal to the UserAnimals of a specific User. */
-  suspend fun addUserAnimals(userId: Id, animalId: Id)
+  suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id)
 
   /** Delete an Animal to the UserAnimals of a specific User. */
-  suspend fun deleteUserAnimals(userId: Id, animalId: Id)
+  suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id)
 }

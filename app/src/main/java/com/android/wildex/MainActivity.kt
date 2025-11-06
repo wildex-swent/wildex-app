@@ -65,6 +65,7 @@ fun WildexApp(
     FirebaseAuth.getInstance().addAuthStateListener(authStateListener)
   }
 
+  val nullUserUID = context.getString(R.string.null_user_uid)
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
   NavHost(navController = navController, startDestination = startDestination) {
@@ -91,16 +92,26 @@ fun WildexApp(
           onNotificationClick = {},
       )
     }
-
     // Map
-    composable(Screen.Map.route) {
-      MapScreen(
-          bottomBar = {
-            BottomNavigationMenu(
-                Tab.Map,
-                onTabSelected = { navigationActions.navigateTo(it.destination) },
-            )
-          })
+    composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
+      val userId = backStackEntry.arguments?.getString("userUid")
+      if (userId != null) {
+        MapScreen(
+            userId = userId,
+            bottomBar = {
+              if (userId == currentUser?.uid) {
+                BottomNavigationMenu(
+                    Tab.Map,
+                    onTabSelected = { navigationActions.navigateTo(it.destination) },
+                )
+              }
+            },
+        )
+      } else {
+        Log.e("MapScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
+        navController.popBackStack()
+      }
     }
 
     // Camera
@@ -115,14 +126,32 @@ fun WildexApp(
     }
 
     // Collection
-    composable(Screen.Collection.route) {
-      CollectionScreen(
-          bottomBar = {
-            BottomNavigationMenu(
-                Tab.Collection,
-                onTabSelected = { navigationActions.navigateTo(it.destination) },
-            )
-          })
+    composable("${Screen.Collection.PATH}/{userUid}") { backStackEntry ->
+      val userId = backStackEntry.arguments?.getString("userUid")
+      if (userId != null) {
+        CollectionScreen(
+            userUid = userId,
+            onAnimalClick = { animalId ->
+              // navigationActions.navigateTo(Screen.AnimalInformationScreen(animalId))
+            },
+            onProfileClick = {
+              navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: ""))
+            },
+            onNotificationClick = {},
+            onGoBack = { navigationActions.goBack() },
+            bottomBar = {
+              if (userId == currentUser?.uid)
+                  BottomNavigationMenu(
+                      Tab.Collection,
+                      onTabSelected = { navigationActions.navigateTo(it.destination) },
+                  )
+            },
+        )
+      } else {
+        Log.e("CollectionScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
+        navController.popBackStack()
+      }
     }
 
     // Reports
@@ -139,6 +168,7 @@ fun WildexApp(
     // Post Details
     composable("${Screen.PostDetails.PATH}/{postUid}") { backStackEntry ->
       val postId = backStackEntry.arguments?.getString("postUid")
+      val nullPostUID = context.getString(R.string.null_post_uid)
       if (postId != null) {
         PostDetailsScreen(
             postId = postId,
@@ -146,8 +176,8 @@ fun WildexApp(
             onProfile = { userUid -> navigationActions.navigateTo(Screen.Profile(userUid)) },
         )
       } else {
-        Log.e("PostDetailsScreen", "Post UID is null")
-        Toast.makeText(context, "Post UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("PostDetailsScreen", nullPostUID)
+        Toast.makeText(context, nullPostUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }
@@ -159,10 +189,11 @@ fun WildexApp(
         ProfileScreen(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
+            onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
         )
       } else {
-        Log.e("ProfileScreen", "User UID is null")
-        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("ProfileScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }

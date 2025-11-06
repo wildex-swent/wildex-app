@@ -9,6 +9,8 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.AnimalRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.report.ReportRepositoryFirestore
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.CommentRepositoryFirestore
 import com.android.wildex.model.social.LikeRepository
@@ -17,6 +19,8 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.storage.StorageRepositoryFirebase
+import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserAnimalsRepositoryFirestore
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.google.firebase.auth.ktx.auth
@@ -31,6 +35,8 @@ object RepositoryProvider {
   val postRepository: PostsRepository by lazy { PostsRepositoryFirestore(Firebase.firestore) }
   val userRepository: UserRepository by lazy { UserRepositoryFirestore(Firebase.firestore) }
   val likeRepository: LikeRepository by lazy { LikeRepositoryFirestore(Firebase.firestore) }
+  val reportRepository: ReportRepository by lazy { ReportRepositoryFirestore(Firebase.firestore) }
+
   val commentRepository: CommentRepository by lazy {
     CommentRepositoryFirestore(Firebase.firestore)
   }
@@ -42,4 +48,7 @@ object RepositoryProvider {
   }
   val storageRepository: StorageRepository by lazy { StorageRepositoryFirebase(Firebase.storage) }
   val animalRepository: AnimalRepository by lazy { AnimalRepositoryFirestore(Firebase.firestore) }
+  val userAnimalsRepository: UserAnimalsRepository by lazy {
+    UserAnimalsRepositoryFirestore(Firebase.firestore)
+  }
 }

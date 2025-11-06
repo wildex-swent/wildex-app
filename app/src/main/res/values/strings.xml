@@ -22,6 +22,9 @@
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>
+    <string name="trophies">Your trophies</string>
+    <string name="unlocked_achievements">Unlocked</string>
+    <string name="to_discover">To discover</string>
     <string name="null_user_uid">User UID is null</string>
     <string name="null_post_uid">Post UID is null</string>
 </resources>

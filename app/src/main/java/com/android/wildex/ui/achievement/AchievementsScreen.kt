@@ -44,7 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.ui.LoadingScreen
@@ -60,6 +60,7 @@ object AchievementsScreenTestTags {
   const val TOP_APP_BAR = "achievements_top_app_bar"
   const val ACHIEVEMENT_IMAGE = "achievement_image"
   const val ACHIEVEMENT_NAME = "achievement_name"
+  const val BACK_BUTTON = "achievements_back_button"
 }
 
 val AchievementAlphaKey = SemanticsPropertyKey<Float>("AchievementAlpha")
@@ -179,7 +180,7 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier = Modifier.width(90.dp).testTag(AchievementsScreenTestTags.ACHIEVEMENT_ITEM)) {
         AsyncImage(
-            painter = rememberAsyncImagePainter(achievement.pictureURL),
+            model = achievement.pictureURL,
             contentDescription = achievement.name,
             contentScale = ContentScale.Crop,
             modifier =
@@ -191,6 +192,7 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
                       achievementId = achievement.achievementId
                     }
                     .testTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE))
+
         Text(
             text = achievement.name,
             style = MaterialTheme.typography.bodySmall,

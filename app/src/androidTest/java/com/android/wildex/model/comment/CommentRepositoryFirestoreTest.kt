@@ -133,6 +133,80 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
   }
 
   @Test
+  fun deleteAllCommentsOfPostWithReportTag() = runTest {
+    repository.addComment(comment2)
+    var exceptionThrown = false
+
+    try {
+      repository.deleteAllCommentsOfPost(comment2.postId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+    }
+
+    assert(!exceptionThrown)
+
+    val comments = repository.getAllCommentsByPost(comment2.postId)
+
+    assertEquals(1, comments.size)
+    assertTrue(comments.contains(comment2))
+  }
+
+  @Test
+  fun deleteAllCommentsOfPostWithPostTag() = runTest {
+    repository.addComment(comment1)
+    var exceptionThrown = false
+
+    try {
+      repository.deleteAllCommentsOfPost(comment1.postId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+    }
+
+    assert(!exceptionThrown)
+
+    val comments = repository.getAllCommentsByPost(comment1.postId)
+
+    assertTrue(comments.isEmpty())
+  }
+
+  @Test
+  fun deleteAllCommentsOfReportWithReportTag() = runTest {
+    repository.addComment(comment2)
+    var exceptionThrown = false
+
+    try {
+      repository.deleteAllCommentsOfReport(comment2.postId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+    }
+
+    assert(!exceptionThrown)
+
+    val comments = repository.getAllCommentsByPost(comment2.postId)
+
+    assertTrue(comments.isEmpty())
+  }
+
+  @Test
+  fun deleteAllCommentsOfReportWithPostTag() = runTest {
+    repository.addComment(comment1)
+    var exceptionThrown = false
+
+    try {
+      repository.deleteAllCommentsOfReport(comment1.postId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+    }
+
+    assert(!exceptionThrown)
+
+    val comments = repository.getAllCommentsByPost(comment1.postId)
+
+    assertEquals(1, comments.size)
+    assertTrue(comments.contains(comment1))
+  }
+
+  @Test
   fun deleteCommentWhenIdDoesNotExist() = runTest {
     var exceptionThrown = false
 

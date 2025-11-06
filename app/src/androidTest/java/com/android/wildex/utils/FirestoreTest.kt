@@ -5,6 +5,7 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
@@ -168,7 +169,8 @@ open class FirestoreTest(val collectionPath: String) {
           postId = "post1",
           authorId = "author1",
           text = "text1",
-          date = Timestamp.fromDate(2003, 11, 21))
+          date = Timestamp.fromDate(2003, 11, 21),
+          tag = CommentTag.POST_COMMENT)
 
   open val comment2 =
       Comment(
@@ -176,7 +178,8 @@ open class FirestoreTest(val collectionPath: String) {
           postId = "post2",
           authorId = "author2",
           text = "text2",
-          date = Timestamp.fromDate(2012, 12, 12))
+          date = Timestamp.fromDate(2012, 12, 12),
+          tag = CommentTag.REPORT_COMMENT)
 
   open val animal1 =
       Animal(

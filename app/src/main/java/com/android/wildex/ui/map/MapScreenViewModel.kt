@@ -22,12 +22,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Represents the different tabs available on the map screen.
+ * - Posts: Shows all posts on the map.
+ * - MyPosts: Shows posts created by the user.
+ * - Reports: Shows reports made by or assigned to the user.
+ */
 enum class MapTab {
   Posts,
   MyPosts,
   Reports
 }
 
+/**
+ * Represents the UI state of the Map Screen.
+ *
+ * @property availableTabs List of tabs available to the user based on their role and context.
+ * @property activeTab The currently selected tab.
+ * @property pins List of map pins to be displayed on the map.
+ * @property selected Details of the currently selected pin, if any.
+ * @property centerCoordinates The coordinates to center the map on.
+ * @property isLoading Indicates whether the map data is currently loading.
+ * @property isRefreshing Indicates whether the map data is currently refreshing.
+ * @property isError Indicates whether there was an error loading the map data.
+ * @property errorMsg Optional error message to display if loading fails.
+ */
 data class MapUIState(
     val availableTabs: List<MapTab> = emptyList(),
     val activeTab: MapTab = MapTab.Posts,
@@ -40,34 +59,51 @@ data class MapUIState(
     val errorMsg: String? = null
 )
 
+/**
+ * Represents the rendering state of the Map Screen.
+ *
+ * @property showUserLocation Indicates whether to show the user's current location on the map.
+ * @property recenterNonce A nonce value used to trigger recentering of the map.
+ * @property renderError Optional error message related to map rendering issues.
+ */
 data class MapRenderState(
     val showUserLocation: Boolean = false,
     val recenterNonce: Long? = null,
     val renderError: String? = null
 )
 
+/** ViewModel for managing the state and logic of the Map Screen.* */
 class MapScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: "",
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
 
+  /** Backing property for the map screen UI state. */
   private val _uiState = MutableStateFlow(MapUIState())
   val uiState: StateFlow<MapUIState> = _uiState.asStateFlow()
-
+  /** Backing property for the map screen render state. */
   private val _renderState = MutableStateFlow(MapRenderState())
   val renderState: StateFlow<MapRenderState> = _renderState.asStateFlow()
 
-  /** Loads or reloads the full UI state for a given user. */
+  /**
+   * Loads the data for the currently visible map (self or other).
+   *
+   * @param userUid The user ID for whom to load the map data. Defaults to the current user.
+   */
   fun loadUIState(userUid: Id = currentUserId) {
     _uiState.value = _uiState.value.copy(isLoading = true, isError = false, errorMsg = null)
     viewModelScope.launch { updateUIState(userUid) }
   }
 
-  /** Refreshes the data for the currently visible map (self or other). */
+  /**
+   * Refreshes the data for the currently visible map (self or other).
+   *
+   * @param userUid The user ID for whom to refresh the map data. Defaults to the current user.
+   */
   fun refreshUIState(userUid: Id = currentUserId) {
     _uiState.value =
         _uiState.value.copy(
@@ -75,6 +111,11 @@ class MapScreenViewModel(
     viewModelScope.launch { updateUIState(userUid) }
   }
 
+  /**
+   * Updates the UI state by fetching map pins and user information.
+   *
+   * @param userUid The user ID for whom to load the map data.
+   */
   private suspend fun updateUIState(userUid: Id) {
     if (currentUserId.isBlank()) {
       setErrorMsg("No logged in user.")
@@ -113,20 +154,30 @@ class MapScreenViewModel(
               isLoading = false,
               isRefreshing = false,
               isError = false,
-              errorMsg = null,
-          )
+              errorMsg = null)
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load map components.")
       _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
     }
   }
 
+  /**
+   * Handles tab selection by the user.
+   *
+   * @param tab The selected [MapTab].
+   * @param userUid The user ID for whom to load the map data. Defaults to the current user.
+   */
   fun onTabSelected(tab: MapTab, userUid: Id = currentUserId) {
     if (tab !in _uiState.value.availableTabs) return
     _uiState.value = _uiState.value.copy(activeTab = tab, selected = null)
     refreshUIState(userUid)
   }
 
+  /**
+   * Handles pin selection by the user.
+   *
+   * @param pinId The ID of the selected pin.
+   */
   fun onPinSelected(pinId: Id) {
     viewModelScope.launch {
       val pin = _uiState.value.pins.firstOrNull { it.id == pinId } ?: return@launch
@@ -165,36 +216,47 @@ class MapScreenViewModel(
     }
   }
 
+  /** Clears the currently selected pin details. */
   fun clearSelection() {
     _uiState.value = _uiState.value.copy(selected = null)
   }
-
+  /** Clears any existing error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
-
+  /**
+   * Handles the result of the location permission request.
+   *
+   * @param granted Indicates whether the location permission was granted.
+   */
   fun onLocationPermissionResult(granted: Boolean) {
     _renderState.value = _renderState.value.copy(showUserLocation = granted)
   }
-
+  /** Requests the map to recenter on the user's location. */
   fun requestRecenter() {
     _renderState.value = _renderState.value.copy(recenterNonce = System.currentTimeMillis())
   }
-
+  /** Consumes the recenter request by clearing the nonce. */
   fun consumeRecenter() {
     if (_renderState.value.recenterNonce != null) {
       _renderState.value = _renderState.value.copy(recenterNonce = null)
     }
   }
-
+  /** Clears any existing render error from the render state. */
   fun clearRenderError() {
     _renderState.value = _renderState.value.copy(renderError = null)
   }
 
+  /** Sets a new error message in the UI state. */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
-
+  /**
+   * Toggles the like status of a post. If the post is already liked by the current user, it removes
+   * the like. Otherwise, it creates and adds a new like entry.
+   *
+   * @param postId The unique identifier of the post to toggle like status.
+   */
   fun toggleLike(postId: Id) {
     val uid = currentUserId
     if (uid.isBlank()) {
@@ -226,11 +288,7 @@ class MapScreenViewModel(
         if (existing != null) likeRepository.deleteLike(existing.likeId)
         else
             likeRepository.addLike(
-                Like(
-                    likeId = likeRepository.getNewLikeId(),
-                    postId = postId,
-                    userId = uid,
-                ))
+                Like(likeId = likeRepository.getNewLikeId(), postId = postId, userId = uid))
       } catch (e: Exception) {
         val cur = _uiState.value
         val curSel = cur.selected
@@ -242,6 +300,11 @@ class MapScreenViewModel(
     }
   }
 
+  /**
+   * Loads all posts with their authors' avatar URLs.
+   *
+   * @return A list of [MapPin.PostPin] representing the posts with author avatars.
+   */
   private suspend fun loadAllPostsWithAuthorAvatar(): List<MapPin> {
     val posts = postRepository.getAllPosts()
     val authorCache = mutableMapOf<Id, URL>()
@@ -257,6 +320,12 @@ class MapScreenViewModel(
         }
   }
 
+  /**
+   * Loads posts created by a specific user with their post image URLs.
+   *
+   * @param userId The ID of the user whose posts are to be loaded.
+   * @return A list of [MapPin.PostPin] representing the user's posts with post images.
+   */
   private suspend fun loadPostsOfUserWithPostImage(userId: Id): List<MapPin> {
     val posts = postRepository.getAllPostsByGivenAuthor(userId)
     return posts
@@ -270,6 +339,11 @@ class MapScreenViewModel(
         }
   }
 
+  /**
+   * Loads all reports as map pins.
+   *
+   * @return A list of [MapPin.ReportPin] representing all reports.
+   */
   private suspend fun loadAllReportsAsPins(): List<MapPin> {
     val reports = reportRepository.getAllReports()
     val authorCache = mutableMapOf<Id, URL>()
@@ -284,11 +358,16 @@ class MapScreenViewModel(
           location = r.location,
           imageURL = avatar,
           status = r.status,
-          assigneeId = r.assigneeId,
-      )
+          assigneeId = r.assigneeId)
     }
   }
 
+  /**
+   * Loads reports involving a specific user, either as author or assignee.
+   *
+   * @param userId The ID of the user involved in the reports.
+   * @return A list of [MapPin.ReportPin] representing the reports involving the user
+   */
   private suspend fun loadReportsInvolvingUser(userId: Id): List<MapPin> {
     val authored = reportRepository.getAllReportsByAuthor(userId)
     val assigned = reportRepository.getAllReportsByAssignee(userId)
@@ -300,8 +379,7 @@ class MapScreenViewModel(
           location = r.location,
           imageURL = r.imageURL,
           status = r.status,
-          assigneeId = r.assigneeId,
-      )
+          assigneeId = r.assigneeId)
     }
   }
 }

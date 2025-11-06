@@ -31,8 +31,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -74,45 +72,22 @@ fun CameraPreviewScreen(
 
   Box(modifier = modifier.fillMaxSize()) {
     // Camera viewfinder
-    CameraViewfinder(surfaceRequest = surfaceRequest.value)
-
-    // Gradient overlay
-    CameraOverlay()
+    surfaceRequest.value?.let {
+      CameraXViewfinder(
+          modifier = Modifier.fillMaxSize().testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
+          surfaceRequest = it,
+      )
+    }
 
     // Bottom controls
     CameraControls(
-        onCaptureClick = { capturePhoto(context, imageCaptureUseCase, onPhotoTaken) },
+        onCaptureClick = { imageCaptureUseCase.capturePhoto(context, onPhotoTaken) },
         onUploadClick = onUploadClick,
         modifier =
             Modifier.align(Alignment.BottomCenter)
                 .padding(start = 60.dp, end = 60.dp, bottom = 40.dp),
     )
   }
-}
-
-@Composable
-private fun CameraViewfinder(surfaceRequest: SurfaceRequest?) {
-  surfaceRequest?.let {
-    CameraXViewfinder(
-        modifier = Modifier.fillMaxSize().testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
-        surfaceRequest = it,
-    )
-  }
-}
-
-@Composable
-private fun CameraOverlay() {
-  Box(
-      modifier =
-          Modifier.fillMaxSize()
-              .background(
-                  Brush.verticalGradient(
-                      colors =
-                          listOf(
-                              colorScheme.surface.copy(alpha = 0.2f),
-                              Color.Transparent,
-                              colorScheme.surface.copy(alpha = 0.4f),
-                          ))))
 }
 
 @Composable
@@ -186,15 +161,14 @@ private fun UploadButton(
 }
 
 // Helper function for capture logic
-private fun capturePhoto(
+private fun ImageCapture.capturePhoto(
     context: Context,
-    imageCaptureUseCase: ImageCapture,
     onPhotoTaken: (Uri) -> Unit,
 ) {
   val photoFile = File(context.cacheDir, "${System.currentTimeMillis()}.jpg")
   val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-  imageCaptureUseCase.takePicture(
+  takePicture(
       outputOptions,
       ContextCompat.getMainExecutor(context),
       object : ImageCapture.OnImageSavedCallback {

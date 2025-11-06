@@ -124,7 +124,8 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
           modifier =
               Modifier.size(150.dp).testTag(DetectingScreenTestTags.DETECTING_SCREEN_ANIMATION),
       )
-      // Clever phrase
+
+      // Analyzing
       Text(
           text = "🐾  Analyzing Wildlife  🐾",
           style = typography.headlineSmall,

@@ -66,7 +66,6 @@ fun CameraPermissionScreen(
                   .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON),
       )
 
-      // Funny message
       Text(
           text = "We promise not to take selfies. Just animals.",
           style = typography.headlineMedium,
@@ -87,7 +86,7 @@ fun CameraPermissionScreen(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // Request permission button - primary action
+      // Request permission button
       Button(
           onClick = onRequestPermission,
           modifier =
@@ -114,7 +113,7 @@ fun CameraPermissionScreen(
         )
       }
 
-      // Upload button - secondary action
+      // Upload button
       OutlinedButton(
           onClick = onUploadClick,
           modifier =

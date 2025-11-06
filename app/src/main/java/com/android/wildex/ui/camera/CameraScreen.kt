@@ -68,23 +68,23 @@ fun CameraScreen(
         modifier = Modifier.padding(innerPadding).fillMaxSize(),
     ) {
       when {
-        uiState.currentImageUri == null ->
-            if (hasCameraPermission) {
-              CameraPreviewScreen(
-                  onPhotoTaken = {
-                    cameraScreenViewModel.updateImageUri(it)
-                    cameraScreenViewModel.detectAnimalImage(it, context)
-                  },
-                  onUploadClick = { imagePickerLauncher.launch("image/*") },
-                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
-              )
-            } else {
-              CameraPermissionScreen(
-                  onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
-                  onUploadClick = { imagePickerLauncher.launch("image/*") },
-                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
-              )
-            }
+        uiState.currentImageUri == null && hasCameraPermission -> {
+          CameraPreviewScreen(
+              onPhotoTaken = {
+                cameraScreenViewModel.updateImageUri(it)
+                cameraScreenViewModel.detectAnimalImage(it, context)
+              },
+              onUploadClick = { imagePickerLauncher.launch("image/*") },
+              modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
+          )
+        }
+        uiState.currentImageUri == null && !hasCameraPermission -> {
+          CameraPermissionScreen(
+              onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
+              onUploadClick = { imagePickerLauncher.launch("image/*") },
+              modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
+          )
+        }
         uiState.isDetecting ->
             DetectingScreen(
                 photoUri = uiState.currentImageUri!!,
@@ -97,13 +97,8 @@ fun CameraScreen(
                 onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
                 useLocation = uiState.addLocation,
                 onLocationToggle = {
-                  if (!hasLocationPermission) {
-                    locationPermissionState.launchPermissionRequest()
-                    if (locationPermissionState.status.isGranted)
-                        cameraScreenViewModel.toggleAddLocation()
-                  } else {
-                    cameraScreenViewModel.toggleAddLocation()
-                  }
+                  if (!hasLocationPermission) locationPermissionState.launchPermissionRequest()
+                  else cameraScreenViewModel.toggleAddLocation()
                 },
                 photoUri = uiState.currentImageUri!!,
                 detectionResponse = uiState.animalDetectResponse!!,

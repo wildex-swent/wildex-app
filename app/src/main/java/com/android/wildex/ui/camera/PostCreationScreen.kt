@@ -68,7 +68,6 @@ fun PostCreationScreen(
               .verticalScroll(rememberScrollState())) {
         // Header with image
         Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
-          // Replace with actual image - using placeholder
           AsyncImage(
               model = photoUri,
               contentDescription = "Post image",
@@ -109,13 +108,14 @@ fun PostCreationScreen(
               }
             }
 
-            // Species name and confidence
+            // Animal name, species name and confidence
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
             ) {
               Column {
+                // Animal Name
                 Text(
                     text = animalName,
                     color = colorScheme.primary,
@@ -125,6 +125,8 @@ fun PostCreationScreen(
                         Modifier.testTag(
                             PostCreationScreenTestTags.POST_CREATION_SCREEN_ANIMAL_NAME),
                 )
+
+                // Species Name
                 if (speciesName.isNotBlank()) {
                   Text(
                       text = speciesName,
@@ -138,6 +140,7 @@ fun PostCreationScreen(
                 }
               }
 
+              // Confidence
               Column(
                   horizontalAlignment = Alignment.End,
                   modifier =
@@ -196,7 +199,7 @@ fun PostCreationScreen(
                 )
               },
           )
-
+          // Location toggle
           Row(
               modifier =
                   Modifier.fillMaxWidth()
@@ -236,6 +239,8 @@ fun PostCreationScreen(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.spacedBy(12.dp),
           ) {
+
+            // Cancel button
             OutlinedButton(
                 onClick = onCancel,
                 modifier =
@@ -255,6 +260,7 @@ fun PostCreationScreen(
               Text(text = "Cancel & Retry", fontSize = 15.sp, fontWeight = FontWeight.Medium)
             }
 
+            // Confirm Button
             Button(
                 onClick = onConfirm,
                 modifier =

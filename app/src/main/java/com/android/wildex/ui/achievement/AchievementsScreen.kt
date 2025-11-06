@@ -61,7 +61,6 @@ object AchievementsScreenTestTags {
   const val TOP_APP_BAR = "achievements_top_app_bar"
   const val ACHIEVEMENT_IMAGE = "achievement_image"
   const val ACHIEVEMENT_NAME = "achievement_name"
-  const val BACK_BUTTON = "achievements_back_button"
 }
 
 val AchievementAlphaKey = SemanticsPropertyKey<Float>("AchievementAlpha")

@@ -23,7 +23,6 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    val profileImageUrl: URL = "",
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
@@ -45,14 +44,17 @@ class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
     private val currentUserId: Id =
-        if (Firebase.auth.currentUser != null) {
+        if (Firebase.auth.uid != null) {
           Firebase.auth.uid
         } else {
           ""
-        } ?: "",
+        } ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
+
+  // Saves selected Uri
+  private var pendingProfileImageUri: Uri? = null
 
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
@@ -78,7 +80,6 @@ class EditProfileViewModel(
               username = user.username,
               description = user.bio,
               country = user.country,
-              profileImageUrl = user.profilePictureURL,
               isLoading = false,
               errorMsg = null,
               isError = false,
@@ -98,9 +99,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
-  fun saveProfileChanges(
-      profileImageUri: Uri? = null,
-  ) {
+  fun saveProfileChanges() {
     if (!_uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
       return
@@ -110,9 +109,9 @@ class EditProfileViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
         val newURL: URL
-        if (profileImageUri != null) {
+        if (pendingProfileImageUri != null) {
           newURL =
-              storageRepository.uploadUserProfilePicture(currentUserId, profileImageUri)
+              storageRepository.uploadUserProfilePicture(currentUserId, pendingProfileImageUri!!)
                   ?: user.profilePictureURL
         } else {
           newURL = user.profilePictureURL
@@ -134,6 +133,8 @@ class EditProfileViewModel(
             userId = currentUserId,
             newUser = newUser,
         )
+        // Reset the pending Uri after successful upload
+        pendingProfileImageUri = null
         clearErrorMsg()
         _uiState.value = _uiState.value.copy(isLoading = false, isError = false)
       } catch (e: Exception) {
@@ -172,7 +173,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(country = country)
   }
 
-  fun setNewProfileImageUrl(url: URL) {
-    _uiState.value = _uiState.value.copy(profileImageUrl = url)
+  fun setNewProfileImageUri(uri: Uri?) {
+    pendingProfileImageUri = uri
   }
 }

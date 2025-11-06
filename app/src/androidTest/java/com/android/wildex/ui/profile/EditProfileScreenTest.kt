@@ -6,7 +6,6 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -75,14 +74,25 @@ class EditProfileScreenTest {
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).performClick()
+    val initialCountry = vm.uiState.value.country
     composeRule
-        .onNodeWithText("United States", useUnmergedTree = true)
-        .assertIsDisplayed()
-        .performClick()
+        .onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)
+        .assertTextContains(initialCountry, substring = false)
+
+    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).performClick()
+    val items =
+        composeRule.onAllNodesWithTag(
+            EditProfileScreenTestTags.COUNTRY_ELEMENT, useUnmergedTree = true)
+    items.assertCountEquals(items.fetchSemanticsNodes().size)
+    items[0].performClick()
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithText("United States", useUnmergedTree = true).assertIsDisplayed()
+    val newCountry = vm.uiState.value.country
+    Assert.assertNotEquals(initialCountry, newCountry)
+
+    composeRule
+        .onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)
+        .assertTextContains(newCountry, substring = false)
   }
 
   @Test
@@ -149,7 +159,7 @@ class EditProfileScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithText("Save").performClick()
+    composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE).performClick()
     Assert.assertEquals(1, saved)
   }
 }

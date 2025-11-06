@@ -23,22 +23,6 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    val countryList: List<String> =
-        listOf(
-            "Switzerland",
-            "United States",
-            "Canada",
-            "United Kingdom",
-            "Germany",
-            "France",
-            "Italy",
-            "Spain",
-            "Australia",
-            "India",
-            "China",
-            "Japan",
-        ),
-    val profileImageUrl: URL = "",
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
@@ -96,7 +80,6 @@ class EditProfileViewModel(
               username = user.username,
               description = user.bio,
               country = user.country,
-              profileImageUrl = user.profilePictureURL,
               isLoading = false,
               errorMsg = null,
               isError = false,
@@ -116,9 +99,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
-  fun saveProfileChanges(
-      profileImageUri: Uri? = null,
-  ) {
+  fun saveProfileChanges() {
     if (!_uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
       return
@@ -127,11 +108,10 @@ class EditProfileViewModel(
       try {
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
-        val effectiveUri = profileImageUri ?: pendingProfileImageUri
         val newURL: URL
-        if (effectiveUri != null) {
+        if (pendingProfileImageUri != null) {
           newURL =
-              storageRepository.uploadUserProfilePicture(currentUserId, effectiveUri)
+              storageRepository.uploadUserProfilePicture(currentUserId, pendingProfileImageUri!!)
                   ?: user.profilePictureURL
         } else {
           newURL = user.profilePictureURL
@@ -191,10 +171,6 @@ class EditProfileViewModel(
 
   fun setCountry(country: String) {
     _uiState.value = _uiState.value.copy(country = country)
-  }
-
-  fun setNewProfileImageUrl(url: URL) {
-    _uiState.value = _uiState.value.copy(profileImageUrl = url)
   }
 
   fun setNewProfileImageUri(uri: Uri?) {

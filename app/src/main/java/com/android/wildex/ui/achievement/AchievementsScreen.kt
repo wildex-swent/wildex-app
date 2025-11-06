@@ -179,7 +179,7 @@ fun AchievementItem(achievement: Achievement, unlocked: Boolean) {
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier = Modifier.width(90.dp).testTag(AchievementsScreenTestTags.ACHIEVEMENT_ITEM)) {
-        Image(
+        AsyncImage(
             painter = rememberAsyncImagePainter(achievement.pictureURL),
             contentDescription = achievement.name,
             contentScale = ContentScale.Crop,

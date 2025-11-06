@@ -16,7 +16,6 @@ private object ReportsFields {
   const val DESCRIPTION = "description"
   const val AUTHOR_ID = "authorId"
   const val ASSIGNEE_ID = "assigneeId"
-  const val STATUS = "status"
 }
 
 /** Represents a repository that manages Report items. */
@@ -173,10 +172,6 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
           document.getString(ReportsFields.AUTHOR_ID)
               ?: throwMissingFieldException(ReportsFields.AUTHOR_ID)
       val assigneeId = document.getString(ReportsFields.ASSIGNEE_ID)
-      val statusData =
-          document.getString(ReportsFields.STATUS)
-              ?: throwMissingFieldException(ReportsFields.STATUS)
-      val status = ReportStatus.valueOf(statusData.uppercase())
 
       Report(
           reportId = reportId,
@@ -185,8 +180,7 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
           date = date,
           description = description,
           authorId = authorId,
-          assigneeId = assigneeId,
-          status = status)
+          assigneeId = assigneeId)
     } catch (e: Exception) {
       null
     }

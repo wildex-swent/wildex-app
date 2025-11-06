@@ -23,7 +23,7 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    val countryList: List<String> = // TODO update related functions
+    val countryList: List<String> =
         listOf(
             "Switzerland",
             "United States",

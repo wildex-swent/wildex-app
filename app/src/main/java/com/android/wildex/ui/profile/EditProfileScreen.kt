@@ -139,10 +139,7 @@ fun EditProfileScreen(
 
           Box(modifier = Modifier.fillMaxWidth()) {
             TextButton(
-                onClick = {
-                  // editScreenViewModel.setCountry("")
-                  showDropdown = true
-                },
+                onClick = { showDropdown = true },
                 modifier =
                     Modifier.align(Alignment.Center)
                         .testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)) {
@@ -192,7 +189,7 @@ fun EditProfileScreen(
                   if (countryList.size > 3) {
                     DropdownMenuItem(
                         text = { Text("More...") },
-                        onClick = { /* Optionally show more results */},
+                        onClick = { /* Nothing currently */},
                         modifier = Modifier.padding(8.dp))
                   }
                 }

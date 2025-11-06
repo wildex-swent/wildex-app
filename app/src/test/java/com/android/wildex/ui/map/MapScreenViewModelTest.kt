@@ -5,6 +5,7 @@ import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.report.ReportStatus
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
@@ -18,7 +19,6 @@ import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
@@ -39,7 +39,7 @@ class MapScreenViewModelTest {
   private lateinit var viewModel: MapScreenViewModel
 
   private val loggedInUserId = "uid-1"
-  private val now = Timestamp(Date())
+  private val now = Timestamp.now()
   private val lausanne = Location(46.5197, 6.6323, "Lausanne")
 
   private val post1 =
@@ -213,7 +213,7 @@ class MapScreenViewModelTest {
   }
 
   @Test
-  fun otherUser_reportsTab_usesLoadReportsInvolvingUser_and_dedups() =
+  fun otherUser_reportsTab_usesLoadReportsInvolvingUser() =
       mainDispatcherRule.runTest {
         val otherUserId = "uid-other"
         val r1 = report1
@@ -273,7 +273,6 @@ class MapScreenViewModelTest {
         Assert.assertEquals(before, after)
         Assert.assertTrue(
             viewModel.uiState.value.errorMsg?.contains("Could not update like") == true)
-
         val vmBlank =
             MapScreenViewModel(
                 userRepository = userRepository,
@@ -287,10 +286,36 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         Assert.assertTrue(vmBlank.uiState.value.isError)
         Assert.assertTrue(vmBlank.uiState.value.errorMsg?.contains("No logged in user.") == true)
-
         vmBlank.toggleLike("p1")
         Assert.assertTrue(
             vmBlank.uiState.value.errorMsg?.contains("You must be logged in to like posts.") ==
                 true)
+      }
+
+  @Test
+  fun cover_missing_branches() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
+        coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
+        coEvery { postsRepository.getPost("p1") } returns post1
+        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("x", "y", "url")
+        coEvery { likeRepository.getLikeForPost("p1") } returns Like("lk1", "p1", loggedInUserId)
+        coEvery { likeRepository.deleteLike("lk1") } returns Unit
+
+        viewModel.loadUIState()
+        advanceUntilIdle()
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        viewModel.toggleLike("p1")
+        advanceUntilIdle()
+        Assert.assertEquals(
+            0, (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount)
+        coEvery { likeRepository.getLikeForPost("p2") } returns null
+        coEvery { likeRepository.getNewLikeId() } returns "like-X"
+        coEvery { likeRepository.addLike(any()) } throws RuntimeException("boom")
+        viewModel.toggleLike("p2")
+        advanceUntilIdle()
+        Assert.assertTrue(
+            viewModel.uiState.value.errorMsg?.contains("Could not update like: boom") == true)
       }
 }

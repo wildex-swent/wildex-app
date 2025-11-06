@@ -4,7 +4,6 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
-import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -46,8 +45,7 @@ class MapScreenViewModelTest {
       Post("p1", "user-a", "https://example.com/p1.jpg", lausanne, "first", now, "a1", 0, 0)
   private val post2 =
       Post("p2", loggedInUserId, "https://example.com/p2.jpg", lausanne, "second", now, "a2", 1, 0)
-  private val report1 =
-      Report("r1", "url", lausanne, now, "injured", "author", "assignee", ReportStatus.PENDING)
+  private val report1 = Report("r1", "url", lausanne, now, "injured", "author", "assignee")
   private val report2 =
       Report(
           "r2",
@@ -57,7 +55,6 @@ class MapScreenViewModelTest {
           "help",
           "x",
           "uid-other",
-          ReportStatus.PENDING,
       )
 
   private val regularUser =

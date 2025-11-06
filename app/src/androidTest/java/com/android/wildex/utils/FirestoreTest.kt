@@ -3,7 +3,6 @@ package com.android.wildex.utils
 import android.util.Log
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.report.Report
-import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
@@ -204,8 +203,7 @@ open class FirestoreTest(val collectionPath: String) {
           date = Timestamp.fromDate(2017, 4, 29),
           description = "description1",
           authorId = "authorId1",
-          assigneeId = "assigneeId1",
-          status = ReportStatus.PENDING)
+          assigneeId = "assigneeId1")
 
   open val report2 =
       Report(
@@ -215,6 +213,5 @@ open class FirestoreTest(val collectionPath: String) {
           date = Timestamp.now(),
           description = "description2",
           authorId = "authorId2",
-          assigneeId = "assigneeId2",
-          status = ReportStatus.RESOLVED)
+          assigneeId = "assigneeId2")
 }

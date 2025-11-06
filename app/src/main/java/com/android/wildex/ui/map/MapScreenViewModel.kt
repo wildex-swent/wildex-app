@@ -116,7 +116,7 @@ class MapScreenViewModel(
               errorMsg = null,
           )
     } catch (e: Exception) {
-      setErrorMsg(e.localizedMessage ?: "Failed to load map.")
+      setErrorMsg(e.localizedMessage ?: "Failed to load map components.")
       _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
     }
   }

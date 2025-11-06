@@ -48,6 +48,17 @@ class MapScreenViewModelTest {
       Post("p2", loggedInUserId, "https://example.com/p2.jpg", lausanne, "second", now, "a2", 1, 0)
   private val report1 =
       Report("r1", "url", lausanne, now, "injured", "author", "assignee", ReportStatus.PENDING)
+  private val report2 =
+      Report(
+          "r2",
+          "url2",
+          lausanne,
+          now,
+          "help",
+          "x",
+          "uid-other",
+          ReportStatus.PENDING,
+      )
 
   private val regularUser =
       User(
@@ -200,4 +211,86 @@ class MapScreenViewModelTest {
     viewModel.consumeRecenter()
     Assert.assertNull(viewModel.renderState.value.recenterNonce)
   }
+
+  @Test
+  fun otherUser_reportsTab_usesLoadReportsInvolvingUser_and_dedups() =
+      mainDispatcherRule.runTest {
+        val otherUserId = "uid-other"
+        val r1 = report1
+        val r1Dup = r1.copy()
+        val r2Assigned = report2
+        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
+        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("u", "n", "pic")
+        coEvery { postsRepository.getAllPostsByGivenAuthor(otherUserId) } returns emptyList()
+        coEvery { reportRepository.getAllReportsByAuthor(otherUserId) } returns listOf(r1, r1Dup)
+        coEvery { reportRepository.getAllReportsByAssignee(otherUserId) } returns listOf(r2Assigned)
+
+        viewModel.loadUIState(otherUserId)
+        advanceUntilIdle()
+
+        val initial = viewModel.uiState.value
+        Assert.assertEquals(listOf(MapTab.MyPosts, MapTab.Reports), initial.availableTabs)
+        Assert.assertEquals(MapTab.MyPosts, initial.activeTab)
+
+        viewModel.onTabSelected(MapTab.Reports, otherUserId)
+        advanceUntilIdle()
+
+        val after = viewModel.uiState.value
+        Assert.assertEquals(MapTab.Reports, after.activeTab)
+        Assert.assertEquals(2, after.pins.size)
+      }
+
+  @Test
+  fun errorBranches_cover_blankUid_AnimalFallback_pinFail_and_toggleFailureRollback() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
+        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("s", "u", "p")
+        coEvery { postsRepository.getAllPosts() } returns listOf(post1)
+        coEvery { reportRepository.getAllReports() } returns emptyList()
+
+        viewModel.loadUIState()
+        advanceUntilIdle()
+
+        coEvery { postsRepository.getPost("p1") } throws RuntimeException("boom")
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        Assert.assertTrue(viewModel.uiState.value.errorMsg?.contains("Failed to load pin") == true)
+
+        coEvery { postsRepository.getPost("p1") } returns post1
+        coEvery { likeRepository.getLikeForPost("p1") } returns null
+        coEvery { animalRepository.getAnimal(any()) } throws RuntimeException("nope")
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        val sel = viewModel.uiState.value.selected as PinDetails.PostDetails
+        Assert.assertEquals("animal", sel.animalName)
+
+        coEvery { likeRepository.getNewLikeId() } returns "like-99"
+        coEvery { likeRepository.addLike(any()) } throws RuntimeException("net")
+        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        viewModel.toggleLike("p1")
+        advanceUntilIdle()
+        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        Assert.assertEquals(before, after)
+        Assert.assertTrue(
+            viewModel.uiState.value.errorMsg?.contains("Could not update like") == true)
+
+        val vmBlank =
+            MapScreenViewModel(
+                userRepository = userRepository,
+                postRepository = postsRepository,
+                reportRepository = reportRepository,
+                likeRepository = likeRepository,
+                animalRepository = animalRepository,
+                currentUserId = "",
+            )
+        vmBlank.loadUIState()
+        advanceUntilIdle()
+        Assert.assertTrue(vmBlank.uiState.value.isError)
+        Assert.assertTrue(vmBlank.uiState.value.errorMsg?.contains("No logged in user.") == true)
+
+        vmBlank.toggleLike("p1")
+        Assert.assertTrue(
+            vmBlank.uiState.value.errorMsg?.contains("You must be logged in to like posts.") ==
+                true)
+      }
 }

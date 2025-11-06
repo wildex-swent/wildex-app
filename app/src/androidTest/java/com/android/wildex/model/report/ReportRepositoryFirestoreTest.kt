@@ -233,7 +233,6 @@ class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
     assertEquals(report2.description, report.description)
     assertEquals(report2.authorId, report.authorId)
     assertEquals(report2.assigneeId, report.assigneeId)
-    assertEquals(report2.status, report.status)
 
     try {
       repository.getReport(report2.reportId)

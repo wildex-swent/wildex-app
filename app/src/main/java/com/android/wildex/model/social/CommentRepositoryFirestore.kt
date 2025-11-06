@@ -1,5 +1,7 @@
 package com.android.wildex.model.social
 
+import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -64,6 +66,32 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
     val docRef = collection.document(commentId)
     ensureDocumentExists(docRef, commentId)
     docRef.set(newValue).await()
+  }
+
+  /**
+   * Deletes all Comment items of a post from the repository.
+   *
+   * @param postId The ID of the post whose comments are to be deleted.
+   */
+  override suspend fun deleteAllCommentsOfPost(postId: Id) {
+    RepositoryProvider.commentRepository.getAllCommentsByPost(postId).forEach {
+      if (it.tag == CommentTag.POST_COMMENT) {
+        deleteComment(it.commentId)
+      }
+    }
+  }
+
+  /**
+   * Deletes all Comment items of a report from the repository.
+   *
+   * @param reportId The ID of the report whose comments are to be deleted.
+   */
+  override suspend fun deleteAllCommentsOfReport(reportId: Id) {
+    RepositoryProvider.commentRepository.getAllCommentsByPost(reportId).forEach {
+      if (it.tag == CommentTag.REPORT_COMMENT) {
+        deleteComment(it.commentId)
+      }
+    }
   }
 
   /**

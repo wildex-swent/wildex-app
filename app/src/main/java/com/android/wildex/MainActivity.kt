@@ -65,6 +65,7 @@ fun WildexApp(
     FirebaseAuth.getInstance().addAuthStateListener(authStateListener)
   }
 
+  val nullUserUID = context.getString(R.string.null_user_uid)
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
   NavHost(navController = navController, startDestination = startDestination) {
@@ -91,7 +92,7 @@ fun WildexApp(
           onNotificationClick = {},
       )
     }
-    // Collection
+    // Map
     composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
       val userId = backStackEntry.arguments?.getString("userUid")
       if (userId != null) {
@@ -104,10 +105,11 @@ fun WildexApp(
                     onTabSelected = { navigationActions.navigateTo(it.destination) },
                 )
               }
-            })
+            },
+        )
       } else {
-        Log.e("MapScreen", "User UID is null")
-        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("MapScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }
@@ -143,10 +145,11 @@ fun WildexApp(
                       Tab.Collection,
                       onTabSelected = { navigationActions.navigateTo(it.destination) },
                   )
-            })
+            },
+        )
       } else {
-        Log.e("CollectionScreen", "User UID is null")
-        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("CollectionScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }
@@ -165,6 +168,7 @@ fun WildexApp(
     // Post Details
     composable("${Screen.PostDetails.PATH}/{postUid}") { backStackEntry ->
       val postId = backStackEntry.arguments?.getString("postUid")
+      val nullPostUID = context.getString(R.string.null_post_uid)
       if (postId != null) {
         PostDetailsScreen(
             postId = postId,
@@ -172,8 +176,8 @@ fun WildexApp(
             onProfile = { userUid -> navigationActions.navigateTo(Screen.Profile(userUid)) },
         )
       } else {
-        Log.e("PostDetailsScreen", "Post UID is null")
-        Toast.makeText(context, "Post UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("PostDetailsScreen", nullPostUID)
+        Toast.makeText(context, nullPostUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }
@@ -185,10 +189,11 @@ fun WildexApp(
         ProfileScreen(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
-            onCollection = { navigationActions.navigateTo(Screen.Collection(it)) })
+            onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
+        )
       } else {
-        Log.e("ProfileScreen", "User UID is null")
-        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        Log.e("ProfileScreen", nullUserUID)
+        Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
     }

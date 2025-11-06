@@ -91,16 +91,25 @@ fun WildexApp(
           onNotificationClick = {},
       )
     }
-
-    // Map
-    composable(Screen.Map.route) {
-      MapScreen(
-          bottomBar = {
-            BottomNavigationMenu(
-                Tab.Map,
-                onTabSelected = { navigationActions.navigateTo(it.destination) },
-            )
-          })
+    // Collection
+    composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
+      val userId = backStackEntry.arguments?.getString("userUid")
+      if (userId != null) {
+        MapScreen(
+            userId = userId,
+            bottomBar = {
+              if (userId == currentUser?.uid) {
+                BottomNavigationMenu(
+                    Tab.Map,
+                    onTabSelected = { navigationActions.navigateTo(it.destination) },
+                )
+              }
+            })
+      } else {
+        Log.e("MapScreen", "User UID is null")
+        Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+        navController.popBackStack()
+      }
     }
 
     // Camera

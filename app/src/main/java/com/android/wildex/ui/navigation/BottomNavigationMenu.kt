@@ -30,7 +30,12 @@ import com.google.firebase.auth.auth
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
   object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
 
-  object Map : Tab("Map", Icons.Filled.LocationOn, Screen.Map)
+  object Map :
+      Tab(
+          "Map",
+          Icons.Filled.LocationOn,
+          Screen.Map(userUid = Firebase.auth.currentUser?.uid ?: ""),
+      )
 
   object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
 
@@ -38,7 +43,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
       Tab(
           "Collection",
           Icons.Filled.EmojiEvents,
-          Screen.Collection(userUid = Firebase.auth.currentUser?.uid ?: ""))
+          Screen.Collection(userUid = Firebase.auth.currentUser?.uid ?: ""),
+      )
 
   object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
 }

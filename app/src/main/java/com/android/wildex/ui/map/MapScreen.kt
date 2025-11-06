@@ -37,6 +37,7 @@ object MapScreenTestTags {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
+    userId: Id,
     bottomBar: @Composable () -> Unit,
     viewModel: MapScreenViewModel = viewModel(),
     onPost: (Id) -> Unit = {},

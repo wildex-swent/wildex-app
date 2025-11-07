@@ -57,11 +57,11 @@ class CollectionScreenViewModel(
   private suspend fun updateUIState(userUid: String) {
     try {
       val user = userRepository.getSimpleUser(userUid)
-      val userAnimals =
-          userAnimalsRepository.getAllAnimalsByUser(userUid).map { animal -> animal.animalId }
+      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { it.animalId }
       val animals = animalRepository.getAllAnimals()
       val animalStates =
           animals
+              .filter { userUid == currentUserId || userAnimals.contains(it.animalId) }
               .map { animal ->
                 AnimalState(
                     animalId = animal.animalId,

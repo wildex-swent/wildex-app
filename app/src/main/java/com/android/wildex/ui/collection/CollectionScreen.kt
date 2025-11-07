@@ -106,12 +106,14 @@ fun CollectionScreen(
       modifier = Modifier.fillMaxSize(),
       bottomBar = { bottomBar() },
       topBar = {
-        CollectionTopBar(
-            uiState.isUserOwner,
-            uiState.user.profilePictureURL,
-            onGoBack,
-            onProfileClick,
-            onNotificationClick)
+        if (!uiState.isLoading) {
+          CollectionTopBar(
+              uiState.isUserOwner,
+              uiState.user.profilePictureURL,
+              onGoBack,
+              onProfileClick,
+              onNotificationClick)
+        }
       }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
           when {
@@ -240,11 +242,11 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
           AsyncImage(
               model = animalPictureURL,
               contentDescription = animalName,
-              modifier = Modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
-              contentScale = ContentScale.Crop,
+              modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+              contentScale = ContentScale.FillWidth,
           )
           Text(
-              text = animalName,
+              text = if (animalState.isUnlocked) animalName else "???",
               fontWeight = FontWeight.Medium,
               color = colorScheme.background,
               textAlign = TextAlign.Center,

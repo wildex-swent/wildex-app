@@ -10,7 +10,7 @@ import org.junit.Test
 
 private const val USER_SETTINGS_COLLECTION_PATH = "userSettings"
 
-class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTION_PATH){
+class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTION_PATH) {
   private var repository = UserSettingsRepositoryFirestore(FirebaseEmulator.firestore)
 
   private suspend fun getUsersCount(): Int = super.getCount()

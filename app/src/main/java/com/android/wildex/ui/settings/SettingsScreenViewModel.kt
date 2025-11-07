@@ -16,19 +16,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class SettingsUIState(
-  val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC,
-  val notificationsEnabled: Boolean = true,
-  val userType: UserType = UserType.REGULAR,
-  val isLoading: Boolean = false,
-  val isError: Boolean = false,
-  val errorMsg: String? = null
+    val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC,
+    val notificationsEnabled: Boolean = true,
+    val userType: UserType = UserType.REGULAR,
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val errorMsg: String? = null
 )
 
-class SettingsScreenViewModel (
-  private val userSettingsRepository: UserSettingsRepository = RepositoryProvider.userSettingsRepository,
-  private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val currentUserId: Id = Firebase.auth.uid ?: ""
-) : ViewModel(){
+class SettingsScreenViewModel(
+    private val userSettingsRepository: UserSettingsRepository =
+        RepositoryProvider.userSettingsRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
+) : ViewModel() {
 
   /** Backing property for the settings screen state. */
   private val _uiState = MutableStateFlow(SettingsUIState())
@@ -37,21 +38,21 @@ class SettingsScreenViewModel (
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
   private suspend fun updateUIState() {
-    try{
+    try {
       val notificationsEnabled = userSettingsRepository.getEnableNotification(currentUserId)
       val appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val userType = userRepository.getUser(currentUserId).userType
       _uiState.value =
-        _uiState.value.copy(
-          appearanceMode = appearanceMode,
-          notificationsEnabled = notificationsEnabled,
-          userType = userType,
-          isLoading = false,
-          errorMsg = null,
-          isError = false,
-        )
+          _uiState.value.copy(
+              appearanceMode = appearanceMode,
+              notificationsEnabled = notificationsEnabled,
+              userType = userType,
+              isLoading = false,
+              errorMsg = null,
+              isError = false,
+          )
     } catch (e: Exception) {
-      setErrorMsg(e.localizedMessage ?: "Failed to load collection.")
+      setErrorMsg(e.localizedMessage ?: "Failed to load settings.")
       _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
     }
   }
@@ -108,5 +109,4 @@ class SettingsScreenViewModel (
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
-
 }

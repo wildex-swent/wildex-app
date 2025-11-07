@@ -40,10 +40,7 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     return userSettings?.appearanceMode ?: AppearanceMode.AUTOMATIC
   }
 
-  override suspend fun setAppearanceMode(
-    userId: String,
-    mode: AppearanceMode
-  ) {
+  override suspend fun setAppearanceMode(userId: String, mode: AppearanceMode) {
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
 

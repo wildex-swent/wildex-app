@@ -22,7 +22,7 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     ensureDocumentExists(docRef, userId)
 
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
-    return userSettings?.enableNotifications ?: throw IllegalStateException("UserSettings for userId '$userId' is null.")
+    return userSettings?.enableNotifications ?: true
   }
 
   override suspend fun setEnableNotification(userId: String, enable: Boolean) {
@@ -37,7 +37,7 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     ensureDocumentExists(docRef, userId)
 
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
-    return userSettings?.appearanceMode ?: throw IllegalStateException("UserSettings for userId '$userId' is null.")
+    return userSettings?.appearanceMode ?: AppearanceMode.AUTOMATIC
   }
 
   override suspend fun setAppearanceMode(
@@ -51,24 +51,24 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
   }
 
   /**
-   * Ensures no userAnimals item in the document reference has a specific userId.
+   * Ensures no UserSettings item in the document reference has a specific userId.
    *
-   * @param docRef The document reference containing all userAnimals.
-   * @param userId The ID that no userAnimals should have.
+   * @param docRef The document reference containing all userSettings.
+   * @param userId The ID that no userSettings should have.
    */
   private suspend fun ensureDocumentDoesNotExist(docRef: DocumentReference, userId: Id) {
     val doc = docRef.get().await()
-    require(!doc.exists()) { "A userAnimal with userId '${userId}' already exists." }
+    require(!doc.exists()) { "A userSettings with userId '${userId}' already exists." }
   }
 
   /**
-   * Ensures one userAnimals item in the document reference has a specific userId.
+   * Ensures one UserSettings item in the document reference has a specific userId.
    *
-   * @param docRef The document reference containing all userAnimals.
-   * @param commentId The ID that one userAnimals should have.
+   * @param docRef The document reference containing all userSettings.
+   * @param userId The ID of the user whose userSettings should exist.
    */
   private suspend fun ensureDocumentExists(docRef: DocumentReference, userId: String) {
     val doc = docRef.get().await()
-    require(doc.exists()) { "A userAnimal with userId '${userId}' does not exist." }
+    require(doc.exists()) { "A userSettings with userId '${userId}' does not exist." }
   }
 }

@@ -6,10 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -200,13 +203,18 @@ fun CollectionTopBar(
  */
 @Composable
 fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
+  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
   LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
+    val rowHeight = (screenHeight) / 4
     items(nbRows) { index ->
       val rowStartIndex = index * 2
       Row(
           horizontalArrangement = Arrangement.spacedBy(20.dp),
-          modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+          modifier =
+              Modifier.height(rowHeight)
+                  .fillMaxWidth()
+                  .padding(horizontal = 20.dp, vertical = 10.dp),
       ) {
         AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
         // Check if there is another animal to display when we are at the last row
@@ -239,26 +247,30 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
             modifier.testTag(
                 CollectionScreenTestTags.testTagForAnimal(
                     animalState.animalId, animalState.isUnlocked))) {
-          AsyncImage(
-              model = animalPictureURL,
-              contentDescription = animalName,
-              modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
-              contentScale = ContentScale.FillWidth,
-          )
-          Text(
-              text = if (animalState.isUnlocked) animalName else "???",
-              fontWeight = FontWeight.Medium,
-              color = colorScheme.background,
-              textAlign = TextAlign.Center,
-              fontSize = 17.sp,
-              style =
-                  TextStyle(
-                      lineHeight = 2.2.em,
-                      lineHeightStyle =
-                          LineHeightStyle(
-                              alignment = LineHeightStyle.Alignment.Center,
-                              trim = LineHeightStyle.Trim.None)),
-              modifier = Modifier.fillMaxSize().background(color = colorScheme.primary))
+          Column(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = animalPictureURL,
+                contentDescription = animalName,
+                modifier = Modifier.fillMaxWidth().weight(0.8f),
+                contentScale = ContentScale.Crop)
+
+            Text(
+                text = if (animalState.isUnlocked) animalName else "???",
+                fontWeight = FontWeight.Medium,
+                color = colorScheme.background,
+                textAlign = TextAlign.Center,
+                fontSize = 17.sp,
+                style =
+                    TextStyle(
+                        lineHeight = 2.2.em,
+                        lineHeightStyle =
+                            LineHeightStyle(
+                                alignment = LineHeightStyle.Alignment.Center,
+                                trim = LineHeightStyle.Trim.None)),
+                modifier =
+                    Modifier.fillMaxWidth().weight(0.2f).background(color = colorScheme.primary),
+            )
+          }
         }
     if (!animalState.isUnlocked) {
       Box(

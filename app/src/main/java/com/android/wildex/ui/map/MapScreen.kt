@@ -1,37 +1,69 @@
 package com.android.wildex.ui.map
 
 import android.Manifest
+import android.widget.Toast
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
-import com.mapbox.maps.extension.compose.MapEffect
-import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.plugin.gestures.OnMapClickListener
+import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 
-object MapScreenTestTags {
-  const val MAP = "MapScreen"
+/* ---------- Test tags ---------- */
+object MapContentTestTags {
+  const val ROOT = "MapScreen/Root"
+  const val MAP = "MapScreen/Map"
+  const val MAP_CANVAS = "MapScreen/MapCanvas"
+  const val PIN_LAYER = "MapScreen/PinLayer"
+  const val TAB_SWITCHER = "MapScreen/TabSwitcher"
+  const val REFRESH = "MapScreen/Refresh"
+  const val REFRESH_SPINNER = "MapScreen/Refresh/Spinner"
+  const val FAB_RECENTER = "MapScreen/RecenterFab"
+  const val SELECTION_CARD = "MapScreen/SelectionCard"
+  const val SELECTION_POST_IMAGE = "MapScreen/SelectionCard/PostImage"
+  const val SELECTION_REPORT_IMAGE = "MapScreen/SelectionCard/ReportImage"
+  const val SELECTION_CLOSE = "MapScreen/SelectionCard/Close"
+  const val LOADING_OVERLAY = "MapScreen/Loading"
+  const val PERMISSIONS_FLOW = "MapScreen/Permissions"
+  const val SELECTION_AUTHOR_IMAGE = "MapScreen/SelectionCard/AuthorImage"
+  const val SELECTION_LIKE_BUTTON = "MapScreen/SelectionCard/LikeButton"
+  const val SELECTION_COMMENT_ICON = "MapScreen/SelectionCard/CommentIcon"
+  const val SELECTION_OPEN_BUTTON = "MapScreen/SelectionCard/OpenButton"
+  const val ERROR_OVERLAY = "MapScreen/Error"
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -43,90 +75,273 @@ fun MapScreen(
     onPost: (Id) -> Unit = {},
     onReport: (Id) -> Unit = {},
 ) {
-  val uiState by viewModel.uiState.collectAsState()
-  val render by viewModel.renderState.collectAsState()
+  LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
+  Scaffold(bottomBar = bottomBar) { inner ->
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val render by viewModel.renderState.collectAsStateWithLifecycle()
 
-  val isDark = isSystemInDarkTheme()
-  val context = LocalContext.current
-  val style = context.getString(R.string.map_style)
-  val standardImportId = context.getString(R.string.map_standard_import)
+    val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+    val styleUri = context.getString(R.string.map_style)
+    val standardImportId = context.getString(R.string.map_standard_import)
 
-  // LaunchedEffect(currentUserId) { viewModel.loadUIState() }
+    // permissions
+    val locationPermissions =
+        rememberMultiplePermissionsState(
+            listOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ))
 
-  // Ask location permission, then notify VM
-  val locationPermissions =
-      rememberMultiplePermissionsState(
-          listOf(
-              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
-
-  LaunchedEffect(Unit) { locationPermissions.launchMultiplePermissionRequest() }
-
-  LaunchedEffect(locationPermissions.allPermissionsGranted) {
-    viewModel.onLocationPermissionResult(locationPermissions.allPermissionsGranted)
-  }
-
-  // Map reference + latest position from the puck
-  var mapView by remember { mutableStateOf<MapView?>(null) }
-  var lastPosition by remember { mutableStateOf<Point?>(null) }
-
-  // listener that updates lastPosition whenever the puck moves
-  val indicatorListener = remember {
-    OnIndicatorPositionChangedListener { point: Point -> lastPosition = point }
-  }
-
-  Scaffold(bottomBar = { bottomBar() }) { inner ->
-    Box(Modifier.padding(inner).fillMaxSize()) {
-      MapboxMap(Modifier.fillMaxSize()) {
-        MapEffect(isDark, render.showUserLocation) { mv ->
-          mapView = mv
-          val mapboxMap = mv.mapboxMap
-          mapboxMap.loadStyle(style) { style ->
-            // Initial camera (Lausanne)
-            mapboxMap.setCamera(
-                CameraOptions.Builder()
-                    .center(Point.fromLngLat(6.6323, 46.5197))
-                    .zoom(12.0)
-                    .build())
-            // Apply day/night preset right after load
-            style.setStyleImportConfigProperty(
-                standardImportId, "lightPreset", (if (isDark) "night" else "day").toValue())
-          }
-          // apply location puck settings
-          mv.location.updateSettings {
-            enabled = render.showUserLocation
-            pulsingEnabled = render.showUserLocation
-          }
-          // (re)attach listener only if location is enabled
-          mv.location.removeOnIndicatorPositionChangedListener(indicatorListener)
-          if (render.showUserLocation) {
-            mv.location.addOnIndicatorPositionChangedListener(indicatorListener)
-          }
-        }
-
-        // Recenter when VM asks
-        LaunchedEffect(render.recenterNonce) {
-          if (render.recenterNonce != null) {
-            val target = lastPosition
-            val fallback = Point.fromLngLat(6.6323, 46.5197)
-            mapView
-                ?.mapboxMap
-                ?.setCamera(
-                    CameraOptions.Builder()
-                        .center(target ?: fallback)
-                        .zoom(if (target != null) 14.0 else 12.0)
-                        .build())
-            viewModel.consumeRecenter()
-          }
+    // run the permission flow only if it actually exists
+    locationPermissions.let { perms ->
+      Box(Modifier.padding(inner).testTag(MapContentTestTags.PERMISSIONS_FLOW)) {
+        LaunchedEffect(Unit) { perms.launchMultiplePermissionRequest() }
+        LaunchedEffect(perms.allPermissionsGranted) {
+          viewModel.onLocationPermissionResult(perms.allPermissionsGranted)
         }
       }
+    }
 
-      FloatingActionButton(
-          onClick = { viewModel.requestRecenter() },
-          containerColor = MaterialTheme.colorScheme.primaryContainer,
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-          modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-            Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
-          }
+    val isLocationGranted = locationPermissions.allPermissionsGranted
+
+    // toasts
+    LaunchedEffect(uiState.errorMsg) {
+      uiState.errorMsg?.let {
+        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        viewModel.clearErrorMsg()
+      }
+    }
+    LaunchedEffect(render.renderError) {
+      render.renderError?.let {
+        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        viewModel.clearRenderError()
+      }
+    }
+
+    // map state
+    var mapView by remember { mutableStateOf<MapView?>(null) }
+    var lastPosition by remember { mutableStateOf<Point?>(null) }
+
+    val indicatorListener = remember {
+      OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
+    }
+
+    DisposableEffect(mapView) {
+      onDispose { mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener) }
+    }
+
+    var isMapReady by remember { mutableStateOf(false) }
+    DisposableEffect(mapView) {
+      val cancelable = mapView?.mapboxMap?.subscribeMapLoaded { isMapReady = true }
+      onDispose { cancelable?.cancel() }
+    }
+    val showLoading = uiState.isLoading || !isMapReady
+
+    // I added this to avoid the old pins taking the new tab color before they disappear
+    var styleTab by remember { mutableStateOf(uiState.activeTab) }
+    LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
+
+    Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
+      // 1) map
+      MapCanvas(
+          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP),
+          mapViewRef = { mapView = it },
+          styleUri = styleUri,
+          styleImportId = standardImportId,
+          isDark = isDark,
+          showUserLocation = render.showUserLocation,
+          indicatorListener = indicatorListener,
+      )
+
+      // 2) pins
+      PinsOverlay(
+          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.PIN_LAYER),
+          mapView = mapView,
+          pins = uiState.pins,
+          currentTab = styleTab,
+          selectedId =
+              when (val s = uiState.selected) {
+                is PinDetails.PostDetails -> s.post.postId
+                is PinDetails.ReportDetails -> s.report.reportId
+                else -> null
+              },
+          onPinClick = { id -> viewModel.onPinSelected(id) },
+      )
+
+      // 3) tap to clear
+      MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
+
+      // 4) tabs
+      MapTabSwitcher(
+          modifier =
+              Modifier.align(Alignment.TopEnd)
+                  .padding(top = 110.dp, end = 8.dp)
+                  .testTag(MapContentTestTags.TAB_SWITCHER),
+          activeTab = uiState.activeTab,
+          availableTabs = uiState.availableTabs,
+          onTabSelected = { viewModel.onTabSelected(it) },
+      )
+
+      // 5) recenter
+      RecenterFab(
+          modifier =
+              Modifier.align(Alignment.BottomEnd)
+                  .padding(16.dp)
+                  .testTag(MapContentTestTags.FAB_RECENTER),
+          isLocationGranted = isLocationGranted,
+          current = uiState.activeTab,
+          onRecenter = { viewModel.requestRecenter() },
+          onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
+      )
+
+      if (uiState.isError) {
+        Box(
+            Modifier.matchParentSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                .testTag(MapContentTestTags.ERROR_OVERLAY)) {
+              LoadingFail(modifier = Modifier.align(Alignment.Center))
+            }
+      }
+
+      // 6) refresh
+      MapRefreshButton(
+          modifier =
+              Modifier.align(Alignment.TopEnd)
+                  .padding(top = 56.dp, end = 8.dp)
+                  .testTag(MapContentTestTags.REFRESH),
+          isRefreshing = uiState.isRefreshing,
+          currentTab = uiState.activeTab,
+          onRefresh = { viewModel.refreshUIState(userId) },
+      )
+
+      // 7) bottom card
+      SelectionBottomCard(
+          modifier =
+              Modifier.align(Alignment.BottomEnd)
+                  .padding(12.dp)
+                  .fillMaxWidth()
+                  .testTag(MapContentTestTags.SELECTION_CARD),
+          selection = uiState.selected,
+          activeTab = uiState.activeTab,
+          onPost = onPost,
+          onReport = onReport,
+          onDismiss = { viewModel.clearSelection() },
+          onToggleLike = viewModel::toggleLike,
+      )
+
+      // 8) loading overlay
+      if (showLoading) {
+        Box(
+            Modifier.fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                .testTag(MapContentTestTags.LOADING_OVERLAY)) {
+              LoadingScreen(modifier = Modifier.align(Alignment.Center))
+            }
+      }
+
+      // 9) camera recenter
+      LaunchedEffect(render.recenterNonce) {
+        if (render.recenterNonce != null) {
+          val target = lastPosition
+          val longitude = uiState.centerCoordinates.longitude
+          val latitude = uiState.centerCoordinates.latitude
+          val fallback = Point.fromLngLat(longitude, latitude)
+          mapView
+              ?.mapboxMap
+              ?.setCamera(
+                  CameraOptions.Builder()
+                      .center(target ?: fallback)
+                      .zoom(if (target != null) 14.0 else 12.0)
+                      .build())
+          viewModel.consumeRecenter()
+        }
+      }
     }
   }
+}
+
+/* ---------- Recenter FAB ---------- */
+@Composable
+fun RecenterFab(
+    modifier: Modifier,
+    isLocationGranted: Boolean,
+    current: MapTab,
+    onRecenter: () -> Unit,
+    onAskLocation: () -> Unit,
+) {
+  val cs = MaterialTheme.colorScheme
+  val ui = colorsForMapTab(current, cs)
+
+  FloatingActionButton(
+      modifier = modifier,
+      onClick = {
+        if (isLocationGranted) {
+          onRecenter()
+        } else {
+          onAskLocation()
+        }
+      },
+      containerColor = cs.background,
+      contentColor = ui.bg,
+  ) {
+    if (isLocationGranted) {
+      Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
+    } else {
+      Icon(
+          imageVector = Icons.Default.LocationOff, // ← add this import
+          contentDescription = "Enable location",
+      )
+    }
+  }
+}
+
+/* ---------- Dismiss on map tap ---------- */
+@Composable
+fun MapTapToClearSelection(mapView: MapView?, onDismiss: () -> Unit) {
+  DisposableEffect(mapView) {
+    val listener = OnMapClickListener {
+      onDismiss()
+      true
+    }
+    mapView?.gestures?.addOnMapClickListener(listener)
+    onDispose { mapView?.gestures?.removeOnMapClickListener(listener) }
+  }
+}
+
+/* ---------- Refresh Button with Rotation Animation ---------- */
+@Composable
+fun MapRefreshButton(
+    modifier: Modifier = Modifier,
+    isRefreshing: Boolean,
+    currentTab: MapTab,
+    onRefresh: () -> Unit,
+) {
+  val cs = MaterialTheme.colorScheme
+  val mapUi = colorsForMapTab(currentTab, cs)
+
+  // Rotation anim
+  val infinite = rememberInfiniteTransition(label = "refreshRotation")
+  val rotation by
+      infinite.animateFloat(
+          initialValue = 0f,
+          targetValue = 360f,
+          animationSpec = infiniteRepeatable(animation = tween(800, easing = LinearEasing)),
+          label = "rotationAnim")
+  val rot = if (isRefreshing) rotation else 0f
+
+  IconButton(
+      onClick = onRefresh,
+      enabled = !isRefreshing,
+      modifier =
+          modifier.clip(CircleShape).background(mapUi.bg).testTag(MapContentTestTags.REFRESH)) {
+        Icon(
+            imageVector = Icons.Default.Refresh,
+            contentDescription = "Refresh",
+            tint = cs.background,
+            modifier =
+                Modifier.size(26.dp) // match the tab switcher’s inner icon visual weight
+                    .graphicsLayer(rotationZ = rot)
+                    .testTag(MapContentTestTags.REFRESH_SPINNER))
+      }
 }

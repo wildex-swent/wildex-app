@@ -7,7 +7,6 @@ import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.relationship.Relationship
 import com.android.wildex.model.relationship.StatusEnum
 import com.android.wildex.model.report.Report
-import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
@@ -97,7 +96,6 @@ class DataClassesTest {
             description = "Test report",
             authorId = "user1",
             assigneeId = "user2",
-            status = ReportStatus.PENDING,
         )
 
     TestCase.assertEquals("report1", report.reportId)
@@ -106,7 +104,6 @@ class DataClassesTest {
     TestCase.assertEquals("Test report", report.description)
     TestCase.assertEquals("user1", report.authorId)
     TestCase.assertEquals("user2", report.assigneeId)
-    TestCase.assertEquals(ReportStatus.PENDING, report.status)
   }
 
   @Test

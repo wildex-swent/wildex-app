@@ -15,7 +15,6 @@ import com.google.firebase.Timestamp
  * @property description A description of why the report was made.
  * @property authorId The ID of the user who made the report.
  * @property assigneeId The ID of the user assigned to handle the report.
- * @property status The status of the report, defined by the ReportStatus enum.
  */
 data class Report(
     val reportId: Id,
@@ -25,11 +24,4 @@ data class Report(
     val description: String,
     val authorId: Id,
     val assigneeId: Id?,
-    val status: ReportStatus,
 )
-
-/** Enum class representing the status of a report. */
-enum class ReportStatus {
-  PENDING,
-  RESOLVED,
-}

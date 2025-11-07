@@ -10,7 +10,8 @@ import com.google.firebase.Timestamp
  * @property postId The ID of the post that this comment belongs to.
  * @property authorId The ID of the user who made the comment.
  * @property text The content of the comment.
- * @property date The date and time when the comment was made.
+ * @property date The date and time when the comment was made. //@property tag The tag of the
+ *   comment.
  */
 data class Comment(
     val commentId: Id,
@@ -18,4 +19,11 @@ data class Comment(
     val authorId: Id,
     val text: String,
     val date: Timestamp,
+    val tag: CommentTag = CommentTag.POST_COMMENT,
 )
+
+/** Enum class representing the tag of a comment. */
+enum class CommentTag {
+  POST_COMMENT,
+  REPORT_COMMENT,
+}

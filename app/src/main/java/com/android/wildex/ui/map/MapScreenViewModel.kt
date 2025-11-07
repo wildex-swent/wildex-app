@@ -357,7 +357,6 @@ class MapScreenViewModel(
           authorId = r.authorId,
           location = r.location,
           imageURL = avatar,
-          status = r.status,
           assigneeId = r.assigneeId)
     }
   }
@@ -378,7 +377,6 @@ class MapScreenViewModel(
           authorId = r.authorId,
           location = r.location,
           imageURL = r.imageURL,
-          status = r.status,
           assigneeId = r.assigneeId)
     }
   }

@@ -155,6 +155,7 @@ class CollectionScreenViewModelTest {
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2
     coEvery { userRepository.getSimpleUser("currentUserId") } returns su1
+    coEvery { userRepository.getSimpleUser("otherUserId") } returns su2
     coEvery { animalsRepository.getAnimal("animalId-1") } returns a1
     coEvery { animalsRepository.getAnimal("animalId-2") } returns a2
     coEvery { animalsRepository.getAnimal("animalId-3") } returns a3

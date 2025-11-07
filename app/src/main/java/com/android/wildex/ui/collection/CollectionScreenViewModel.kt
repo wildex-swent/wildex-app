@@ -1,6 +1,5 @@
 package com.android.wildex.ui.collection
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider

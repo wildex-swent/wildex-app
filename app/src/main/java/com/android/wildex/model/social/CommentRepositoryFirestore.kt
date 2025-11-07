@@ -1,5 +1,6 @@
 package com.android.wildex.model.social
 
+import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -12,6 +13,7 @@ private object CommentsFields {
   const val AUTHOR_ID = "authorId"
   const val TEXT = "text"
   const val DATE = "date"
+  const val TAG = "tag"
 }
 
 /** Represents a repository that manages Comment items. */
@@ -64,6 +66,32 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
     val docRef = collection.document(commentId)
     ensureDocumentExists(docRef, commentId)
     docRef.set(newValue).await()
+  }
+
+  /**
+   * Deletes all Comment items of a post from the repository.
+   *
+   * @param postId The ID of the post whose comments are to be deleted.
+   */
+  override suspend fun deleteAllCommentsOfPost(postId: Id) {
+    getAllCommentsByPost(postId).forEach {
+      if (it.tag == CommentTag.POST_COMMENT) {
+        deleteComment(it.commentId)
+      }
+    }
+  }
+
+  /**
+   * Deletes all Comment items of a report from the repository.
+   *
+   * @param reportId The ID of the report whose comments are to be deleted.
+   */
+  override suspend fun deleteAllCommentsOfReport(reportId: Id) {
+    getAllCommentsByPost(reportId).forEach {
+      if (it.tag == CommentTag.REPORT_COMMENT) {
+        deleteComment(it.commentId)
+      }
+    }
   }
 
   /**
@@ -134,8 +162,17 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
       val date =
           document.getTimestamp(CommentsFields.DATE)
               ?: throwMissingFieldException(CommentsFields.DATE)
+      val tagData =
+          document.getString(CommentsFields.TAG) ?: throwMissingFieldException(CommentsFields.TAG)
+      val tag = CommentTag.valueOf(tagData.uppercase())
 
-      Comment(commentId = commentId, postId = postId, authorId = authorId, text = text, date = date)
+      Comment(
+          commentId = commentId,
+          postId = postId,
+          authorId = authorId,
+          text = text,
+          date = date,
+          tag = tag)
     } catch (e: Exception) {
       null
     }

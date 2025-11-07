@@ -6,6 +6,7 @@ import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -155,6 +156,14 @@ object LocalRepositories {
     override suspend fun editComment(commentId: String, newValue: Comment) {
       listOfComments.removeIf { it.commentId == commentId }
       listOfComments.add(newValue)
+    }
+
+    override suspend fun deleteAllCommentsOfPost(postId: Id) {
+      listOfComments.removeIf { it.commentId == postId && it.tag == CommentTag.POST_COMMENT }
+    }
+
+    override suspend fun deleteAllCommentsOfReport(reportId: Id) {
+      listOfComments.removeIf { it.commentId == reportId && it.tag == CommentTag.REPORT_COMMENT }
     }
 
     override suspend fun deleteComment(commentId: String) {

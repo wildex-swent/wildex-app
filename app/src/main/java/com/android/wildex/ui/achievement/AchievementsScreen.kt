@@ -115,10 +115,7 @@ fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> U
                         .padding(paddingValues)
                         .testTag(AchievementsScreenTestTags.ERROR),
                 contentAlignment = Alignment.Center) {
-                  Text(
-                      text =
-                          uiState.errorMsg ?: LocalContext.current.getString(R.string.prev_arrow),
-                      color = MaterialTheme.colorScheme.error)
+                  Text(text = uiState.errorMsg ?: "", color = MaterialTheme.colorScheme.error)
                 }
           }
           else -> {

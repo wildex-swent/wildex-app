@@ -148,7 +148,8 @@ fun ProfileAchievements(
                   navDirection = -1
                   startIndex = wrap(startIndex - 1)
                 },
-                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV))
+                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV),
+            )
 
             Spacer(Modifier.width(6.dp))
 
@@ -200,7 +201,8 @@ fun ProfileAchievements(
                   navDirection = +1
                   startIndex = wrap(startIndex + 1)
                 },
-                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT))
+                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT),
+            )
           }
         }
   }
@@ -239,7 +241,7 @@ private fun ArrowButton(
     isLeft: Boolean,
     tint: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
   val interaction = remember { MutableInteractionSource() }
   val pressed by interaction.collectIsPressedAsState()
@@ -261,9 +263,7 @@ private fun ArrowButton(
   ) {
     Icon(
         imageVector = if (isLeft) Icons.Filled.ChevronLeft else Icons.Filled.ChevronRight,
-        contentDescription =
-            if (isLeft) context.getString(R.string.prev_arrow)
-            else context.getString(R.string.next_arrow),
+        contentDescription = if (isLeft) "Previous" else "Next",
         tint = tint,
         modifier = Modifier.size(68.dp),
     )

@@ -1,30 +1,64 @@
 <resources>
-    <string name="app_name">Wildex</string>
-    <string name="cancel_sign_in">Sign-in cancelled</string>
     <string name="default_web_client_id">55923703889-g4po1sphfo9peea096muat5e44rr5l90.apps.googleusercontent.com</string>
-    <string name="google_logo">Google Logo</string>
-    <string name="sign_in">Sign in with Google</string>
-    <string name="welcome">Welcome to Wildex!</string>
-    <string name="profile">My Profile</string>
-    <string name="collection">My Collection</string>
-    <string name="user_profile">User Profile</string>
+
+    <!-- Main Activity -->
+    <string name="null_user_uid">User UID is null</string>
+    <string name="null_post_uid">Post UID is null</string>
+
+    <!-- Home screen -->
+    <string name="app_name">Wildex</string>
+
+    <!-- Placeholder screen -->
     <string name="not_implemented">Coming soon …</string>
-    <string name="view_achievements">View all achievements →</string>
-    <string name="prev_arrow">Prev</string>
-    <string name="next_arrow">Next</string>
+
+    <!-- Loading Failed screen -->
     <string name="fail_loading">Loading failed. Please try again.</string>
+
+    <!-- SignIn screen -->
+    <string name="sign_in">Sign in with Google</string>
+    <string name="cancel_sign_in">Sign-in cancelled</string>
+    <string name="welcome">Welcome to Wildex!</string>
+    <string name="collection">My Collection</string>
+
+    <!-- Profile screen -->
+    <string name="profile">My Profile</string>
+    <string name="user_profile">User Profile</string>
     <string name="view_map">View in full screen →</string>
     <string name="default_description">No description yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
+    <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
+
+    <!-- Collection screen -->
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
     <string name="empty_other_collection">No animals in this collection.</string>
+
+    <!-- Home screen -->
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
+
+    <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>
+
+    <!-- Achievements screen -->
     <string name="trophies">Your trophies</string>
     <string name="unlocked_achievements">Unlocked</string>
     <string name="to_discover">To discover</string>
-    <string name="null_user_uid">User UID is null</string>
-    <string name="null_post_uid">Post UID is null</string>
+
+    <!-- Camera screen -->
+    <string name="camera_permission_msg_1">We promise not to take selfies. Just animals.</string>
+    <string name="camera_permission_msg_2">Grant camera access — or we’ll just imagine the animal for you.</string>
+    <string name="request_permission_button">Grant Camera Access</string>
+    <string name="upload_button">Upload from Gallery</string>
+    <string name="detecting_msg">Identifying species and characteristics...</string>
+    <string name="analyzing_msg">🐾  Analyzing Wildlife  🐾</string>
+    <string name="confidence">Confidence</string>
+    <string name="add_description">Add a description</string>
+    <string name="description_placeholder">Share what you observed... behavior, habitat, weather conditions, or any interesting details!</string>
+    <string name="share_location">Share Location</string>
+    <string name="share_location_description">Help others discover nearby animals</string>
+    <string name="cancel_button">Cancel &amp; Retry</string>
+    <string name="confirm_button">✓ Confirm &amp; Post</string>
+    <string name="footer">Your sighting will be shared with the wildlife community</string>
+
 </resources>

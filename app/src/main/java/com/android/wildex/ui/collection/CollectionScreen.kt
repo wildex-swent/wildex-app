@@ -251,7 +251,7 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
             AsyncImage(
                 model = animalPictureURL,
                 contentDescription = animalName,
-                modifier = Modifier.fillMaxWidth().weight(0.8f),
+                modifier = Modifier.fillMaxSize().weight(0.8f),
                 contentScale = ContentScale.Crop)
 
             Text(

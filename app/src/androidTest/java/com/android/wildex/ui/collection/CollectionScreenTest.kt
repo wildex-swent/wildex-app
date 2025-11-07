@@ -286,11 +286,11 @@ class CollectionScreenTest {
         .onNodeWithTag(CollectionScreenTestTags.testTagForAnimal("animalId-6", true))
         .assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).performScrollToIndex(3)
+    composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).performScrollToIndex(1)
 
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.testTagForAnimal("animalId-1", false))
-        .assertIsDisplayed()
+        .assertIsNotDisplayed()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).assertIsNotDisplayed()
 

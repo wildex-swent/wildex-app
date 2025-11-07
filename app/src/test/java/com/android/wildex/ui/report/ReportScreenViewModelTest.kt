@@ -281,16 +281,17 @@ class ReportScreenViewModelTest {
       }
 
   @Test
-  fun loadUIState_sets_error_when_getSimpleUser_fails() {
+  fun loadUIState_sets_error_when_User_fails() {
     mainDispatcherRule.runTest {
-      coEvery { userRepository.getSimpleUser("user3") } throws Exception("Failed to load user")
+      coEvery { userRepository.getUser("user3") } throws Exception("Error getting user")
+      coEvery { reportRepository.getAllReportsByAuthor("user3") } returns emptyList()
 
       viewModel.loadUIState()
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
       assertNotNull(state.errorMsg)
-      assertTrue(state.errorMsg!!.contains("Error loading current user simple data"))
+      assertTrue(state.errorMsg!!.contains("Error loading current user data"))
     }
   }
 

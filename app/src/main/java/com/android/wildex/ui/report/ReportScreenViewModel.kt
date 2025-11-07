@@ -103,21 +103,21 @@ class ReportScreenViewModel(
    */
   private suspend fun updateUIState() {
     try {
-      val currentSimpleUser =
+      val currentUser =
           try {
-            userRepository.getSimpleUser(currentUserId)
+            userRepository.getUser(currentUserId)
           } catch (e: Exception) {
-            handleException("Error loading current user simple data", e)
-            defaultUser
+            handleException("Error loading current user data", e)
+            null
           }
 
-      val currentUserType =
-          try {
-            userRepository.getUser(currentUserId).userType
-          } catch (e: Exception) {
-            handleException("Error loading current user type", e)
-            UserType.REGULAR
-          }
+      val currentSimpleUser =
+          SimpleUser(
+              userId = currentUser?.userId ?: "",
+              username = currentUser?.username ?: "",
+              profilePictureURL = currentUser?.profilePictureURL ?: "",
+          )
+      val currentUserType = currentUser?.userType ?: UserType.REGULAR
 
       val reports =
           try {

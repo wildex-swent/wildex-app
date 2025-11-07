@@ -1,7 +1,6 @@
 package com.android.wildex.model.map
 
 import com.android.wildex.model.report.Report
-import com.android.wildex.model.report.ReportStatus
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
@@ -59,7 +58,6 @@ sealed class MapPin {
       override val location: Location,
       override val imageURL: URL,
       override val kind: PinKind = PinKind.REPORT,
-      val status: ReportStatus,
       val assigneeId: Id?
   ) : MapPin()
 }

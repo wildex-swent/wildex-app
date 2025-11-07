@@ -57,6 +57,26 @@ data class UserAnimals(
     val animalsCount: Int = 0,
 )
 
+/**
+ * Represents the settings of a user.
+ *
+ * @property userId The unique identifier of the user to whom these settings belong.
+ * @property enableNotifications A boolean indicating whether notifications are enabled for the user.
+ * @property appearanceMode The appearance mode preference of the user, defined by the AppearanceMode enum.
+ */
+data class UserSettings(
+    val userId: Id = "",
+    val enableNotifications: Boolean = true,
+    val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC
+)
+
+/** Enum class representing the appearance mode preference of a user. */
+enum class AppearanceMode {
+  LIGHT,
+  DARK,
+  AUTOMATIC
+}
+
 /** Enum class representing the type of user. */
 enum class UserType {
   REGULAR,

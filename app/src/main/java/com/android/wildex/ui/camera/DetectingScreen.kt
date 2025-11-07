@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -67,21 +68,6 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
             R.raw.snake,
         )
 
-    var currentAnimationId by remember { mutableIntStateOf(animationIds.random()) }
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(currentAnimationId))
-    val progress by
-        animateLottieCompositionAsState(
-            composition,
-            iterations = 1, // play once, then switch
-            restartOnPlay = false,
-        )
-
-    // When animation finishes, pick another one randomly
-    LaunchedEffect(progress) {
-      if (progress >= 1f) {
-        currentAnimationId = animationIds.random()
-      }
-    }
     val infiniteTransition = rememberInfiniteTransition(label = "loading")
     val loadingProgress by
         infiniteTransition.animateFloat(
@@ -127,14 +113,14 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
 
       // Analyzing
       Text(
-          text = "🐾  Analyzing Wildlife  🐾",
+          text = stringResource(R.string.analyzing_msg),
           style = typography.headlineSmall,
           textAlign = TextAlign.Center,
           modifier = Modifier.testTag(DetectingScreenTestTags.DETECTING_SCREEN_PHRASE_1),
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
-          text = "Identifying species and characteristics...",
+          text = stringResource(R.string.detecting_msg),
           style = typography.titleMedium,
           textAlign = TextAlign.Center,
           modifier = Modifier.testTag(DetectingScreenTestTags.DETECTING_SCREEN_PHRASE_2),

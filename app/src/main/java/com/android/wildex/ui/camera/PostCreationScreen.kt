@@ -21,11 +21,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.android.wildex.R
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import kotlin.math.ceil
 
@@ -147,7 +149,7 @@ fun PostCreationScreen(
                       Modifier.testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_CONFIDENCE),
               ) {
                 Text(
-                    text = "Confidence",
+                    text = stringResource(R.string.confidence),
                     color = colorScheme.secondary.copy(alpha = 0.9f),
                     fontSize = 12.sp,
                 )
@@ -168,7 +170,7 @@ fun PostCreationScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
           Text(
-              text = "Add a description",
+              text = stringResource(R.string.add_description),
               fontSize = 20.sp,
               fontWeight = FontWeight.SemiBold,
               color = colorScheme.onSurface,
@@ -184,8 +186,7 @@ fun PostCreationScreen(
                       .testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_DESCRIPTION_FIELD),
               placeholder = {
                 Text(
-                    text =
-                        "Share what you observed... behavior, habitat, weather conditions, or any interesting details!",
+                    text = stringResource(R.string.description_placeholder),
                     color = colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     fontSize = 15.sp,
                 )
@@ -220,12 +221,12 @@ fun PostCreationScreen(
               )
               Column {
                 Text(
-                    text = "Share Location",
+                    text = stringResource(R.string.share_location),
                     style = typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = "Help others discover nearby animals",
+                    text = stringResource(R.string.share_location_description),
                     style = typography.bodySmall,
                     color = colorScheme.onSurfaceVariant,
                 )
@@ -257,7 +258,10 @@ fun PostCreationScreen(
                   modifier = Modifier.size(18.dp),
               )
               Spacer(modifier = Modifier.width(8.dp))
-              Text(text = "Cancel & Retry", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+              Text(
+                  text = stringResource(R.string.cancel_button),
+                  fontSize = 15.sp,
+                  fontWeight = FontWeight.Medium)
             }
 
             // Confirm Button
@@ -270,13 +274,16 @@ fun PostCreationScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
             ) {
-              Text(text = "✓ Confirm & Post", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+              Text(
+                  text = stringResource(R.string.confirm_button),
+                  fontSize = 15.sp,
+                  fontWeight = FontWeight.Medium)
             }
           }
 
           // Footer text
           Text(
-              text = "Your sighting will be shared with the wildlife community",
+              text = stringResource(R.string.footer),
               fontSize = 13.sp,
               color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
               modifier = Modifier.align(Alignment.CenterHorizontally),

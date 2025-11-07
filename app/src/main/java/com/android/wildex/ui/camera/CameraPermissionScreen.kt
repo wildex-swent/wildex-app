@@ -28,10 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.android.wildex.R
 
 object CameraPermissionScreenTestTags {
   const val CAMERA_PERMISSION_CAMERA_ICON = "camera_permission_camera_icon"
@@ -67,7 +69,7 @@ fun CameraPermissionScreen(
       )
 
       Text(
-          text = "We promise not to take selfies. Just animals.",
+          text = stringResource(R.string.camera_permission_msg_1),
           style = typography.headlineMedium,
           fontWeight = FontWeight.Bold,
           color = colorScheme.onBackground,
@@ -76,7 +78,7 @@ fun CameraPermissionScreen(
       )
 
       Text(
-          text = "Grant camera access — or we’ll just imagine the animal for you.",
+          text = stringResource(R.string.camera_permission_msg_1),
           style = typography.bodyLarge,
           color = colorScheme.onSurfaceVariant,
           textAlign = TextAlign.Center,
@@ -107,7 +109,7 @@ fun CameraPermissionScreen(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Grant Camera Access",
+            text = stringResource(R.string.request_permission_button),
             style = typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
@@ -130,7 +132,7 @@ fun CameraPermissionScreen(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Upload from Gallery",
+            text = stringResource(R.string.upload_button),
             style = typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )

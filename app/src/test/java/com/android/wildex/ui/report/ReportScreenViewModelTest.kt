@@ -55,7 +55,7 @@ class ReportScreenViewModelTest {
           date = Timestamp.now(),
           description = "Test report 2",
           authorId = "user2",
-          assigneeId = "",
+          assigneeId = null,
       )
 
   private val report3 =
@@ -192,6 +192,10 @@ class ReportScreenViewModelTest {
       val expectedReportAuthors = listOf(simpleUser2, simpleUser2)
       val actualReportAuthors = state.reports.map { it.author }
       assertEquals(expectedReportAuthors, actualReportAuthors)
+
+      val expectedReportAssignees = listOf("", "user4")
+      val actualReportAssignees = state.reports.map { it.assigneeId }
+      assertEquals(expectedReportAssignees, actualReportAssignees)
 
       assertEquals(simpleUser2, state.currentUser)
       assertEquals(UserType.REGULAR, state.currentUserType)

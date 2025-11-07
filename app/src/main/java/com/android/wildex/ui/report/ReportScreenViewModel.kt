@@ -168,6 +168,7 @@ class ReportScreenViewModel(
           date = formatDate(report.date),
           description = report.description,
           author = author,
+          assigneeId = report.assigneeId ?: "",
       )
     }
   }

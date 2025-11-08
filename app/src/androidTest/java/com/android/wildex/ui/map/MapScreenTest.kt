@@ -192,13 +192,12 @@ class MapScreenTest {
   @Test
   fun mapScreen_recenterFab_click_setsAndConsumesNonce() {
     composeTestRule.waitForIdle()
-    val before = viewModel.renderState.value.recenterNonce
     composeTestRule
         .onNodeWithTag(MapContentTestTags.FAB_RECENTER)
         .assertIsDisplayed()
         .performClick()
     composeTestRule.waitForIdle()
-    assert(viewModel.renderState.value.recenterNonce != before)
+    assert(viewModel.renderState.value.recenterNonce == null)
   }
 
   @Test

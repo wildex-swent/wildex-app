@@ -4,7 +4,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import com.android.wildex.model.utils.Location
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
@@ -31,7 +30,7 @@ fun MapCanvas(
     indicatorListener: OnIndicatorPositionChangedListener,
     centerCoordinates: Location,
 ) {
-  MapboxMap(modifier = modifier.testTag(MapContentTestTags.MAP_CANVAS)) {
+  MapboxMap(modifier = modifier) {
     MapEffect(isDark, showUserLocation, styleUri, styleImportId) { mv ->
       mapViewRef(mv)
       val mapboxMap = mv.mapboxMap

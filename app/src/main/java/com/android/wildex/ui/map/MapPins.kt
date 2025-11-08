@@ -54,7 +54,7 @@ private const val BADGE_BAR_W = 3.6f
 private const val BADGE_BAR_H = 9.5f
 private const val BADGE_DOT_R = 2.4f
 
-/* ----------------------- image loader singleton ----------------------- */
+/* ----------------------- Image loader  ----------------------- */
 private object SharedCoil {
   @Volatile private var instance: ImageLoader? = null
 
@@ -67,16 +67,12 @@ private object SharedCoil {
               .also { instance = it }
 }
 
-/* ----------------------- base icon cache ----------------------- */
+/* ----------------------- Base icon cache (to avoid repeating the rebuilding each frame)  ----------------------- */
 private data class BaseKey(
     val url: String,
     val borderColor: Int,
     val scaleKey: Int,
 )
-
-@Composable
-private fun rememberBaseCache(): MutableMap<BaseKey, Bitmap> = remember { mutableMapOf() }
-
 /* ----------------------- Composable ----------------------- */
 @Composable
 fun PinsOverlay(
@@ -97,9 +93,9 @@ fun PinsOverlay(
   var manager by remember(mapView, currentTab) { mutableStateOf<PointAnnotationManager?>(null) }
   var previousSelectedId by remember { mutableStateOf<Id?>(null) }
 
-  val baseCache = rememberBaseCache()
+  val baseCache: MutableMap<BaseKey, Bitmap> = remember { mutableMapOf() }
   val latestOnClick by rememberUpdatedState(onPinClick)
-  val latestSelectedId by rememberUpdatedState(selectedId) // <-- NEW
+  val latestSelectedId by rememberUpdatedState(selectedId)
 
   // One global ticker for bobbing “!”
   var bobTime by remember { mutableFloatStateOf(0f) }
@@ -111,7 +107,7 @@ fun PinsOverlay(
       manager =
           mapView.annotations.createPointAnnotationManager().apply {
             addClickListener { annotation ->
-              annotation.getData()?.asString?.let { latestOnClick(it) } // Id is a typealias String
+              annotation.getData()?.asString?.let { latestOnClick(it) }
               true
             }
           }
@@ -217,7 +213,7 @@ fun PinsOverlay(
   }
 
   /* ------------- recompute bobbing ids when pins OR selection changes ------------- */
-  LaunchedEffect(pins, selectedId) { // <-- NEW
+  LaunchedEffect(pins, selectedId) {
     bobbingIds =
         pins
             .asSequence()
@@ -273,10 +269,6 @@ fun PinsOverlay(
   LaunchedEffect(selectedId, manager, pins) {
     val mgr = manager ?: return@LaunchedEffect
     val sel = selectedId ?: return@LaunchedEffect
-
-    // ensure the selected pin is not updated by the bobbing loop anymore
-    bobbingIds = bobbingIds - sel // <-- NEW
-
     val ann = annotationById[sel] ?: return@LaunchedEffect
     val pin = pins.firstOrNull { it.id == sel } ?: return@LaunchedEffect
     val targetUrl = pin.imageURL.ifBlank { fallbackUrl }

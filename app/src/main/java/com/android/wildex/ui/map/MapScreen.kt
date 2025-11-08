@@ -57,13 +57,11 @@ object MapContentTestTags {
   const val SELECTION_POST_IMAGE = "MapScreen/SelectionCard/PostImage"
   const val SELECTION_REPORT_IMAGE = "MapScreen/SelectionCard/ReportImage"
   const val SELECTION_CLOSE = "MapScreen/SelectionCard/Close"
-  const val LOADING_OVERLAY = "MapScreen/Loading"
   const val PERMISSIONS_FLOW = "MapScreen/Permissions"
   const val SELECTION_AUTHOR_IMAGE = "MapScreen/SelectionCard/AuthorImage"
   const val SELECTION_LIKE_BUTTON = "MapScreen/SelectionCard/LikeButton"
   const val SELECTION_COMMENT_ICON = "MapScreen/SelectionCard/CommentIcon"
   const val SELECTION_OPEN_BUTTON = "MapScreen/SelectionCard/OpenButton"
-  const val ERROR_OVERLAY = "MapScreen/Error"
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -95,7 +93,7 @@ fun MapScreen(
 
     // run the permission flow only if it actually exists
     locationPermissions.let { perms ->
-      Box(Modifier.padding(inner).testTag(MapContentTestTags.PERMISSIONS_FLOW)) {
+      Box(Modifier.testTag(MapContentTestTags.PERMISSIONS_FLOW)) {
         LaunchedEffect(Unit) { perms.launchMultiplePermissionRequest() }
         LaunchedEffect(perms.allPermissionsGranted) {
           viewModel.onLocationPermissionResult(perms.allPermissionsGranted)
@@ -105,7 +103,7 @@ fun MapScreen(
 
     val isLocationGranted = locationPermissions.allPermissionsGranted
 
-    // toasts
+    // Error toasts
     LaunchedEffect(uiState.errorMsg) {
       uiState.errorMsg?.let {
         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -119,28 +117,25 @@ fun MapScreen(
       }
     }
 
-    // map state
+    // Map state
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var lastPosition by remember { mutableStateOf<Point?>(null) }
+    var isMapReady by remember { mutableStateOf(false) }
+    // I added this to avoid the old pins taking the new tab color before they disappear
+    var styleTab by remember { mutableStateOf(uiState.activeTab) }
 
     val indicatorListener = remember {
       OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
     }
-
-    DisposableEffect(mapView) {
-      onDispose { mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener) }
-    }
-
-    var isMapReady by remember { mutableStateOf(false) }
     DisposableEffect(mapView) {
       val cancelable = mapView?.mapboxMap?.subscribeMapLoaded { isMapReady = true }
-      onDispose { cancelable?.cancel() }
+      onDispose {
+        cancelable?.cancel()
+        mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener)
+      }
     }
-    val showLoading = uiState.isLoading || !isMapReady
-
-    // I added this to avoid the old pins taking the new tab color before they disappear
-    var styleTab by remember { mutableStateOf(uiState.activeTab) }
     LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
+    val showLoading = uiState.isLoading || !isMapReady
 
     Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
       // 1) map
@@ -152,6 +147,7 @@ fun MapScreen(
           isDark = isDark,
           showUserLocation = render.showUserLocation,
           indicatorListener = indicatorListener,
+          centerCoordinates = uiState.centerCoordinates,
       )
 
       // 2) pins
@@ -195,27 +191,7 @@ fun MapScreen(
           onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
       )
 
-      if (uiState.isError) {
-        Box(
-            Modifier.matchParentSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                .testTag(MapContentTestTags.ERROR_OVERLAY)) {
-              LoadingFail(modifier = Modifier.align(Alignment.Center))
-            }
-      }
-
-      // 6) refresh
-      MapRefreshButton(
-          modifier =
-              Modifier.align(Alignment.TopEnd)
-                  .padding(top = 56.dp, end = 8.dp)
-                  .testTag(MapContentTestTags.REFRESH),
-          isRefreshing = uiState.isRefreshing,
-          currentTab = uiState.activeTab,
-          onRefresh = { viewModel.refreshUIState(userId) },
-      )
-
-      // 7) bottom card
+      // 6) bottom card
       SelectionBottomCard(
           modifier =
               Modifier.align(Alignment.BottomEnd)
@@ -230,12 +206,32 @@ fun MapScreen(
           onToggleLike = viewModel::toggleLike,
       )
 
+      // I know it's a weird placement mais the idea is to have the error overlay above the refresh
+      // button and to keep the map visible below
+      if (uiState.isError) {
+        Box(
+            Modifier.matchParentSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))) {
+              LoadingFail(modifier = Modifier.align(Alignment.Center))
+            }
+      }
+
+      // 7) refresh
+      MapRefreshButton(
+          modifier =
+              Modifier.align(Alignment.TopEnd)
+                  .padding(top = 56.dp, end = 8.dp)
+                  .testTag(MapContentTestTags.REFRESH),
+          isRefreshing = uiState.isRefreshing,
+          currentTab = uiState.activeTab,
+          onRefresh = { viewModel.refreshUIState(userId) },
+      )
+
       // 8) loading overlay
       if (showLoading) {
         Box(
             Modifier.fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                .testTag(MapContentTestTags.LOADING_OVERLAY)) {
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))) {
               LoadingScreen(modifier = Modifier.align(Alignment.Center))
             }
       }
@@ -289,7 +285,7 @@ fun RecenterFab(
       Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
     } else {
       Icon(
-          imageVector = Icons.Default.LocationOff, // ← add this import
+          imageVector = Icons.Default.LocationOff,
           contentDescription = "Enable location",
       )
     }
@@ -321,27 +317,31 @@ fun MapRefreshButton(
   val mapUi = colorsForMapTab(currentTab, cs)
 
   // Rotation anim
-  val infinite = rememberInfiniteTransition(label = "refreshRotation")
-  val rotation by
-      infinite.animateFloat(
-          initialValue = 0f,
-          targetValue = 360f,
-          animationSpec = infiniteRepeatable(animation = tween(800, easing = LinearEasing)),
-          label = "rotationAnim")
-  val rot = if (isRefreshing) rotation else 0f
+  val rotation =
+      if (isRefreshing) {
+        val t = rememberInfiniteTransition(label = "refreshRotation")
+        t.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(animation = tween(800, easing = LinearEasing)),
+                label = "rotationAnim",
+            )
+            .value
+      } else 0f
 
   IconButton(
       onClick = onRefresh,
       enabled = !isRefreshing,
-      modifier =
-          modifier.clip(CircleShape).background(mapUi.bg).testTag(MapContentTestTags.REFRESH)) {
-        Icon(
-            imageVector = Icons.Default.Refresh,
-            contentDescription = "Refresh",
-            tint = cs.background,
-            modifier =
-                Modifier.size(26.dp) // match the tab switcher’s inner icon visual weight
-                    .graphicsLayer(rotationZ = rot)
-                    .testTag(MapContentTestTags.REFRESH_SPINNER))
-      }
+      modifier = modifier.clip(CircleShape).background(mapUi.bg),
+  ) {
+    Icon(
+        imageVector = Icons.Default.Refresh,
+        contentDescription = "Refresh",
+        tint = cs.background,
+        modifier =
+            Modifier.size(26.dp)
+                .graphicsLayer(rotationZ = rotation)
+                .testTag(MapContentTestTags.REFRESH_SPINNER),
+    )
+  }
 }

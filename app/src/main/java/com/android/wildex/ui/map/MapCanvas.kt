@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import com.android.wildex.model.utils.Location
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -15,8 +16,8 @@ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListen
 import com.mapbox.maps.plugin.locationcomponent.location
 
 data class MapUiColors(
-    val bg: Color, // container color
-    val fg: Color // content color
+    val bg: Color, // background color
+    val fg: Color, // content color
 )
 
 @Composable
@@ -28,6 +29,7 @@ fun MapCanvas(
     isDark: Boolean,
     showUserLocation: Boolean,
     indicatorListener: OnIndicatorPositionChangedListener,
+    centerCoordinates: Location,
 ) {
   MapboxMap(modifier = modifier.testTag(MapContentTestTags.MAP_CANVAS)) {
     MapEffect(isDark, showUserLocation, styleUri, styleImportId) { mv ->
@@ -35,7 +37,10 @@ fun MapCanvas(
       val mapboxMap = mv.mapboxMap
       mapboxMap.loadStyle(styleUri) { style ->
         mapboxMap.setCamera(
-            CameraOptions.Builder().center(Point.fromLngLat(6.6323, 46.5197)).zoom(12.0).build())
+            CameraOptions.Builder()
+                .center(Point.fromLngLat(centerCoordinates.longitude, centerCoordinates.latitude))
+                .zoom(12.0)
+                .build())
         runCatching {
           style.setStyleImportConfigProperty(
               styleImportId,
@@ -49,6 +54,7 @@ fun MapCanvas(
         pulsingEnabled = showUserLocation
       }
       mv.location.removeOnIndicatorPositionChangedListener(indicatorListener)
+
       if (showUserLocation) {
         mv.location.addOnIndicatorPositionChangedListener(indicatorListener)
       }

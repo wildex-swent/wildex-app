@@ -1,6 +1,7 @@
 package com.android.wildex.ui.map
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -107,7 +108,8 @@ private fun LocationRow(name: String, ui: MapUiColors) {
         Icons.Filled.LocationOn,
         contentDescription = "Location",
         tint = ui.fg,
-        modifier = Modifier.size(18.dp))
+        modifier = Modifier.size(18.dp),
+    )
     Text(
         text = name.ifEmpty { "Unknown" },
         style = MaterialTheme.typography.bodyMedium,
@@ -177,7 +179,7 @@ private fun PostSelectionCard(
         overflow = TextOverflow.Ellipsis,
     )
 
-    LocationRow(details.post.location?.name ?: "Unknown", ui)
+    LocationRow(details.post.location?.name ?: "", ui)
     Spacer(Modifier.height(2.dp))
 
     Row(
@@ -194,9 +196,8 @@ private fun PostSelectionCard(
             modifier = Modifier.size(34.dp).testTag(MapContentTestTags.SELECTION_LIKE_BUTTON),
             colors = IconButtonDefaults.iconButtonColors(contentColor = ui.fg),
         ) {
-          if (details.likedByMe)
-              Icon(Icons.Filled.Favorite, contentDescription = "Unlike", tint = ui.fg)
-          else Icon(Icons.Filled.FavoriteBorder, contentDescription = "Like", tint = ui.fg)
+          if (details.likedByMe) Icon(Icons.Filled.Favorite, contentDescription = "Unlike")
+          else Icon(Icons.Filled.FavoriteBorder, contentDescription = "Like")
         }
 
         Text(
@@ -242,7 +243,10 @@ private fun ReportSelectionCard(
   SelectionRow(
       left = {
         PreviewImage(
-            details.report.imageURL, MapContentTestTags.SELECTION_REPORT_IMAGE, "Report image")
+            details.report.imageURL,
+            MapContentTestTags.SELECTION_REPORT_IMAGE,
+            "Report image",
+        )
       },
   ) {
     AuthorAvatar(details.author?.profilePictureURL)
@@ -260,36 +264,67 @@ private fun ReportSelectionCard(
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth())
+        modifier = Modifier.fillMaxWidth(),
+    )
 
     LocationRow(details.report.location.name, ui)
 
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-      val assignee = details.report.assigneeId
-      val (bg, fg, label) =
-          if (assignee.isNullOrBlank()) {
-            Triple(ui.fg.copy(alpha = 0.12f), ui.fg, "Not assigned")
-          } else {
-            Triple(ui.fg.copy(alpha = 0.08f), ui.fg, "Assigned")
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+      val assigned = !details.report.assigneeId.isNullOrBlank() && details.assignee != null
+      val bg = if (assigned) ui.fg.copy(alpha = 0.08f) else ui.fg.copy(alpha = 0.12f)
+      val fg = ui.fg
+
+      Surface(
+          shape = RoundedCornerShape(percent = 40),
+          color = bg,
+          contentColor = fg,
+          modifier = Modifier.wrapContentWidth(),
+      ) {
+        if (!assigned) {
+          Text(
+              text = "Not assigned :(",
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+              style = MaterialTheme.typography.bodySmall,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
+        } else {
+          Row(
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+          ) {
+            Text(text = "Assigned to", style = MaterialTheme.typography.bodySmall, maxLines = 1)
+            // tiny inline avatar
+            AsyncImage(
+                model =
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(details.assignee?.profilePictureURL)
+                        .build(),
+                contentDescription = "Assignee",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(16.dp).clip(CircleShape),
+            )
+            // username, single line with ellipsis
+            Text(
+                text = details.assignee?.username ?: "Unknown",
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
           }
-
-      Surface(shape = RoundedCornerShape(999.dp), color = bg, contentColor = fg) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        }
       }
 
-      Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-        OpenButton(
-            onClick = { onReport(details.report.reportId) },
-            ui = ui,
-            size = 26,
-        )
-      }
+      OpenButton(
+          onClick = { onReport(details.report.reportId) },
+          ui = ui,
+          size = 26,
+      )
     }
   }
 }

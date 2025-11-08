@@ -101,6 +101,7 @@ private fun AuthorAvatar(data: Any?) {
 @Composable
 private fun LocationRow(name: String, ui: MapUiColors) {
   Row(
+      modifier = Modifier.testTag(MapContentTestTags.SELECTION_LOCATION),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(6.dp),
   ) {
@@ -264,13 +265,13 @@ private fun ReportSelectionCard(
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION),
     )
 
     LocationRow(details.report.location.name, ui)
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(MapContentTestTags.REPORT_ASSIGNED_ROW),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -333,5 +334,5 @@ fun articleWithWord(word: String): String {
   if (word.isBlank()) return "a"
   val first = word.trim().first().lowercaseChar()
   val article = if (first in listOf('a', 'e', 'i', 'o', 'u')) "an" else "a"
-  return "$article $word"
+  return "$article ${word.lowercase()}"
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -68,13 +67,9 @@ fun MapTabSwitcher(
     val mainIcon = getIconForMapTab(activeTab)
     IconButton(
         onClick = { expanded = !expanded },
-        modifier =
-            Modifier.clip(CircleShape)
-                .background(uiActive.bg)
-                .testTag(MapContentTestTags.TAB_SWITCHER),
-    ) {
-      Icon(mainIcon, contentDescription = activeTab.name, tint = Color.White)
-    }
+        modifier = Modifier.clip(CircleShape).background(uiActive.bg)) {
+          Icon(mainIcon, contentDescription = activeTab.name, tint = Color.White)
+        }
   }
 }
 

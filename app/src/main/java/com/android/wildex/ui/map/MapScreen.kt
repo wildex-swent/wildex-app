@@ -46,9 +46,6 @@ import com.mapbox.maps.plugin.locationcomponent.location
 /* ---------- Test tags ---------- */
 object MapContentTestTags {
   const val ROOT = "MapScreen/Root"
-  const val MAP = "MapScreen/Map"
-  const val MAP_CANVAS = "MapScreen/MapCanvas"
-  const val PIN_LAYER = "MapScreen/PinLayer"
   const val TAB_SWITCHER = "MapScreen/TabSwitcher"
   const val REFRESH = "MapScreen/Refresh"
   const val REFRESH_SPINNER = "MapScreen/Refresh/Spinner"
@@ -57,12 +54,17 @@ object MapContentTestTags {
   const val SELECTION_POST_IMAGE = "MapScreen/SelectionCard/PostImage"
   const val SELECTION_REPORT_IMAGE = "MapScreen/SelectionCard/ReportImage"
   const val SELECTION_CLOSE = "MapScreen/SelectionCard/Close"
-  const val PERMISSIONS_FLOW = "MapScreen/Permissions"
   const val SELECTION_AUTHOR_IMAGE = "MapScreen/SelectionCard/AuthorImage"
   const val SELECTION_LIKE_BUTTON = "MapScreen/SelectionCard/LikeButton"
   const val SELECTION_COMMENT_ICON = "MapScreen/SelectionCard/CommentIcon"
   const val SELECTION_OPEN_BUTTON = "MapScreen/SelectionCard/OpenButton"
+  const val SELECTION_REPORT_DESCRIPTION = "MapScreen/SelectionCard/ReportDescription"
+  const val SELECTION_LOCATION = "MapScreen/SelectionCard/Location"
+  const val REPORT_ASSIGNED_ROW = "MapScreen/SelectionCard/ReportAssignedRow"
 }
+
+/** Local to skip Mapbox in tests */
+val LocalSkipMapbox = staticCompositionLocalOf { false }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -83,7 +85,7 @@ fun MapScreen(
     val styleUri = context.getString(R.string.map_style)
     val standardImportId = context.getString(R.string.map_standard_import)
 
-    // permissions
+    // location permissions
     val locationPermissions =
         rememberMultiplePermissionsState(
             listOf(
@@ -93,11 +95,9 @@ fun MapScreen(
 
     // run the permission flow only if it actually exists
     locationPermissions.let { perms ->
-      Box(Modifier.testTag(MapContentTestTags.PERMISSIONS_FLOW)) {
-        LaunchedEffect(Unit) { perms.launchMultiplePermissionRequest() }
-        LaunchedEffect(perms.allPermissionsGranted) {
-          viewModel.onLocationPermissionResult(perms.allPermissionsGranted)
-        }
+      LaunchedEffect(Unit) { perms.launchMultiplePermissionRequest() }
+      LaunchedEffect(perms.allPermissionsGranted) {
+        viewModel.onLocationPermissionResult(perms.allPermissionsGranted)
       }
     }
 
@@ -138,35 +138,37 @@ fun MapScreen(
     val showLoading = uiState.isLoading || !isMapReady
 
     Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
-      // 1) map
-      MapCanvas(
-          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP),
-          mapViewRef = { mapView = it },
-          styleUri = styleUri,
-          styleImportId = standardImportId,
-          isDark = isDark,
-          showUserLocation = render.showUserLocation,
-          indicatorListener = indicatorListener,
-          centerCoordinates = uiState.centerCoordinates,
-      )
+      if (!LocalSkipMapbox.current) {
+        // 1) map
+        MapCanvas(
+            modifier = Modifier.fillMaxSize(),
+            mapViewRef = { mapView = it },
+            styleUri = styleUri,
+            styleImportId = standardImportId,
+            isDark = isDark,
+            showUserLocation = render.showUserLocation,
+            indicatorListener = indicatorListener,
+            centerCoordinates = uiState.centerCoordinates,
+        )
 
-      // 2) pins
-      PinsOverlay(
-          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.PIN_LAYER),
-          mapView = mapView,
-          pins = uiState.pins,
-          currentTab = styleTab,
-          selectedId =
-              when (val s = uiState.selected) {
-                is PinDetails.PostDetails -> s.post.postId
-                is PinDetails.ReportDetails -> s.report.reportId
-                else -> null
-              },
-          onPinClick = { id -> viewModel.onPinSelected(id) },
-      )
+        // 2) pins
+        PinsOverlay(
+            modifier = Modifier.fillMaxSize(),
+            mapView = mapView,
+            pins = uiState.pins,
+            currentTab = styleTab,
+            selectedId =
+                when (val s = uiState.selected) {
+                  is PinDetails.PostDetails -> s.post.postId
+                  is PinDetails.ReportDetails -> s.report.reportId
+                  else -> null
+                },
+            onPinClick = { id -> viewModel.onPinSelected(id) },
+        )
 
-      // 3) tap to clear
-      MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
+        // 3) tap to clear
+        MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
+      }
 
       // 4) tabs
       MapTabSwitcher(
@@ -209,11 +211,10 @@ fun MapScreen(
       // I know it's a weird placement mais the idea is to have the error overlay above the refresh
       // button and to keep the map visible below
       if (uiState.isError) {
-        Box(
-            Modifier.matchParentSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))) {
-              LoadingFail(modifier = Modifier.align(Alignment.Center))
-            }
+        LoadingFail(
+            modifier =
+                Modifier.align(Alignment.Center)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)))
       }
 
       // 7) refresh
@@ -229,11 +230,10 @@ fun MapScreen(
 
       // 8) loading overlay
       if (showLoading) {
-        Box(
-            Modifier.fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))) {
-              LoadingScreen(modifier = Modifier.align(Alignment.Center))
-            }
+        LoadingScreen(
+            modifier =
+                Modifier.align(Alignment.Center)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)))
       }
 
       // 9) camera recenter

@@ -34,6 +34,7 @@ import com.android.wildex.ui.navigation.Tab
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
+import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.mapbox.common.MapboxOptions
@@ -92,6 +93,15 @@ fun WildexApp(
           onNotificationClick = {},
       )
     }
+
+    //Settings
+    composable(Screen.Settings.route) {
+      SettingsScreen(
+        onGoBack = {navigationActions.goBack()},
+        onEditProfileClick = {}
+      )
+    }
+
     // Map
     composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
       val userId = backStackEntry.arguments?.getString("userUid")
@@ -190,6 +200,7 @@ fun WildexApp(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
             onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
+            onSettings = {navigationActions.navigateTo(Screen.Settings)}
         )
       } else {
         Log.e("ProfileScreen", nullUserUID)

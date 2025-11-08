@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Autorenew
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +72,7 @@ import kotlin.math.ceil
 object SettingsScreenTestTags {
     const val GO_BACK_BUTTON = "go_back_button"
     const val EDIT_PROFILE_BUTTON = "edit_profile_button"
+    const val DELETE_ACCOUNT_BUTTON = "delete_account_button"
     const val NOTIFICATIONS_TOGGLE = "notifications_toggle"
     const val SCREEN_TITLE = "settings_screen_title"
 }
@@ -78,7 +81,8 @@ object SettingsScreenTestTags {
 fun SettingsScreen(
   settingsScreenViewModel : SettingsScreenViewModel = viewModel(),
   onGoBack: () -> Unit = {},
-  onEditProfileClick: () -> Unit = {}
+  onEditProfileClick: () -> Unit = {},
+  onAccountDelete: () -> Unit = {}
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -195,7 +199,17 @@ fun SettingsContent(
       )
       SettingsDivider()
     }
-
+    item {
+      FloatingActionButton(
+        onClick = { /* TODO */ },
+        modifier = Modifier
+          .padding(bottom = 16.dp)
+      ) {
+        Text(
+          text = "Delete account"
+        )
+      }
+    }
   }
 }
 
@@ -228,11 +242,13 @@ fun SettingsScreenTopBar(
 }
 
 @Composable
-fun SettingsDivider(){
+fun SettingsDivider(
+  modifier: Modifier = Modifier
+){
   HorizontalDivider(
     thickness = 1.dp,
     color = colorScheme.onBackground,
-    modifier = Modifier.fillMaxWidth()
+    modifier = modifier.fillMaxWidth()
   )
 }
 

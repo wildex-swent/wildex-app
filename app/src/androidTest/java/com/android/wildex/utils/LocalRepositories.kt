@@ -11,11 +11,15 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettings
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
+import kotlin.collections.mutableMapOf
 
 interface ClearableRepository {
   fun clear()
@@ -95,6 +99,45 @@ object LocalRepositories {
     override fun clear() {
       listOfLikes.clear()
     }
+  }
+
+  open class UserSettingsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
+    UserSettingsRepository, ClearableRepository {
+
+      val mapUserToSettings = mutableMapOf<Id, UserSettings>()
+
+      init {
+        clear()
+      }
+
+      override suspend fun initializeUserSettings(userId: String) {
+        mapUserToSettings.put(userId, UserSettings())
+      }
+
+      override suspend fun getEnableNotification(userId: String): Boolean {
+        return mapUserToSettings[userId]?.enableNotifications ?: throw Exception("No User with id $userId found")
+      }
+
+      override suspend fun setEnableNotification(userId: String, enable: Boolean) {
+        val userSettings = mapUserToSettings[userId]
+        mapUserToSettings.put(userId, userSettings?.copy(enableNotifications = enable) ?: throw Exception("No User with id $userId found"))
+      }
+
+      override suspend fun getAppearanceMode(userId: String): AppearanceMode {
+        return mapUserToSettings[userId]?.appearanceMode ?: throw Exception("No User with id $userId found")
+      }
+
+      override suspend fun setAppearanceMode(
+        userId: String,
+        mode: AppearanceMode
+      ) {
+        val userSettings = mapUserToSettings[userId]
+        mapUserToSettings.put(userId, userSettings?.copy(appearanceMode = mode) ?: throw Exception("No User with id $userId found"))
+      }
+
+      override fun clear() {
+        mapUserToSettings.clear()
+      }
   }
 
   open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
@@ -277,6 +320,7 @@ object LocalRepositories {
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
   val animalRepository: AnimalRepository = AnimalRepositoryImpl()
+  val userSettingsRepository: UserSettingsRepository = UserSettingsRepositoryImpl()
   val userAnimalsRepository: UserAnimalsRepository =
       UserAnimalsRepositoryImpl(animalRepository = animalRepository)
   val reportRepository: ReportRepository = ReportRepositoryImpl()
@@ -287,6 +331,7 @@ object LocalRepositories {
     (userRepository as ClearableRepository).clear()
     (commentRepository as ClearableRepository).clear()
     (animalRepository as ClearableRepository).clear()
+    (userSettingsRepository as ClearableRepository).clear()
     (userAnimalsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
   }

@@ -196,6 +196,8 @@ class ProfileScreenTest {
           override suspend fun initializeUserAchievements(userId: String) {}
 
           override suspend fun getAchievementsCountOfUser(userId: String): Int = 0
+
+          override suspend fun deleteUserAchievements(userId: Id) {}
         }
     val vm =
         ProfileScreenViewModel(
@@ -228,6 +230,8 @@ class ProfileScreenTest {
     override suspend fun initializeUserAchievements(userId: String) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
+
+    override suspend fun deleteUserAchievements(userId: Id) {}
   }
 
   @Test

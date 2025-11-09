@@ -278,7 +278,6 @@ class MapScreenTest {
       MapRefreshButton(isRefreshing = refreshing, currentTab = MapTab.Posts, onRefresh = {})
     }
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
-    refreshing = true
     composeTestRule.waitForIdle()
     composeTestRule.mainClock.advanceTimeBy(1200L)
     composeTestRule.mainClock.autoAdvance = true

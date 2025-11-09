@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -29,7 +30,10 @@ import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButtonElevation
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -99,7 +103,28 @@ fun SettingsScreen(
 
   Scaffold (
     modifier = Modifier.fillMaxSize(),
-    topBar = { SettingsScreenTopBar(onGoBack) }
+    topBar = { SettingsScreenTopBar(onGoBack) },
+    floatingActionButton = {
+      FloatingActionButton(
+        onClick = { /* TODO */ },
+        shape = RoundedCornerShape(50.dp),
+        containerColor = colorScheme.tertiary,
+        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+        modifier = Modifier
+          .padding(bottom = 16.dp)
+          .height(45.dp)
+          .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+      ) {
+        Text(
+          text = "Delete account",
+          fontSize = 16.sp,
+          fontWeight = FontWeight.SemiBold,
+          color = colorScheme.onTertiary,
+          modifier = Modifier.padding(horizontal = 30.dp)
+        )
+      }
+    },
+    floatingActionButtonPosition = FabPosition.Center
   ){ paddingValues ->
     when {
       uiState.isError -> LoadingFail()
@@ -198,17 +223,6 @@ fun SettingsContent(
         groupButtonsColors = groupButtonsColors
       )
       SettingsDivider()
-    }
-    item {
-      FloatingActionButton(
-        onClick = { /* TODO */ },
-        modifier = Modifier
-          .padding(bottom = 16.dp)
-      ) {
-        Text(
-          text = "Delete account"
-        )
-      }
     }
   }
 }

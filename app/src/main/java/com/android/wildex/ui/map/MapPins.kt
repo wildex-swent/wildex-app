@@ -70,7 +70,8 @@ internal object SharedCoil {
 }
 
 /* ----------------------- Base icon cache (to avoid repeating the rebuilding each frame)  ----------------------- */
-private data class BaseKey(
+@VisibleForTesting
+internal data class BaseKey(
     val url: String,
     val borderColor: Int,
     val scaleKey: Int,

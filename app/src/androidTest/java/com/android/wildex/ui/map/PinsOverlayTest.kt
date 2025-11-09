@@ -2,12 +2,20 @@ package com.android.wildex.ui.map
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.PixelFormat
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
+import coil.ImageLoader
 import coil.annotation.ExperimentalCoilApi
+import coil.request.ImageRequest
+import coil.request.ImageResult
+import coil.request.SuccessResult
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.reflect.Field
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
@@ -183,6 +191,97 @@ class PinsOverlayTest {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val loaded = fetchBitmapViaCoil(ctx, "this-is-not-a-valid-url")
     assertNull(loaded)
+  }
+
+  @Test
+  fun fetchBitmapViaCoil_nonBitmapDrawable_withZeroIntrinsicSize_rasterizesAtLeast1x1() = runTest {
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val original = getSharedCoilInstanceField().get(null) as ImageLoader?
+    val zeroIntrinsicDrawable =
+        object : Drawable() {
+          override fun draw(canvas: Canvas) {}
+
+          override fun setAlpha(alpha: Int) {}
+
+          override fun getAlpha(): Int = 255
+
+          override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {}
+
+          @Deprecated("Deprecated in Java") override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
+
+          override fun getIntrinsicWidth(): Int = 0
+
+          override fun getIntrinsicHeight(): Int = 0
+        }
+    val base = SharedCoil.get(ctx)
+    val fake =
+        object : ImageLoader by base {
+          override suspend fun execute(request: ImageRequest): ImageResult {
+            return SuccessResult(
+                drawable = zeroIntrinsicDrawable,
+                request = request,
+                dataSource = coil.decode.DataSource.MEMORY,
+                memoryCacheKey = null)
+          }
+        }
+    try {
+      getSharedCoilInstanceField().set(null, fake)
+      val loaded = fetchBitmapViaCoil(ctx, "anything://does-not-matter")
+      assertNotNull(loaded)
+      checkNotNull(loaded)
+      assertEquals(1, loaded.width)
+      assertEquals(1, loaded.height)
+      loaded.recycle()
+    } finally {
+      getSharedCoilInstanceField().set(null, original)
+    }
+  }
+
+  @Test
+  fun fetchBitmapViaCoil_whenImageLoaderThrows_returnsNull_and_hitsCatchBranch() = runTest {
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val original = getSharedCoilInstanceField().get(null) as ImageLoader?
+    val base = SharedCoil.get(ctx)
+    val throwing =
+        object : ImageLoader by base {
+          override suspend fun execute(request: ImageRequest): ImageResult {
+            throw RuntimeException("Boom from fake ImageLoader")
+          }
+        }
+    try {
+      getSharedCoilInstanceField().set(null, throwing)
+      val loaded = fetchBitmapViaCoil(ctx, "fake://trigger-throw")
+      assertNull(loaded)
+    } finally {
+      getSharedCoilInstanceField().set(null, original)
+    }
+  }
+
+  @Test
+  fun baseKey_equality_and_hash_are_valueBased() {
+    val k1 = BaseKey(url = "u", borderColor = 0x112233, scaleKey = 100)
+    val k2 = BaseKey(url = "u", borderColor = 0x112233, scaleKey = 100)
+    val k3 = BaseKey(url = "u", borderColor = 0x112233, scaleKey = 125)
+    val k4 = BaseKey(url = "v", borderColor = 0x112233, scaleKey = 100)
+    assertEquals(k1, k2)
+    assertEquals(k1.hashCode(), k2.hashCode())
+    assertNotEquals(k1, k3)
+    assertNotEquals(k1, k4)
+    val map = hashMapOf<BaseKey, String>()
+    map[k1] = "A"
+    map[k2] = "B"
+    map[k3] = "C"
+    map[k4] = "D"
+    assertEquals("B", map[k1])
+    assertEquals("B", map[k2])
+    assertEquals("C", map[k3])
+    assertEquals("D", map[k4])
+  }
+
+  private fun getSharedCoilInstanceField(): Field {
+    val f = SharedCoil::class.java.getDeclaredField("instance")
+    f.isAccessible = true
+    return f
   }
 
   // ---------- Cleanup between tests to prevent cross-test flakiness ----------

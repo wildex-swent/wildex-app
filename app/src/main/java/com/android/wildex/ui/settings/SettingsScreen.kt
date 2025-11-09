@@ -152,7 +152,7 @@ fun SettingsScreen(
               TextButton(
                 onClick = {
                   showDeletionValidation = false
-                  //delete account with user repo
+                  settingsScreenViewModel.deleteAccount()
                   onAccountDelete()
                 }
               ) {

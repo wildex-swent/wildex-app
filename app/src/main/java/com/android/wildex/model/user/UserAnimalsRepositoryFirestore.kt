@@ -102,6 +102,12 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
         .await()
   }
 
+  override suspend fun deleteUserAnimals(userId: Id) {
+    val docRef = collection.document(userId)
+    ensureDocumentExists(docRef, userId)
+    docRef.delete().await()
+  }
+
   /**
    * Ensures no userAnimals item in the document reference has a specific userId.
    *

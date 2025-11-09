@@ -100,10 +100,15 @@ class SettingsScreenViewModel(
     }
   }
 
+  /**
+   * Deletes the account of the current user
+   */
   fun deleteAccount(){
     viewModelScope.launch {
       userRepository.deleteUser(currentUserId)
       userSettingsRepository.deleteUserSettings(currentUserId)
+      //delete user achievements
+      //delete user animals
     }
   }
 

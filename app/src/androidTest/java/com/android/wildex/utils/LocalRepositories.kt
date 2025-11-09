@@ -278,6 +278,10 @@ object LocalRepositories {
       mapUserToAnimals.put(userId, oldList)
     }
 
+    override suspend fun deleteUserAnimals(userId: Id) {
+      mapUserToAnimals.remove(userId)
+    }
+
     override fun clear() {
       mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
     }

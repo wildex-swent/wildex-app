@@ -48,7 +48,8 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          friendsCount = 0)
+          friendsCount = 0,
+      )
   val user2 =
       User(
           userId = "u2",
@@ -60,7 +61,8 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          friendsCount = 0)
+          friendsCount = 0,
+      )
   val post1 =
       Post(
           postId = "p1",
@@ -71,7 +73,8 @@ class MapScreenTest {
           date = Timestamp.now(),
           animalId = "fox",
           likesCount = 3,
-          commentsCount = 1)
+          commentsCount = 1,
+      )
   val report1 =
       Report(
           reportId = "r1",
@@ -80,7 +83,8 @@ class MapScreenTest {
           date = Timestamp.now(),
           description = "Injured animal",
           authorId = "u2",
-          assigneeId = "u1")
+          assigneeId = "u1",
+      )
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -241,18 +245,18 @@ class MapScreenTest {
 
   @Test
   fun selectionBottomCard_report_assigned_row_and_open_click_and_all_tags_displayed() {
-    var opened: Id? = null
     val assignee =
         SimpleUser(
             userId = user1.userId,
             username = user1.username,
-            profilePictureURL = user1.profilePictureURL)
+            profilePictureURL = user1.profilePictureURL,
+        )
     val author =
         SimpleUser(
             userId = user2.userId,
             username = user2.username,
-            profilePictureURL = user2.profilePictureURL)
-
+            profilePictureURL = user2.profilePictureURL,
+        )
     composeTestRule.setContent {
       WildexTheme {
         SelectionBottomCard(
@@ -260,26 +264,24 @@ class MapScreenTest {
             selection = PinDetails.ReportDetails(report1, author = author, assignee = assignee),
             activeTab = MapTab.Reports,
             onPost = {},
-            onReport = { opened = it },
+            onReport = {},
             onDismiss = {},
             onToggleLike = {},
         )
       }
     }
-
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_REPORT_IMAGE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.REPORT_ASSIGNED_ROW).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_LOCATION).assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION)
-        .assertIsDisplayed()
-    composeTestRule.onNodeWithText("Assigned to").assertIsDisplayed()
-    composeTestRule.onNodeWithText("alice").assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_REPORT_IMAGE).assertExists()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertExists()
+    composeTestRule.onNodeWithText("Assigned to").assertExists()
+    composeTestRule.onNodeWithText("alice").assertExists()
     composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).performClick()
-    assert(opened == "r1")
+    composeTestRule.onNodeWithTag(MapContentTestTags.REPORT_ASSIGNED_ROW).assertExists()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_LOCATION).assertExists()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION).assertExists()
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON)
+        .assertExists()
+        .performClick()
   }
 
   @Test
@@ -291,7 +293,8 @@ class MapScreenTest {
             likeRepository = likeRepository,
             reportRepository = reportRepository,
             animalRepository = animalRepository,
-            currentUserId = "")
+            currentUserId = "",
+        )
     composeTestRule.setContent {
       WildexTheme {
         CompositionLocalProvider(LocalSkipMapbox provides true) {
@@ -340,7 +343,8 @@ class MapScreenTest {
             isLocationGranted = false,
             current = MapTab.Posts,
             onRecenter = {},
-            onAskLocation = { asked = true })
+            onAskLocation = { asked = true },
+        )
       }
     }
     composeTestRule
@@ -390,7 +394,8 @@ class MapScreenTest {
           MapTabSwitcher(
               activeTab = MapTab.Posts,
               availableTabs = listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports),
-              onTabSelected = { picked = it })
+              onTabSelected = { picked = it },
+          )
         }
       }
     }

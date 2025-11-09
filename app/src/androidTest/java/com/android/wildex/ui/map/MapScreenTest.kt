@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
@@ -282,6 +285,51 @@ class MapScreenTest {
         .onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON)
         .assertExists()
         .performClick()
+  }
+
+  @Test
+  fun selectionBottomCard_report_not_assigned_showsNotAssignedChip() {
+    val author =
+        SimpleUser(
+            userId = user2.userId,
+            username = user2.username,
+            profilePictureURL = user2.profilePictureURL)
+    val notAssignedReport = report1.copy(assigneeId = null)
+    composeTestRule.setContent {
+      WildexTheme {
+        SelectionBottomCard(
+            modifier = Modifier,
+            selection =
+                PinDetails.ReportDetails(
+                    report = notAssignedReport, author = author, assignee = null),
+            activeTab = MapTab.Reports,
+            onPost = {},
+            onReport = {},
+            onDismiss = {},
+            onToggleLike = {},
+        )
+      }
+    }
+    composeTestRule.onNodeWithTag(MapContentTestTags.REPORT_ASSIGNED_ROW).assertIsDisplayed()
+    composeTestRule.onNodeWithText("Not assigned :(").assertIsDisplayed()
+  }
+
+  @Test
+  fun mapRefreshButton_rotation_animates_whenRefreshing_advanceClock() {
+    composeTestRule.mainClock.autoAdvance = false
+    var refreshing by mutableStateOf(false)
+    composeTestRule.setContent {
+      WildexTheme {
+        MapRefreshButton(isRefreshing = refreshing, currentTab = MapTab.Posts, onRefresh = {})
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.REFRESH_SPINNER, useUnmergedTree = true)
+        .assertIsDisplayed()
+    refreshing = true
+    composeTestRule.waitForIdle()
+    composeTestRule.mainClock.advanceTimeBy(1200L)
+    composeTestRule.mainClock.autoAdvance = true
   }
 
   @Test

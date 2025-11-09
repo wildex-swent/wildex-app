@@ -47,7 +47,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 object MapContentTestTags {
   const val ROOT = "MapScreen/Root"
   const val TAB_SWITCHER = "MapScreen/TabSwitcher"
-
+  const val MAP_PINS = "MapPins"
   const val MAP_CANVAS = "MapCanvas"
   const val MAIN_TAB_SWITCHER = "MapTabSwitcher-Main"
   const val REFRESH = "MapScreen/Refresh"
@@ -158,7 +158,7 @@ fun MapScreen(
       if (!LocalSkipWorkerThread.current) {
         // 2) pins
         PinsOverlay(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
             mapView = mapView,
             pins = uiState.pins,
             currentTab = styleTab,

@@ -138,8 +138,12 @@ class MapScreenTest {
   private fun compose(content: @Composable () -> Unit) =
       composeTestRule.setContent { WildexTheme { content() } }
 
-  private fun setMapScreen(vm: MapScreenViewModel = viewModel, uid: Id = currentUserId) = compose {
-    CompositionLocalProvider(LocalSkipWorkerThread provides true) {
+  private fun setMapScreen(
+      vm: MapScreenViewModel = viewModel,
+      uid: Id = currentUserId,
+      skipThread: Boolean = true,
+  ) = compose {
+    CompositionLocalProvider(LocalSkipWorkerThread provides skipThread) {
       MapScreen(userId = uid, bottomBar = {}, viewModel = vm)
     }
   }
@@ -172,12 +176,13 @@ class MapScreenTest {
   // ---------- Tests ----------
   @Test
   fun mapScreen_initialDisplay_coreElementsVisible_selectionHidden() {
-    setMapScreen()
+    setMapScreen(uid = "u3", skipThread = false)
     composeTestRule.waitForIdle()
     node(MapContentTestTags.ROOT).assertIsDisplayed()
     node(MapContentTestTags.TAB_SWITCHER).assertIsDisplayed()
     node(MapContentTestTags.FAB_RECENTER).assertIsDisplayed()
     node(MapContentTestTags.MAP_CANVAS).assertIsDisplayed()
+    node(MapContentTestTags.MAP_PINS).assertIsDisplayed()
     node(MapContentTestTags.REFRESH).assertIsDisplayed()
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()

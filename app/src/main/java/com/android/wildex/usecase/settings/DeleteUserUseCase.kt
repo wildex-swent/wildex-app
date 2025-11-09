@@ -10,6 +10,9 @@ import com.android.wildex.model.utils.Id
 
 /**
  * Use case: Delete a user's account
+ *
+ * Deleting a user's account means deleting the User object itself but also all other objects linked
+ * to this User. This includes a UserSettings, a UserAnimals and a UserAchievements.
  */
 class DeleteUserUseCase(
   private val userRepository: UserRepository = RepositoryProvider.userRepository,
@@ -18,9 +21,15 @@ class DeleteUserUseCase(
   private val userAchievementsRepository: UserAchievementsRepository = RepositoryProvider.userAchievementsRepository
 ) {
 
+  /**
+   * Deletes the account of the given user
+   *
+   * @param userId user whose account we want to delete
+   */
   suspend operator fun invoke(userId: Id) {
     userRepository.deleteUser(userId)
     userSettingsRepository.deleteUserSettings(userId)
     userAnimalsRepository.deleteUserAnimals(userId)
+    userAchievementsRepository.deleteUserAchievements(userId)
   }
 }

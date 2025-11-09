@@ -8,6 +8,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.usecase.settings.DeleteUserUseCase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
+    private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase()
 ) : ViewModel() {
 
   /** Backing property for the settings screen state. */
@@ -105,10 +107,7 @@ class SettingsScreenViewModel(
    */
   fun deleteAccount(){
     viewModelScope.launch {
-      userRepository.deleteUser(currentUserId)
-      userSettingsRepository.deleteUserSettings(currentUserId)
-      //delete user achievements
-      //delete user animals
+      deleteUserUseCase(currentUserId)
     }
   }
 

@@ -9,10 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
@@ -80,7 +82,7 @@ class MapScreenTest {
           date = Timestamp.now(),
           description = "Injured animal",
           authorId = "u2",
-          assigneeId = null)
+          assigneeId = "u1")
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -474,5 +476,33 @@ class MapScreenTest {
         .assertIsDisplayed()
         .performClick()
     assert(picked == MapTab.Reports)
+  }
+
+  @Test
+  fun mapScreen_reportCard_assignedBranch_showsAssigneeRow() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    runBlocking { viewModel.loadUIState(currentUserId) }
+    composeTestRule.runOnUiThread { viewModel.onTabSelected(MapTab.Reports, currentUserId) }
+    composeTestRule.waitForIdle()
+    val reportPinId =
+        viewModel.uiState.value.pins.first { it is MapPin.ReportPin && it.id == "r1" }.id
+    viewModel.onPinSelected(reportPinId)
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MapContentTestTags.REPORT_ASSIGNED_ROW).assertIsDisplayed()
+    composeTestRule.onNodeWithText("Assigned to").assertIsDisplayed()
+    composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithText("alice").assertIsDisplayed()
   }
 }

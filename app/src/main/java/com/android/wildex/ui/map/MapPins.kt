@@ -56,7 +56,8 @@ private const val BADGE_BAR_H = 9.5f
 private const val BADGE_DOT_R = 2.4f
 
 /* ----------------------- Image loader  ----------------------- */
-private object SharedCoil {
+@VisibleForTesting
+internal object SharedCoil {
   @Volatile private var instance: ImageLoader? = null
 
   fun get(ctx: Context): ImageLoader =
@@ -472,7 +473,8 @@ internal fun composeOverlays(
   return out
 }
 /* ----------------------- image loading ----------------------- */
-private suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
+@VisibleForTesting
+internal suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
     withContext(Dispatchers.IO) {
       try {
         val loader = SharedCoil.get(ctx)

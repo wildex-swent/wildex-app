@@ -139,7 +139,7 @@ class MapScreenTest {
       composeTestRule.setContent { WildexTheme { content() } }
 
   private fun setMapScreen(vm: MapScreenViewModel = viewModel, uid: Id = currentUserId) = compose {
-    CompositionLocalProvider(LocalSkipMapbox provides true) {
+    CompositionLocalProvider(LocalSkipWorkerThread provides true) {
       MapScreen(userId = uid, bottomBar = {}, viewModel = vm)
     }
   }
@@ -177,6 +177,7 @@ class MapScreenTest {
     node(MapContentTestTags.ROOT).assertIsDisplayed()
     node(MapContentTestTags.TAB_SWITCHER).assertIsDisplayed()
     node(MapContentTestTags.FAB_RECENTER).assertIsDisplayed()
+    node(MapContentTestTags.MAP_CANVAS).assertIsDisplayed()
     node(MapContentTestTags.REFRESH).assertIsDisplayed()
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()
@@ -235,7 +236,8 @@ class MapScreenTest {
     val author = SimpleUser(user2.userId, user2.username, user2.profilePictureURL)
     setSelectionCard(
         selection = PinDetails.ReportDetails(report1, author = author, assignee = assignee),
-        tab = MapTab.Reports)
+        tab = MapTab.Reports,
+    )
     node(MapContentTestTags.SELECTION_REPORT_IMAGE).assertExists()
     node(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertExists()
     nodeText("Assigned to").assertExists()
@@ -248,14 +250,19 @@ class MapScreenTest {
 
   @Test
   fun selectionBottomCard_report_not_assigned_showsNotAssignedChip() {
+    var opened: Id? = null
     val notAssignedReport = report1.copy(assigneeId = null)
     setSelectionCard(
         selection =
             PinDetails.ReportDetails(report = notAssignedReport, author = null, assignee = null),
-        tab = MapTab.Reports)
+        tab = MapTab.Reports,
+        onReport = { opened = it },
+    )
     node(MapContentTestTags.REPORT_ASSIGNED_ROW).assertIsDisplayed()
+    node(MapContentTestTags.SELECTION_OPEN_BUTTON).assertIsDisplayed().performClick()
     nodeText("Not assigned :(").assertIsDisplayed()
     nodeText("Someone reported:", substring = true).assertIsDisplayed()
+    assert(opened == "r1")
   }
 
   @Test

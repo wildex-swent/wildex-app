@@ -35,6 +35,7 @@ import com.android.wildex.ui.navigation.NavigationActions
 import com.android.wildex.ui.navigation.Screen
 import com.android.wildex.ui.navigation.Tab
 import com.android.wildex.ui.post.PostDetailsScreen
+import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
@@ -145,7 +146,8 @@ fun WildexApp(
                 Tab.Camera,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          })
+          }
+      )
     }
 
     // Collection
@@ -154,9 +156,7 @@ fun WildexApp(
       if (userId != null) {
         CollectionScreen(
             userUid = userId,
-            onAnimalClick = { animalId ->
-              // navigationActions.navigateTo(Screen.AnimalInformationScreen(animalId))
-            },
+            onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformationScreen(it)) },
             onProfileClick = {
               navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: ""))
             },
@@ -185,7 +185,8 @@ fun WildexApp(
                 Tab.Report,
                 onTabSelected = { navigationActions.navigateTo(it.destination) },
             )
-          })
+          }
+      )
     }
 
     // Post Details
@@ -196,7 +197,7 @@ fun WildexApp(
         PostDetailsScreen(
             postId = postId,
             onGoBack = { navigationActions.goBack() },
-            onProfile = { userUid -> navigationActions.navigateTo(Screen.Profile(userUid)) },
+            onProfile = { navigationActions.navigateTo(Screen.Profile(it)) },
         )
       } else {
         Log.e("PostDetailsScreen", nullPostUID)
@@ -219,6 +220,14 @@ fun WildexApp(
         Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()
         navController.popBackStack()
       }
+    }
+
+    // Edit Profile
+    composable(Screen.EditProfile.route) {
+      EditProfileScreen(
+          onGoBack = { navigationActions.goBack() },
+          onSave = { navigationActions.navigateTo(Screen.Home) },
+      )
     }
   }
 }

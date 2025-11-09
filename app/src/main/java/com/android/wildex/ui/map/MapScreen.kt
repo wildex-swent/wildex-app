@@ -47,6 +47,8 @@ import com.mapbox.maps.plugin.locationcomponent.location
 object MapContentTestTags {
   const val ROOT = "MapScreen/Root"
   const val TAB_SWITCHER = "MapScreen/TabSwitcher"
+
+  const val MAP_CANVAS = "MapCanvas"
   const val MAIN_TAB_SWITCHER = "MapTabSwitcher-Main"
   const val REFRESH = "MapScreen/Refresh"
   const val REFRESH_SPINNER = "MapScreen/Refresh/Spinner"
@@ -67,7 +69,7 @@ object MapContentTestTags {
 }
 
 /** Local to skip Mapbox in tests */
-val LocalSkipMapbox = staticCompositionLocalOf { false }
+val LocalSkipWorkerThread = staticCompositionLocalOf { false }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -141,19 +143,19 @@ fun MapScreen(
     val showLoading = uiState.isLoading || !isMapReady
 
     Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
-      if (!LocalSkipMapbox.current) {
-        // 1) map
-        MapCanvas(
-            modifier = Modifier.fillMaxSize(),
-            mapViewRef = { mapView = it },
-            styleUri = styleUri,
-            styleImportId = standardImportId,
-            isDark = isDark,
-            showUserLocation = render.showUserLocation,
-            indicatorListener = indicatorListener,
-            centerCoordinates = uiState.centerCoordinates,
-        )
+      // 1) map
+      MapCanvas(
+          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_CANVAS),
+          mapViewRef = { mapView = it },
+          styleUri = styleUri,
+          styleImportId = standardImportId,
+          isDark = isDark,
+          showUserLocation = render.showUserLocation,
+          indicatorListener = indicatorListener,
+          centerCoordinates = uiState.centerCoordinates,
+      )
 
+      if (!LocalSkipWorkerThread.current) {
         // 2) pins
         PinsOverlay(
             modifier = Modifier.fillMaxSize(),
@@ -168,10 +170,9 @@ fun MapScreen(
                 },
             onPinClick = { id -> viewModel.onPinSelected(id) },
         )
-
-        // 3) tap to clear
-        MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
       }
+      // 3) tap to clear
+      MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
 
       // 4) tabs
       MapTabSwitcher(
@@ -183,7 +184,6 @@ fun MapScreen(
           availableTabs = uiState.availableTabs,
           onTabSelected = { viewModel.onTabSelected(it) },
       )
-
       // 5) recenter
       RecenterFab(
           modifier =
@@ -195,7 +195,6 @@ fun MapScreen(
           onRecenter = { viewModel.requestRecenter() },
           onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
       )
-
       // 6) bottom card
       SelectionBottomCard(
           modifier =
@@ -210,7 +209,6 @@ fun MapScreen(
           onDismiss = { viewModel.clearSelection() },
           onToggleLike = viewModel::toggleLike,
       )
-
       // I know it's a weird placement mais the idea is to have the error overlay above the refresh
       // button and to keep the map visible below
       if (uiState.isError) {
@@ -219,7 +217,6 @@ fun MapScreen(
                 Modifier.align(Alignment.Center)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)))
       }
-
       // 7) refresh
       MapRefreshButton(
           modifier =
@@ -230,7 +227,6 @@ fun MapScreen(
           currentTab = uiState.activeTab,
           onRefresh = { viewModel.refreshUIState(userId) },
       )
-
       // 8) loading overlay
       if (showLoading) {
         LoadingScreen(

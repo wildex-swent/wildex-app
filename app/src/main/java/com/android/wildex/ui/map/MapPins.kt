@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
@@ -344,7 +345,8 @@ fun PinsOverlay(
 /* ----------------------- Rendering helpers ----------------------- */
 
 @WorkerThread
-private fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap {
+@VisibleForTesting
+internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap {
   val circleBoxNoRipple = BASE_CIRCLE * scale
   val width = circleBoxNoRipple.toInt()
   val height = (circleBoxNoRipple + BAR_H * scale).toInt()
@@ -395,7 +397,8 @@ private fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap 
 }
 
 @WorkerThread
-private fun composeOverlays(
+@VisibleForTesting
+internal fun composeOverlays(
     base: Bitmap,
     globalAlpha: Float,
     rippleProgress: Float?,
@@ -468,7 +471,6 @@ private fun composeOverlays(
 
   return out
 }
-
 /* ----------------------- image loading ----------------------- */
 private suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
     withContext(Dispatchers.IO) {

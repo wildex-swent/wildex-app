@@ -98,7 +98,8 @@ fun WildexApp(
     composable(Screen.Settings.route) {
       SettingsScreen(
         onGoBack = {navigationActions.goBack()},
-        onEditProfileClick = {}
+        onEditProfileClick = {},
+        onAccountDelete = {navigationActions.navigateTo(Screen.Auth)}
       )
     }
 

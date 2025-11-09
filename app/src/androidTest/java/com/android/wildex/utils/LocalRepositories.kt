@@ -152,8 +152,6 @@ object LocalRepositories {
       clear()
     }
 
-    override fun getNewUid(): String = "newUserId"
-
     override suspend fun getUser(userId: Id): User = listOfUsers.find { it.userId == userId }!!
 
     override suspend fun getSimpleUser(userId: Id): SimpleUser {

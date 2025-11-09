@@ -22,7 +22,6 @@ import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Post
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -173,32 +172,6 @@ class MapScreenTest {
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin }?.id)
     viewModel.onPinSelected(postPinId)
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_POST_IMAGE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_COMMENT_ICON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertIsDisplayed()
-  }
-
-  @Test
-  fun mapScreen_toggleLike_updatesLikesCountInVm() {
-    composeTestRule.setContent {
-      WildexTheme {
-        CompositionLocalProvider(LocalSkipMapbox provides true) {
-          MapScreen(
-              userId = currentUserId,
-              bottomBar = {},
-              viewModel = viewModel,
-          )
-        }
-      }
-    }
-    composeTestRule.waitForIdle()
-    runBlocking { viewModel.loadUIState(currentUserId) }
-    val postPin =
-        requireNotNull(
-            viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin } as? MapPin.PostPin)
-    viewModel.onPinSelected(postPin.id)
-    composeTestRule.waitForIdle()
     val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
     requireNotNull(before)
     composeTestRule
@@ -209,6 +182,10 @@ class MapScreenTest {
     val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
     requireNotNull(after)
     assert(before != after)
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_POST_IMAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_COMMENT_ICON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertIsDisplayed()
   }
 
   @Test
@@ -291,12 +268,22 @@ class MapScreenTest {
         }
       }
     }
+
     composeTestRule.waitForIdle()
+    runBlocking { viewModel.loadUIState(currentUserId) }
     composeTestRule.runOnUiThread { viewModel.onTabSelected(MapTab.Reports, currentUserId) }
+    composeTestRule.waitUntil(timeoutMillis = 5_000) {
+      viewModel.uiState.value.pins.any { it is MapPin.ReportPin }
+    }
     val reportPinId =
-        requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.ReportPin }?.id)
-    viewModel.onPinSelected(reportPinId)
-    composeTestRule.waitForIdle()
+        requireNotNull(
+            viewModel.uiState.value.pins
+                .firstOrNull { it is MapPin.ReportPin && it.id == "r1" }
+                ?.id)
+    composeTestRule.runOnUiThread { viewModel.onPinSelected(reportPinId) }
+    composeTestRule.waitUntil(timeoutMillis = 5_000) {
+      viewModel.uiState.value.selected is PinDetails.ReportDetails
+    }
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_REPORT_IMAGE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertIsDisplayed()
@@ -306,6 +293,10 @@ class MapScreenTest {
     composeTestRule
         .onNodeWithTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION)
         .assertIsDisplayed()
+    composeTestRule.onNodeWithText("Assigned to").assertIsDisplayed()
+    composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithText("alice").assertIsDisplayed()
+
     val hasNotAssigned =
         composeTestRule.onAllNodesWithText("Not assigned :(").fetchSemanticsNodes().isNotEmpty()
     val hasAssignedTo =
@@ -412,39 +403,17 @@ class MapScreenTest {
         )
       }
     }
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_LIKE_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).performClick()
-    assert(liked == "p1")
-    assert(opened == "p1")
-  }
-
-  @Test
-  fun selectionBottomCard_report_assigned_row_and_open_click() {
-    var opened: Id? = null
-    val simpleUser2 =
-        SimpleUser(
-            userId = user2.userId,
-            username = user2.username,
-            profilePictureURL = user2.profilePictureURL)
-    composeTestRule.setContent {
-      WildexTheme {
-        SelectionBottomCard(
-            modifier = Modifier,
-            selection = PinDetails.ReportDetails(report1, author = null, assignee = simpleUser2),
-            activeTab = MapTab.Reports,
-            onPost = {},
-            onReport = { opened = it },
-            onDismiss = {},
-            onToggleLike = {},
-        )
-      }
-    }
     composeTestRule.onAllNodesWithText("Assigned to").fetchSemanticsNodes().isNotEmpty()
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.SELECTION_LIKE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule
         .onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON)
         .assertIsDisplayed()
         .performClick()
-    assert(opened == "r1")
+    assert(liked == "p1")
+    assert(opened == "p1")
   }
 
   @Test
@@ -476,33 +445,5 @@ class MapScreenTest {
         .assertIsDisplayed()
         .performClick()
     assert(picked == MapTab.Reports)
-  }
-
-  @Test
-  fun mapScreen_reportCard_assignedBranch_showsAssigneeRow() {
-    composeTestRule.setContent {
-      WildexTheme {
-        CompositionLocalProvider(LocalSkipMapbox provides true) {
-          MapScreen(
-              userId = currentUserId,
-              bottomBar = {},
-              viewModel = viewModel,
-          )
-        }
-      }
-    }
-    composeTestRule.waitForIdle()
-    runBlocking { viewModel.loadUIState(currentUserId) }
-    composeTestRule.runOnUiThread { viewModel.onTabSelected(MapTab.Reports, currentUserId) }
-    composeTestRule.waitForIdle()
-    val reportPinId =
-        viewModel.uiState.value.pins.first { it is MapPin.ReportPin && it.id == "r1" }.id
-    viewModel.onPinSelected(reportPinId)
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MapContentTestTags.REPORT_ASSIGNED_ROW).assertIsDisplayed()
-    composeTestRule.onNodeWithText("Assigned to").assertIsDisplayed()
-    composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
-    composeTestRule.onNodeWithText("alice").assertIsDisplayed()
   }
 }

@@ -273,7 +273,7 @@ private fun ReportSelectionCard(
     Row(
         modifier = Modifier.fillMaxWidth().testTag(MapContentTestTags.REPORT_ASSIGNED_ROW),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       val assigned = !details.report.assigneeId.isNullOrBlank() && details.assignee != null
       val bg = if (assigned) ui.fg.copy(alpha = 0.08f) else ui.fg.copy(alpha = 0.12f)
@@ -283,7 +283,7 @@ private fun ReportSelectionCard(
           shape = RoundedCornerShape(percent = 40),
           color = bg,
           contentColor = fg,
-          modifier = Modifier.wrapContentWidth(),
+          modifier = Modifier.weight(1f).wrapContentWidth(),
       ) {
         if (!assigned) {
           Text(
@@ -316,6 +316,7 @@ private fun ReportSelectionCard(
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
           }
         }

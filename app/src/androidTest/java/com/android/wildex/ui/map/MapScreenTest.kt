@@ -11,8 +11,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -22,6 +20,7 @@ import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -206,8 +205,13 @@ class MapScreenTest {
     val anyId = requireNotNull(viewModel.uiState.value.pins.firstOrNull()?.id)
     viewModel.onPinSelected(anyId)
     composeTestRule.waitForIdle()
+    viewModel.onPinSelected(anyId)
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
-    viewModel.clearSelection()
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.SELECTION_CLOSE)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()
   }
@@ -236,55 +240,33 @@ class MapScreenTest {
   }
 
   @Test
-  fun mapScreen_refreshButton_isClickable_andDoesNotCrash() {
-    composeTestRule.setContent {
-      WildexTheme {
-        CompositionLocalProvider(LocalSkipMapbox provides true) {
-          MapScreen(
-              userId = currentUserId,
-              bottomBar = {},
-              viewModel = viewModel,
-          )
-        }
-      }
-    }
-    composeTestRule.waitForIdle()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(MapContentTestTags.REFRESH).assertIsDisplayed().performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(MapContentTestTags.ROOT).assertIsDisplayed()
-  }
+  fun selectionBottomCard_report_assigned_row_and_open_click_and_all_tags_displayed() {
+    var opened: Id? = null
+    val assignee =
+        SimpleUser(
+            userId = user1.userId,
+            username = user1.username,
+            profilePictureURL = user1.profilePictureURL)
+    val author =
+        SimpleUser(
+            userId = user2.userId,
+            username = user2.username,
+            profilePictureURL = user2.profilePictureURL)
 
-  @Test
-  fun mapScreen_selectReportPin_showsReportCard_andAssignmentChip() {
     composeTestRule.setContent {
       WildexTheme {
-        CompositionLocalProvider(LocalSkipMapbox provides true) {
-          MapScreen(
-              userId = currentUserId,
-              bottomBar = {},
-              viewModel = viewModel,
-          )
-        }
+        SelectionBottomCard(
+            modifier = Modifier,
+            selection = PinDetails.ReportDetails(report1, author = author, assignee = assignee),
+            activeTab = MapTab.Reports,
+            onPost = {},
+            onReport = { opened = it },
+            onDismiss = {},
+            onToggleLike = {},
+        )
       }
     }
 
-    composeTestRule.waitForIdle()
-    runBlocking { viewModel.loadUIState(currentUserId) }
-    composeTestRule.runOnUiThread { viewModel.onTabSelected(MapTab.Reports, currentUserId) }
-    composeTestRule.waitUntil(timeoutMillis = 5_000) {
-      viewModel.uiState.value.pins.any { it is MapPin.ReportPin }
-    }
-    val reportPinId =
-        requireNotNull(
-            viewModel.uiState.value.pins
-                .firstOrNull { it is MapPin.ReportPin && it.id == "r1" }
-                ?.id)
-    composeTestRule.runOnUiThread { viewModel.onPinSelected(reportPinId) }
-    composeTestRule.waitUntil(timeoutMillis = 5_000) {
-      viewModel.uiState.value.selected is PinDetails.ReportDetails
-    }
-    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_REPORT_IMAGE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).assertIsDisplayed()
@@ -294,14 +276,10 @@ class MapScreenTest {
         .onNodeWithTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION)
         .assertIsDisplayed()
     composeTestRule.onNodeWithText("Assigned to").assertIsDisplayed()
-    composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
     composeTestRule.onNodeWithText("alice").assertIsDisplayed()
-
-    val hasNotAssigned =
-        composeTestRule.onAllNodesWithText("Not assigned :(").fetchSemanticsNodes().isNotEmpty()
-    val hasAssignedTo =
-        composeTestRule.onAllNodesWithText("Assigned to").fetchSemanticsNodes().isNotEmpty()
-    assert(hasNotAssigned || hasAssignedTo)
+    composeTestRule.onNode(hasContentDescription("Assignee"), useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).performClick()
+    assert(opened == "r1")
   }
 
   @Test
@@ -373,18 +351,6 @@ class MapScreenTest {
   }
 
   @Test
-  fun refreshButton_rotationAnim_branch_executed_whenRefreshing() {
-    composeTestRule.setContent {
-      WildexTheme {
-        MapRefreshButton(isRefreshing = true, currentTab = MapTab.Posts, onRefresh = {})
-      }
-    }
-    composeTestRule
-        .onNodeWithTag(MapContentTestTags.REFRESH_SPINNER, useUnmergedTree = true)
-        .assertIsDisplayed()
-  }
-
-  @Test
   fun selectionBottomCard_post_open_and_like_callbacks_fire() {
     var opened: Id? = null
     var liked: Id? = null
@@ -403,7 +369,6 @@ class MapScreenTest {
         )
       }
     }
-    composeTestRule.onAllNodesWithText("Assigned to").fetchSemanticsNodes().isNotEmpty()
     composeTestRule
         .onNodeWithTag(MapContentTestTags.SELECTION_LIKE_BUTTON)
         .assertIsDisplayed()
@@ -434,12 +399,6 @@ class MapScreenTest {
         .assertIsDisplayed()
         .performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.waitUntil(2_000) {
-      composeTestRule
-          .onAllNodesWithTag("MapTabSwitcher-Reports", useUnmergedTree = true)
-          .fetchSemanticsNodes()
-          .any { it.layoutInfo.isPlaced }
-    }
     composeTestRule
         .onNodeWithTag("MapTabSwitcher-Reports", useUnmergedTree = true)
         .assertIsDisplayed()

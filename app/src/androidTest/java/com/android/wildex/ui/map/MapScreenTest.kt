@@ -2,10 +2,15 @@ package com.android.wildex.ui.map
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -15,6 +20,7 @@ import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -23,6 +29,7 @@ import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -30,6 +37,50 @@ import org.junit.Rule
 import org.junit.Test
 
 class MapScreenTest {
+  val user1 =
+      User(
+          userId = "u1",
+          username = "alice",
+          name = "Alice",
+          surname = "L",
+          bio = "",
+          profilePictureURL = "",
+          userType = UserType.PROFESSIONAL,
+          creationDate = Timestamp.now(),
+          country = "CH",
+          friendsCount = 0)
+  val user2 =
+      User(
+          userId = "u2",
+          username = "bob",
+          name = "Bob",
+          surname = "K",
+          bio = "",
+          profilePictureURL = "",
+          userType = UserType.PROFESSIONAL,
+          creationDate = Timestamp.now(),
+          country = "CH",
+          friendsCount = 0)
+  val post1 =
+      Post(
+          postId = "p1",
+          authorId = "u1",
+          pictureURL = "",
+          location = Location(46.5197, 6.6323, "Lausanne"),
+          description = "A nice post",
+          date = Timestamp.now(),
+          animalId = "fox",
+          likesCount = 3,
+          commentsCount = 1)
+  val report1 =
+      Report(
+          reportId = "r1",
+          imageURL = "",
+          location = Location(46.52, 6.63, "Riponne"),
+          date = Timestamp.now(),
+          description = "Injured animal",
+          authorId = "u2",
+          assigneeId = null)
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -54,52 +105,10 @@ class MapScreenTest {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
 
     runBlocking {
-      userRepository.addUser(
-          User(
-              userId = "u1",
-              username = "alice",
-              name = "Alice",
-              surname = "L",
-              bio = "",
-              profilePictureURL = "",
-              userType = UserType.PROFESSIONAL,
-              creationDate = Timestamp.now(),
-              country = "CH",
-              friendsCount = 0))
-      userRepository.addUser(
-          User(
-              userId = "u2",
-              username = "bob",
-              name = "Bob",
-              surname = "K",
-              bio = "",
-              profilePictureURL = "",
-              userType = UserType.PROFESSIONAL,
-              creationDate = Timestamp.now(),
-              country = "CH",
-              friendsCount = 0))
-
-      postsRepository.addPost(
-          Post(
-              postId = "p1",
-              authorId = "u1",
-              pictureURL = "",
-              location = Location(46.5197, 6.6323, "Lausanne"),
-              description = "A nice post",
-              date = Timestamp.now(),
-              animalId = "fox",
-              likesCount = 3,
-              commentsCount = 1))
-
-      reportRepository.addReport(
-          Report(
-              reportId = "r1",
-              imageURL = "",
-              location = Location(46.52, 6.63, "Riponne"),
-              date = Timestamp.now(),
-              description = "Injured animal",
-              authorId = "u2",
-              assigneeId = null))
+      userRepository.addUser(user1)
+      userRepository.addUser(user2)
+      postsRepository.addPost(post1)
+      reportRepository.addReport(report1)
     }
 
     viewModel =
@@ -111,7 +120,16 @@ class MapScreenTest {
             animalRepository = animalRepository,
             currentUserId = currentUserId,
         )
+    viewModel.onLocationPermissionResult(true)
+  }
 
+  @After
+  fun tearDown() {
+    LocalRepositories.clearAll()
+  }
+
+  @Test
+  fun mapScreen_initialDisplay_coreElementsVisible_selectionHidden() {
     composeTestRule.setContent {
       WildexTheme {
         CompositionLocalProvider(LocalSkipMapbox provides true) {
@@ -124,16 +142,6 @@ class MapScreenTest {
       }
     }
     composeTestRule.waitForIdle()
-    viewModel.onLocationPermissionResult(true)
-  }
-
-  @After
-  fun tearDown() {
-    LocalRepositories.clearAll()
-  }
-
-  @Test
-  fun mapScreen_initialDisplay_coreElementsVisible_selectionHidden() {
     composeTestRule.onNodeWithTag(MapContentTestTags.ROOT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.TAB_SWITCHER).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MapContentTestTags.FAB_RECENTER).assertIsDisplayed()
@@ -146,6 +154,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_selectPostPin_showsPostCard() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.loadUIState(currentUserId) }
     val postPinId =
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin }?.id)
@@ -159,6 +179,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_toggleLike_updatesLikesCountInVm() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.loadUIState(currentUserId) }
     val postPin =
         requireNotNull(
@@ -179,6 +211,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_clearSelection_hidesSelectionCard() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.loadUIState(currentUserId) }
     val anyId = requireNotNull(viewModel.uiState.value.pins.firstOrNull()?.id)
     viewModel.onPinSelected(anyId)
@@ -191,6 +235,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_recenterFab_click_setsAndConsumesNonce() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     composeTestRule.waitForIdle()
     composeTestRule
         .onNodeWithTag(MapContentTestTags.FAB_RECENTER)
@@ -202,6 +258,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_refreshButton_isClickable_andDoesNotCrash() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(MapContentTestTags.REFRESH).assertIsDisplayed().performClick()
     composeTestRule.waitForIdle()
@@ -210,6 +278,18 @@ class MapScreenTest {
 
   @Test
   fun mapScreen_selectReportPin_showsReportCard_andAssignmentChip() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
     composeTestRule.runOnUiThread { viewModel.onTabSelected(MapTab.Reports, currentUserId) }
     val reportPinId =
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.ReportPin }?.id)
@@ -229,5 +309,170 @@ class MapScreenTest {
     val hasAssignedTo =
         composeTestRule.onAllNodesWithText("Assigned to").fetchSemanticsNodes().isNotEmpty()
     assert(hasNotAssigned || hasAssignedTo)
+  }
+
+  @Test
+  fun mapScreen_errorMsg_isClearedByLaunchedEffect() {
+    val badVm =
+        MapScreenViewModel(
+            postRepository = postsRepository,
+            userRepository = userRepository,
+            likeRepository = likeRepository,
+            reportRepository = reportRepository,
+            animalRepository = animalRepository,
+            currentUserId = "")
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = "",
+              bottomBar = {},
+              viewModel = badVm,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    assert(badVm.uiState.value.errorMsg == null)
+    assert(badVm.uiState.value.isError)
+  }
+
+  @Test
+  fun mapScreen_renderError_isClearedByLaunchedEffect() {
+    composeTestRule.setContent {
+      WildexTheme {
+        CompositionLocalProvider(LocalSkipMapbox provides true) {
+          MapScreen(
+              userId = currentUserId,
+              bottomBar = {},
+              viewModel = viewModel,
+          )
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    val fld = MapScreenViewModel::class.java.getDeclaredField("_renderState")
+    fld.isAccessible = true
+    @Suppress("UNCHECKED_CAST") val flow = fld.get(viewModel) as MutableStateFlow<MapRenderState>
+    composeTestRule.runOnUiThread { flow.value = flow.value.copy(renderError = "boom") }
+    composeTestRule.waitForIdle()
+    assert(flow.value.renderError == null)
+  }
+
+  @Test
+  fun recenterFab_calls_onAskLocation_whenPermissionDenied() {
+    var asked = false
+    composeTestRule.setContent {
+      WildexTheme {
+        RecenterFab(
+            modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
+            isLocationGranted = false,
+            current = MapTab.Posts,
+            onRecenter = {},
+            onAskLocation = { asked = true })
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.FAB_RECENTER)
+        .assertIsDisplayed()
+        .performClick()
+    assert(asked)
+  }
+
+  @Test
+  fun refreshButton_rotationAnim_branch_executed_whenRefreshing() {
+    composeTestRule.setContent {
+      WildexTheme {
+        MapRefreshButton(isRefreshing = true, currentTab = MapTab.Posts, onRefresh = {})
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.REFRESH_SPINNER, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun selectionBottomCard_post_open_and_like_callbacks_fire() {
+    var opened: Id? = null
+    var liked: Id? = null
+    val details =
+        PinDetails.PostDetails(post = post1, author = null, likedByMe = false, animalName = "fox")
+    composeTestRule.setContent {
+      WildexTheme {
+        SelectionBottomCard(
+            modifier = Modifier,
+            selection = details,
+            activeTab = MapTab.Posts,
+            onPost = { opened = it },
+            onReport = {},
+            onDismiss = {},
+            onToggleLike = { liked = it },
+        )
+      }
+    }
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_LIKE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON).performClick()
+    assert(liked == "p1")
+    assert(opened == "p1")
+  }
+
+  @Test
+  fun selectionBottomCard_report_assigned_row_and_open_click() {
+    var opened: Id? = null
+    val simpleUser2 =
+        SimpleUser(
+            userId = user2.userId,
+            username = user2.username,
+            profilePictureURL = user2.profilePictureURL)
+    composeTestRule.setContent {
+      WildexTheme {
+        SelectionBottomCard(
+            modifier = Modifier,
+            selection = PinDetails.ReportDetails(report1, author = null, assignee = simpleUser2),
+            activeTab = MapTab.Reports,
+            onPost = {},
+            onReport = { opened = it },
+            onDismiss = {},
+            onToggleLike = {},
+        )
+      }
+    }
+    composeTestRule.onAllNodesWithText("Assigned to").fetchSemanticsNodes().isNotEmpty()
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.SELECTION_OPEN_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    assert(opened == "r1")
+  }
+
+  @Test
+  fun mapTabSwitcher_expand_then_select_other_tab_calls_onTabSelected_and_collapses() {
+    var picked: MapTab? = null
+    composeTestRule.setContent {
+      WildexTheme {
+        Box(Modifier.fillMaxSize()) {
+          MapTabSwitcher(
+              activeTab = MapTab.Posts,
+              availableTabs = listOf(MapTab.Posts, MapTab.MyPosts, MapTab.Reports),
+              onTabSelected = { picked = it })
+        }
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(MapContentTestTags.MAIN_TAB_SWITCHER, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.waitUntil(2_000) {
+      composeTestRule
+          .onAllNodesWithTag("MapTabSwitcher-Reports", useUnmergedTree = true)
+          .fetchSemanticsNodes()
+          .any { it.layoutInfo.isPlaced }
+    }
+    composeTestRule
+        .onNodeWithTag("MapTabSwitcher-Reports", useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    assert(picked == MapTab.Reports)
   }
 }

@@ -47,6 +47,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 object MapContentTestTags {
   const val ROOT = "MapScreen/Root"
   const val TAB_SWITCHER = "MapScreen/TabSwitcher"
+  const val MAIN_TAB_SWITCHER = "MapTabSwitcher-Main"
   const val REFRESH = "MapScreen/Refresh"
   const val REFRESH_SPINNER = "MapScreen/Refresh/Spinner"
   const val FAB_RECENTER = "MapScreen/RecenterFab"
@@ -61,6 +62,8 @@ object MapContentTestTags {
   const val SELECTION_REPORT_DESCRIPTION = "MapScreen/SelectionCard/ReportDescription"
   const val SELECTION_LOCATION = "MapScreen/SelectionCard/Location"
   const val REPORT_ASSIGNED_ROW = "MapScreen/SelectionCard/ReportAssignedRow"
+
+  fun getPinTag(tab: MapTab): String = "MapTabSwitcher-${tab.name}"
 }
 
 /** Local to skip Mapbox in tests */

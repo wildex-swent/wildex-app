@@ -17,7 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.android.wildex.ui.map.MapContentTestTags.getPinTag
 
 @Composable
 fun MapTabSwitcher(
@@ -59,7 +61,11 @@ fun MapTabSwitcher(
                 modifier =
                     Modifier.offset(y = offset).size(32.dp).clip(CircleShape).background(tabUi.bg),
             ) {
-              Icon(tabIcon, contentDescription = tab.name, tint = Color.White)
+              Icon(
+                  tabIcon,
+                  contentDescription = tab.name,
+                  tint = tabUi.fg,
+                  modifier = Modifier.testTag(getPinTag(tab)))
             }
           }
         }
@@ -67,8 +73,11 @@ fun MapTabSwitcher(
     val mainIcon = getIconForMapTab(activeTab)
     IconButton(
         onClick = { expanded = !expanded },
-        modifier = Modifier.clip(CircleShape).background(uiActive.bg)) {
-          Icon(mainIcon, contentDescription = activeTab.name, tint = Color.White)
+        modifier =
+            Modifier.clip(CircleShape)
+                .background(uiActive.bg)
+                .testTag(MapContentTestTags.MAIN_TAB_SWITCHER)) {
+          Icon(mainIcon, contentDescription = activeTab.name, tint = uiActive.fg)
         }
   }
 }

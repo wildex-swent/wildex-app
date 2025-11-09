@@ -84,6 +84,17 @@ object SettingsScreenTestTags {
     const val SCREEN_TITLE = "settings_screen_title"
 }
 
+/**
+ * Main Composable that defines the entire settings screen and loads the UI state
+ *
+ * @param settingsScreenViewModel ViewModel in charge of updating the UI state and linking the
+ * screen to the repositories
+ * @param onGoBack callback function called when the user wants to go back to the profile page
+ * @param onEditProfileClick callback function for when the user wants to edit his profile, so that
+ * he is taken to the edit profile screen
+ * @param onAccountDelete callback function called when the user wants to delete his account, so
+ * that he is taken back to the authentication screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -171,6 +182,19 @@ fun SettingsScreen(
   }
 }
 
+/**
+ * Container Composable for the actual settings available to the user (appearance, notifications,
+ * user status, edit profile)
+ *
+ * @param screenHeight height in Dp of the device's screen, allows dynamic positioning
+ * @param screenWidth width in Dp of the device's screen
+ * @param onEditProfileClick callback function to be called when clicking on the Edit Profile setting
+ * @param paddingValues padding values of the scaffold passed down to the column
+ * @param uiState settings UI state, containing info on the current notification enablement status,
+ * the current user status and the current appearance mode
+ * @param settingsScreenViewModel ViewModel in charge of updating the UI state and linking the
+ * screen to the repositories
+ */
 @Composable
 fun SettingsContent(
   screenHeight: Dp,
@@ -256,6 +280,12 @@ fun SettingsContent(
   }
 }
 
+/**
+ * Settings screen top bar Composable
+ *
+ * @param onGoBack callback function to be called when the user clicks on the Arrow Back button,
+ * meaning he wants to navigate to the previous screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreenTopBar(
@@ -284,17 +314,33 @@ fun SettingsScreenTopBar(
   )
 }
 
+/**
+ * Divider component to be placed between settings for better visibility and contrast between settings
+ */
 @Composable
-fun SettingsDivider(
-  modifier: Modifier = Modifier
-){
+fun SettingsDivider(){
   HorizontalDivider(
     thickness = 1.dp,
     color = colorScheme.onBackground,
-    modifier = modifier.fillMaxWidth()
+    modifier = Modifier.fillMaxWidth()
   )
 }
 
+/**
+ * Default setting component, defining a standard setting format, placing 3 components in a Row in
+ * the following order:
+ * - an icon representing the setting's subject
+ * - a title, i.e. the setting's subject
+ * - an interactable element allowing to change the setting's value
+ *
+ * @param settingHeight height of a setting component, depending on the current device's screen height
+ * @param paddingHorizontal padding to be applied horizontally around the Row, depending on the
+ * current device's screen width
+ * @param icon icon to display at the start of the Row, representing the setting's subject
+ * @param settingName title of the setting
+ * @param interactableElement interactable component, placed at the end of the row, that allows
+ * interacting with the setting's value
+ */
 @Composable
 fun SettingTemplate(
   settingHeight: Dp,
@@ -324,6 +370,15 @@ fun SettingTemplate(
   }
 }
 
+/**
+ * Edit Profile option that redirects you to the EditProfileScreen when you click on the interactable
+ * component
+ *
+ * @param paddingHorizontal padding to be applied horizontally around the setting's content
+ * @param settingHeight height of the edit profile component
+ * @param onEditProfileClick callback function to be called when the user clicks on the interactable
+ * component of the setting
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileOption(
@@ -350,6 +405,15 @@ fun EditProfileOption(
   }
 }
 
+/**
+ * Notification setting, allowing the user to turn notifications on and off
+ *
+ * @param paddingHorizontal padding to be applied horizontally around the setting's content
+ * @param settingHeight height of the notification component
+ * @param currentNotificationState current setting value of the logged in user
+ * @param onNotificationStateChanged callback function to be called when the user turns the
+ * notifications on or off
+ */
 @Composable
 fun NotificationOption(
   paddingHorizontal: Dp,
@@ -382,6 +446,18 @@ fun NotificationOption(
   }
 }
 
+/**
+ * User Status setting, allowing the user to change his status from regular to professional, or the
+ * opposite
+ *
+ * @param paddingHorizontal padding to be applied horizontally around the setting's content
+ * @param settingHeight height of the user status component
+ * @param screenWidth width of the current device's screen
+ * @param currentUserStatus current user status of the logged in user
+ * @param onUserStatusChanged callback function to be called when the user changes his status
+ * @param groupButtonsColors colors to be applied to the interactable element, so that it follows
+ * the application's theme
+ */
 @Composable
 fun UserStatusOption(
   paddingHorizontal: Dp,
@@ -424,6 +500,19 @@ fun UserStatusOption(
   }
 }
 
+/**
+ * Appearance mode setting, allowing the user to change the appearance of the app. The user can
+ * choose between light and dark mode, or the system's automatic choice of appearance.
+ *
+ * @param paddingHorizontal padding to be applied horizontally around the setting's content
+ * @param screenWidth width of the current device's screen
+ * @param settingHeight height of the appearance mode component
+ * @param currentAppearanceMode current appearance mode defined in the user's UserSettings
+ * @param onAppearanceModeChanged callback function to be called when the user wants to change the
+ * app's appearance mode
+ * @param groupButtonsColors colors to be applied to the interactable component, so that it follows
+ * the application's theme
+ */
 @Composable
 fun AppearanceModeOption(
   paddingHorizontal: Dp,

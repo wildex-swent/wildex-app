@@ -1,4 +1,4 @@
-package com.android.wildex.usecase.settings
+package com.android.wildex.usecase.user
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository

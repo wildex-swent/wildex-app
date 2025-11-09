@@ -47,6 +47,13 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     docRef.update("appearanceMode", mode).await()
   }
 
+  override suspend fun deleteUserSettings(userId: Id) {
+    val docRef = collection.document(userId)
+    ensureDocumentExists(docRef, userId)
+
+    docRef.delete().await()
+  }
+
   /**
    * Ensures no UserSettings item in the document reference has a specific userId.
    *

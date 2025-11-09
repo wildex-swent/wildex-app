@@ -135,7 +135,11 @@ object LocalRepositories {
         mapUserToSettings.put(userId, userSettings?.copy(appearanceMode = mode) ?: throw Exception("No User with id $userId found"))
       }
 
-      override fun clear() {
+    override suspend fun deleteUserSettings(userId: Id) {
+      mapUserToSettings.remove(userId)
+    }
+
+    override fun clear() {
         mapUserToSettings.clear()
       }
   }

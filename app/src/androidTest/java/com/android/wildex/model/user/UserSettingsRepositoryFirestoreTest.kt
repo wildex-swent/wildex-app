@@ -113,6 +113,21 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
   }
 
   @Test
+  fun deleteUserSettingsWhenUserDoesNotExist() = runTest {
+    var exceptionThrown = false
+
+    try {
+      repository.deleteUserSettings(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+
+      assertEquals("A userSettings with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
+  }
+
+  @Test
   fun setEnableNotificationSuccess() = runTest {
     repository.initializeUserSettings(user1.userId)
 
@@ -130,5 +145,21 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     val appearanceMode = repository.getAppearanceMode(user1.userId)
 
     assertEquals(AppearanceMode.DARK, appearanceMode)
+  }
+
+  @Test
+  fun deleteAccountSuccess() = runTest{
+    var exceptionThrown = false
+    repository.initializeUserSettings(user1.userId)
+
+    repository.deleteUserSettings(user1.userId)
+    try {
+      repository.getEnableNotification(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+      assertEquals("A userSettings with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
   }
 }

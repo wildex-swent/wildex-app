@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -46,12 +47,14 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -81,6 +84,7 @@ object SettingsScreenTestTags {
     const val SCREEN_TITLE = "settings_screen_title"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
   settingsScreenViewModel : SettingsScreenViewModel = viewModel(),
@@ -92,6 +96,7 @@ fun SettingsScreen(
   val context = LocalContext.current
   val screenHeight = LocalConfiguration.current.screenHeightDp.dp
   val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+  var showDeletionValidation by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { settingsScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -106,7 +111,7 @@ fun SettingsScreen(
     topBar = { SettingsScreenTopBar(onGoBack) },
     floatingActionButton = {
       FloatingActionButton(
-        onClick = { /* TODO */ },
+        onClick = { showDeletionValidation = true },
         shape = RoundedCornerShape(50.dp),
         containerColor = colorScheme.tertiary,
         elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
@@ -129,7 +134,7 @@ fun SettingsScreen(
     when {
       uiState.isError -> LoadingFail()
       uiState.isLoading -> LoadingScreen()
-      else ->
+      else -> {
         SettingsContent(
           screenHeight,
           screenWidth,
@@ -138,6 +143,30 @@ fun SettingsScreen(
           uiState,
           settingsScreenViewModel
         )
+        if (showDeletionValidation){
+          AlertDialog(
+            onDismissRequest = { showDeletionValidation = false },
+            title = { Text(text = "Delete account") },
+            text = { Text(text = "Are you sure you want to delete your account?")},
+            confirmButton = {
+              TextButton(
+                onClick = {
+                  showDeletionValidation = false
+                  //delete account with user repo
+                  onAccountDelete()
+                }
+              ) {
+                Text("Delete", color = Color.Red)
+              }
+            },
+            dismissButton = {
+              TextButton(onClick = { showDeletionValidation = false }) {
+                Text("Cancel")
+              }
+            }
+          )
+        }
+      }
     }
   }
 }

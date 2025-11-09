@@ -100,6 +100,13 @@ class SettingsScreenViewModel(
     }
   }
 
+  fun deleteAccount(){
+    viewModelScope.launch {
+      userRepository.deleteUser(currentUserId)
+      userSettingsRepository.deleteUserSettings(currentUserId)
+    }
+  }
+
   /** Clears any existing error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)

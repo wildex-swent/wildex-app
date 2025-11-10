@@ -91,7 +91,7 @@ fun AchievementsScreen(
       topBar = {
         TopAppBar(
             modifier = Modifier.testTag(AchievementsScreenTestTags.TOP_APP_BAR),
-            title = { LocalContext.current.getString(R.string.trophies) },
+            title = { Text(text = LocalContext.current.getString(R.string.trophies)) },
             navigationIcon = {
               IconButton(
                   onClick = onGoBack,

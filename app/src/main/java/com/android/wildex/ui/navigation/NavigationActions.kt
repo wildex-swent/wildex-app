@@ -15,27 +15,27 @@ sealed class Screen(
   data class PostDetails(val postUid: Id) :
       Screen(route = "post_details/${postUid}", name = "Post Details") {
     companion object {
-      const val PATH = "post_details"
+      const val PATH = "post_details/{postUid}"
     }
   }
 
   data class Profile(val userUid: Id) : Screen(route = "profile/${userUid}", name = "Profile") {
     companion object {
-      const val PATH = "profile"
+      const val PATH = "profile/{userUid}"
     }
   }
 
   data class EditProfile(val isNewUser: Boolean) :
       Screen(route = "edit_profile/${isNewUser}", name = "Edit Profile") {
     companion object {
-      const val PATH = "edit_profile"
+      const val PATH = "edit_profile/{isNewUser}"
     }
   }
 
   data class Map(val userUid: Id) :
       Screen(route = "map/${userUid}", name = "Map", isTopLevelDestination = true) {
     companion object {
-      const val PATH = "map"
+      const val PATH = "map/{userUid}"
     }
   }
 
@@ -44,7 +44,7 @@ sealed class Screen(
   data class Collection(val userUid: Id) :
       Screen(route = "collection/${userUid}", name = "Collection") {
     companion object {
-      const val PATH = "collection"
+      const val PATH = "collection/{userUid}"
     }
   }
 
@@ -53,7 +53,7 @@ sealed class Screen(
   data class ReportDetails(val reportUid: Id) :
       Screen(route = "report_details/${reportUid}", name = "Report Details") {
     companion object {
-      const val PATH = "report_details"
+      const val PATH = "report_details/{reportUid}"
     }
   }
 
@@ -61,24 +61,24 @@ sealed class Screen(
 
   object Settings : Screen(route = "settings", name = "Settings")
 
-  data class FriendScreen(val userUid: Id) :
+  data class Friend(val userUid: Id) :
       Screen(route = "friend_screen/${userUid}", name = "Friend Screen") {
     companion object {
-      const val PATH = "friend_screen"
+      const val PATH = "friend_screen/{userUid}"
     }
   }
 
-  data class AchievementScreen(val userUid: Id) :
+  data class Achievements(val userUid: Id) :
       Screen(route = "achievement_screen/${userUid}", name = "Achievement Screen") {
     companion object {
-      const val PATH = "achievement_screen"
+      const val PATH = "achievement_screen/{userUid}"
     }
   }
 
-  data class AnimalInformationScreen(val animalId: Id) :
-      Screen(route = "animal_information_screen/${animalId}", name = "Animal Information Screen") {
+  data class AnimalInformation(val animalUid: Id) :
+      Screen(route = "animal_information_screen/${animalUid}", name = "Animal Information Screen") {
     companion object {
-      const val PATH = "animal_information_screen"
+      const val PATH = "animal_information_screen/{animalUid}"
     }
   }
 }

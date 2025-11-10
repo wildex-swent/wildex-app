@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.authentication.SignInScreen
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
@@ -82,30 +83,45 @@ fun WildexApp(
     homeComposable(navigationActions)
 
     // Map
-    mapComposable(currentUser, navigationActions, navController)
+    mapComposable(currentUser, navigationActions)
 
     // Camera
     cameraComposable(navigationActions)
 
     // Collection
-    collectionComposable(navigationActions, currentUser, navController)
+    collectionComposable(navigationActions, currentUser)
 
     // Reports
     reportComposable(navigationActions)
 
     // Post Details
-    postDetailComposable(navigationActions, navController)
+    postDetailComposable(navigationActions)
 
     // Profile
-    profileComposable(navigationActions, navController)
+    profileComposable(navigationActions)
 
     // Edit Profile
     editProfileComposable(navigationActions)
+
+    // Achievements
+    achievementsComposable(navigationActions, navController)
+  }
+}
+
+private fun NavGraphBuilder.achievementsComposable(
+    navigationActions: NavigationActions,
+    navController: NavHostController,
+) {
+  composable(Screen.Achievements.PATH) { backStackEntry ->
+    val userId = backStackEntry.arguments?.getString("userUid")
+    if (userId != null) {
+      AchievementsScreen(onGoBack = { navigationActions.goBack() })
+    } else navController.popBackStack()
   }
 }
 
 private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationActions) {
-  composable("${Screen.EditProfile.PATH}/{isNewUser}") { backStackEntry ->
+  composable(Screen.EditProfile.PATH) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
         onGoBack = { navigationActions.goBack() },
@@ -115,27 +131,23 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
   }
 }
 
-private fun NavGraphBuilder.profileComposable(
-    navigationActions: NavigationActions,
-    navController: NavHostController,
-) {
-  composable("${Screen.Profile.PATH}/{userUid}") { backStackEntry ->
+private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActions) {
+  composable(Screen.Profile.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
       ProfileScreen(
           userUid = userId,
           onGoBack = { navigationActions.goBack() },
           onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
+          onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
+          onMap = { navigationActions.navigateTo(Screen.Map(it)) },
       )
-    } else navController.popBackStack()
+    }
   }
 }
 
-private fun NavGraphBuilder.postDetailComposable(
-    navigationActions: NavigationActions,
-    navController: NavHostController,
-) {
-  composable("${Screen.PostDetails.PATH}/{postUid}") { backStackEntry ->
+private fun NavGraphBuilder.postDetailComposable(navigationActions: NavigationActions) {
+  composable(Screen.PostDetails.PATH) { backStackEntry ->
     val postId = backStackEntry.arguments?.getString("postUid")
     if (postId != null) {
       PostDetailsScreen(
@@ -143,7 +155,7 @@ private fun NavGraphBuilder.postDetailComposable(
           onGoBack = { navigationActions.goBack() },
           onProfile = { navigationActions.navigateTo(Screen.Profile(it)) },
       )
-    } else navController.popBackStack()
+    }
   }
 }
 
@@ -160,14 +172,13 @@ private fun NavGraphBuilder.reportComposable(navigationActions: NavigationAction
 private fun NavGraphBuilder.collectionComposable(
     navigationActions: NavigationActions,
     currentUser: FirebaseUser?,
-    navController: NavHostController,
 ) {
-  composable("${Screen.Collection.PATH}/{userUid}") { backStackEntry ->
+  composable(Screen.Collection.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
       CollectionScreen(
           userUid = userId,
-          onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformationScreen(it)) },
+          onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
           onProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: "")) },
           onGoBack = { navigationActions.goBack() },
           bottomBar = {
@@ -177,7 +188,7 @@ private fun NavGraphBuilder.collectionComposable(
                 }
           },
       )
-    } else navController.popBackStack()
+    }
   }
 }
 
@@ -194,9 +205,8 @@ private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationAction
 private fun NavGraphBuilder.mapComposable(
     currentUser: FirebaseUser?,
     navigationActions: NavigationActions,
-    navController: NavHostController,
 ) {
-  composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
+  composable(Screen.Map.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
       MapScreen(
@@ -207,7 +217,7 @@ private fun NavGraphBuilder.mapComposable(
             }
           },
       )
-    } else navController.popBackStack()
+    }
   }
 }
 

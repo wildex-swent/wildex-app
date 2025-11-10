@@ -93,7 +93,7 @@ fun PostDetailsScreen(
   }
 
   Scaffold(
-      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
+      modifier = Modifier.testTag(NavigationTestTags.POST_DETAILS_SCREEN),
       topBar = { PostDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
         // Pinned comment input – content scrolls behind it

@@ -464,6 +464,38 @@ object LocalRepositories {
     }
   }
 
+  open class UserAchievementsRepositoryImpl(val currentUserId: Id = "currentUserId-1") :
+      UserAchievementsRepository, ClearableRepository {
+
+    val mapUserToAchievements = mutableMapOf<Id, MutableList<Achievement>>()
+
+    override suspend fun initializeUserAchievements(userId: Id) {
+      mapUserToAchievements[userId] = mutableListOf()
+    }
+
+    override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
+      return mapUserToAchievements[userId]?.toList() ?: throw Exception("User not found")
+    }
+
+    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> {
+      return getAllAchievementsByUser(currentUserId)
+    }
+
+    override suspend fun getAllAchievements(): List<Achievement> {
+      return mapUserToAchievements.values.flatten()
+    }
+
+    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
+
+    override suspend fun getAchievementsCountOfUser(userId: Id): Int {
+      return mapUserToAchievements[userId]?.size ?: 0
+    }
+
+    override fun clear() {
+      mapUserToAchievements.clear()
+    }
+  }
+
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
@@ -476,6 +508,7 @@ object LocalRepositories {
   val reportRepository: ReportRepository = ReportRepositoryImpl()
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
+  val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -488,6 +521,7 @@ object LocalRepositories {
     (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
     (storageRepository as ClearableRepository).clear()
+    (userAchievementsRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

@@ -49,13 +49,13 @@ object SignInScreenTestTags {
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: () -> Unit = {}
+    onSignedIn: (Boolean) -> Unit = {},
 ) {
 
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
 
-  LaunchedEffect(uiState.errorMsg, uiState.firebaseUser) {
+  LaunchedEffect(uiState.errorMsg, uiState.username) {
     // Show error message if login fails
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -63,9 +63,9 @@ fun SignInScreen(
     }
 
     // Navigate to home screen on successful login
-    uiState.firebaseUser?.let {
+    uiState.username?.let {
       Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-      onSignedIn()
+      onSignedIn(uiState.isNewUser)
     }
   }
 
@@ -75,35 +75,41 @@ fun SignInScreen(
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
-              Image(
-                  painter = painterResource(id = R.drawable.app_logo_name),
-                  contentDescription = "App logo",
-                  modifier = Modifier.size(200.dp).testTag(SignInScreenTestTags.APP_LOGO))
+            verticalArrangement = Arrangement.Center,
+        ) {
+          Image(
+              painter = painterResource(id = R.drawable.app_logo_name),
+              contentDescription = "App logo",
+              modifier = Modifier.size(200.dp).testTag(SignInScreenTestTags.APP_LOGO),
+          )
 
-              Spacer(modifier = Modifier.height(48.dp))
+          Spacer(modifier = Modifier.height(48.dp))
 
-              // Authenticate With Google Button
-              if (uiState.firebaseUser == null) {
-                if (uiState.isLoading) {
-                  CircularProgressIndicator(
-                      modifier =
-                          Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
-                } else {
-                  GoogleSignInButton(
-                      context = context,
-                      onSignInClick = { authViewModel.signIn(context, credentialManager) })
-                }
-              } else {
-                Text(
-                    text = context.getString(R.string.welcome),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.testTag(SignInScreenTestTags.WELCOME))
-              }
+          // Authenticate With Google Button
+          when {
+            uiState.isLoading -> {
+              CircularProgressIndicator(
+                  modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
             }
-      })
+            uiState.username == null -> {
+              GoogleSignInButton(
+                  context = context,
+                  onSignInClick = { authViewModel.signIn(context, credentialManager) },
+              )
+            }
+            else -> {
+              Text(
+                  text = context.getString(R.string.welcome),
+                  style = MaterialTheme.typography.headlineLarge,
+                  fontWeight = FontWeight.Bold,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.testTag(SignInScreenTestTags.WELCOME),
+              )
+            }
+          }
+        }
+      },
+  )
 }
 
 @Composable
@@ -117,21 +123,25 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
           Modifier.padding(8.dp)
               .fillMaxWidth(0.8f)
               .height(48.dp)
-              .testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()) {
-              Image(
-                  painter = painterResource(id = R.drawable.google_logo),
-                  contentDescription = "Google Logo",
-                  modifier = Modifier.size(30.dp).padding(8.dp))
+              .testTag(SignInScreenTestTags.LOGIN_BUTTON),
+  ) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+      Image(
+          painter = painterResource(id = R.drawable.google_logo),
+          contentDescription = "Google Logo",
+          modifier = Modifier.size(30.dp).padding(8.dp),
+      )
 
-              Text(
-                  text = context.getString(R.string.sign_in),
-                  color = Color.Gray,
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.Medium)
-            }
-      }
+      Text(
+          text = context.getString(R.string.sign_in),
+          color = Color.Gray,
+          fontSize = 16.sp,
+          fontWeight = FontWeight.Medium,
+      )
+    }
+  }
 }

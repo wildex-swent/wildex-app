@@ -10,9 +10,12 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FirebaseEmulator
+import com.android.wildex.utils.LocalRepositories
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.auth.FirebaseUser
@@ -24,6 +27,7 @@ import io.mockk.mockkObject
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -40,13 +44,17 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SignInViewModelTest {
 
   private lateinit var context: Context
-  private lateinit var repository: AuthRepositoryFirebase
+  private lateinit var authRepository: AuthRepositoryFirebase
   private lateinit var credentialManager: CredentialManager
   private lateinit var viewModel: SignInViewModel
+
+  private lateinit var userRepository: UserRepository
+  private lateinit var userAchievementsRepository: UserAchievementsRepository
   private val fakeUserIdToken = "fakeUserIdToken"
   private val testDispatcher = StandardTestDispatcher()
 
@@ -56,25 +64,25 @@ class SignInViewModelTest {
     }
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     context = ApplicationProvider.getApplicationContext()
-    repository = mockk(relaxed = true)
+    userRepository = LocalRepositories.userRepository
+    userAchievementsRepository = LocalRepositories.userAchievementsRepository
+    authRepository = mockk(relaxed = true)
     credentialManager = FakeCredentialManager.create("fakeToken")
-    viewModel = SignInViewModel(repository)
+    viewModel = SignInViewModel(authRepository, userRepository, userAchievementsRepository)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    LocalRepositories.clearAll()
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun signInSuccessUpdatesUIStateWithUser() {
+  fun signInSuccessUpdatesUIStateWithUsername_newUser() {
     runTest(timeout = 60.seconds) {
       val fakeUser = mock(FirebaseUser::class.java)
       Mockito.`when`(fakeUser.uid).thenReturn("fake-uid")
@@ -91,22 +99,59 @@ class SignInViewModelTest {
 
       coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } returns
           response
-      coEvery { repository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
+      coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
 
       viewModel.signIn(context, credentialManager)
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
+      assertEquals(SignInViewModel.startUser.username, state.username)
+      assertTrue(state.isNewUser)
       assertFalse(state.isLoading)
-      assertEquals(fakeUser, state.firebaseUser)
       assertNull(state.errorMsg)
-      assertFalse(state.signedOut)
 
-      coVerify { repository.signInWithGoogle(fakeCredential) }
+      coVerify { authRepository.signInWithGoogle(fakeCredential) }
     }
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun signInSuccessUpdatesUIStateWithUsername_oldUser() {
+    runTest(timeout = 60.seconds) {
+      val fakeUser = mock(FirebaseUser::class.java)
+      Mockito.`when`(fakeUser.uid).thenReturn("fake-uid")
+
+      runBlocking {
+        userRepository.addUser(
+            SignInViewModel.startUser.copy(userId = "fake-uid", username = "fake-username"))
+      }
+
+      val fakeCredential =
+          CustomCredential(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, bundleOf("id_token" to fakeUserIdToken))
+      val response = mockk<GetCredentialResponse>()
+      every { response.credential } returns fakeCredential
+
+      mockkObject(GoogleIdTokenCredential)
+      val googleIdTokenCredential = mockk<GoogleIdTokenCredential>()
+      every { googleIdTokenCredential.idToken } returns fakeUserIdToken
+      every { GoogleIdTokenCredential.createFrom(any()) } returns googleIdTokenCredential
+
+      coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } returns
+          response
+      coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
+
+      viewModel.signIn(context, credentialManager)
+      advanceUntilIdle()
+
+      val state = viewModel.uiState.value
+      assertEquals("fake-username", state.username)
+      assertFalse(state.isNewUser)
+      assertFalse(state.isLoading)
+      assertNull(state.errorMsg)
+
+      coVerify { authRepository.signInWithGoogle(fakeCredential) }
+    }
+  }
+
   @Test
   fun signInCancelledUpdatesUIStateWithCancelMessage() = runTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
@@ -116,13 +161,11 @@ class SignInViewModelTest {
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
+    assertNull(state.username)
     assertFalse(state.isLoading)
-    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("cancel", ignoreCase = true) == true)
-    assertTrue(state.signedOut)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun signInFailsDueToCredentialErrorUpdatesErrorMsg() = runTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
@@ -132,13 +175,11 @@ class SignInViewModelTest {
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
+    assertNull(state.username)
     assertFalse(state.isLoading)
-    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("Failed to get credentials") == true)
-    assertTrue(state.signedOut)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun signInFailsDueToRepositoryErrorUpdatesUIState() = runTest {
     val fakeCredential =
@@ -148,19 +189,17 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } returns response
 
     val fakeError = RuntimeException("auth failed")
-    coEvery { repository.signInWithGoogle(fakeCredential) } returns Result.failure(fakeError)
+    coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.failure(fakeError)
 
     viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
+    assertNull(state.username)
     assertFalse(state.isLoading)
-    assertNull(state.firebaseUser)
     assertTrue(state.errorMsg?.contains("auth failed") == true)
-    assertTrue(state.signedOut)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun clearErrorMsgResetsError() = runTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
@@ -174,7 +213,6 @@ class SignInViewModelTest {
     assertNull(state.errorMsg)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun signInHandlesUnexpectedException() {
     runTest {
@@ -185,10 +223,9 @@ class SignInViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
+      assertNull(state.username)
       assertFalse(state.isLoading)
-      assertNull(state.firebaseUser)
       assertTrue(state.errorMsg?.contains("Unexpected error") == true)
-      assertTrue(state.signedOut)
     }
   }
 }

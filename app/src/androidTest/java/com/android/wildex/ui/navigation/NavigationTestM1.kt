@@ -27,17 +27,20 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class NavigationTestM1 {
+class NavigationTestM1 : NavigationTest() {
 
   @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
   private lateinit var navController: TestNavHostController
 
-  @Before
-  fun setup() {
+  init {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
     }
+  }
+
+  @Before
+  fun setup() {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     composeRule.setContent {
       navController =
@@ -96,14 +99,7 @@ class NavigationTestM1 {
   fun navigation_HomeScreen() {
     runBlocking { FirebaseEmulator.auth.signInAnonymously().await() }
     composeRule.waitForIdle()
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(NavigationTestTags.HOME_TAB)
-        .assertIsDisplayed()
-        .performClick()
-        .assertIsSelected()
-    composeRule.waitForIdle()
-
+    composeRule.checkHomeScreenIsDisplayed()
     assertEquals(Screen.Home.route, navController.currentBackStackEntry?.destination?.route)
   }
 

@@ -55,14 +55,13 @@ private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Rep
 fun BottomNavigationMenu(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
   val cs = MaterialTheme.colorScheme
   val shape = RoundedCornerShape(24.dp)
 
   NavigationBar(
       modifier =
-          modifier
+          Modifier
               .padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
               .fillMaxWidth()
               .height(64.dp)

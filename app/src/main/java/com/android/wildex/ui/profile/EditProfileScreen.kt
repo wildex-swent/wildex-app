@@ -62,6 +62,8 @@ import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
+import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -116,7 +118,7 @@ fun EditProfileScreen(
 
   val cs = colorScheme
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.EDIT_PROFILE_SCREEN),
       topBar = { EditProfileTopBar(isNewUser, onGoBack) },
   ) { pd ->
     when {

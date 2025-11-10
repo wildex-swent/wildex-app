@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,6 +40,7 @@ import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +63,7 @@ fun AnimalInformationScreen(
 
   val scrollState = rememberScrollState()
 
-  Scaffold { paddingValues ->
+  Scaffold(modifier = Modifier.testTag(NavigationTestTags.ANIMAL_INFORMATION_SCREEN)) { paddingValues ->
     when {
       uiState.isError -> LoadingFail()
       uiState.isLoading -> LoadingScreen()

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 
 object SignInScreenTestTags {
@@ -72,7 +73,7 @@ fun SignInScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       content = { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).background(White),

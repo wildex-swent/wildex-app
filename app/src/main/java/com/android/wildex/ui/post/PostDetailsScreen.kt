@@ -66,6 +66,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 
 fun testTagForProfilePicture(profileId: String, role: String = ""): String {
   return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
@@ -92,6 +93,7 @@ fun PostDetailsScreen(
   }
 
   Scaffold(
+      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
       topBar = { PostDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
         // Pinned comment input – content scrolls behind it

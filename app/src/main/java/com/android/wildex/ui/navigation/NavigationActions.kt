@@ -25,7 +25,12 @@ sealed class Screen(
     }
   }
 
-  object EditProfile : Screen(route = "edit_profile", name = "Edit Profile")
+  data class EditProfile(val isNewUser: Boolean) :
+      Screen(route = "edit_profile/${isNewUser}", name = "Edit Profile") {
+    companion object {
+      const val PATH = "edit_profile"
+    }
+  }
 
   data class Map(val userUid: Id) :
       Screen(route = "map/${userUid}", name = "Map", isTopLevelDestination = true) {

@@ -72,6 +72,7 @@ import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -132,6 +133,7 @@ fun HomeScreen(
   Scaffold(
       topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
+      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN)
   ) { pd ->
     val pullState = rememberPullToRefreshState()
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -63,7 +64,7 @@ fun CameraScreen(
         }
       }
 
-  Scaffold(bottomBar = bottomBar) { innerPadding ->
+  Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) { innerPadding ->
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.padding(innerPadding).fillMaxSize(),

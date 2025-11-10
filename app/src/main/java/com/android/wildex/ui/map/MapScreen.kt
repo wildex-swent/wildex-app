@@ -37,6 +37,7 @@ import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mapbox.geojson.Point
@@ -98,7 +99,8 @@ fun MapScreen(
     isCurrentUser: Boolean = true,
 ) {
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
-  Scaffold(bottomBar = bottomBar) { inner ->
+  Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.MAP_SCREEN)) {
+      inner ->
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val render by viewModel.renderState.collectAsStateWithLifecycle()
 

@@ -68,9 +68,18 @@ object MapContentTestTags {
   fun getPinTag(tab: MapTab): String = "MapTabSwitcher-${tab.name}"
 }
 
-/** Local to skip Mapbox in tests */
+/* -------- Local to skip Mapbox in tests ---- */
 val LocalSkipWorkerThread = staticCompositionLocalOf { false }
 
+/**
+ * Main Map Screen Composable.
+ *
+ * @param userId ID of the current user.
+ * @param bottomBar Composable for the bottom bar.
+ * @param viewModel ViewModel for the Map Screen.
+ * @param onPost Callback when a post is selected.
+ * @param onReport Callback when a report is selected.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
@@ -256,7 +265,15 @@ fun MapScreen(
   }
 }
 
-/* ---------- Recenter FAB ---------- */
+/**
+ * Recenter Floating Action Button Composable.
+ *
+ * @param modifier Modifier to be applied to the FAB.
+ * @param isLocationGranted Boolean indicating if location permission is granted.
+ * @param current Current MapTab.
+ * @param onRecenter Callback when recentering is requested.
+ * @param onAskLocation Callback when location permission is requested.
+ */
 @Composable
 fun RecenterFab(
     modifier: Modifier,
@@ -291,7 +308,12 @@ fun RecenterFab(
   }
 }
 
-/* ---------- Dismiss on map tap ---------- */
+/**
+ * Composable that adds a tap listener to the MapView to clear selection.
+ *
+ * @param mapView The MapView to add the listener to.
+ * @param onDismiss Callback when the map is tapped.
+ */
 @Composable
 fun MapTapToClearSelection(mapView: MapView?, onDismiss: () -> Unit) {
   DisposableEffect(mapView) {
@@ -304,7 +326,14 @@ fun MapTapToClearSelection(mapView: MapView?, onDismiss: () -> Unit) {
   }
 }
 
-/* ---------- Refresh Button with Rotation Animation ---------- */
+/**
+ * Refresh Button Composable with rotation animation when refreshing.
+ *
+ * @param modifier Modifier to be applied to the button.
+ * @param isRefreshing Boolean indicating if a refresh is in progress.
+ * @param currentTab Current MapTab.
+ * @param onRefresh Callback when the button is clicked.
+ */
 @Composable
 fun MapRefreshButton(
     modifier: Modifier = Modifier,

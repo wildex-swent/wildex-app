@@ -21,6 +21,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.android.wildex.ui.map.MapContentTestTags.getPinTag
 
+/**
+ * Composable that displays a tab switcher for the map screen.
+ *
+ * @param modifier Modifier to be applied to the tab switcher.
+ * @param activeTab The currently active map tab.
+ * @param availableTabs List of available map tabs.
+ * @param onTabSelected Callback invoked when a tab is selected.
+ */
 @Composable
 fun MapTabSwitcher(
     modifier: Modifier = Modifier,
@@ -82,6 +90,12 @@ fun MapTabSwitcher(
   }
 }
 
+/**
+ * Returns the UI icons for a given map tab.
+ *
+ * @param tab The map tab.
+ * @return The UI icon for the specified map tab.
+ */
 fun getIconForMapTab(tab: MapTab) =
     when (tab) {
       MapTab.Posts -> Icons.Default.Language

@@ -10,6 +10,16 @@ import com.android.wildex.model.utils.Location
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
+/**
+ * Data class representing the UI state of the Submit Report Screen.
+ *
+ * @property imageUri The URI of the image to be submitted with the report.
+ * @property description The description text of the report.
+ * @property location The location associated with the report.
+ * @property isSubmitting Flag indicating whether the report is currently being submitted.
+ * @property errorMsg An optional error message if submission fails.
+ * @property success Flag indicating whether the report was successfully submitted.
+ */
 data class SubmitReportUiState(
     val imageUri: Uri? = null,
     val description: String = "",
@@ -19,6 +29,13 @@ data class SubmitReportUiState(
     val success: Boolean = false
 )
 
+/**
+ * ViewModel for managing the state and logic of the Submit Report Screen.
+ *
+ * @property reportRepository The repository for handling report data operations.
+ * @property storageRepository The repository for handling storage operations.
+ * @property currentId The unique identifier of the current user.
+ */
 class SubmitReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,

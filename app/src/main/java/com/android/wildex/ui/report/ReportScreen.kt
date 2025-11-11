@@ -1,25 +1,589 @@
 package com.android.wildex.ui.report
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.post.testTagForProfilePicture
 
+/** Test tag constants used for UI testing of CollectionScreen components. */
+object ReportScreenTestTags {
+  const val NOTIFICATION_BUTTON = "report_screen_notification_button"
+  const val USER_PROFILE_BUTTON = "report_screen_profile_button"
+  const val NO_REPORT_TEXT = "report_screen_no_report_text"
+  const val SCREEN_TITLE = "report_screen_title"
+  const val REPORT_LIST = "report_screen_report_list"
+
+  fun testTagForReport(reportId: Id, element: String): String =
+      "ReportScreen_report_${reportId}_$element"
+
+  fun imageTag(reportId: Id): String = testTagForReport(reportId, "Image")
+
+  fun testTagForProfilePicture(profileId: String, role: String = ""): String {
+    return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
+  }
+}
+
+/**
+ * A composable that displays the report screen.
+ *
+ * @param reportScreenViewModel The view model for the report screen.
+ * @param onProfileClick The function to be called when a profile picture is clicked.
+ * @param onNotificationClick The function to be called when the notification button is clicked.
+ * @param onReportClick The function to be called when a report is clicked.
+ * @param onSubmitReportClick The function to be called when the submit report button is clicked.
+ * @param bottomBar The bottom bar to be displayed.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportScreen(bottomBar: @Composable () -> Unit) {
-  Scaffold(bottomBar = { bottomBar() }) { innerPadding ->
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.padding(innerPadding).fillMaxSize(),
-    ) {
-      Text(stringResource(R.string.not_implemented), textAlign = TextAlign.Center)
+fun ReportScreen(
+    reportScreenViewModel: ReportScreenViewModel = viewModel(),
+    onProfileClick: (Id) -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onReportClick: (Id) -> Unit = {},
+    onSubmitReportClick: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {}
+) {
+  val uiState by reportScreenViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+
+  LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      reportScreenViewModel.clearErrorMsg()
     }
+  }
+
+  Scaffold(
+      modifier = Modifier.fillMaxSize(),
+      bottomBar = { bottomBar() },
+      topBar = {
+        ReportScreenTopBar(
+            userId = uiState.currentUser.userId,
+            userType = uiState.currentUserType,
+            userProfilePictureURL = uiState.currentUser.profilePictureURL,
+            onProfileClick = onProfileClick,
+            onNotificationClick = onNotificationClick)
+      }) { innerPadding ->
+        val pullState = rememberPullToRefreshState()
+
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+          PullToRefreshBox(
+              state = pullState,
+              isRefreshing = uiState.isRefreshing,
+              onRefresh = { reportScreenViewModel.refreshUIState() }) {
+                when {
+                  uiState.isError -> LoadingFail()
+                  uiState.isLoading -> LoadingScreen()
+                  uiState.reports.isEmpty() -> NoReportsView()
+                  else -> {
+                    ReportsView(
+                        reports = uiState.reports,
+                        userId = uiState.currentUser.userId,
+                        username = uiState.currentUser.username,
+                        userType = uiState.currentUserType,
+                        onProfileClick = onProfileClick,
+                        onReportClick = onReportClick,
+                        cancelReport = reportScreenViewModel::cancelReport,
+                        selfAssignReport = reportScreenViewModel::selfAssignReport,
+                        resolveReport = reportScreenViewModel::resolveReport,
+                        unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+                    )
+                  }
+                }
+              }
+          // Submit Report button
+          Card(
+              shape = RoundedCornerShape(8.dp),
+              colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
+              border =
+                  BorderStroke(width = 8.dp, color = colorScheme.secondary.copy(alpha = 0.28f)),
+              elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+              modifier =
+                  Modifier.align(Alignment.BottomCenter)
+                      .padding(horizontal = 16.dp, vertical = 16.dp)
+                      .clickable { onSubmitReportClick() },
+          ) {
+            Text(
+                text = context.getString(R.string.submit_report),
+                color = colorScheme.onSecondary,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp))
+          }
+        }
+      }
+}
+
+/**
+ * A composable that displays the top bar of the ReportScreen.
+ *
+ * @param userId The ID of the user.
+ * @param userType The type of the user.
+ * @param userProfilePictureURL The URL of the user's profile picture.
+ * @param onProfileClick The function to be called when the profile is clicked.
+ * @param onNotificationClick The function to be called when the notification button is clicked.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReportScreenTopBar(
+    userId: Id = "",
+    userType: UserType = UserType.REGULAR,
+    userProfilePictureURL: URL = "",
+    onProfileClick: (Id) -> Unit = {},
+    onNotificationClick: () -> Unit
+) {
+  TopAppBar(
+      title = {
+        Text(
+            modifier = Modifier.fillMaxWidth().testTag(ReportScreenTestTags.SCREEN_TITLE),
+            text =
+                when (userType) {
+                  UserType.REGULAR -> LocalContext.current.getString(R.string.report_title_regular)
+                  UserType.PROFESSIONAL ->
+                      LocalContext.current.getString(R.string.report_title_professional)
+                },
+            textAlign = TextAlign.Center,
+            color = colorScheme.primary,
+        )
+      },
+      navigationIcon = {
+        IconButton(
+            modifier = Modifier.testTag(ReportScreenTestTags.NOTIFICATION_BUTTON),
+            onClick = onNotificationClick) {
+              Icon(
+                  imageVector = Icons.Default.Notifications,
+                  contentDescription = "Notifications",
+                  tint = colorScheme.primary,
+              )
+            }
+      },
+      actions = {
+        ClickableProfilePicture(
+            modifier = Modifier.testTag(ReportScreenTestTags.USER_PROFILE_BUTTON),
+            profileId = userId,
+            profilePictureURL = userProfilePictureURL,
+            role = "user",
+            onProfile = onProfileClick)
+      })
+}
+
+/**
+ * A composable that displays a list of reports.
+ *
+ * @param reports The list of reports to be displayed.
+ * @param userId The ID of the user.
+ * @param username The username of the user.
+ * @param userType The type of the user.
+ * @param onProfileClick The function to be called when a profile picture is clicked.
+ * @param onReportClick The function to be called when a report is clicked.
+ * @param cancelReport The function to be called when a report is cancelled.
+ * @param selfAssignReport The function to be called when a report is self-assigned.
+ * @param resolveReport The function to be called when a report is resolved.
+ * @param unSelfAssignReport The function to be called when a report is unassigned.
+ */
+@Composable
+fun ReportsView(
+    reports: List<ReportUIState> = emptyList(),
+    userId: Id = "",
+    username: String = "",
+    userType: UserType = UserType.REGULAR,
+    onProfileClick: (Id) -> Unit = {},
+    onReportClick: (Id) -> Unit = {},
+    cancelReport: (Id) -> Unit = {},
+    selfAssignReport: (Id) -> Unit = {},
+    resolveReport: (Id) -> Unit = {},
+    unSelfAssignReport: (Id) -> Unit = {},
+) {
+  LazyColumn(
+      modifier = Modifier.fillMaxSize().testTag(ReportScreenTestTags.REPORT_LIST),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+      contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp),
+  ) {
+    items(reports.size) { index ->
+      ReportItem(
+          reportState = reports[index],
+          userId = userId,
+          username = username,
+          userType = userType,
+          onProfileClick = onProfileClick,
+          onReportClick = onReportClick,
+          cancelReport = cancelReport,
+          selfAssignReport = selfAssignReport,
+          resolveReport = resolveReport,
+          unSelfAssignReport = unSelfAssignReport)
+    }
+  }
+}
+
+/**
+ * A composable that displays a single report.
+ *
+ * @param reportState The state of the report to be displayed.
+ * @param userId The ID of the user.
+ * @param username The username of the user.
+ * @param userType The type of the user.
+ * @param onReportClick The function to be called when the report is clicked.
+ * @param onProfileClick The function to be called when the profile picture of the author is
+ *   clicked.
+ * @param cancelReport The function to be called when the cancel report button is clicked.
+ * @param selfAssignReport The function to be called when the self assign report button is clicked.
+ * @param resolveReport The function to be called when the resolve report button is clicked.
+ * @param unSelfAssignReport The function to be called when the unself assign report button is
+ *   clicked.
+ */
+@Composable
+fun ReportItem(
+    reportState: ReportUIState = ReportUIState(),
+    userId: Id = "",
+    username: String = "",
+    userType: UserType = UserType.REGULAR,
+    onProfileClick: (Id) -> Unit = {},
+    onReportClick: (Id) -> Unit = {},
+    cancelReport: (Id) -> Unit = {},
+    selfAssignReport: (Id) -> Unit = {},
+    resolveReport: (Id) -> Unit = {},
+    unSelfAssignReport: (Id) -> Unit = {},
+) {
+  val author = reportState.author
+  Card(
+      shape = RoundedCornerShape(16.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+      border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+  ) {
+    // Header: Profile picture + report author + date
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClickableProfilePicture(
+          profileId = author.userId,
+          profilePictureURL = author.profilePictureURL,
+          role = "report_author",
+          onProfile = onProfileClick)
+      Spacer(modifier = Modifier.width(10.dp))
+      Column(modifier = Modifier.weight(1f)) {
+        Text(
+            text =
+                LocalContext.current.getString(R.string.report_author) +
+                    " " +
+                    when (userType) {
+                      UserType.REGULAR ->
+                          LocalContext.current.getString(R.string.report_author_current)
+                      UserType.PROFESSIONAL -> {
+                        if (author.userId == userId) {
+                          LocalContext.current.getString(R.string.report_author_current)
+                        } else {
+                          author.username
+                        }
+                      }
+                    },
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+            color = colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = reportState.date,
+            style = MaterialTheme.typography.labelSmall,
+            color = colorScheme.tertiary,
+        )
+      }
+    }
+    // Image
+    Box(
+        modifier =
+            Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onReportClick(reportState.reportId) }) {
+          AsyncImage(
+              model = reportState.imageURL,
+              contentDescription = "Report Image",
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .testTag(ReportScreenTestTags.imageTag(reportState.reportId)),
+              contentScale = ContentScale.FillWidth,
+          )
+        }
+    // Location
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Icon(
+          imageVector = Icons.Filled.LocationOn,
+          contentDescription = "Location",
+          tint = colorScheme.tertiary,
+          modifier = Modifier.size(24.dp),
+      )
+      Spacer(Modifier.width(6.dp))
+      Text(
+          text = reportState.location,
+          color = colorScheme.tertiary,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          softWrap = true,
+      )
+    }
+    // Description
+    Text(
+        text = reportState.description,
+        color = colorScheme.tertiary,
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        softWrap = true,
+    )
+    // Buttons
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+      when (userType) {
+        UserType.REGULAR -> {
+          if (reportState.assigneeUsername.isNotEmpty())
+              ReportAssigneeCard(assigneeUsername = reportState.assigneeUsername)
+          CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+        }
+        UserType.PROFESSIONAL -> {
+          if (reportState.assigneeUsername.isEmpty()) {
+            SelfAssignButton(reportId = reportState.reportId, selfAssignReport = selfAssignReport)
+            if (author.userId == userId)
+                CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+          } else if (reportState.assigneeUsername == username) {
+            ResolveReportButton(reportId = reportState.reportId, resolveReport = resolveReport)
+            UnSelfAssignReportButton(
+                reportId = reportState.reportId, unSelfAssignReport = unSelfAssignReport)
+          } else {
+            ReportAssigneeCard(assigneeUsername = reportState.assigneeUsername)
+            if (author.userId == userId)
+                CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * A composable that displays a cancel report button.
+ *
+ * @param reportId The ID of the report.
+ * @param cancelReport The function to be called when the cancel report button is clicked.
+ */
+@Composable
+fun CancelReportButton(reportId: Id = "", cancelReport: (Id) -> Unit = {}) {
+  Card(
+      shape = RoundedCornerShape(8.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = Modifier.padding(horizontal = 16.dp).clickable { cancelReport(reportId) },
+  ) {
+    Text(
+        text = LocalContext.current.getString(R.string.cancel_report),
+        color = colorScheme.onTertiary,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+  }
+}
+
+/**
+ * A composable that displays a self assign report button.
+ *
+ * @param reportId The ID of the report.
+ * @param selfAssignReport The function to be called when the self-assign report button is clicked.
+ */
+@Composable
+fun SelfAssignButton(reportId: Id = "", selfAssignReport: (Id) -> Unit = {}) {
+  Card(
+      shape = RoundedCornerShape(8.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = Modifier.padding(horizontal = 16.dp).clickable { selfAssignReport(reportId) },
+  ) {
+    Text(
+        text = LocalContext.current.getString(R.string.self_assign_report),
+        color = colorScheme.onTertiary,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+  }
+}
+
+/**
+ * A composable that displays a resolve report button.
+ *
+ * @param reportId The ID of the report.
+ * @param resolveReport The function to be called when the resolve report button is clicked.
+ */
+@Composable
+fun ResolveReportButton(reportId: Id = "", resolveReport: (Id) -> Unit = {}) {
+  Card(
+      shape = RoundedCornerShape(8.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.primary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = Modifier.padding(horizontal = 16.dp).clickable { resolveReport(reportId) },
+  ) {
+    Text(
+        text = LocalContext.current.getString(R.string.resolve_report),
+        color = colorScheme.onPrimary,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+  }
+}
+
+/**
+ * A composable that displays an unself-assign report button.
+ *
+ * @param reportId The ID of the report.
+ * @param unSelfAssignReport The function to be called when the unself assign report button is
+ */
+@Composable
+fun UnSelfAssignReportButton(reportId: Id = "", unSelfAssignReport: (Id) -> Unit = {}) {
+  Card(
+      shape = RoundedCornerShape(8.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = Modifier.padding(horizontal = 16.dp).clickable { unSelfAssignReport(reportId) },
+  ) {
+    Text(
+        text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
+        color = colorScheme.onTertiary,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+  }
+}
+
+/**
+ * A composable that displays a report assignee card.
+ *
+ * @param assigneeUsername The username of the assignee.
+ */
+@Composable
+fun ReportAssigneeCard(assigneeUsername: String = "") {
+  Card(
+      shape = RoundedCornerShape(8.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary.copy(alpha = 0.6f)),
+      border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
+      modifier = Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text =
+                LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
+            color = colorScheme.onTertiary,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+      }
+}
+
+/** A composable that displays a message when there are no reports. */
+@Composable
+fun NoReportsView() {
+  Column(
+      modifier = Modifier.fillMaxSize().padding(24.dp).testTag(ReportScreenTestTags.NO_REPORT_TEXT),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Icon(
+        painter = painterResource(R.drawable.nothing_found),
+        contentDescription = "Nothing Found",
+        tint = colorScheme.primary,
+        modifier = Modifier.size(96.dp),
+    )
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = LocalContext.current.getString(R.string.no_reports),
+        color = colorScheme.primary,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+  }
+}
+
+/**
+ * A composable that displays a clickable profile picture.
+ *
+ * @param modifier The modifier to be applied to the composable.
+ * @param profileId The ID of the profile.
+ * @param profilePictureURL The URL of the profile picture.
+ * @param role The role of the profile picture.
+ * @param onProfile The function to be called when the profile picture is clicked.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClickableProfilePicture(
+    modifier: Modifier = Modifier,
+    profileId: String = "",
+    profilePictureURL: URL = "",
+    role: String = "",
+    onProfile: (Id) -> Unit = {},
+) {
+  IconButton(
+      onClick = { onProfile(profileId) },
+      modifier = modifier.testTag(testTagForProfilePicture(profileId, role)),
+  ) {
+    AsyncImage(
+        model = profilePictureURL,
+        contentDescription = "Profile picture",
+        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
+        contentScale = ContentScale.Crop,
+    )
   }
 }

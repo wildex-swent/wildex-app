@@ -26,6 +26,17 @@ import coil.request.ImageRequest
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.utils.Id
 
+/**
+ * Composable that displays a bottom card with details about the selected pin.
+ *
+ * @param modifier Modifier to be applied to the bottom card.
+ * @param selection Details of the selected pin.
+ * @param activeTab The currently active map tab.
+ * @param onPost Callback invoked when the post is to be opened.
+ * @param onReport Callback invoked when the report is to be opened.
+ * @param onDismiss Callback invoked when the card is dismissed.
+ * @param onToggleLike Callback invoked when the like button is toggled.
+ */
 @Composable
 fun SelectionBottomCard(
     modifier: Modifier,
@@ -75,6 +86,13 @@ fun SelectionBottomCard(
   }
 }
 
+/**
+ * Composable that displays a preview image with rounded corners.
+ *
+ * @param data The image data to be loaded.
+ * @param tag The test tag for the image.
+ * @param desc The content description for the image.
+ */
 @Composable
 private fun PreviewImage(data: Any?, tag: String, desc: String) {
   AsyncImage(
@@ -85,6 +103,11 @@ private fun PreviewImage(data: Any?, tag: String, desc: String) {
   )
 }
 
+/**
+ * Composable that displays an author's avatar image with rounded corners.
+ *
+ * @param data The image data to be loaded.
+ */
 @Composable
 private fun AuthorAvatar(data: Any?) {
   AsyncImage(
@@ -98,6 +121,12 @@ private fun AuthorAvatar(data: Any?) {
   )
 }
 
+/**
+ * Composable that displays a location row with an icon and name.
+ *
+ * @param name The name of the location.
+ * @param ui The UI colors for the map tab.
+ */
 @Composable
 private fun LocationRow(name: String, ui: MapUiColors) {
   Row(
@@ -120,6 +149,13 @@ private fun LocationRow(name: String, ui: MapUiColors) {
   }
 }
 
+/**
+ * Composable that displays an open button with an icon.
+ *
+ * @param onClick Callback invoked when the button is clicked.
+ * @param ui The UI colors for the map tab.
+ * @param size The size of the icon.
+ */
 @Composable
 private fun OpenButton(onClick: () -> Unit, ui: MapUiColors, size: Int) {
   IconButton(
@@ -135,6 +171,12 @@ private fun OpenButton(onClick: () -> Unit, ui: MapUiColors, size: Int) {
   }
 }
 
+/**
+ * Composable that displays a selection row with a left component and content.
+ *
+ * @param left The left composable component.
+ * @param content The content composable component.
+ */
 @Composable
 private fun SelectionRow(
     left: @Composable () -> Unit,
@@ -155,6 +197,15 @@ private fun SelectionRow(
   }
 }
 
+/**
+ * Composable that displays a post selection card with details and actions.
+ *
+ * @param details The post details to be displayed.
+ * @param ui The UI colors for the map tab.
+ * @param onPost Callback invoked when the post is to be opened.
+ * @param onToggleLike Callback invoked when the like button is toggled.
+ * @param activeTab The currently active map tab.
+ */
 @Composable
 private fun PostSelectionCard(
     details: PinDetails.PostDetails,
@@ -235,6 +286,13 @@ private fun PostSelectionCard(
   }
 }
 
+/**
+ * Composable that displays a report selection card with details and actions.
+ *
+ * @param details The report details to be displayed.
+ * @param ui The UI colors for the map tab.
+ * @param onReport Callback invoked when the report is to be opened.
+ */
 @Composable
 private fun ReportSelectionCard(
     details: PinDetails.ReportDetails,
@@ -331,6 +389,12 @@ private fun ReportSelectionCard(
   }
 }
 
+/**
+ * Returns the appropriate indefinite article ("a" or "an") for the given word.
+ *
+ * @param word The word to evaluate.
+ * @return A string containing the article and the word in lowercase.
+ */
 fun articleWithWord(word: String): String {
   if (word.isBlank()) return "a"
   val first = word.trim().first().lowercaseChar()

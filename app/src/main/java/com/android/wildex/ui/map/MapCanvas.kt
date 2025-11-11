@@ -14,11 +14,29 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 
+/**
+ * UI colors for the map tab/card.
+ *
+ * @param bg Background color.
+ * @param fg Content color.
+ */
 data class MapUiColors(
     val bg: Color, // background color
     val fg: Color, // content color
 )
 
+/**
+ * Composable that displays a Mapbox map with specified settings.
+ *
+ * @param modifier Modifier to be applied to the Mapbox map.
+ * @param mapViewRef Lambda to obtain a reference to the MapView.
+ * @param styleUri URI of the map style to be used.
+ * @param styleImportId ID of the style import for light/dark mode switching.
+ * @param isDark Boolean indicating whether dark mode is enabled.
+ * @param showUserLocation Boolean indicating whether to show the user's location.
+ * @param indicatorListener Listener for changes in the user's location indicator position.
+ * @param centerCoordinates Coordinates to center the map on initial load.
+ */
 @Composable
 fun MapCanvas(
     modifier: Modifier,
@@ -61,7 +79,13 @@ fun MapCanvas(
   }
 }
 
-/** One source of truth for Map tab/card colors. */
+/**
+ * Returns the UI colors for the specified map tab based on the provided color scheme.
+ *
+ * @param tab The map tab for which to get the colors.
+ * @param cs The color scheme to use for determining the colors.
+ * @return The UI colors for the specified map tab.
+ */
 fun colorsForMapTab(tab: MapTab, cs: ColorScheme): MapUiColors =
     when (tab) {
       MapTab.Posts -> MapUiColors(cs.primary, cs.onPrimary)

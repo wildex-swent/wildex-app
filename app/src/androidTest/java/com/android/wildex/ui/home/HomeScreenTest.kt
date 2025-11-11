@@ -8,7 +8,9 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.animal.Animal
@@ -56,7 +58,12 @@ class HomeScreenTest {
   fun setup() = runBlocking {
     homeScreenVM =
         HomeScreenViewModel(
-            postRepository, userRepository, likeRepository, animalRepository, "currentUserId-1")
+            postRepository,
+            userRepository,
+            likeRepository,
+            animalRepository,
+            "currentUserId-1",
+        )
     userRepository.addUser(
         User(
             userId = "currentUserId-1",
@@ -88,10 +95,53 @@ class HomeScreenTest {
     animalRepository.addAnimal(
         Animal(
             animalId = "a1",
-            name = "animal1",
+            name = "ant",
             description = "animal1",
             pictureURL = "",
-            species = "species1"))
+            species = "species1",
+        ),
+    )
+
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a2",
+            name = "eagle",
+            description = "animal2",
+            pictureURL = "",
+            species = "species2",
+        ))
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a3",
+            name = "iguana",
+            description = "animal3",
+            pictureURL = "",
+            species = "species3",
+        ))
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a4",
+            name = "orca",
+            description = "animal4",
+            pictureURL = "",
+            species = "species4",
+        ))
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a5",
+            name = "unicorn",
+            description = "animal5",
+            pictureURL = "",
+            species = "species5",
+        ))
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a6",
+            name = "dolphin",
+            description = "animal6",
+            pictureURL = "",
+            species = "species6",
+        ))
   }
 
   @After
@@ -125,10 +175,19 @@ class HomeScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenPosts() {
-    val fullPost2 = fullPost.copy(postId = "post2")
+    val fullPost2 = fullPost.copy(postId = "post2", animalId = "a2")
+    val fullPost3 = fullPost.copy(postId = "post3", animalId = "a3")
+    val fullPost4 = fullPost.copy(postId = "post4", animalId = "a4")
+    val fullPost5 = fullPost.copy(postId = "post5", animalId = "a5")
+    val fullPost6 = fullPost.copy(postId = "post6", animalId = "a6")
+
     runBlocking {
       postRepository.addPost(fullPost)
       postRepository.addPost(fullPost2)
+      postRepository.addPost(fullPost3)
+      postRepository.addPost(fullPost4)
+      postRepository.addPost(fullPost5)
+      postRepository.addPost(fullPost6)
       homeScreenVM.refreshUIState()
     }
 
@@ -141,9 +200,46 @@ class HomeScreenTest {
     // Ensure each post is brought into view before asserting
     scrollToPost(fullPost.postId)
     assertFullPostIsDisplayed(fullPost.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw an ant", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
 
     scrollToPost(fullPost2.postId)
     assertFullPostIsDisplayed(fullPost2.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw an eagle", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+
+    scrollToPost(fullPost3.postId)
+    assertFullPostIsDisplayed(fullPost3.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw an iguana", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+
+    scrollToPost(fullPost4.postId)
+    assertFullPostIsDisplayed(fullPost4.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw an orca", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+
+    scrollToPost(fullPost5.postId)
+    assertFullPostIsDisplayed(fullPost5.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw an unicorn", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+
+    scrollToPost(fullPost6.postId)
+    assertFullPostIsDisplayed(fullPost6.postId)
+    composeTestRule
+        .onNodeWithText("testuser saw a dolphin", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.NO_POST_ICON, useUnmergedTree = true)
         .assertIsNotDisplayed()

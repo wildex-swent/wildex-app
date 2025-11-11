@@ -271,19 +271,14 @@ class HomeScreenTest {
   }
 
   @Test
-  fun failScreenShown_whenAuthorLookupFails() {
+  fun postGetsSkipped_whenAuthorLookupFails() {
     val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
     runBlocking { postRepository.addPost(badPost) }
 
     composeTestRule.setContent { HomeScreen(homeScreenVM) }
     composeTestRule.waitForIdle()
 
-    composeTestRule
-        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.NO_POSTS, useUnmergedTree = true)
-        .assertIsNotDisplayed()
+    assertFullPostIsNotDisplayed("bad")
   }
 
   @Test
@@ -385,5 +380,26 @@ class HomeScreenTest {
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  private fun assertFullPostIsNotDisplayed(postId: String) {
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.locationTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
   }
 }

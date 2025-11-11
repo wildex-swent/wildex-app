@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.ui.authentication.SignInScreen
+import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
@@ -74,11 +75,13 @@ fun WildexApp(
   val nullUserUID = context.getString(R.string.null_user_uid)
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
+  val signInViewModel = SignInViewModel()
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
     composable(Screen.Auth.route) {
       SignInScreen(
+          authViewModel = signInViewModel,
           credentialManager = credentialManager,
           onSignedIn = { navigationActions.navigateTo(Screen.Home) },
       )

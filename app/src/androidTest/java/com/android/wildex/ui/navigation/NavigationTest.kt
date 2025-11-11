@@ -190,6 +190,8 @@ class NavigationTest : NavigationTestUtils() {
       RepositoryProvider.userRepository.addUser(user)
       val post = post0.copy(authorId = result.user!!.uid, postId = postId)
       RepositoryProvider.postRepository.addPost(post)
+      val animal = animal0.copy(animalId = post.animalId)
+      RepositoryProvider.animalRepository.addAnimal(animal)
     }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()

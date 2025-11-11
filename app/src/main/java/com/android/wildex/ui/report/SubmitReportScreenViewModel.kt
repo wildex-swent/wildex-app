@@ -18,15 +18,13 @@ import com.google.firebase.auth.auth
  * @property location The location associated with the report.
  * @property isSubmitting Flag indicating whether the report is currently being submitted.
  * @property errorMsg An optional error message if submission fails.
- * @property success Flag indicating whether the report was successfully submitted.
  */
 data class SubmitReportUiState(
     val imageUri: Uri? = null,
     val description: String = "",
     val location: Location? = null,
     val isSubmitting: Boolean = false,
-    val errorMsg: String? = null,
-    val success: Boolean = false
+    val errorMsg: String? = null
 )
 
 /**
@@ -34,10 +32,15 @@ data class SubmitReportUiState(
  *
  * @property reportRepository The repository for handling report data operations.
  * @property storageRepository The repository for handling storage operations.
- * @property currentId The unique identifier of the current user.
+ * @property currentUserId The unique identifier of the current user.
  */
 class SubmitReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val currentId: Id? = Firebase.auth.uid
+    private val currentUserId: Id =
+        try {
+          Firebase.auth.uid
+        } catch (_: Exception) {
+          defaultUser.userId
+        } ?: defaultUser.userId
 ) : ViewModel() {}

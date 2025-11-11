@@ -17,12 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /** Default placeholder user used when no valid user is loaded. */
-val defaultUser: SimpleUser =
-    SimpleUser(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        profilePictureURL = "",
-    )
+private val defaultUser: SimpleUser =
+    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
 
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,
@@ -30,14 +26,14 @@ data class CollectionUIState(
     val animals: List<AnimalState> = emptyList(),
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
 )
 
 data class AnimalState(
-    val animalId: Id = "defaultAnimalId",
-    val pictureURL: URL = "",
-    val name: String = "Default Animal",
-    val isUnlocked: Boolean = false
+    val animalId: Id,
+    val pictureURL: URL,
+    val name: String,
+    val isUnlocked: Boolean,
 )
 
 class CollectionScreenViewModel(
@@ -45,7 +41,7 @@ class CollectionScreenViewModel(
     private val userAnimalsRepository: UserAnimalsRepository =
         RepositoryProvider.userAnimalsRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
   /** Backing property for the collection screen state. */
@@ -67,7 +63,8 @@ class CollectionScreenViewModel(
                     animalId = animal.animalId,
                     pictureURL = animal.pictureURL,
                     name = animal.name,
-                    isUnlocked = userAnimals.contains(animal.animalId))
+                    isUnlocked = userAnimals.contains(animal.animalId),
+                )
               }
               .sortedBy { !it.isUnlocked }
       _uiState.value =

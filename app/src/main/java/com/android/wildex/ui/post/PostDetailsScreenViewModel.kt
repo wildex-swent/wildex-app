@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
@@ -12,8 +13,6 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
-import com.android.wildex.ui.home.defaultAnimal
-import com.android.wildex.ui.home.defaultUser
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
@@ -30,8 +29,8 @@ data class PostDetailsUIState(
     val location: String = "",
     val description: String = "",
     val date: String = "",
-    val animalName: String = defaultAnimal.name,
-    val animalSpecies: String = defaultAnimal.species,
+    val animalName: String = "",
+    val animalSpecies: String = "",
     val likesCount: Int = 0,
     val commentsCount: Int = 0,
     val authorId: Id = "",
@@ -60,13 +59,9 @@ class PostDetailsScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId,
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(PostDetailsUIState())
@@ -98,6 +93,8 @@ class PostDetailsScreenViewModel(
       val post = postRepository.getPost(postId)
       val simpleAuthor = userRepository.getSimpleUser(post.authorId)
       val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }
+      val animal = animalRepository.getAnimal(post.animalId)
+      val currentUser = userRepository.getSimpleUser(currentUserId)
 
       var localErrorMsg: String? = null
       val commentsUI =
@@ -107,15 +104,6 @@ class PostDetailsScreenViewModel(
             Log.e("PostDetailsViewModel", "Error loading comments for post id $postId", e)
             localErrorMsg = "Failed to load comments: ${e.message}"
             emptyList()
-          }
-
-      val currentUser =
-          try {
-            userRepository.getSimpleUser(currentUserId)
-          } catch (e: Exception) {
-            Log.e("PostDetailsViewModel", "Error loading current user data", e)
-            if (localErrorMsg == null) localErrorMsg = "Failed to load user data: ${e.message}"
-            defaultUser
           }
 
       val likedByCurrentUser =
@@ -139,6 +127,8 @@ class PostDetailsScreenViewModel(
               authorId = post.authorId,
               authorUsername = simpleAuthor.username,
               authorProfilePictureURL = simpleAuthor.profilePictureURL,
+              animalName = animal.name,
+              animalSpecies = animal.species,
               commentsUI = commentsUI,
               currentUserId = currentUserId,
               currentUserProfilePictureURL = currentUser.profilePictureURL,

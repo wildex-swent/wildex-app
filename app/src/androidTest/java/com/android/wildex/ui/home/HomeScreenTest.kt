@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -33,6 +34,8 @@ class HomeScreenTest {
   private val postRepository = LocalRepositories.postsRepository
   private val userRepository = LocalRepositories.userRepository
   private val likeRepository = LocalRepositories.likeRepository
+  private val animalRepository = LocalRepositories.animalRepository
+
   private val fullPost =
       Post(
           postId = "uid",
@@ -42,7 +45,7 @@ class HomeScreenTest {
           location = Location(0.0, 0.0, "Casablanca"),
           description = "Description 1",
           date = Timestamp.now(),
-          animalId = "animal1",
+          animalId = "a1",
           likesCount = 10,
           commentsCount = 5,
       )
@@ -52,7 +55,8 @@ class HomeScreenTest {
   @Before
   fun setup() = runBlocking {
     homeScreenVM =
-        HomeScreenViewModel(postRepository, userRepository, likeRepository, "currentUserId-1")
+        HomeScreenViewModel(
+            postRepository, userRepository, likeRepository, animalRepository, "currentUserId-1")
     userRepository.addUser(
         User(
             userId = "currentUserId-1",
@@ -81,6 +85,13 @@ class HomeScreenTest {
             country = "Testland",
             friendsCount = 0,
         ))
+    animalRepository.addAnimal(
+        Animal(
+            animalId = "a1",
+            name = "animal1",
+            description = "animal1",
+            pictureURL = "",
+            species = "species1"))
   }
 
   @After
@@ -332,6 +343,7 @@ class HomeScreenTest {
               delayedPostsRepo,
               LocalRepositories.userRepository,
               LocalRepositories.likeRepository,
+              LocalRepositories.animalRepository,
               "currentUserId-1",
           )
       vm.loadUIState()

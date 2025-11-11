@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
@@ -41,6 +42,7 @@ class PostDetailsScreenTest {
   private val userRepository: UserRepository = LocalRepositories.userRepository
   private val commentRepository: CommentRepository = LocalRepositories.commentRepository
   private val likeRepository: LikeRepository = LocalRepositories.likeRepository
+  private val animalRepository = LocalRepositories.animalRepository
   private lateinit var postDetailsViewModel: PostDetailsScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -144,7 +146,7 @@ class PostDetailsScreenTest {
             location = Location(0.0, 0.0, "India"),
             description = "Saw this beautiful tiger during my trip!",
             date = Timestamp.now(),
-            animalId = "Tiger",
+            animalId = "tiger",
             likesCount = 2,
             commentsCount = 2,
         )
@@ -172,11 +174,22 @@ class PostDetailsScreenTest {
             date = Timestamp.now(),
         ))
 
+    val animal =
+        Animal(
+            animalId = "tiger",
+            name = "Tiger",
+            description = "",
+            pictureURL = "",
+            species = "Bengal Tiger",
+        )
+    animalRepository.addAnimal(animal)
+
     postDetailsViewModel =
         PostDetailsScreenViewModel(
             postRepository,
             userRepository,
             commentRepository,
+            animalRepository,
             likeRepository,
             "currentUserId-1",
         )
@@ -322,6 +335,7 @@ class PostDetailsScreenTest {
               delayedPostsRepo,
               LocalRepositories.userRepository,
               LocalRepositories.commentRepository,
+              LocalRepositories.animalRepository,
               LocalRepositories.likeRepository,
               "currentUserId-1",
           )

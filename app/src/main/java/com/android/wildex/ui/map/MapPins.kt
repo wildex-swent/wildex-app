@@ -55,11 +55,16 @@ private const val BADGE_BAR_W = 3.6f
 private const val BADGE_BAR_H = 9.5f
 private const val BADGE_DOT_R = 2.4f
 
-/* ----------------------- Image loader  ----------------------- */
+/** Singleton Coil ImageLoader to be shared across multiple invocations of PinsOverlay */
 @VisibleForTesting
 internal object SharedCoil {
   @Volatile private var instance: ImageLoader? = null
 
+  /**
+   * Get the singleton ImageLoader instance
+   *
+   * @param ctx Context to build the ImageLoader if not already created
+   */
   fun get(ctx: Context): ImageLoader =
       instance
           ?: ImageLoader.Builder(ctx)
@@ -69,14 +74,30 @@ internal object SharedCoil {
               .also { instance = it }
 }
 
-/* ----------------------- Base icon cache (to avoid repeating the rebuilding each frame)  ----------------------- */
+/**
+ * Base icon cache (to avoid repeating the rebuilding each frame)
+ *
+ * @param url Image URL
+ * @param borderColor Border color integer
+ * @param scaleKey Scale factor multiplied by 100 (to avoid float keys)
+ */
 @VisibleForTesting
 internal data class BaseKey(
     val url: String,
     val borderColor: Int,
     val scaleKey: Int,
 )
-/* ----------------------- Composable ----------------------- */
+
+/**
+ * Composable overlay that displays map pins on a Mapbox MapView.
+ *
+ * @param modifier Modifier to be applied to the Box containing the map pins.
+ * @param mapView The Mapbox MapView where the pins will be displayed.
+ * @param pins List of MapPin objects representing the pins to be displayed.
+ * @param currentTab The current MapTab, used to determine color scheme.
+ * @param selectedId The ID of the currently selected pin, if any.
+ * @param onPinClick Callback function to be invoked when a pin is clicked, with the
+ */
 @Composable
 fun PinsOverlay(
     modifier: Modifier,
@@ -346,6 +367,14 @@ fun PinsOverlay(
 
 /* ----------------------- Rendering helpers ----------------------- */
 
+/**
+ * Render the base pin bitmap with optional photo and border.
+ *
+ * @param src Source Bitmap photo to render inside the pin, or null for placeholder.
+ * @param borderColor Color integer for the border.
+ * @param scale Scale factor for the pin size.
+ * @return Rendered Bitmap of the base pin.
+ */
 @WorkerThread
 @VisibleForTesting
 internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap {
@@ -398,6 +427,18 @@ internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap
   return out
 }
 
+/**
+ * Compose the overlay bitmap with optional ripple and exclamation badge.
+ *
+ * @param base Base Bitmap to overlay on.
+ * @param globalAlpha Global alpha for the entire overlay (0f to 1f).
+ * @param rippleProgress Ripple animation progress (0f to 1f), or null for no ripple.
+ * @param showExclamation Whether to show the exclamation badge.
+ * @param exclamationOffsetPx Vertical offset for the exclamation badge (for bobbing).
+ * @param borderColor Color integer for the border and badge.
+ * @param scale Scale factor for the overlay size.
+ * @return Composed Bitmap with overlays.
+ */
 @WorkerThread
 @VisibleForTesting
 internal fun composeOverlays(
@@ -474,6 +515,14 @@ internal fun composeOverlays(
   return out
 }
 /* ----------------------- image loading ----------------------- */
+
+/**
+ * Fetch a Bitmap from a URL using Coil.
+ *
+ * @param ctx Context for Coil image loading.
+ * @param url Image URL to fetch.
+ * @return Fetched Bitmap, or null if loading failed.
+ */
 @VisibleForTesting
 internal suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
     withContext(Dispatchers.IO) {

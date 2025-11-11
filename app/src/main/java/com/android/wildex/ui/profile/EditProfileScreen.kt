@@ -5,19 +5,25 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,13 +34,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,17 +47,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
-import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 import java.util.Locale
-import kotlin.collections.get
 
 object EditProfileScreenTestTags {
   const val GO_BACK = "edit_profile_screen_go_back_button"
@@ -65,6 +69,7 @@ object EditProfileScreenTestTags {
   const val DROPDOWN_COUNTRY = "edit_profile_screen_dropdown_country"
   const val COUNTRY_ELEMENT = "edit_profile_screen_country_element_"
   const val CHANGE_PROFILE_PICTURE = "edit_profile_screen_change_profile_picture_button"
+  const val PROFILE_PICTURE_PREVIEW = "edit_profile_screen_profile_picture_preview"
   const val SAVE = "edit_profile_screen_go_save_button"
   const val ERROR_MESSAGE = "edit_profile_screen_error_message"
 }
@@ -187,68 +192,88 @@ fun EditView(
             modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_DESCRIPTION))
         // Country Input with dropdown
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-          TextButton(
-              onClick = { showDropdown = true },
+        Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+          val icon =
+              if (showDropdown) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+          OutlinedTextField(
+              value = uiState.country,
+              readOnly = true,
+              onValueChange = { /* No-operation: handled by dropdown */},
               modifier =
-                  Modifier.align(Alignment.Center)
-                      .testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)) {
-                Text(text = uiState.country)
-              }
+                  Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY),
+              label = { Text("Label") },
+              trailingIcon = {
+                Icon(
+                    icon, "contentDescription", Modifier.clickable { showDropdown = !showDropdown })
+              })
 
           // Dropdown to show location suggestions
           DropdownMenu(
               expanded = showDropdown && countryNames.isNotEmpty(),
               onDismissRequest = { showDropdown = false },
               properties = PopupProperties(focusable = false),
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .heightIn(max = 200.dp) // Set max height to make it scrollable if more than 3
-              // items
-              ) {
+              modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)) {
                 countryNames.forEach { country ->
                   DropdownMenuItem(
                       text = {
-                        Text(
-                            text =
-                                country.take(30) +
-                                    if (country.length > 30) "..."
-                                    else "", // Limit name length and add ellipsis
-                            maxLines = 1, // Ensure name doesn't overflow
-                        )
+                        Text(text = country, maxLines = 1, overflow = TextOverflow.Ellipsis)
                       },
                       onClick = {
-                        // Update country
                         editScreenViewModel.setCountry(country)
-                        showDropdown = false // Close dropdown on selection
+                        showDropdown = false
                       },
                       modifier =
-                          Modifier.padding(8.dp)
-                              .testTag(
-                                  EditProfileScreenTestTags
-                                      .COUNTRY_ELEMENT) // Add padding for better
-                      // separation
-                      )
-                  HorizontalDivider(
-                      Modifier,
-                      DividerDefaults.Thickness,
-                      DividerDefaults.color) // Separate items with a divider
+                          Modifier.fillMaxWidth()
+                              .padding(horizontal = 16.dp, vertical = 8.dp) // padding(8.dp)
+                              .testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT))
+                  HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
               }
         }
-        Button(
-            modifier =
-                Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.CHANGE_PROFILE_PICTURE),
-            onClick = {
-              // Opens image picker
-              pickImageLauncher.launch("image/*")
-            },
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = cs.secondary,
-                    contentColor = cs.onSecondary,
-                )) {
-              Text(text = "Change profile picture")
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+              val previewModel: Any? =
+                  uiState.pendingProfileImageUri ?: uiState.url.takeIf { it.isNotBlank() }
+              if (previewModel != null) {
+                AsyncImage(
+                    model = previewModel,
+                    contentDescription = "Profile picture",
+                    modifier =
+                        Modifier.width(72.dp)
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .border(1.dp, cs.outline, CircleShape)
+                            .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
+                    contentScale = ContentScale.Crop)
+              } else if (uiState.url.isNotBlank()) {
+                AsyncImage(
+                    model = uiState.url,
+                    contentDescription = "Profile picture",
+                    modifier =
+                        Modifier.width(72.dp)
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .border(1.dp, cs.outline, CircleShape)
+                            .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
+                    contentScale = ContentScale.Crop)
+              }
+              Button(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .testTag(EditProfileScreenTestTags.CHANGE_PROFILE_PICTURE),
+                  onClick = {
+                    // Opens image picker
+                    pickImageLauncher.launch("image/*")
+                  },
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = cs.secondary,
+                          contentColor = cs.onSecondary,
+                      )) {
+                    Text(text = "Change profile picture")
+                  }
             }
         Button(
             onClick = {
@@ -262,7 +287,9 @@ fun EditView(
                     containerColor = cs.secondary,
                     contentColor = cs.onSecondary,
                 ),
-            modifier = Modifier.testTag(EditProfileScreenTestTags.SAVE)) {
+            modifier =
+                Modifier.testTag(EditProfileScreenTestTags.SAVE)
+                    .align(Alignment.CenterHorizontally)) {
               Row {
                 Icon(
                     imageVector = Icons.Filled.SaveAlt,
@@ -273,32 +300,4 @@ fun EditView(
               }
             }
       }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditProfileTopBar(onGoBack: () -> Unit) {
-  val cs = colorScheme
-  TopAppBar(
-      title = {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-          Text(
-              text = "Edit Profile",
-              fontWeight = FontWeight.SemiBold,
-              color = cs.onBackground,
-          )
-        }
-      },
-      navigationIcon = {
-        IconButton(
-            modifier = Modifier.testTag(EditProfileScreenTestTags.GO_BACK),
-            onClick = { onGoBack() },
-        ) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
-              tint = cs.onBackground,
-          )
-        }
-      })
 }

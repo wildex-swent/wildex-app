@@ -84,8 +84,7 @@ fun WildexTheme(
       val window = (view.context as? Activity)?.window
       if (window != null && view.isAttachedToWindow) {
         // Set Status bar color to match the theme
-        window.statusBarColor = colorScheme.primary.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isDarkTheme
+        window.statusBarColor = Green.toArgb()
       }
     }
   }

@@ -53,22 +53,18 @@ data class ReportScreenUIState(
  * @property assigneeId The ID of the assignee of the report.
  */
 data class ReportUIState(
-    val reportId: Id = "",
-    val imageURL: URL = "",
-    val location: String = "",
-    val date: String = "",
-    val description: String = "",
-    val author: SimpleUser = defaultUser,
-    val assigneeId: Id = "",
+    val reportId: Id,
+    val imageURL: URL,
+    val location: String,
+    val date: String,
+    val description: String,
+    val author: SimpleUser,
+    val assigneeId: Id,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
-val defaultUser: SimpleUser =
-    SimpleUser(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        profilePictureURL = "",
-    )
+private val defaultUser: SimpleUser =
+    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
 
 /**
  * ViewModel for the report screen. Loads the reports and user data and handles UI state updates
@@ -137,7 +133,8 @@ class ReportScreenViewModel(
               currentUserType = currentUserType,
               isLoading = false,
               isRefreshing = false,
-              isError = false)
+              isError = false,
+          )
     } catch (e: Exception) {
       handleException("Failed to update UI state", e)
     }
@@ -158,7 +155,8 @@ class ReportScreenViewModel(
           } catch (e: Exception) {
             handleException(
                 "Error loading author ${report.authorId} user data for report ${report.reportId}",
-                e)
+                e,
+            )
             defaultUser
           }
       ReportUIState(

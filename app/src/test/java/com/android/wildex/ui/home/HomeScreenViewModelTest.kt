@@ -1,6 +1,8 @@
 // kotlin
 package com.android.wildex.ui.home
 
+import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -29,7 +31,11 @@ class HomeScreenViewModelTest {
   private lateinit var postsRepository: PostsRepository
   private lateinit var userRepository: UserRepository
   private lateinit var likeRepository: LikeRepository
+  private lateinit var animalRepository: AnimalRepository
   private lateinit var viewModel: HomeScreenViewModel
+
+  private val defaultUser: SimpleUser =
+      SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
 
   private val p1 =
       Post(
@@ -66,16 +72,44 @@ class HomeScreenViewModelTest {
 
   private val like2 = Like(likeId = "like2", postId = "p2", userId = "author-1")
 
+  private val animal1 =
+      Animal(
+          animalId = "a1",
+          name = "animal_one",
+          species = "species_one",
+          description = "description_one",
+          pictureURL = "url_one",
+      )
+
+  private val animal2 =
+      Animal(
+          animalId = "a2",
+          name = "animal_two",
+          species = "species_two",
+          description = "description_two",
+          pictureURL = "url_two",
+      )
+
   @Before
   fun setUp() {
     postsRepository = mockk()
     userRepository = mockk()
     likeRepository = mockk()
-    viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository, "uid-1")
+    animalRepository = mockk()
+    viewModel =
+        HomeScreenViewModel(
+            postsRepository,
+            userRepository,
+            likeRepository,
+            animalRepository,
+            "uid-1",
+        )
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
     coEvery { likeRepository.getLikeForPost("p1") } returns null
     coEvery { likeRepository.getLikeForPost("p2") } returns null
+    coEvery { animalRepository.getAnimal("a1") } returns animal1
+    coEvery { animalRepository.getAnimal("a2") } returns animal2
   }
 
   @Test
@@ -104,8 +138,8 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val expectedStates =
           listOf(
-              PostState(p1, isLiked = true, author = author1),
-              PostState(p2, isLiked = false, author = author2),
+              PostState(p1, isLiked = true, author = author1, animalName = animal1.name),
+              PostState(p2, isLiked = false, author = author2, animalName = animal2.name),
           )
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
@@ -131,8 +165,8 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val expectedStates =
           listOf(
-              PostState(p1, isLiked = true, author = author1),
-              PostState(p2, isLiked = false, author = author2),
+              PostState(p1, isLiked = true, author = author1, animalName = animal1.name),
+              PostState(p2, isLiked = false, author = author2, animalName = animal2.name),
           )
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
@@ -144,7 +178,7 @@ class HomeScreenViewModelTest {
   }
 
   @Test
-  fun refreshUIState_whenUserRepoThrows_setsErrorAndKeepsEmptyPosts() {
+  fun refreshUIState_whenCurrentUserRepoThrows_setsErrorAndKeepsEmptyPosts() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1, p2)
       coEvery { userRepository.getSimpleUser("uid-1") } throws RuntimeException("boom")
@@ -154,7 +188,7 @@ class HomeScreenViewModelTest {
 
       val s = viewModel.uiState.value
       Assert.assertTrue(s.postStates.isEmpty())
-      Assert.assertEquals(defaultUser, s.currentUser)
+      Assert.assertEquals(s.currentUser, defaultUser)
       Assert.assertFalse(s.isLoading)
       Assert.assertFalse(s.isRefreshing)
       Assert.assertNotNull(s.errorMsg)
@@ -162,18 +196,19 @@ class HomeScreenViewModelTest {
   }
 
   @Test
-  fun refreshUIState_whenCurrentUserFetchFails_keepsDefaultUserAndSetsError() {
+  fun refreshUIState_whenCurrentUserFetchFails_keepsEmptyUserAndSetsError() {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
-      viewModel = HomeScreenViewModel(postsRepository, userRepository, likeRepository)
+      viewModel =
+          HomeScreenViewModel(postsRepository, userRepository, likeRepository, animalRepository, "")
       viewModel.refreshUIState()
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
       Assert.assertTrue(s.postStates.isEmpty())
-      Assert.assertEquals("defaultUserId", s.currentUser.userId)
-      Assert.assertEquals("defaultUsername", s.currentUser.username)
+      Assert.assertEquals(s.currentUser.userId, defaultUser.userId)
+      Assert.assertEquals(s.currentUser.username, defaultUser.username)
       Assert.assertFalse(s.isLoading)
       Assert.assertFalse(s.isRefreshing)
       Assert.assertNotNull(s.errorMsg)
@@ -222,7 +257,7 @@ class HomeScreenViewModelTest {
       val s = viewModel.uiState.value
       val expectedStates =
           listOf(
-              PostState(p2, isLiked = true, author = author2),
+              PostState(p2, isLiked = true, author = author2, animalName = animal2.name),
           )
       Assert.assertEquals(expectedStates, s.postStates)
       Assert.assertEquals(u2, s.currentUser)
@@ -280,7 +315,9 @@ class HomeScreenViewModelTest {
       val s = viewModel.uiState.value
       Assert.assertFalse(s.isLoading)
       Assert.assertNull(s.errorMsg)
-      Assert.assertEquals(listOf(PostState(p1, isLiked = false, author = author1)), s.postStates)
+      Assert.assertEquals(
+          listOf(PostState(p1, isLiked = false, author = author1, animalName = animal1.name)),
+          s.postStates)
     }
   }
 

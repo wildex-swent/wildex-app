@@ -1,5 +1,7 @@
 package com.android.wildex.ui.post
 
+import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
@@ -34,6 +36,7 @@ class PostDetailsScreenViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var commentRepository: CommentRepository
   private lateinit var likeRepository: LikeRepository
+  private lateinit var animalRepository: AnimalRepository
   private lateinit var viewModel: PostDetailsScreenViewModel
 
   private val testPost =
@@ -48,7 +51,7 @@ class PostDetailsScreenViewModelTest {
           likesCount = 0,
           commentsCount = 4,
       )
-
+  private val testAnimal = Animal("Tiger", "", "Tiger", "Feline", "")
   private val testPostSimpleAuthor =
       SimpleUser(
           userId = "poster1",
@@ -103,13 +106,15 @@ class PostDetailsScreenViewModelTest {
     userRepository = mockk()
     commentRepository = mockk()
     likeRepository = mockk()
+    animalRepository = mockk()
     viewModel =
         PostDetailsScreenViewModel(
             postRepository = postsRepository,
             userRepository = userRepository,
             commentRepository = commentRepository,
             likeRepository = likeRepository,
-            "currentUserId-1",
+            animalRepository = animalRepository,
+            currentUserId = "currentUserId-1",
         )
     coEvery { postsRepository.getPost("post1") } returns testPost
     coEvery { userRepository.getSimpleUser("poster1") } returns testPostSimpleAuthor
@@ -121,6 +126,7 @@ class PostDetailsScreenViewModelTest {
     coEvery { likeRepository.getNewLikeId() } returns "like1"
     coEvery { likeRepository.addLike(any()) } just Runs
     coEvery { likeRepository.deleteLike("like1") } just Runs
+    coEvery { animalRepository.getAnimal("Tiger") } returns testAnimal
   }
 
   @Test

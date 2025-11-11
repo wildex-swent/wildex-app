@@ -219,7 +219,7 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
   val colorScheme = MaterialTheme.colorScheme
   val post = postState.post
   val author = postState.author
-  val animal = postState.animal
+  val animalName = postState.animalName
 
   // -------- Optimistic Like State (instant UI) --------
   var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
@@ -255,7 +255,8 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
       Spacer(Modifier.width(10.dp))
       Column(Modifier.weight(1f)) {
         Text(
-            text = "${author.username} saw ${animal.name}",
+            text =
+                "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             color = colorScheme.onBackground,
             maxLines = 1,
@@ -399,3 +400,12 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
 private fun likeText(count: Int): String = if (count == 1) "1 like" else "$count likes"
 
 private fun commentText(count: Int): String = if (count == 1) "1 comment" else "$count comments"
+
+private fun String.startsWithVowel(): Boolean {
+  val lower = this.lowercase()
+  return lower.startsWith("a") ||
+      lower.startsWith("e") ||
+      lower.startsWith("i") ||
+      lower.startsWith("o") ||
+      lower.startsWith("u")
+}

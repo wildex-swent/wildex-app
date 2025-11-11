@@ -39,6 +39,7 @@
     <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>
+    <string name="fallback_url">https://media.istockphoto.com/id/1223671392/vector/default-profile-picture-avatar-photo-placeholder-vector-illustration.jpg?s=612x612&amp;w=0&amp;k=20&amp;c=s0aTdmT5aU6b8ot7VKm11DeID6NctRCpB755rA1BIP0=</string>
 
     <!-- Achievements screen -->
     <string name="trophies">Your trophies</string>

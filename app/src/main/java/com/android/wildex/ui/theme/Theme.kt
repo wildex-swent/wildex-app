@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
     darkColorScheme(
@@ -57,18 +58,23 @@ private val LightColorScheme =
 
 @Composable
 fun WildexTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+  theme: AppearanceMode = AppearanceMode.AUTOMATIC,
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
-    content: @Composable () -> Unit,
+  dynamicColor: Boolean = false,
+  content: @Composable () -> Unit,
 ) {
+  val isDarkTheme = when (theme) {
+    AppearanceMode.LIGHT -> false
+    AppearanceMode.DARK -> true
+    AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+  }
   val colorScheme =
       when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
           val context = LocalContext.current
-          if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+          if (isDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
+        isDarkTheme -> DarkColorScheme
         else -> LightColorScheme
       }
   val view = LocalView.current
@@ -78,7 +84,7 @@ fun WildexTheme(
       if (window != null && view.isAttachedToWindow) {
         // Set Status bar color to match the theme
         window.statusBarColor = colorScheme.primary.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isDarkTheme
       }
     }
   }

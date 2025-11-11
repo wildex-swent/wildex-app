@@ -22,6 +22,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.ui.authentication.SignInScreen
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
@@ -45,11 +46,15 @@ object HttpClientProvider {
   val client: OkHttpClient = OkHttpClient()
 }
 
+object AppTheme {
+  var appearanceMode = AppearanceMode.LIGHT
+}
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
+    setContent { WildexTheme (theme = AppTheme.appearanceMode) { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
   }
 }
 

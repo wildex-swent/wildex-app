@@ -45,6 +45,7 @@ import androidx.compose.material3.SegmentedButtonColors
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.AppTheme
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
@@ -272,6 +274,7 @@ fun SettingsContent(
             else -> throw IllegalArgumentException("The new appearance mode [$newAppearanceModeString] is not recognized")
           }
           settingsScreenViewModel.setAppearanceMode(newAppearanceMode)
+          AppTheme.appearanceMode = newAppearanceMode
         },
         groupButtonsColors = groupButtonsColors
       )
@@ -430,6 +433,24 @@ fun NotificationOption(
     Switch(
       modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE),
       checked = currentNotificationState,
+      colors = SwitchColors(
+        colorScheme.onPrimary,
+        colorScheme.primary,
+        colorScheme.onPrimary,
+        colorScheme.primary,
+        colorScheme.primary,
+        colorScheme.onPrimary,
+        colorScheme.onPrimary,
+        colorScheme.primary,
+        Color(1),
+        Color(1),
+        Color(1),
+        Color(1),
+        Color(1),
+        Color(1),
+        Color(1),
+        Color(1)
+      ),
       onCheckedChange = {
         onNotificationStateChanged(it)
       },

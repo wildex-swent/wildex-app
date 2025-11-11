@@ -7,9 +7,11 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -76,8 +78,10 @@ class SignInViewModel(
           val userId = firebaseUser.uid
           try {
             userRepository.getUser(userId)
+            AppTheme.appearanceMode = RepositoryProvider.userSettingsRepository.getAppearanceMode(userId)
           } catch (_: Exception) {
             initializeUserUseCase(userId)
+            AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
           }
         }) { failure ->
           _uiState.update {

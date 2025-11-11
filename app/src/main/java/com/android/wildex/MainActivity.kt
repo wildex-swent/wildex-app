@@ -48,7 +48,7 @@ object HttpClientProvider {
 }
 
 object AppTheme {
-  var appearanceMode = AppearanceMode.LIGHT
+  var appearanceMode by mutableStateOf(AppearanceMode.AUTOMATIC)
 }
 
 class MainActivity : ComponentActivity() {

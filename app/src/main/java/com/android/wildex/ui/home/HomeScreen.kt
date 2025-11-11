@@ -133,29 +133,28 @@ fun HomeScreen(
   Scaffold(
       topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
-      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN)
-  ) { pd ->
-    val pullState = rememberPullToRefreshState()
+      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN)) { pd ->
+        val pullState = rememberPullToRefreshState()
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { homeScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        postStates.isEmpty() -> NoPostsView()
-        else ->
-            PostsView(
-                postStates = postStates,
-                onPostLike = homeScreenViewModel::toggleLike,
-                onPostClick = onPostClick,
-            )
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = uiState.isRefreshing,
+            modifier = Modifier.padding(pd),
+            onRefresh = { homeScreenViewModel.refreshUIState() },
+        ) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            postStates.isEmpty() -> NoPostsView()
+            else ->
+                PostsView(
+                    postStates = postStates,
+                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostClick = onPostClick,
+                )
+          }
+        }
       }
-    }
-  }
 }
 
 /** Displays a placeholder view when there are no posts available. */

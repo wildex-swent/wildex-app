@@ -12,6 +12,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.ui.collection.CollectionScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
@@ -121,7 +122,7 @@ abstract class NavigationTestUtils {
 
   fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id) {
     onNodeWithTag(NavigationTestTags.MAP_SCREEN).assertIsDisplayed()
-    //    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
+    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
     assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
   }
@@ -133,7 +134,7 @@ abstract class NavigationTestUtils {
 
   fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id) {
     onNodeWithTag(NavigationTestTags.COLLECTION_SCREEN).assertIsDisplayed()
-    //    onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
+    onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
     assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
   }
@@ -188,6 +189,12 @@ abstract class NavigationTestUtils {
     onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().performClick()
   }
 
+  fun ComposeTestRule.navigateToHomeScreenFromAuth() {
+    onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+  }
+
   fun ComposeTestRule.navigateToMapScreenFromBottomBar() {
     onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().performClick()
   }
@@ -211,26 +218,26 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.navigateToMyProfileScreenFromCollection() {
-    onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON, useUnmergedTree = true)
-        .assertIsDisplayed()
-        .performClick()
+    val profileNode = onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON, useUnmergedTree = true)
+    waitUntil(5_000) { profileNode.isDisplayed() }
+    profileNode.assertIsDisplayed().performClick()
   }
 
   fun ComposeTestRule.navigateToPostDetailsScreenFromHome(postUid: String) {
     val homeImageTag = HomeScreenTestTags.imageTag(postUid)
     val imageNode = onNodeWithTag(homeImageTag, useUnmergedTree = true)
-    waitUntil(5_000) {
-      try {
-        imageNode.isDisplayed()
-      } catch (_: Throwable) {
-        false
-      }
-    }
+    waitUntil(5_000) { imageNode.isDisplayed() }
     imageNode.performClick()
   }
 
   fun ComposeTestRule.navigateToAnimalInformationScreenFromCollection(animalUid: String) {
-    onNodeWithTag(CollectionScreenTestTags.testTagForAnimal(animalUid, true))
+    val animalNode =
+        onNodeWithTag(
+            CollectionScreenTestTags.testTagForAnimal(animalUid, true),
+            useUnmergedTree = true,
+        )
+    waitUntil(5_000) { animalNode.isDisplayed() }
+    animalNode.performClick()
   }
 
   fun ComposeTestRule.navigateToSubmitReportScreen() {}
@@ -238,7 +245,10 @@ abstract class NavigationTestUtils {
   fun ComposeTestRule.navigateToReportDetailsScreen(reportUid: String) {}
 
   fun ComposeTestRule.navigateToAchievementsScreenFromProfile() {
-    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).assertIsDisplayed().performClick()
+    val achievementsCtaNode =
+        onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA, useUnmergedTree = true)
+    waitUntil(5_000) { achievementsCtaNode.isDisplayed() }
+    achievementsCtaNode.performClick()
   }
 
   fun ComposeTestRule.navigateToSettingsScreen() {}

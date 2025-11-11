@@ -64,7 +64,8 @@ fun CameraScreen(
         }
       }
 
-  Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) { innerPadding ->
+  Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) {
+      innerPadding ->
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.padding(innerPadding).fillMaxSize(),

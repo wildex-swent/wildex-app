@@ -3,7 +3,6 @@ package com.android.wildex.ui.navigation
 import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -14,10 +13,13 @@ import com.android.wildex.WildexApp
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.ui.theme.WildexTheme
+import com.android.wildex.utils.FakeCredentialManager
+import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -30,10 +32,21 @@ class NavigationTest : NavigationTestUtils() {
 
   @Before
   fun setup() {
+
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+
+    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
     composeRule.setContent {
       navController = rememberNavController()
-      WildexTheme { WildexApp(context = LocalContext.current, navController = navController) }
+      WildexTheme {
+        WildexApp(
+            context = LocalContext.current,
+            navController = navController,
+            credentialManager = fakeCredentialManager,
+        )
+      }
     }
   }
 
@@ -47,7 +60,11 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun startsAtHomeScreen_whenAuthenticated() {
-    runBlocking { FirebaseEmulator.auth.signInAnonymously().await() }
+    runBlocking {
+      val result = FirebaseEmulator.auth.signInAnonymously().await()
+      val user = user0.copy(userId = result.user!!.uid)
+      RepositoryProvider.userRepository.addUser(user)
+    }
     composeRule.waitForIdle()
     assertNotNull(FirebaseEmulator.auth.currentUser)
     composeRule.checkHomeScreenIsDisplayed()
@@ -71,6 +88,16 @@ class NavigationTest : NavigationTestUtils() {
   }
 
   @Test
+  fun navigation_HomeScreen_FromAuth() {
+    runBlocking { FirebaseEmulator.auth.signOut() }
+    composeRule.waitForIdle()
+    composeRule.checkAuthScreenIsDisplayed()
+    composeRule.navigateToHomeScreenFromAuth()
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+  }
+
+  @Test
   fun navigation_HomeScreen() {
     runBlocking {
       val result = FirebaseEmulator.auth.signInAnonymously().await()
@@ -81,17 +108,22 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToHomeScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeRule.checkBottomNavigationIsDisplayed()
   }
 
   @Test
-  fun navigation_MapScreen() {
-    val uid = runBlocking { FirebaseEmulator.auth.signInAnonymously().await().user!!.uid }
+  fun navigation_MapScreen_CurrentUser() {
+    val uid = runBlocking {
+      val result = FirebaseEmulator.auth.signInAnonymously().await()
+      val user = user0.copy(userId = result.user!!.uid)
+      RepositoryProvider.userRepository.addUser(user)
+      result.user!!.uid
+    }
     composeRule.waitForIdle()
     composeRule.navigateToMapScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkMapScreenIsDisplayed(uid)
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeRule.checkBottomNavigationIsDisplayed()
   }
 
   @Test
@@ -101,22 +133,23 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToCameraScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkCameraScreenIsDisplayed()
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeRule.checkBottomNavigationIsDisplayed()
   }
 
   @Test
-  fun navigation_CollectionScreen() {
+  fun navigation_CollectionScreen_CurrentUser() {
     val uid = runBlocking {
       val result = FirebaseEmulator.auth.signInAnonymously().await()
       val user = user0.copy(userId = result.user!!.uid)
       RepositoryProvider.userRepository.addUser(user)
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
       result.user!!.uid
     }
     composeRule.waitForIdle()
     composeRule.navigateToCollectionScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkCollectionScreenIsDisplayed(uid)
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeRule.checkBottomNavigationIsDisplayed()
   }
 
   @Test
@@ -130,11 +163,11 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToReportScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkReportScreenIsDisplayed()
-    composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeRule.checkBottomNavigationIsDisplayed()
   }
 
   @Test
-  fun navigation_ProfileScreen_FromHome() {
+  fun navigation_ProfileScreen_FromHome_CurrentUser() {
     val uid = runBlocking {
       val result = FirebaseEmulator.auth.signInAnonymously().await()
       val user = user0.copy(userId = result.user!!.uid)
@@ -166,11 +199,12 @@ class NavigationTest : NavigationTestUtils() {
   }
 
   @Test
-  fun navigation_ProfileScreen_FromCollection() {
+  fun navigation_ProfileScreen_FromCollection_CurrentUser() {
     val uid = runBlocking {
       val result = FirebaseEmulator.auth.signInAnonymously().await()
       val user = user0.copy(userId = result.user!!.uid)
       RepositoryProvider.userRepository.addUser(user)
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
       result.user!!.uid
     }
     composeRule.waitForIdle()
@@ -186,7 +220,7 @@ class NavigationTest : NavigationTestUtils() {
   @Test
   fun navigation_AnimalDetailScreen() {
     val animalId = "animal_id"
-    runBlocking {
+    val uid = runBlocking {
       val result = FirebaseEmulator.auth.signInAnonymously().await()
       val user = user0.copy(userId = result.user!!.uid)
       RepositoryProvider.userRepository.addUser(user)
@@ -194,7 +228,9 @@ class NavigationTest : NavigationTestUtils() {
       RepositoryProvider.animalRepository.addAnimal(animal)
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
       RepositoryProvider.userAnimalsRepository.addAnimalToUserAnimals(user.userId, animalId)
+      user.userId
     }
+    assertEquals(FirebaseEmulator.auth.currentUser!!.uid, uid)
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToCollectionScreenFromBottomBar()

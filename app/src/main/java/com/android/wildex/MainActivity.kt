@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.ui.achievement.AchievementsScreen
+import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
@@ -91,6 +92,9 @@ fun WildexApp(
     // Collection
     collectionComposable(navigationActions, currentUser)
 
+    // Animal Information
+    animalInformationComposable(navigationActions)
+
     // Reports
     reportComposable(navigationActions)
 
@@ -104,19 +108,25 @@ fun WildexApp(
     editProfileComposable(navigationActions)
 
     // Achievements
-    achievementsComposable(navigationActions, navController)
+    achievementsComposable(navigationActions)
   }
 }
 
-private fun NavGraphBuilder.achievementsComposable(
-    navigationActions: NavigationActions,
-    navController: NavHostController,
-) {
+private fun NavGraphBuilder.animalInformationComposable(navigationActions: NavigationActions) {
+  composable(Screen.AnimalInformation.PATH) { backStackEntry ->
+    val animalUid = backStackEntry.arguments?.getString("animalUid")
+    if (animalUid != null) {
+      AnimalInformationScreen(animalId = animalUid, onGoBack = { navigationActions.goBack() })
+    }
+  }
+}
+
+private fun NavGraphBuilder.achievementsComposable(navigationActions: NavigationActions) {
   composable(Screen.Achievements.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
       AchievementsScreen(onGoBack = { navigationActions.goBack() })
-    } else navController.popBackStack()
+    }
   }
 }
 
@@ -164,8 +174,7 @@ private fun NavGraphBuilder.reportComposable(navigationActions: NavigationAction
     ReportScreen(
         bottomBar = {
           BottomNavigationMenu(Tab.Report) { navigationActions.navigateTo(it.destination) }
-        }
-    )
+        })
   }
 }
 
@@ -197,8 +206,7 @@ private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationAction
     CameraScreen(
         bottomBar = {
           BottomNavigationMenu(Tab.Camera) { navigationActions.navigateTo(it.destination) }
-        }
-    )
+        })
   }
 }
 

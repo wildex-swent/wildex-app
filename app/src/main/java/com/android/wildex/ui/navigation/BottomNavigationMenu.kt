@@ -61,8 +61,7 @@ fun BottomNavigationMenu(
 
   NavigationBar(
       modifier =
-          Modifier
-              .padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
+          Modifier.padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
               .fillMaxWidth()
               .height(64.dp)
               .clip(shape)

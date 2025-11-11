@@ -63,7 +63,8 @@ fun AnimalInformationScreen(
 
   val scrollState = rememberScrollState()
 
-  Scaffold(modifier = Modifier.testTag(NavigationTestTags.ANIMAL_INFORMATION_SCREEN)) { paddingValues ->
+  Scaffold(modifier = Modifier.testTag(NavigationTestTags.ANIMAL_INFORMATION_SCREEN)) {
+      paddingValues ->
     when {
       uiState.isError -> LoadingFail()
       uiState.isLoading -> LoadingScreen()

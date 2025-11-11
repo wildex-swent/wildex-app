@@ -37,10 +37,5 @@ data class SubmitReportUiState(
 class SubmitReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId
+    private val currentUserId: Id = Firebase.auth.uid ?: defaultUser.userId
 ) : ViewModel() {}

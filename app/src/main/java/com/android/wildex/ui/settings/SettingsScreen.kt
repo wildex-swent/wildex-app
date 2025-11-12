@@ -2,7 +2,9 @@ package com.android.wildex.ui.settings
 
 import android.graphics.drawable.Icon
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -68,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
@@ -77,6 +80,7 @@ object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
   const val EDIT_PROFILE_SETTING = "edit_profile_setting"
   const val EDIT_PROFILE_BUTTON = "edit_profile_button"
+  const val SIGN_OUT_BUTTON = "sign_out_button"
   const val DELETE_ACCOUNT_BUTTON = "delete_account_button"
   const val DELETE_ACCOUNT_DIALOG = "delete_account_dialog"
   const val DELETE_ACCOUNT_CONFIRM_BUTTON = "delete_account_confirm_button"
@@ -130,22 +134,49 @@ fun SettingsScreen(
       modifier = Modifier.fillMaxSize(),
       topBar = { SettingsScreenTopBar(onGoBack) },
       floatingActionButton = {
-        FloatingActionButton(
-            onClick = { showDeletionValidation = true },
-            shape = RoundedCornerShape(50.dp),
-            containerColor = colorScheme.tertiary,
-            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-            modifier =
-                Modifier.padding(bottom = 16.dp)
-                    .height(45.dp)
-                    .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)) {
-              Text(
-                  text = "Delete account",
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.SemiBold,
-                  color = colorScheme.onTertiary,
-                  modifier = Modifier.padding(horizontal = 30.dp))
-            }
+        Column {
+          FloatingActionButton(
+              onClick = {
+                RepositoryProvider.authRepository.signOut()
+                onAccountDeleteOrSignOut()
+              },
+              shape = RoundedCornerShape(16.dp),
+              containerColor = colorScheme.onTertiary,
+              elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+              modifier =
+                  Modifier.padding(bottom = 16.dp)
+                      .padding(horizontal = screenWidth / 25)
+                      .fillMaxWidth()
+                      .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
+                      .height(55.dp)
+                      .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)) {
+                Text(
+                    text = context.getString(R.string.sign_out),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.tertiary,
+                    modifier = Modifier.padding(horizontal = 30.dp))
+              }
+          FloatingActionButton(
+              onClick = { showDeletionValidation = true },
+              shape = RoundedCornerShape(16.dp),
+              containerColor = colorScheme.tertiary,
+              elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+              modifier =
+                  Modifier.padding(bottom = 16.dp)
+                      .padding(horizontal = screenWidth / 25)
+                      .fillMaxWidth()
+                      .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
+                      .height(55.dp)
+                      .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)) {
+                Text(
+                    text = context.getString(R.string.delete_account),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.onTertiary,
+                    modifier = Modifier.padding(horizontal = 30.dp))
+              }
+        }
       },
       floatingActionButtonPosition = FabPosition.Center) { paddingValues ->
         when {

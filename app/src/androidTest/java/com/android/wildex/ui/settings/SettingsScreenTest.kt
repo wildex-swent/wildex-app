@@ -185,6 +185,22 @@ class SettingsScreenTest {
   }
 
   @Test
+  fun signOutClick_invokesCallback() {
+    var signOutInvoked = false
+
+    composeTestRule.setContent {
+      SettingsScreen(
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDeleteOrSignOut = { signOutInvoked = true })
+    }
+
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.SIGN_OUT_BUTTON).performClick()
+    assert(signOutInvoked)
+  }
+
+  @Test
   fun deleteAccountClick_displaysPopup() {
     composeTestRule.setContent {
       SettingsScreen(

@@ -46,6 +46,7 @@
     <string name="light_mode">Light</string>
     <string name="dark_mode">Dark</string>
     <string name="system_default">Auto</string>
+    <string name="sign_out">Sign out</string>
 
     <!-- Collection screen -->
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>

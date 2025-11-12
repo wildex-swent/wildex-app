@@ -32,8 +32,8 @@ object SettingsScreenTestTags {
  * @param onGoBack callback function called when the user wants to go back to the profile page
  * @param onEditProfileClick callback function for when the user wants to edit his profile, so that
  *   he is taken to the edit profile screen
- * @param onAccountDelete callback function called when the user wants to delete his account, so
- *   that he is taken back to the authentication screen
+ * @param onAccountDeleteOrSignOut callback function called when the user wants to delete his
+ *   account or sign out, so that he is taken back to the authentication screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,5 +41,5 @@ fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
-    onAccountDelete: () -> Unit = {}
+    onAccountDeleteOrSignOut: () -> Unit = {}
 ) {}

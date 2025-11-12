@@ -33,6 +33,11 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
     return uploadImageToStorage(imageUri, path)
   }
 
+  override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL? {
+    val path = getReportImagePath(reportId)
+    return uploadImageToStorage(imageUri, path)
+  }
+
   override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
     val path = getAnimalPicturePath(animalId)
     return uploadImageToStorage(imageUri, path)
@@ -48,6 +53,11 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
     deleteImageFromStorage(path)
   }
 
+  override suspend fun deleteReportImage(reportId: Id) {
+    val path = getReportImagePath(reportId)
+    deleteImageFromStorage(path)
+  }
+
   override suspend fun deleteAnimalPicture(animalId: Id) {
     val path = getAnimalPicturePath(animalId)
     deleteImageFromStorage(path)
@@ -57,6 +67,7 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
     private const val TAG = "StorageRepositoryFirebase"
     private const val USERS_PATH = "users"
     private const val POSTS_PATH = "posts"
+    private const val REPORTS_PATH = "reports"
     private const val ANIMALS_PATH = "animals"
   }
 
@@ -108,6 +119,14 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @return The storage path (e.g., "posts/postId.jpg")
    */
   private fun getPostImagePath(postId: Id): String = "$POSTS_PATH/$postId.jpg"
+
+  /**
+   * Helper function to generate a storage path for a report image.
+   *
+   * @param reportId The report's ID
+   * @return The storage path (e.g., "reports/reportId.jpg")
+   */
+  private fun getReportImagePath(reportId: Id): String = "$REPORTS_PATH/$reportId.jpg"
 
   /**
    * Helper function to generate a storage path for an animal picture.

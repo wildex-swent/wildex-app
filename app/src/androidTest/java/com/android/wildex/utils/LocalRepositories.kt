@@ -294,6 +294,11 @@ object LocalRepositories {
       return "imageUrl:$postId"
     }
 
+    override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL? {
+      storage[reportId] = imageUri
+      return "imageUrl:$reportId"
+    }
+
     override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
       storage[animalId] = imageUri
       return "imageUrl:$animalId"
@@ -305,6 +310,10 @@ object LocalRepositories {
 
     override suspend fun deletePostImage(postId: Id) {
       storage.remove(postId)
+    }
+
+    override suspend fun deleteReportImage(reportId: Id) {
+      storage.remove(reportId)
     }
 
     override suspend fun deleteAnimalPicture(animalId: Id) {

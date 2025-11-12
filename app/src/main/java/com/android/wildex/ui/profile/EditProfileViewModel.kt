@@ -2,6 +2,7 @@ package com.android.wildex.ui.profile
 
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -22,7 +23,7 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    val url: String = "",
+    //val url: String = "",
     val pendingProfileImageUri: Uri? = null,
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
@@ -67,7 +68,7 @@ class EditProfileViewModel(
               username = user.username,
               description = user.bio,
               country = user.country,
-              url = user.profilePictureURL,
+              pendingProfileImageUri = if (!user.profilePictureURL.isBlank()) user.profilePictureURL.toUri() else null,
               isLoading = false,
               errorMsg = null,
               isError = false,
@@ -119,12 +120,12 @@ class EditProfileViewModel(
         // Reset the pending Uri after successful upload
         clearErrorMsg()
         _uiState.value =
-            _uiState.value.copy(isLoading = false, isError = false, pendingProfileImageUri = null)
+            _uiState.value.copy(isLoading = false, isError = false)
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")
         _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false, pendingProfileImageUri = null)
+            _uiState.value.copy(isError = true, isLoading = false)
       }
     }
   }

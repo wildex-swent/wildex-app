@@ -1,10 +1,12 @@
 package com.android.wildex.ui.profile
 
 import android.net.Uri
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,11 +19,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BorderColor
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.SaveAlt
@@ -48,16 +56,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -108,7 +119,7 @@ fun EditProfileScreen(
   val cs = colorScheme
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = { EditProfileTopBar(onGoBack) },
+      topBar = { EditProfileTopBar(isNewUser, onGoBack) },
   ) { pd ->
     when {
       uiState.isError -> LoadingFail()
@@ -140,10 +151,40 @@ fun EditView(
 ) {
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
+    val defaultUri: Uri =
+        "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg".toUri()
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Box(
+              modifier = Modifier.align(Alignment.CenterHorizontally)
+          ){
+              AsyncImage(
+                  model = uiState.pendingProfileImageUri ?: defaultUri,
+                  contentDescription = "Profile picture",
+                  modifier =
+                      Modifier.width(72.dp)
+                          .aspectRatio(1f)
+                          .clip(CircleShape)
+                          .border(1.dp, cs.outline, CircleShape)
+                          .clickable{
+                              pickImageLauncher.launch("image/*")
+                          }
+                          .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
+                  contentScale = ContentScale.Crop)
+              Icon(
+                  imageVector = Icons.Filled.Create,
+                  contentDescription = "Change profile picture",
+                  tint = cs.onPrimary,
+                  modifier = Modifier
+                      .align(Alignment.TopEnd)
+                      .size(20.dp)
+                      .clip(CircleShape)
+                      .background(cs.secondary)
+                      .padding(4.dp)
+              )
+          }
         // Name Input
         OutlinedTextField(
             value = uiState.name,
@@ -224,57 +265,12 @@ fun EditView(
                       },
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(horizontal = 16.dp, vertical = 8.dp) // padding(8.dp)
+                              .padding(horizontal = 16.dp, vertical = 8.dp)
                               .testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT))
                   HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
               }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-              val previewModel: Any? =
-                  uiState.pendingProfileImageUri ?: uiState.url.takeIf { it.isNotBlank() }
-              if (previewModel != null) {
-                AsyncImage(
-                    model = previewModel,
-                    contentDescription = "Profile picture",
-                    modifier =
-                        Modifier.width(72.dp)
-                            .aspectRatio(1f)
-                            .clip(CircleShape)
-                            .border(1.dp, cs.outline, CircleShape)
-                            .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
-                    contentScale = ContentScale.Crop)
-              } else if (uiState.url.isNotBlank()) {
-                AsyncImage(
-                    model = uiState.url,
-                    contentDescription = "Profile picture",
-                    modifier =
-                        Modifier.width(72.dp)
-                            .aspectRatio(1f)
-                            .clip(CircleShape)
-                            .border(1.dp, cs.outline, CircleShape)
-                            .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
-                    contentScale = ContentScale.Crop)
-              }
-              Button(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .testTag(EditProfileScreenTestTags.CHANGE_PROFILE_PICTURE),
-                  onClick = {
-                    // Opens image picker
-                    pickImageLauncher.launch("image/*")
-                  },
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = cs.secondary,
-                          contentColor = cs.onSecondary,
-                      )) {
-                    Text(text = "Change profile picture")
-                  }
-            }
         Button(
             onClick = {
               editScreenViewModel.saveProfileChanges()
@@ -287,17 +283,12 @@ fun EditView(
                     containerColor = cs.secondary,
                     contentColor = cs.onSecondary,
                 ),
+            shape = RoundedCornerShape(8.dp),
             modifier =
                 Modifier.testTag(EditProfileScreenTestTags.SAVE)
-                    .align(Alignment.CenterHorizontally)) {
-              Row {
-                Icon(
-                    imageVector = Icons.Filled.SaveAlt,
-                    contentDescription = "Save",
-                    tint = cs.onSecondary,
-                )
-                Text(text = "Save")
-              }
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()) {
+            Text(text = "Save")
             }
       }
 }

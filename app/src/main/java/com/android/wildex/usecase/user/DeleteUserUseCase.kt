@@ -44,6 +44,6 @@ class DeleteUserUseCase(
     postsRepository.deletePostsByUser(userId)
     reportRepository.deleteReportsByUser(userId)
     likeRepository.deleteLikesByUser(userId)
-    //commentRepository.deleteCommentsByUser(userId)
+    commentRepository.deleteCommentsByUser(userId)
   }
 }

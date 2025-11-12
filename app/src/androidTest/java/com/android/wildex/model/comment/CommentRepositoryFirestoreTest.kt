@@ -258,4 +258,21 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     assertEquals(expectedCount, comments.size)
     assertTrue(comments.all { it.authorId == targetUserId })
   }
+
+  @Test
+  fun deleteCommentsByUserDeletesCorrectComments() = runTest {
+    repository.addComment(comment1)
+    repository.addComment(comment2)
+
+    val targetUserId = comment1.authorId
+
+    repository.deleteCommentsByUser(targetUserId)
+
+    val commentsUser1 = repository.getCommentsByUser(targetUserId)
+    val commentsUser2 = repository.getCommentsByUser(comment2.authorId)
+
+    assertTrue(commentsUser1.isEmpty())
+    assertEquals(1, commentsUser2.size)
+    assertEquals(comment2, commentsUser2[0])
+  }
 }

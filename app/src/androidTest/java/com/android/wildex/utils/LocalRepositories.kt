@@ -242,6 +242,10 @@ object LocalRepositories {
     override suspend fun getCommentsByUser(userId: String): List<Comment> =
         listOfComments.filter { it.authorId == userId }
 
+    override suspend fun deleteCommentsByUser(userId: Id) {
+      listOfComments.removeIf { it.authorId == userId }
+    }
+
     override fun clear() {
       listOfComments.clear()
     }

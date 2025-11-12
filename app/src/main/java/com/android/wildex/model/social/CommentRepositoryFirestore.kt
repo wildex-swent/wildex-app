@@ -120,6 +120,14 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
         .mapNotNull { documentToComment(it) }
   }
 
+  override suspend fun deleteCommentsByUser(userId: Id) {
+    collection.whereEqualTo(CommentsFields.AUTHOR_ID, userId)
+        .get()
+        .await()
+        .documents
+        .forEach { it.reference.delete().await()}
+  }
+
   /**
    * Ensures no Comment item in the document reference has a specific commentId.
    *

@@ -36,6 +36,7 @@ import com.android.wildex.model.utils.Id
  * @param onReport Callback invoked when the report is to be opened.
  * @param onDismiss Callback invoked when the card is dismissed.
  * @param onToggleLike Callback invoked when the like button is toggled.
+ * @param isCurrentUser Boolean indicating if the current user is the author of the post.
  */
 @Composable
 fun SelectionBottomCard(
@@ -46,6 +47,7 @@ fun SelectionBottomCard(
     onReport: (Id) -> Unit,
     onDismiss: () -> Unit,
     onToggleLike: (Id) -> Unit,
+    isCurrentUser: Boolean
 ) {
   if (selection == null) return
   val cs = MaterialTheme.colorScheme
@@ -67,7 +69,7 @@ fun SelectionBottomCard(
               onPost = onPost,
               onToggleLike = onToggleLike,
               activeTab = activeTab,
-          )
+              isCurrentUser = isCurrentUser)
         }
         is PinDetails.ReportDetails -> {
           ReportSelectionCard(details = selection, ui = ui, onReport = onReport)
@@ -205,6 +207,7 @@ private fun SelectionRow(
  * @param onPost Callback invoked when the post is to be opened.
  * @param onToggleLike Callback invoked when the like button is toggled.
  * @param activeTab The currently active map tab.
+ * @param isCurrentUser Boolean indicating if the current user is the author of the post.
  */
 @Composable
 private fun PostSelectionCard(
@@ -213,6 +216,7 @@ private fun PostSelectionCard(
     onPost: (Id) -> Unit,
     onToggleLike: (Id) -> Unit,
     activeTab: MapTab = MapTab.Posts,
+    isCurrentUser: Boolean
 ) {
   SelectionRow(
       left = {
@@ -223,7 +227,8 @@ private fun PostSelectionCard(
 
     Text(
         text =
-            if (activeTab == MapTab.MyPosts) "You saw ${articleWithWord(details.animalName)}"
+            if (activeTab == MapTab.MyPosts && isCurrentUser)
+                "You saw ${articleWithWord(details.animalName)}"
             else
                 "${details.author?.username ?: "Someone"} saw ${articleWithWord(details.animalName)}",
         style = MaterialTheme.typography.titleMedium,

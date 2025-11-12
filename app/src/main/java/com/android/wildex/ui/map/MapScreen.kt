@@ -8,14 +8,18 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -65,6 +69,8 @@ object MapContentTestTags {
   const val SELECTION_LOCATION = "MapScreen/SelectionCard/Location"
   const val REPORT_ASSIGNED_ROW = "MapScreen/SelectionCard/ReportAssignedRow"
 
+  const val BACK_BUTTON = "MapScreen/BackButton"
+
   fun getPinTag(tab: MapTab): String = "MapTabSwitcher-${tab.name}"
 }
 
@@ -88,6 +94,8 @@ fun MapScreen(
     viewModel: MapScreenViewModel = viewModel(),
     onPost: (Id) -> Unit = {},
     onReport: (Id) -> Unit = {},
+    onGoBack: () -> Unit = {},
+    isCurrentUser: Boolean = true,
 ) {
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
   Scaffold(bottomBar = bottomBar) { inner ->
@@ -191,7 +199,7 @@ fun MapScreen(
                   .testTag(MapContentTestTags.TAB_SWITCHER),
           activeTab = uiState.activeTab,
           availableTabs = uiState.availableTabs,
-          onTabSelected = { viewModel.onTabSelected(it) },
+          onTabSelected = { viewModel.onTabSelected(it, userId) },
       )
       // 5) recenter
       RecenterFab(
@@ -217,16 +225,29 @@ fun MapScreen(
           onReport = onReport,
           onDismiss = { viewModel.clearSelection() },
           onToggleLike = viewModel::toggleLike,
+          isCurrentUser = isCurrentUser,
       )
+
+      // 7) back button
+      if (!isCurrentUser) {
+        BackButton(
+            modifier =
+                Modifier.padding(16.dp, vertical = 36.dp)
+                    .align(Alignment.TopStart)
+                    .testTag(MapContentTestTags.BACK_BUTTON),
+            onGoBack = onGoBack,
+            currentTab = uiState.activeTab,
+        )
+      }
+
       // I know it's a weird placement mais the idea is to have the error overlay above the refresh
       // button and to keep the map visible below
       if (uiState.isError) {
         LoadingFail(
             modifier =
-                Modifier.align(Alignment.Center)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)))
+                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
       }
-      // 7) refresh
+      // 8) refresh
       MapRefreshButton(
           modifier =
               Modifier.align(Alignment.TopEnd)
@@ -236,15 +257,14 @@ fun MapScreen(
           currentTab = uiState.activeTab,
           onRefresh = { viewModel.refreshUIState(userId) },
       )
-      // 8) loading overlay
+      // 9) loading overlay
       if (showLoading) {
         LoadingScreen(
             modifier =
-                Modifier.align(Alignment.Center)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)))
+                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
       }
 
-      // 9) camera recenter
+      // 10) camera recenter
       LaunchedEffect(render.recenterNonce) {
         if (render.recenterNonce != null) {
           val target = lastPosition
@@ -282,7 +302,7 @@ fun RecenterFab(
     onRecenter: () -> Unit,
     onAskLocation: () -> Unit,
 ) {
-  val cs = MaterialTheme.colorScheme
+  val cs = colorScheme
   val ui = colorsForMapTab(current, cs)
 
   FloatingActionButton(
@@ -341,7 +361,7 @@ fun MapRefreshButton(
     currentTab: MapTab,
     onRefresh: () -> Unit,
 ) {
-  val cs = MaterialTheme.colorScheme
+  val cs = colorScheme
   val mapUi = colorsForMapTab(currentTab, cs)
 
   // Rotation anim
@@ -371,5 +391,44 @@ fun MapRefreshButton(
                 .graphicsLayer(rotationZ = rotation)
                 .testTag(MapContentTestTags.REFRESH_SPINNER),
     )
+  }
+}
+
+/**
+ * Back Button Composable.
+ *
+ * @param modifier Modifier to be applied to the button.
+ * @param onGoBack Callback when the button is clicked.
+ */
+@Composable
+fun BackButton(
+    modifier: Modifier = Modifier,
+    onGoBack: () -> Unit = {},
+    currentTab: MapTab,
+) {
+  val cs = colorScheme
+  val mapUi = colorsForMapTab(currentTab, cs)
+
+  Box(modifier = modifier) {
+    Row(
+        modifier =
+            Modifier.clickable(onClick = onGoBack)
+                .clip(RoundedCornerShape(20.dp))
+                .background(colorScheme.background)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+      Icon(
+          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+          contentDescription = "Back to Profile",
+          tint = mapUi.bg,
+      )
+
+      Text(
+          text = "Back",
+          color = mapUi.bg,
+      )
+    }
   }
 }

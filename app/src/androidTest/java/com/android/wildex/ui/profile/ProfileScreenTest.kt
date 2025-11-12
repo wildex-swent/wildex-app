@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
+import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
@@ -34,6 +35,7 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import com.mapbox.common.MapboxOptions
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
@@ -42,6 +44,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -67,6 +70,11 @@ class ProfileScreenTest {
           country = "Switzerland",
           friendsCount = 42,
       )
+
+  @Before
+  fun setup() {
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+  }
 
   @Test
   fun topBar_combined_owner_and_not_owner() {

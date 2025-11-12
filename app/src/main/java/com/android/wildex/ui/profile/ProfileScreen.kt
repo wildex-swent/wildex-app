@@ -71,6 +71,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.mapbox.geojson.Point
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -139,6 +140,7 @@ fun ProfileScreen(
               achievements = uiState.achievements,
               onAchievements = onAchievements,
               animalCount = uiState.animalCount,
+              recentPins = uiState.recentPins,
               onCollection = onCollection,
               onMap = onMap,
               onFriends = onFriends,
@@ -156,6 +158,7 @@ fun ProfileContent(
     ownerProfile: Boolean,
     achievements: List<Achievement> = emptyList(),
     animalCount: Int = 17,
+    recentPins: List<Point> = emptyList(),
     onAchievements: (Id) -> Unit,
     onCollection: (Id) -> Unit,
     onMap: (Id) -> Unit,
@@ -210,7 +213,7 @@ fun ProfileContent(
         )
 
         Spacer(modifier = Modifier.height(14.dp))
-        ProfileMap(id = id, onMap = onMap)
+        ProfileMap(id = id, onMap = onMap, pins = recentPins)
 
         Spacer(modifier = Modifier.height(24.dp))
         if (!ownerProfile) {

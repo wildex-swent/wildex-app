@@ -167,7 +167,7 @@ open class FirestoreTest(val collectionPath: String) {
   open val comment1 =
       Comment(
           commentId = "comment1",
-          postId = "post1",
+          parentId = "parent1",
           authorId = "author1",
           text = "text1",
           date = Timestamp.fromDate(2003, 11, 21),
@@ -176,7 +176,7 @@ open class FirestoreTest(val collectionPath: String) {
   open val comment2 =
       Comment(
           commentId = "comment2",
-          postId = "post2",
+          parentId = "parent2",
           authorId = "author2",
           text = "text2",
           date = Timestamp.fromDate(2012, 12, 12),

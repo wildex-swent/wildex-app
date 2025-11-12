@@ -155,7 +155,10 @@ object LocalRepositories {
     override fun getNewCommentId(): String = "newCommentId"
 
     override suspend fun getAllCommentsByPost(postId: String): List<Comment> =
-        listOfComments.filter { it.postId == postId }
+        listOfComments.filter { it.parentId == postId }
+
+    override suspend fun getAllCommentsByReport(reportId: Id): List<Comment> =
+        listOfComments.filter { it.parentId == reportId }
 
     override suspend fun addComment(comment: Comment) {
       listOfComments.add(comment)

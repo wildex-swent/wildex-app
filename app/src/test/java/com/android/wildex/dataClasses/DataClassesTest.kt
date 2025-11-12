@@ -8,6 +8,7 @@ import com.android.wildex.model.relationship.Relationship
 import com.android.wildex.model.relationship.StatusEnum
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.SimpleUser
@@ -111,14 +112,14 @@ class DataClassesTest {
     val comment =
         Comment(
             commentId = "comment1",
-            postId = "post1",
+            parentId = "post1",
             authorId = "user1",
             text = "This is a comment.",
             date = Timestamp.Companion.now(),
-        )
+            tag = CommentTag.POST_COMMENT)
 
     TestCase.assertEquals("comment1", comment.commentId)
-    TestCase.assertEquals("post1", comment.postId)
+    TestCase.assertEquals("post1", comment.parentId)
     TestCase.assertEquals("user1", comment.authorId)
     TestCase.assertEquals("This is a comment.", comment.text)
   }

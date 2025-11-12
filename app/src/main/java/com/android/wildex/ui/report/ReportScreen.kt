@@ -59,20 +59,16 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
-import com.android.wildex.ui.post.testTagForProfilePicture
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
   const val NOTIFICATION_BUTTON = "report_screen_notification_button"
-  const val USER_PROFILE_BUTTON = "report_screen_profile_button"
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
   const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
 
   fun testTagForReport(reportId: Id, element: String): String =
       "ReportScreen_report_${reportId}_$element"
-
-  fun imageTag(reportId: Id): String = testTagForReport(reportId, "Image")
 
   fun testTagForProfilePicture(profileId: String, role: String = ""): String {
     return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
@@ -215,7 +211,6 @@ fun ReportScreenTopBar(
       },
       actions = {
         ClickableProfilePicture(
-            modifier = Modifier.testTag(ReportScreenTestTags.USER_PROFILE_BUTTON),
             profileId = userId,
             profilePictureURL = userProfilePictureURL,
             role = "user",
@@ -306,7 +301,10 @@ fun ReportItem(
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
       border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
       elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp)
+              .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "full")),
   ) {
     // Header: Profile picture + report author + date + location
     Row(
@@ -314,10 +312,9 @@ fun ReportItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
       ClickableProfilePicture(
-          modifier = Modifier.testTag(ReportScreenTestTags.testTagForProfilePicture(author.userId)),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
-          role = "report_author",
+          role = "author",
           onProfile = onProfileClick)
       Spacer(modifier = Modifier.width(10.dp))
       Column(modifier = Modifier.weight(1f)) {
@@ -381,9 +378,7 @@ fun ReportItem(
           AsyncImage(
               model = reportState.imageURL,
               contentDescription = "Report Image",
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .testTag(ReportScreenTestTags.imageTag(reportState.reportId)),
+              modifier = Modifier.fillMaxWidth(),
               contentScale = ContentScale.FillWidth,
           )
         }
@@ -614,7 +609,6 @@ fun NoReportsView() {
  * @param modifier The modifier to be applied to the composable.
  * @param profileId The ID of the profile.
  * @param profilePictureURL The URL of the profile picture.
- * @param role The role of the profile picture.
  * @param onProfile The function to be called when the profile picture is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -628,7 +622,7 @@ fun ClickableProfilePicture(
 ) {
   IconButton(
       onClick = { onProfile(profileId) },
-      modifier = modifier.testTag(testTagForProfilePicture(profileId, role)),
+      modifier = modifier.testTag(ReportScreenTestTags.testTagForProfilePicture(profileId, role)),
   ) {
     AsyncImage(
         model = profilePictureURL,

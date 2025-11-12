@@ -136,7 +136,7 @@ class ReportScreenTest {
   }
 
   @Test
-  fun userProfilePictureClick_invokesCallback() {
+  fun profilePictureClick_invokesCallback() {
     var profilePictureClicked = false
     composeRule.setContent {
       ReportScreen(
@@ -145,7 +145,9 @@ class ReportScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(ReportScreenTestTags.USER_PROFILE_BUTTON).performClick()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
+        .performClick()
     assert(profilePictureClicked)
   }
 
@@ -155,17 +157,28 @@ class ReportScreenTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
-    composeRule.onNodeWithTag(ReportScreenTestTags.USER_PROFILE_BUTTON).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
+        .assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.REPORT_LIST).assertIsDisplayed()
 
     composeRule
         .onNodeWithTag(
-            ReportScreenTestTags.testTagForProfilePicture("user2"), useUnmergedTree = true)
+            ReportScreenTestTags.testTagForProfilePicture("user2", "author"),
+            useUnmergedTree = true)
         .assertIsDisplayed()
     composeRule
         .onNodeWithTag(
-            ReportScreenTestTags.testTagForProfilePicture("user3"), useUnmergedTree = true)
+            ReportScreenTestTags.testTagForProfilePicture("user3", "author"),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId1", "full"))
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
         .assertIsDisplayed()
   }
 
@@ -181,7 +194,9 @@ class ReportScreenTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
-    composeRule.onNodeWithTag(ReportScreenTestTags.USER_PROFILE_BUTTON).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
+        .assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.NO_REPORT_TEXT).assertIsDisplayed()
   }

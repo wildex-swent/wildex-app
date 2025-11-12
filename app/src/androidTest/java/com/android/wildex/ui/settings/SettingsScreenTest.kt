@@ -36,33 +36,33 @@ class SettingsScreenTest {
   @Before
   fun setup() = runBlocking {
     userRepository.addUser(
-      User(
-        userId = "currentUserId",
-        username = "currentUsername",
-        name = "John",
-        surname = "Doe",
-        bio = "This is a bio",
-        profilePictureURL =
-          "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-        userType = UserType.REGULAR,
-        creationDate = Timestamp.now(),
-        country = "France",
-        friendsCount = 3))
+        User(
+            userId = "currentUserId",
+            username = "currentUsername",
+            name = "John",
+            surname = "Doe",
+            bio = "This is a bio",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "France",
+            friendsCount = 3))
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAchievementsRepository.initializeUserAchievements("currentUserId")
 
-    userSettingsScreenVM = SettingsScreenViewModel(
-      userRepository = userRepository,
-      userSettingsRepository = userSettingsRepository,
-      currentUserId = "currentUserId",
-      deleteUserUseCase = DeleteUserUseCase(
-        userRepository = userRepository,
-        userSettingsRepository = userSettingsRepository,
-        userAnimalsRepository = userAnimalsRepository,
-        userAchievementsRepository = userAchievementsRepository
-      )
-    )
+    userSettingsScreenVM =
+        SettingsScreenViewModel(
+            userRepository = userRepository,
+            userSettingsRepository = userSettingsRepository,
+            currentUserId = "currentUserId",
+            deleteUserUseCase =
+                DeleteUserUseCase(
+                    userRepository = userRepository,
+                    userSettingsRepository = userSettingsRepository,
+                    userAnimalsRepository = userAnimalsRepository,
+                    userAchievementsRepository = userAchievementsRepository))
   }
 
   @After
@@ -74,18 +74,21 @@ class SettingsScreenTest {
   fun initialState_displaysCorrectly() {
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.USER_STATUS_SETTING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.APPEARANCE_MODE_SETTING).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.APPEARANCE_MODE_SETTING)
+        .assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG)
+        .assertIsNotDisplayed()
   }
 
   @Test
@@ -94,11 +97,10 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {goBackInvoked = true},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = { goBackInvoked = true },
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -111,11 +113,10 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {editProfileInvoked = true},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = { editProfileInvoked = true },
+          onAccountDelete = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON).performClick()
@@ -128,11 +129,10 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE).performClick()
@@ -146,14 +146,15 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
 
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON).performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
+        .performClick()
     val newStatus = userSettingsScreenVM.uiState.value.userType
     assert(initialStatus != newStatus)
   }
@@ -164,11 +165,10 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.LIGHT_MODE_BUTTON).performClick()
@@ -177,22 +177,30 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.DARK_MODE_BUTTON).performClick()
     val anotherState = userSettingsScreenVM.uiState.value.appearanceMode
 
-    assert(initialState != newState && initialState != anotherState && newState == AppearanceMode.LIGHT && anotherState == AppearanceMode.DARK)
+    assert(
+        initialState != newState &&
+            initialState != anotherState &&
+            newState == AppearanceMode.LIGHT &&
+            anotherState == AppearanceMode.DARK)
   }
 
   @Test
   fun deleteAccountClick_displaysPopup() {
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = {})
     }
 
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG).assertIsDisplayed()
   }
 
@@ -202,16 +210,21 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {accountDeletionInvoked = true}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = { accountDeletionInvoked = true })
     }
 
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     assert(accountDeletionInvoked)
   }
 
@@ -221,16 +234,21 @@ class SettingsScreenTest {
 
     composeTestRule.setContent {
       SettingsScreen(
-        settingsScreenViewModel = userSettingsScreenVM,
-        onGoBack = {},
-        onEditProfileClick = {},
-        onAccountDelete = {accountDeletionInvoked = true}
-      )
+          settingsScreenViewModel = userSettingsScreenVM,
+          onGoBack = {},
+          onEditProfileClick = {},
+          onAccountDelete = { accountDeletionInvoked = true })
     }
 
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     assert(!accountDeletionInvoked)
   }
 }

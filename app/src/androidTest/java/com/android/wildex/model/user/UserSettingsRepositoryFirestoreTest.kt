@@ -148,7 +148,7 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
   }
 
   @Test
-  fun deleteAccountSuccess() = runTest{
+  fun deleteAccountSuccess() = runTest {
     var exceptionThrown = false
     repository.initializeUserSettings(user1.userId)
 

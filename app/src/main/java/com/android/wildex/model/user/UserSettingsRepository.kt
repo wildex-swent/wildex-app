@@ -20,6 +20,6 @@ interface UserSettingsRepository {
   /** Sets the appearance mode preference for a specific user */
   suspend fun setAppearanceMode(userId: Id, mode: AppearanceMode)
 
-  /** Deletes the UserSettings of the given user*/
+  /** Deletes the UserSettings of the given user */
   suspend fun deleteUserSettings(userId: Id)
 }

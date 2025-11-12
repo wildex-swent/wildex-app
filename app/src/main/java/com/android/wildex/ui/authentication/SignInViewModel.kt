@@ -78,7 +78,8 @@ class SignInViewModel(
           val userId = firebaseUser.uid
           try {
             userRepository.getUser(userId)
-            AppTheme.appearanceMode = RepositoryProvider.userSettingsRepository.getAppearanceMode(userId)
+            AppTheme.appearanceMode =
+                RepositoryProvider.userSettingsRepository.getAppearanceMode(userId)
           } catch (_: Exception) {
             initializeUserUseCase(userId)
             AppTheme.appearanceMode = AppearanceMode.AUTOMATIC

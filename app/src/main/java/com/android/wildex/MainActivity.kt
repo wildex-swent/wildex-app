@@ -55,7 +55,11 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    setContent { WildexTheme (theme = AppTheme.appearanceMode) { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
+    setContent {
+      WildexTheme(theme = AppTheme.appearanceMode) {
+        Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+      }
+    }
   }
 }
 
@@ -102,13 +106,12 @@ fun WildexApp(
       )
     }
 
-    //Settings
+    // Settings
     composable(Screen.Settings.route) {
       SettingsScreen(
-        onGoBack = {navigationActions.goBack()},
-        onEditProfileClick = {},
-        onAccountDelete = {navigationActions.navigateTo(Screen.Auth)}
-      )
+          onGoBack = { navigationActions.goBack() },
+          onEditProfileClick = {},
+          onAccountDelete = { navigationActions.navigateTo(Screen.Auth) })
     }
 
     // Map
@@ -209,8 +212,7 @@ fun WildexApp(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
             onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
-            onSettings = {navigationActions.navigateTo(Screen.Settings)}
-        )
+            onSettings = { navigationActions.navigateTo(Screen.Settings) })
       } else {
         Log.e("ProfileScreen", nullUserUID)
         Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()

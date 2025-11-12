@@ -102,13 +102,9 @@ class SettingsScreenViewModel(
     }
   }
 
-  /**
-   * Deletes the account of the current user
-   */
-  fun deleteAccount(){
-    viewModelScope.launch {
-      deleteUserUseCase(currentUserId)
-    }
+  /** Deletes the account of the current user */
+  fun deleteAccount() {
+    viewModelScope.launch { deleteUserUseCase(currentUserId) }
   }
 
   /** Clears any existing error message from the UI state. */

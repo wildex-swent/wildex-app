@@ -30,10 +30,11 @@ class WildexThemeComposeTest {
           object : AbstractComposeView(context) {
             override fun isInEditMode() = isInEditMode
 
-            val theme = when (darkTheme) {
-              true -> AppearanceMode.DARK
-              false -> AppearanceMode.LIGHT
-            }
+            val theme =
+                when (darkTheme) {
+                  true -> AppearanceMode.DARK
+                  false -> AppearanceMode.LIGHT
+                }
 
             @Composable
             override fun Content() {

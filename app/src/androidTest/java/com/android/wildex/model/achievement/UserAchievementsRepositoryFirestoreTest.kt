@@ -233,7 +233,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   }
 
   @Test
-  fun deleteAccountWhenUserExists() = runTest{
+  fun deleteAccountWhenUserExists() = runTest {
     var exceptionThrown = false
     repository.initializeUserAchievements(user1.userId)
 

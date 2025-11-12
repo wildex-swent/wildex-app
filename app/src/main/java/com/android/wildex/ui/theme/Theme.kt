@@ -58,16 +58,17 @@ private val LightColorScheme =
 
 @Composable
 fun WildexTheme(
-  theme: AppearanceMode = AppearanceMode.AUTOMATIC,
+    theme: AppearanceMode = AppearanceMode.AUTOMATIC,
     // Dynamic color is available on Android 12+
-  dynamicColor: Boolean = false,
-  content: @Composable () -> Unit,
+    dynamicColor: Boolean = false,
+    content: @Composable () -> Unit,
 ) {
-  val isDarkTheme = when (theme) {
-    AppearanceMode.LIGHT -> false
-    AppearanceMode.DARK -> true
-    AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
-  }
+  val isDarkTheme =
+      when (theme) {
+        AppearanceMode.LIGHT -> false
+        AppearanceMode.DARK -> true
+        AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+      }
   val colorScheme =
       when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {

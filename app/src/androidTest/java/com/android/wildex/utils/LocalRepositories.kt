@@ -105,46 +105,51 @@ object LocalRepositories {
   }
 
   open class UserSettingsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-    UserSettingsRepository, ClearableRepository {
+      UserSettingsRepository, ClearableRepository {
 
-      val mapUserToSettings = mutableMapOf<Id, UserSettings>()
+    val mapUserToSettings = mutableMapOf<Id, UserSettings>()
 
-      init {
-        clear()
-      }
+    init {
+      clear()
+    }
 
-      override suspend fun initializeUserSettings(userId: String) {
-        mapUserToSettings.put(userId, UserSettings())
-      }
+    override suspend fun initializeUserSettings(userId: String) {
+      mapUserToSettings.put(userId, UserSettings())
+    }
 
-      override suspend fun getEnableNotification(userId: String): Boolean {
-        return mapUserToSettings[userId]?.enableNotifications ?: throw Exception("No User with id $userId found")
-      }
+    override suspend fun getEnableNotification(userId: String): Boolean {
+      return mapUserToSettings[userId]?.enableNotifications
+          ?: throw Exception("No User with id $userId found")
+    }
 
-      override suspend fun setEnableNotification(userId: String, enable: Boolean) {
-        val userSettings = mapUserToSettings[userId]
-        mapUserToSettings.put(userId, userSettings?.copy(enableNotifications = enable) ?: throw Exception("No User with id $userId found"))
-      }
+    override suspend fun setEnableNotification(userId: String, enable: Boolean) {
+      val userSettings = mapUserToSettings[userId]
+      mapUserToSettings.put(
+          userId,
+          userSettings?.copy(enableNotifications = enable)
+              ?: throw Exception("No User with id $userId found"))
+    }
 
-      override suspend fun getAppearanceMode(userId: String): AppearanceMode {
-        return mapUserToSettings[userId]?.appearanceMode ?: throw Exception("No User with id $userId found")
-      }
+    override suspend fun getAppearanceMode(userId: String): AppearanceMode {
+      return mapUserToSettings[userId]?.appearanceMode
+          ?: throw Exception("No User with id $userId found")
+    }
 
-      override suspend fun setAppearanceMode(
-        userId: String,
-        mode: AppearanceMode
-      ) {
-        val userSettings = mapUserToSettings[userId]
-        mapUserToSettings.put(userId, userSettings?.copy(appearanceMode = mode) ?: throw Exception("No User with id $userId found"))
-      }
+    override suspend fun setAppearanceMode(userId: String, mode: AppearanceMode) {
+      val userSettings = mapUserToSettings[userId]
+      mapUserToSettings.put(
+          userId,
+          userSettings?.copy(appearanceMode = mode)
+              ?: throw Exception("No User with id $userId found"))
+    }
 
     override suspend fun deleteUserSettings(userId: Id) {
       mapUserToSettings.remove(userId)
     }
 
     override fun clear() {
-        mapUserToSettings.clear()
-      }
+      mapUserToSettings.clear()
+    }
   }
 
   open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
@@ -308,10 +313,7 @@ object LocalRepositories {
       return mapUserToAchievements.values.flatten().distinct()
     }
 
-    override suspend fun updateUserAchievements(
-      userId: String,
-      inputs: Input
-    ) {
+    override suspend fun updateUserAchievements(userId: String, inputs: Input) {
       // Not needed for tests
     }
 

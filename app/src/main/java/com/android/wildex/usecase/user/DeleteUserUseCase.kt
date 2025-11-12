@@ -7,7 +7,6 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
 
-
 /**
  * Use case: Delete a user's account
  *
@@ -15,10 +14,13 @@ import com.android.wildex.model.utils.Id
  * to this User. This includes a UserSettings, a UserAnimals and a UserAchievements.
  */
 class DeleteUserUseCase(
-  private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val userSettingsRepository: UserSettingsRepository = RepositoryProvider.userSettingsRepository,
-  private val userAnimalsRepository: UserAnimalsRepository = RepositoryProvider.userAnimalsRepository,
-  private val userAchievementsRepository: UserAchievementsRepository = RepositoryProvider.userAchievementsRepository
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val userSettingsRepository: UserSettingsRepository =
+        RepositoryProvider.userSettingsRepository,
+    private val userAnimalsRepository: UserAnimalsRepository =
+        RepositoryProvider.userAnimalsRepository,
+    private val userAchievementsRepository: UserAchievementsRepository =
+        RepositoryProvider.userAchievementsRepository
 ) {
 
   /**

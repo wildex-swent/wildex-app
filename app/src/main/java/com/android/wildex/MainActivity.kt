@@ -37,8 +37,9 @@ import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.theme.WildexTheme
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
 import okhttp3.OkHttpClient
 
@@ -68,10 +69,8 @@ fun WildexApp(
     credentialManager: CredentialManager = CredentialManager.create(context),
     navController: NavHostController = rememberNavController(),
 ) {
-  var currentUser by remember { mutableStateOf(FirebaseAuth.getInstance().currentUser) }
-  LaunchedEffect(Unit) {
-    FirebaseAuth.getInstance().addAuthStateListener { currentUser = it.currentUser }
-  }
+  var currentUser by remember { mutableStateOf(Firebase.auth.currentUser) }
+  LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUser = it.currentUser } }
 
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
@@ -174,7 +173,8 @@ private fun NavGraphBuilder.reportComposable(navigationActions: NavigationAction
     ReportScreen(
         bottomBar = {
           BottomNavigationMenu(Tab.Report) { navigationActions.navigateTo(it.destination) }
-        })
+        }
+    )
   }
 }
 
@@ -206,7 +206,8 @@ private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationAction
     CameraScreen(
         bottomBar = {
           BottomNavigationMenu(Tab.Camera) { navigationActions.navigateTo(it.destination) }
-        })
+        }
+    )
   }
 }
 

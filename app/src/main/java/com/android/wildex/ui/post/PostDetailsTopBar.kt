@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,7 +26,7 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
         )
       },
       navigationIcon = {
-        IconButton(onClick = onGoBack) {
+        IconButton(onClick = onGoBack, modifier = Modifier.testTag(PostDetailsScreenTestTags.BACK_BUTTON)) {
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = "Back to Homepage",

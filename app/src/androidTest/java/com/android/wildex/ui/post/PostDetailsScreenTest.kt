@@ -296,14 +296,22 @@ class PostDetailsScreenTest {
     }
     composeRule.waitForIdle()
     // Click posters profile picture
-    composeRule.onNodeWithTag(testTagForProfilePicture("poster1", "author")).performClick()
+    composeRule
+        .onNodeWithTag(PostDetailsScreenTestTags.testTagForProfilePicture("poster1", "author"))
+        .performClick()
     Assert.assertEquals("poster1", profileClicked)
     // Click comment authors profile picture
-    composeRule.onNodeWithTag(testTagForProfilePicture("commenter1", "commenter")).performClick()
+    composeRule
+        .onNodeWithTag(
+            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter")
+        )
+        .performClick()
     Assert.assertEquals("commenter1", profileClicked)
     // Click current users profile picture in the comment input
     composeRule
-        .onNodeWithTag(testTagForProfilePicture("currentUserId-1", "comment_input"))
+        .onNodeWithTag(
+            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input")
+        )
         .performClick()
     Assert.assertEquals("currentUserId-1", profileClicked)
   }
@@ -330,7 +338,8 @@ class PostDetailsScreenTest {
               animalId = "",
               likesCount = 0,
               commentsCount = 0,
-          ))
+          )
+      )
       val vm =
           PostDetailsScreenViewModel(
               delayedPostsRepo,

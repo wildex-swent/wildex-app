@@ -12,14 +12,15 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.achievement.AchievementsScreenTestTags
+import com.android.wildex.ui.animal.AnimalInformationScreenTestTags
 import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.ui.collection.CollectionScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
+import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Assert.assertEquals
 
 /** Base class for all Wildex tests, providing common setup and utility functions. */
@@ -30,15 +31,6 @@ abstract class NavigationTestUtils {
   init {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
-    }
-  }
-
-  @After
-  fun teardown() {
-    runBlocking {
-      FirebaseEmulator.auth.signOut()
-      FirebaseEmulator.clearAuthEmulator()
-      FirebaseEmulator.clearFirestoreEmulator()
     }
   }
 
@@ -132,9 +124,10 @@ abstract class NavigationTestUtils {
     assertEquals(Screen.Camera.route, navController.currentDestination?.route)
   }
 
-  fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id) {
+  fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     onNodeWithTag(NavigationTestTags.COLLECTION_SCREEN).assertIsDisplayed()
-    onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
+    if (isCurrentUser)
+        onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
     assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
   }
@@ -174,11 +167,6 @@ abstract class NavigationTestUtils {
     assertEquals(animalUid, navController.currentBackStackEntry?.arguments?.getString("animalUid"))
   }
 
-  fun ComposeTestRule.checkSubmitReportScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.SUBMIT_REPORT_SCREEN).assertIsDisplayed()
-    assertEquals(Screen.SubmitReport.route, navController.currentDestination?.route)
-  }
-
   fun ComposeTestRule.checkAchievementsScreenIsDisplayed(userId: Id) {
     onNodeWithTag(NavigationTestTags.ACHIEVEMENTS_SCREEN).assertIsDisplayed()
     assertEquals(Screen.Achievements.PATH, navController.currentDestination?.route)
@@ -199,12 +187,36 @@ abstract class NavigationTestUtils {
     onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().performClick()
   }
 
+  fun ComposeTestRule.navigateToMapFromProfile() {
+    onNodeWithTag(ProfileScreenTestTags.MAP_CTA, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+  }
+
   fun ComposeTestRule.navigateToCameraScreenFromBottomBar() {
     onNodeWithTag(NavigationTestTags.CAMERA_TAB).assertIsDisplayed().performClick()
   }
 
   fun ComposeTestRule.navigateToCollectionScreenFromBottomBar() {
     onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().performClick()
+  }
+
+  fun ComposeTestRule.navigateToCollectionScreenFromProfile() {
+    val collectionNode = onNodeWithTag(ProfileScreenTestTags.COLLECTION, useUnmergedTree = true)
+    waitUntil(5_000) { collectionNode.isDisplayed() }
+    collectionNode.performClick()
+  }
+
+  fun ComposeTestRule.navigateBackFromCollection() {
+    val backNode = onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON, useUnmergedTree = true)
+    waitUntil(5_000) { backNode.isDisplayed() }
+    backNode.performClick()
+  }
+
+  fun ComposeTestRule.navigateBackFromProfile() {
+    onNodeWithTag(ProfileScreenTestTags.GO_BACK, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
   }
 
   fun ComposeTestRule.navigateToReportScreenFromBottomBar() {
@@ -230,6 +242,22 @@ abstract class NavigationTestUtils {
     imageNode.performClick()
   }
 
+  fun ComposeTestRule.navigateBackFromPostDetails() {
+    onNodeWithTag(PostDetailsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+  }
+
+  fun ComposeTestRule.navigateToProfileFromPostDetails(userId: String) {
+    val authorProfileNode =
+        onNodeWithTag(
+            PostDetailsScreenTestTags.testTagForProfilePicture(userId, "author"),
+            useUnmergedTree = true,
+        )
+    waitUntil(5_000) { authorProfileNode.isDisplayed() }
+    authorProfileNode.performClick()
+  }
+
   fun ComposeTestRule.navigateToAnimalInformationScreenFromCollection(animalUid: String) {
     val animalNode =
         onNodeWithTag(
@@ -240,9 +268,11 @@ abstract class NavigationTestUtils {
     animalNode.performClick()
   }
 
-  fun ComposeTestRule.navigateToSubmitReportScreen() {}
-
-  fun ComposeTestRule.navigateToReportDetailsScreen(reportUid: String) {}
+  fun ComposeTestRule.navigateBackFromAnimalInformation() {
+    onNodeWithTag(AnimalInformationScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+  }
 
   fun ComposeTestRule.navigateToAchievementsScreenFromProfile() {
     val achievementsCtaNode =
@@ -251,7 +281,22 @@ abstract class NavigationTestUtils {
     achievementsCtaNode.performClick()
   }
 
+  fun ComposeTestRule.navigateBackFromAchievements() {
+    onNodeWithTag(AchievementsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+  }
+
+  fun ComposeTestRule.checkSubmitReportScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.SUBMIT_REPORT_SCREEN).assertIsDisplayed()
+    assertEquals(Screen.SubmitReport.route, navController.currentDestination?.route)
+  }
+
   fun ComposeTestRule.navigateToSettingsScreen() {}
+
+  fun ComposeTestRule.navigateToSubmitReportScreen() {}
+
+  fun ComposeTestRule.navigateToReportDetailsScreen(reportUid: String) {}
 
   fun ComposeTestRule.navigateToEditProfileScreen() {}
 }

@@ -40,8 +40,12 @@ import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.animal.AnimalInformationScreenTestTags.BACK_BUTTON
 import com.android.wildex.ui.navigation.NavigationTestTags
 
+object AnimalInformationScreenTestTags {
+    const val BACK_BUTTON = "back_button"
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalInformationScreen(
@@ -85,7 +89,8 @@ fun AnimalInformationScreen(
                           Modifier.clickable(onClick = onGoBack)
                               .clip(RoundedCornerShape(20.dp))
                               .background(colorScheme.background)
-                              .padding(horizontal = 8.dp, vertical = 4.dp),
+                              .padding(horizontal = 8.dp, vertical = 4.dp)
+                              .testTag(BACK_BUTTON),
                       verticalAlignment = Alignment.CenterVertically,
                       horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(

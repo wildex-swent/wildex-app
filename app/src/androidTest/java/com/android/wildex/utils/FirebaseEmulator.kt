@@ -1,11 +1,11 @@
 package com.android.wildex.utils
 
 import android.util.Log
-import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.storage
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import io.mockk.InternalPlatformDsl.toArray
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -124,7 +124,8 @@ object FirebaseEmulator {
             .newCall(
                 Request.Builder()
                     .url(
-                        "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key")
+                        "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key"
+                    )
                     .post(
                         """
             {
@@ -134,8 +135,10 @@ object FirebaseEmulator {
             }
         """
                             .trimIndent()
-                            .toRequestBody())
-                    .build())
+                            .toRequestBody()
+                    )
+                    .build()
+            )
             .execute()
     assert(response.isSuccessful) {
       "Failed to change email in Auth Emulator: ${response.code} ${response.message}"
@@ -147,7 +150,8 @@ object FirebaseEmulator {
       val request =
           Request.Builder()
               .url(
-                  "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:query?key=fake-api-key")
+                  "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:query?key=fake-api-key"
+              )
               .build()
 
       Log.d("FirebaseEmulator", "Fetching users with request: ${request.url.toString()}")

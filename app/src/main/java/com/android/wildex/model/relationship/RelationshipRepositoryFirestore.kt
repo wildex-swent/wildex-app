@@ -1,6 +1,7 @@
 package com.android.wildex.model.relationship
 
 import com.android.wildex.model.utils.Id
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -25,11 +26,7 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    * @param receiverId the Id of the user who is the receiver
    */
   override suspend fun initializeRelationship(senderId: Id, receiverId: Id) {
-    collection
-        .document()
-        .set(
-            Relationship(senderId = senderId, receiverId = receiverId, status = StatusEnum.PENDING))
-        .await()
+    collection.document().set(Relationship(senderId = senderId, receiverId = receiverId)).await()
   }
 
   /**
@@ -39,13 +36,8 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    * @return The list of all Relationships with a specified sender
    */
   override suspend fun getAllPendingRelationshipsBySender(senderId: Id): List<Relationship> {
-    return collection
-        .whereEqualTo(RelationshipsFields.STATUS, StatusEnum.PENDING)
-        .whereEqualTo(RelationshipsFields.SENDER_ID, senderId)
-        .get()
-        .await()
-        .documents
-        .mapNotNull { documentToRelationship(it) }
+    return getPendingOrAcceptedRelationshipsByReceiverOrSender(
+        userId = senderId, isReceiver = false, relationshipStatus = StatusEnum.PENDING)
   }
 
   /**
@@ -55,13 +47,8 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    * @return The list of all Relationships with a specified receiver
    */
   override suspend fun getAllPendingRelationshipsByReceiver(receiverId: Id): List<Relationship> {
-    return collection
-        .whereEqualTo(RelationshipsFields.STATUS, StatusEnum.PENDING)
-        .whereEqualTo(RelationshipsFields.RECEIVER_ID, receiverId)
-        .get()
-        .await()
-        .documents
-        .mapNotNull { documentToRelationship(it) }
+    return getPendingOrAcceptedRelationshipsByReceiverOrSender(
+        userId = receiverId, isReceiver = true, relationshipStatus = StatusEnum.PENDING)
   }
 
   /**
@@ -72,21 +59,11 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    */
   override suspend fun getAllAcceptedRelationshipsByUser(userId: Id): List<Relationship> {
     val relationshipAsSender =
-        collection
-            .whereEqualTo(RelationshipsFields.STATUS, StatusEnum.ACCEPTED)
-            .whereEqualTo(RelationshipsFields.SENDER_ID, userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { documentToRelationship(it) }
+        getPendingOrAcceptedRelationshipsByReceiverOrSender(
+            userId = userId, isReceiver = false, relationshipStatus = StatusEnum.ACCEPTED)
     val relationshipAsReceiver =
-        collection
-            .whereEqualTo(RelationshipsFields.STATUS, StatusEnum.ACCEPTED)
-            .whereEqualTo(RelationshipsFields.RECEIVER_ID, userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { documentToRelationship(it) }
+        getPendingOrAcceptedRelationshipsByReceiverOrSender(
+            userId = userId, isReceiver = true, relationshipStatus = StatusEnum.ACCEPTED)
 
     return relationshipAsSender + relationshipAsReceiver
   }
@@ -97,14 +74,7 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    * @param relationship The relationship whose status is to be set to ACCEPTED
    */
   override suspend fun acceptRelationship(relationship: Relationship) {
-    collection
-        .whereEqualTo(RelationshipsFields.SENDER_ID, relationship.senderId)
-        .whereEqualTo(RelationshipsFields.RECEIVER_ID, relationship.receiverId)
-        .get()
-        .await()
-        .documents
-        .first() // assuming only one relationship between two users should exist
-        .reference
+    getRelationshipDocRef(relationship.senderId, relationship.receiverId)
         .update(RelationshipsFields.STATUS, StatusEnum.ACCEPTED)
         .await()
   }
@@ -115,16 +85,49 @@ class RelationshipRepositoryFirestore(private val db: FirebaseFirestore) : Relat
    * @param relationship The relationship who will be deleted
    */
   override suspend fun deleteRelationship(relationship: Relationship) {
-    collection
-        .whereEqualTo(RelationshipsFields.SENDER_ID, relationship.senderId)
-        .whereEqualTo(RelationshipsFields.RECEIVER_ID, relationship.receiverId)
+    getRelationshipDocRef(relationship.senderId, relationship.receiverId).delete().await()
+  }
+
+  /**
+   * Retrieves the pending or accepted relationships of the given user, initiated or received by him
+   *
+   * @param userId the user whose relationships we want to fetch
+   * @param isReceiver false if we want the relationships initiated by the given user, true
+   *   otherwise
+   * @param relationshipStatus defines which relationships we fetch, either pending relationships or
+   *   accepted ones
+   */
+  private suspend fun getPendingOrAcceptedRelationshipsByReceiverOrSender(
+      userId: Id,
+      isReceiver: Boolean,
+      relationshipStatus: StatusEnum
+  ): List<Relationship> {
+    return collection
+        .whereEqualTo(
+            if (isReceiver) RelationshipsFields.RECEIVER_ID else RelationshipsFields.SENDER_ID,
+            userId)
+        .whereEqualTo(RelationshipsFields.STATUS, relationshipStatus)
+        .get()
+        .await()
+        .documents
+        .mapNotNull { documentToRelationship(it) }
+  }
+
+  /**
+   * Retrieves the document reference of the relationship with the given sender and receiver
+   *
+   * @param senderId the sender of the relationship whose document reference is to be retrieved
+   * @param receiverId the receiver of the relationship whose document reference is to be retrieved
+   */
+  private suspend fun getRelationshipDocRef(senderId: Id, receiverId: Id): DocumentReference {
+    return collection
+        .whereEqualTo(RelationshipsFields.SENDER_ID, senderId)
+        .whereEqualTo(RelationshipsFields.RECEIVER_ID, receiverId)
         .get()
         .await()
         .documents
         .first() // assuming only one relationship between two users should exist
         .reference
-        .delete()
-        .await()
   }
 
   /**

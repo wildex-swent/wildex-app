@@ -38,8 +38,8 @@ object SettingsScreenTestTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-  settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
-  onGoBack: () -> Unit = {},
-  onEditProfileClick: () -> Unit = {},
-  onAccountDelete: () -> Unit = {}
+    settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
+    onGoBack: () -> Unit = {},
+    onEditProfileClick: () -> Unit = {},
+    onAccountDelete: () -> Unit = {}
 ) {}

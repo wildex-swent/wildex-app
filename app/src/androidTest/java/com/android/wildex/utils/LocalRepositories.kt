@@ -1,5 +1,7 @@
 package com.android.wildex.utils
 
+import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.report.Report
@@ -19,6 +21,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Input
 import kotlin.collections.mutableMapOf
 
 interface ClearableRepository {
@@ -285,6 +288,46 @@ object LocalRepositories {
     }
   }
 
+  open class UserAchievementsRepositoryImpl() : UserAchievementsRepository, ClearableRepository {
+    val mapUserToAchievements = mutableMapOf<Id, List<Achievement>>()
+
+    override suspend fun initializeUserAchievements(userId: Id) {
+      mapUserToAchievements.put(userId, mutableListOf())
+    }
+
+    override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
+      return mapUserToAchievements[userId] ?: throw Exception("User not found")
+    }
+
+    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> {
+      // Not needed for tests
+      return emptyList()
+    }
+
+    override suspend fun getAllAchievements(): List<Achievement> {
+      return mapUserToAchievements.values.flatten().distinct()
+    }
+
+    override suspend fun updateUserAchievements(
+      userId: String,
+      inputs: Input
+    ) {
+      // Not needed for tests
+    }
+
+    override suspend fun getAchievementsCountOfUser(userId: Id): Int {
+      return getAllAchievementsByUser(userId).size
+    }
+
+    override suspend fun deleteUserAchievements(userId: Id) {
+      mapUserToAchievements.remove(userId)
+    }
+
+    override fun clear() {
+      mapUserToAchievements.clear()
+    }
+  }
+
   open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
       ReportRepository, ClearableRepository {
 
@@ -329,6 +372,7 @@ object LocalRepositories {
   val userSettingsRepository: UserSettingsRepository = UserSettingsRepositoryImpl()
   val userAnimalsRepository: UserAnimalsRepository =
       UserAnimalsRepositoryImpl(animalRepository = animalRepository)
+  val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val reportRepository: ReportRepository = ReportRepositoryImpl()
 
   fun clearAll() {
@@ -339,6 +383,7 @@ object LocalRepositories {
     (animalRepository as ClearableRepository).clear()
     (userSettingsRepository as ClearableRepository).clear()
     (userAnimalsRepository as ClearableRepository).clear()
+    (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
   }
 

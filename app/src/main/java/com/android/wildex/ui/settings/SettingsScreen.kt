@@ -80,9 +80,21 @@ import kotlin.math.ceil
 
 object SettingsScreenTestTags {
     const val GO_BACK_BUTTON = "go_back_button"
+    const val EDIT_PROFILE_SETTING = "edit_profile_setting"
     const val EDIT_PROFILE_BUTTON = "edit_profile_button"
     const val DELETE_ACCOUNT_BUTTON = "delete_account_button"
+    const val DELETE_ACCOUNT_DIALOG = "delete_account_dialog"
+    const val DELETE_ACCOUNT_CONFIRM_BUTTON = "delete_account_confirm_button"
+    const val DELETE_ACCOUNT_DISMISS_BUTTON = "delete_account_dismiss_button"
+    const val NOTIFICATIONS_SETTING = "notifications_setting"
     const val NOTIFICATIONS_TOGGLE = "notifications_toggle"
+    const val USER_STATUS_SETTING = "user_status_setting"
+    const val REGULAR_USER_STATUS_BUTTON = "regular_user_status_button"
+    const val PROFESSIONAL_USER_STATUS_BUTTON = "professional_user_status_button"
+    const val APPEARANCE_MODE_SETTING = "appearance_mode_setting"
+    const val AUTOMATIC_MODE_BUTTON = "automatic_mode_button"
+    const val LIGHT_MODE_BUTTON = "light_mode_button"
+    const val DARK_MODE_BUTTON = "dark_mode_button"
     const val SCREEN_TITLE = "settings_screen_title"
 }
 
@@ -161,8 +173,10 @@ fun SettingsScreen(
             onDismissRequest = { showDeletionValidation = false },
             title = { Text(text = "Delete account") },
             text = { Text(text = "Are you sure you want to delete your account?")},
+            modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
             confirmButton = {
               TextButton(
+                modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON),
                 onClick = {
                   showDeletionValidation = false
                   settingsScreenViewModel.deleteAccount()
@@ -173,7 +187,10 @@ fun SettingsScreen(
               }
             },
             dismissButton = {
-              TextButton(onClick = { showDeletionValidation = false }) {
+              TextButton(
+                modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
+                onClick = { showDeletionValidation = false }
+              ) {
                 Text("Cancel")
               }
             }
@@ -229,7 +246,10 @@ fun SettingsContent(
     val settingHeight = screenHeight / 12
     val paddingHorizontal = screenWidth / 25
     item{
-      EditProfileOption(paddingHorizontal, settingHeight, onEditProfileClick)
+      EditProfileOption(
+        paddingHorizontal,
+        settingHeight,
+        onEditProfileClick)
       SettingsDivider()
     }
     item {
@@ -348,12 +368,16 @@ fun SettingsDivider(){
 fun SettingTemplate(
   settingHeight: Dp,
   paddingHorizontal: Dp,
+  testTag: String = "",
   icon: ImageVector,
   settingName: String,
   interactableElement: @Composable (() -> Unit)
 ){
   Row (
-    modifier = Modifier.fillMaxWidth().height(settingHeight).padding(horizontal = paddingHorizontal),
+    modifier = Modifier.fillMaxWidth()
+      .height(settingHeight)
+      .padding(horizontal = paddingHorizontal)
+      .testTag(testTag),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.Start
   ){
@@ -392,6 +416,7 @@ fun EditProfileOption(
   SettingTemplate(
     settingHeight = settingHeight,
     paddingHorizontal = paddingHorizontal,
+    testTag = SettingsScreenTestTags.EDIT_PROFILE_SETTING,
     icon = Icons.Outlined.Edit,
     settingName = "Edit profile"
   ) {
@@ -427,6 +452,7 @@ fun NotificationOption(
   SettingTemplate(
     settingHeight = settingHeight,
     paddingHorizontal = paddingHorizontal,
+    testTag = SettingsScreenTestTags.NOTIFICATIONS_SETTING,
     icon = Icons.Outlined.Notifications,
     settingName = "Notifications"
   ) {
@@ -489,11 +515,14 @@ fun UserStatusOption(
   groupButtonsColors: SegmentedButtonColors
 ){
   val options = listOf("Regular", "Professional")
+  val testTags = listOf(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON,
+    SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
   val selectedIndex = UserType.entries.indexOf(currentUserStatus)
 
   SettingTemplate(
     settingHeight = settingHeight,
     paddingHorizontal = paddingHorizontal,
+    testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
     icon = Icons.Outlined.Person,
     settingName = "User status"
   ) {
@@ -508,7 +537,7 @@ fun UserStatusOption(
           },
           selected = selectedIndex == index,
           colors = groupButtonsColors,
-          modifier = Modifier.height(35.dp)
+          modifier = Modifier.height(35.dp).testTag(testTags[index])
         ){
           Text(
             text = option,
@@ -546,10 +575,14 @@ fun AppearanceModeOption(
   SettingTemplate(
     settingHeight = settingHeight,
     paddingHorizontal = paddingHorizontal,
+    testTag = SettingsScreenTestTags.APPEARANCE_MODE_SETTING,
     icon = Icons.Outlined.LightMode,
     settingName = "Appearance"
   ) {
     val options = listOf("Auto", "Light", "Dark")
+    val testTags = listOf(SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON,
+      SettingsScreenTestTags.LIGHT_MODE_BUTTON,
+      SettingsScreenTestTags.DARK_MODE_BUTTON)
     val unCheckedIcons = listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
     val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
@@ -564,7 +597,7 @@ fun AppearanceModeOption(
             onAppearanceModeChanged(option)
           },
           selected = index == selectedIndex,
-          modifier = Modifier.height(35.dp),
+          modifier = Modifier.height(35.dp).testTag(testTags[index]),
           icon = {},
           colors = groupButtonsColors
         ){

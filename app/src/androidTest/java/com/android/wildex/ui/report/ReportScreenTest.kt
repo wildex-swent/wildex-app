@@ -1,6 +1,7 @@
 package com.android.wildex.ui.report
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -79,7 +80,7 @@ class ReportScreenTest {
             surname = "Smith",
             bio = "I love wildlife more.",
             profilePictureURL = "urlAlice1",
-            userType = UserType.REGULAR,
+            userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "England",
             friendsCount = 0)
@@ -199,5 +200,27 @@ class ReportScreenTest {
         .assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.NO_REPORT_TEXT).assertIsDisplayed()
+  }
+
+  @Test
+  fun testTagsAreCorrectlySetWhenUserIsRegular() {
+    runBlocking {
+      reportScreenViewModel =
+          ReportScreenViewModel(
+              reportRepository = reportRepository,
+              userRepository = userRepository,
+              currentUserId = "user3")
+      reportScreenViewModel.refreshUIState()
+    }
+
+    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    composeRule.waitForIdle()
+
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId1", "full"))
+        .assertIsNotDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
+        .assertIsDisplayed()
   }
 }

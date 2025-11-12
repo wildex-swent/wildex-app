@@ -71,7 +71,12 @@ class SettingsScreenViewModelTest {
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
             currentUserId = "currentUserId",
-            deleteUserUseCase = DeleteUserUseCase(userRepository, userSettingsRepository, userAnimalsRepository, userAchievementsRepository))
+            deleteUserUseCase =
+                DeleteUserUseCase(
+                    userRepository,
+                    userSettingsRepository,
+                    userAnimalsRepository,
+                    userAchievementsRepository))
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2

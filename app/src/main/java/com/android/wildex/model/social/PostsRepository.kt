@@ -28,4 +28,7 @@ interface PostsRepository {
 
   /** Deletes a Post item from the repository. */
   suspend fun deletePost(postId: Id)
+
+  /** Deletes all Post items made by a specific user. */
+  suspend fun deletePostsByUser(userId: Id)
 }

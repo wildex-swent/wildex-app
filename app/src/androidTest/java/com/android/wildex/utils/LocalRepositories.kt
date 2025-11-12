@@ -71,6 +71,10 @@ object LocalRepositories {
       listOfPosts.removeIf { it.postId == postId }
     }
 
+    override suspend fun deletePostsByUser(userId: Id) {
+      listOfPosts.removeIf { it.authorId == userId }
+    }
+
     override fun clear() {
       listOfPosts.clear()
     }

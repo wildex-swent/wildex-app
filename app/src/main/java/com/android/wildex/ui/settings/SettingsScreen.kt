@@ -110,6 +110,7 @@ fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
+    onSignOut: () -> Unit = {},
     onAccountDelete: () -> Unit = {}
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()

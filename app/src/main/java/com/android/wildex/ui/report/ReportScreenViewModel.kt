@@ -199,6 +199,7 @@ class ReportScreenViewModel(
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error canceling report $reportId", e)
       }
@@ -211,6 +212,7 @@ class ReportScreenViewModel(
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = currentUserId))
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error self-assigning report $reportId", e)
       }
@@ -223,6 +225,7 @@ class ReportScreenViewModel(
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = null))
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error unself-assigning report $reportId", e)
       }
@@ -234,6 +237,7 @@ class ReportScreenViewModel(
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error resolving report $reportId", e)
       }
@@ -242,7 +246,7 @@ class ReportScreenViewModel(
 
   /** Returns a formatted date string from a [Timestamp]. */
   private fun formatDate(ts: Timestamp): String {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     return dateFormat.format(ts.toDate())
   }
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,7 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -153,7 +154,7 @@ fun ReportScreen(
               colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
               border =
                   BorderStroke(width = 8.dp, color = colorScheme.secondary.copy(alpha = 0.28f)),
-              elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+              elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
               modifier =
                   Modifier.align(Alignment.BottomCenter)
                       .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -199,17 +200,17 @@ fun ReportScreenTopBar(
                 },
             textAlign = TextAlign.Center,
             color = colorScheme.primary,
-        )
+            style = MaterialTheme.typography.titleLarge)
       },
       navigationIcon = {
         IconButton(
             modifier = Modifier.testTag(ReportScreenTestTags.NOTIFICATION_BUTTON),
             onClick = onNotificationClick) {
               Icon(
-                  imageVector = Icons.Default.Notifications,
+                  imageVector = Icons.Outlined.Notifications,
                   contentDescription = "Notifications",
-                  tint = colorScheme.primary,
-              )
+                  tint = colorScheme.tertiary,
+                  modifier = Modifier.size(30.dp))
             }
       },
       actions = {
@@ -304,10 +305,10 @@ fun ReportItem(
       shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
       border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
   ) {
-    // Header: Profile picture + report author + date
+    // Header: Profile picture + report author + date + location
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -339,11 +340,35 @@ fun ReportItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = reportState.date,
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.tertiary,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+          Text(
+              text = reportState.date,
+              style = MaterialTheme.typography.labelSmall,
+              color = colorScheme.tertiary,
+          )
+          Row(
+              modifier = Modifier.fillMaxWidth(.4f),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Location",
+                modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+                tint = colorScheme.tertiary,
+            )
+            Spacer(Modifier.width(2.dp))
+            Text(
+                text = reportState.location,
+                style = MaterialTheme.typography.labelMedium,
+                color = colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis)
+          }
+        }
       }
     }
     // Image
@@ -361,26 +386,6 @@ fun ReportItem(
               contentScale = ContentScale.FillWidth,
           )
         }
-    // Location
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Icon(
-          imageVector = Icons.Filled.LocationOn,
-          contentDescription = "Location",
-          tint = colorScheme.tertiary,
-          modifier = Modifier.size(24.dp),
-      )
-      Spacer(Modifier.width(6.dp))
-      Text(
-          text = reportState.location,
-          color = colorScheme.tertiary,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-          softWrap = true,
-      )
-    }
     // Description
     Text(
         text = reportState.description,
@@ -399,22 +404,41 @@ fun ReportItem(
       when (userType) {
         UserType.REGULAR -> {
           if (reportState.assigneeUsername.isNotEmpty())
-              ReportAssigneeCard(assigneeUsername = reportState.assigneeUsername)
-          CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+              ReportAssigneeCard(
+                  assigneeUsername = reportState.assigneeUsername, modifier = Modifier.weight(1f))
+          CancelReportButton(
+              reportId = reportState.reportId,
+              cancelReport = cancelReport,
+              modifier = Modifier.weight(1f))
         }
         UserType.PROFESSIONAL -> {
           if (reportState.assigneeUsername.isEmpty()) {
-            SelfAssignButton(reportId = reportState.reportId, selfAssignReport = selfAssignReport)
+            SelfAssignButton(
+                reportId = reportState.reportId,
+                selfAssignReport = selfAssignReport,
+                modifier = Modifier.weight(1f))
             if (author.userId == userId)
-                CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+                CancelReportButton(
+                    reportId = reportState.reportId,
+                    cancelReport = cancelReport,
+                    modifier = Modifier.weight(1f))
           } else if (reportState.assigneeUsername == username) {
-            ResolveReportButton(reportId = reportState.reportId, resolveReport = resolveReport)
+            ResolveReportButton(
+                reportId = reportState.reportId,
+                resolveReport = resolveReport,
+                modifier = Modifier.weight(1f))
             UnSelfAssignReportButton(
-                reportId = reportState.reportId, unSelfAssignReport = unSelfAssignReport)
+                reportId = reportState.reportId,
+                unSelfAssignReport = unSelfAssignReport,
+                modifier = Modifier.weight(1f))
           } else {
-            ReportAssigneeCard(assigneeUsername = reportState.assigneeUsername)
+            ReportAssigneeCard(
+                assigneeUsername = reportState.assigneeUsername, modifier = Modifier.weight(1f))
             if (author.userId == userId)
-                CancelReportButton(reportId = reportState.reportId, cancelReport = cancelReport)
+                CancelReportButton(
+                    reportId = reportState.reportId,
+                    cancelReport = cancelReport,
+                    modifier = Modifier.weight(1f))
           }
         }
       }
@@ -429,18 +453,24 @@ fun ReportItem(
  * @param cancelReport The function to be called when the cancel report button is clicked.
  */
 @Composable
-fun CancelReportButton(reportId: Id = "", cancelReport: (Id) -> Unit = {}) {
+fun CancelReportButton(
+    reportId: Id = "",
+    cancelReport: (Id) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
   Card(
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(50.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
       border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier.padding(horizontal = 16.dp).clickable { cancelReport(reportId) },
+      elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+      modifier = modifier.padding(horizontal = 16.dp).clickable { cancelReport(reportId) },
   ) {
     Text(
         text = LocalContext.current.getString(R.string.cancel_report),
         color = colorScheme.onTertiary,
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+        modifier =
+            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                .align(Alignment.CenterHorizontally))
   }
 }
 
@@ -451,18 +481,24 @@ fun CancelReportButton(reportId: Id = "", cancelReport: (Id) -> Unit = {}) {
  * @param selfAssignReport The function to be called when the self-assign report button is clicked.
  */
 @Composable
-fun SelfAssignButton(reportId: Id = "", selfAssignReport: (Id) -> Unit = {}) {
+fun SelfAssignButton(
+    reportId: Id = "",
+    selfAssignReport: (Id) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
   Card(
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(50.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
       border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier.padding(horizontal = 16.dp).clickable { selfAssignReport(reportId) },
+      elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+      modifier = modifier.padding(horizontal = 16.dp).clickable { selfAssignReport(reportId) },
   ) {
     Text(
         text = LocalContext.current.getString(R.string.self_assign_report),
         color = colorScheme.onTertiary,
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+        modifier =
+            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                .align(Alignment.CenterHorizontally))
   }
 }
 
@@ -473,18 +509,24 @@ fun SelfAssignButton(reportId: Id = "", selfAssignReport: (Id) -> Unit = {}) {
  * @param resolveReport The function to be called when the resolve report button is clicked.
  */
 @Composable
-fun ResolveReportButton(reportId: Id = "", resolveReport: (Id) -> Unit = {}) {
+fun ResolveReportButton(
+    reportId: Id = "",
+    resolveReport: (Id) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
   Card(
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(50.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.primary),
       border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier.padding(horizontal = 16.dp).clickable { resolveReport(reportId) },
+      elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+      modifier = modifier.padding(horizontal = 16.dp).clickable { resolveReport(reportId) },
   ) {
     Text(
         text = LocalContext.current.getString(R.string.resolve_report),
         color = colorScheme.onPrimary,
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+        modifier =
+            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                .align(Alignment.CenterHorizontally))
   }
 }
 
@@ -495,18 +537,24 @@ fun ResolveReportButton(reportId: Id = "", resolveReport: (Id) -> Unit = {}) {
  * @param unSelfAssignReport The function to be called when the unself assign report button is
  */
 @Composable
-fun UnSelfAssignReportButton(reportId: Id = "", unSelfAssignReport: (Id) -> Unit = {}) {
+fun UnSelfAssignReportButton(
+    reportId: Id = "",
+    unSelfAssignReport: (Id) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
   Card(
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(50.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary),
       border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier.padding(horizontal = 16.dp).clickable { unSelfAssignReport(reportId) },
+      elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+      modifier = modifier.padding(horizontal = 16.dp).clickable { unSelfAssignReport(reportId) },
   ) {
     Text(
         text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
         color = colorScheme.onTertiary,
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+        modifier =
+            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                .align(Alignment.CenterHorizontally))
   }
 }
 
@@ -516,17 +564,19 @@ fun UnSelfAssignReportButton(reportId: Id = "", unSelfAssignReport: (Id) -> Unit
  * @param assigneeUsername The username of the assignee.
  */
 @Composable
-fun ReportAssigneeCard(assigneeUsername: String = "") {
+fun ReportAssigneeCard(assigneeUsername: String = "", modifier: Modifier = Modifier) {
   Card(
       shape = RoundedCornerShape(8.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary.copy(alpha = 0.6f)),
       border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
-      modifier = Modifier.padding(horizontal = 16.dp)) {
+      modifier = modifier.padding(horizontal = 16.dp)) {
         Text(
             text =
                 LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
             color = colorScheme.onTertiary,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+            modifier =
+                Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                    .align(Alignment.CenterHorizontally))
       }
 }
 

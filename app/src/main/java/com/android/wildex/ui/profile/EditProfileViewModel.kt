@@ -23,7 +23,7 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
-    //val url: String = "",
+    val profileSaved: Boolean = false,
     val pendingProfileImageUri: Uri? = null,
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
@@ -68,11 +68,11 @@ class EditProfileViewModel(
               username = user.username,
               description = user.bio,
               country = user.country,
-              pendingProfileImageUri = if (!user.profilePictureURL.isBlank()) user.profilePictureURL.toUri() else null,
+              pendingProfileImageUri =
+                  if (!user.profilePictureURL.isBlank()) user.profilePictureURL.toUri() else null,
               isLoading = false,
               errorMsg = null,
-              isError = false,
-          )
+              isError = false)
     } catch (e: Exception) {
       Log.e("EditProfileScreenViewModel", "Error refreshing UI state", e)
       setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
@@ -120,12 +120,11 @@ class EditProfileViewModel(
         // Reset the pending Uri after successful upload
         clearErrorMsg()
         _uiState.value =
-            _uiState.value.copy(isLoading = false, isError = false)
+            _uiState.value.copy(isLoading = false, isError = false, profileSaved = true)
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")
-        _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false)
+        _uiState.value = _uiState.value.copy(isError = true, isLoading = false)
       }
     }
   }
@@ -160,5 +159,9 @@ class EditProfileViewModel(
 
   fun setNewProfileImageUri(uri: Uri?) {
     _uiState.value = _uiState.value.copy(pendingProfileImageUri = uri)
+  }
+
+  fun setProfileSaved(new: Boolean) {
+    _uiState.value = _uiState.value.copy(profileSaved = new)
   }
 }

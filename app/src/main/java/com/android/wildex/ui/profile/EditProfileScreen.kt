@@ -1,7 +1,6 @@
 package com.android.wildex.ui.profile
 
 import android.net.Uri
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,13 +24,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BorderColor
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
@@ -56,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -68,7 +61,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -151,44 +143,46 @@ fun EditView(
 ) {
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
-    val defaultUri: Uri =
-        "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg".toUri()
+  val defaultUri: Uri =
+      "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg"
+          .toUri()
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Box(
-              modifier = Modifier.align(Alignment.CenterHorizontally)
-          ){
-              AsyncImage(
-                  model = uiState.pendingProfileImageUri ?: defaultUri,
-                  contentDescription = "Profile picture",
-                  modifier =
-                      Modifier.width(72.dp)
-                          .aspectRatio(1f)
-                          .clip(CircleShape)
-                          .border(1.dp, cs.outline, CircleShape)
-                          .clickable{
-                              pickImageLauncher.launch("image/*")
-                          }
-                          .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
-                  contentScale = ContentScale.Crop)
-              Icon(
-                  imageVector = Icons.Filled.Create,
-                  contentDescription = "Change profile picture",
-                  tint = cs.onPrimary,
-                  modifier = Modifier
-                      .align(Alignment.TopEnd)
+        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+          AsyncImage(
+              model = uiState.pendingProfileImageUri ?: defaultUri,
+              contentDescription = "Profile picture",
+              modifier =
+                  Modifier.width(72.dp)
+                      .aspectRatio(1f)
+                      .clip(CircleShape)
+                      .border(1.dp, cs.outline, CircleShape)
+                      .clickable {
+                        pickImageLauncher.launch("image/*")
+                        editScreenViewModel.setProfileSaved(false)
+                      }
+                      .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
+              contentScale = ContentScale.Crop)
+          Icon(
+              imageVector = Icons.Filled.Create,
+              contentDescription = "Change profile picture",
+              tint = cs.onPrimary,
+              modifier =
+                  Modifier.align(Alignment.TopEnd)
                       .size(20.dp)
                       .clip(CircleShape)
                       .background(cs.secondary)
-                      .padding(4.dp)
-              )
-          }
+                      .padding(4.dp))
+        }
         // Name Input
         OutlinedTextField(
             value = uiState.name,
-            onValueChange = { editScreenViewModel.setName(it) },
+            onValueChange = {
+              editScreenViewModel.setName(it)
+              editScreenViewModel.setProfileSaved(false)
+            },
             label = { Text("Name") },
             placeholder = { Text("Name") },
             isError = uiState.invalidNameMsg != null,
@@ -201,7 +195,10 @@ fun EditView(
         // Surname Input
         OutlinedTextField(
             value = uiState.surname,
-            onValueChange = { editScreenViewModel.setSurname(it) },
+            onValueChange = {
+              editScreenViewModel.setSurname(it)
+              editScreenViewModel.setProfileSaved(false)
+            },
             label = { Text("Surname") },
             placeholder = { Text("Surname") },
             isError = uiState.invalidSurnameMsg != null,
@@ -214,7 +211,10 @@ fun EditView(
         // User Input
         OutlinedTextField(
             value = uiState.username,
-            onValueChange = { editScreenViewModel.setUsername(it) },
+            onValueChange = {
+              editScreenViewModel.setUsername(it)
+              editScreenViewModel.setProfileSaved(false)
+            },
             label = { Text("Username") },
             placeholder = { Text("Username") },
             isError = uiState.invalidUsernameMsg != null,
@@ -227,7 +227,10 @@ fun EditView(
         // Description Input
         OutlinedTextField(
             value = uiState.description,
-            onValueChange = { editScreenViewModel.setDescription(it) },
+            onValueChange = {
+              editScreenViewModel.setDescription(it)
+              editScreenViewModel.setProfileSaved(false)
+            },
             label = { Text("Description") },
             placeholder = { Text("Description") },
             modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_DESCRIPTION))
@@ -245,7 +248,12 @@ fun EditView(
               label = { Text("Label") },
               trailingIcon = {
                 Icon(
-                    icon, "contentDescription", Modifier.clickable { showDropdown = !showDropdown })
+                    icon,
+                    "contentDescription",
+                    Modifier.clickable {
+                      showDropdown = !showDropdown
+                      editScreenViewModel.setProfileSaved(false)
+                    })
               })
 
           // Dropdown to show location suggestions
@@ -271,12 +279,18 @@ fun EditView(
                 }
               }
         }
+        if (uiState.profileSaved) {
+          Text(
+              text = "Profile changes saved successfully",
+              modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
         Button(
             onClick = {
               editScreenViewModel.saveProfileChanges()
               if (isNewUser) {
                 onSave()
               }
+              editScreenViewModel.setProfileSaved(true)
             },
             colors =
                 ButtonDefaults.buttonColors(
@@ -288,7 +302,7 @@ fun EditView(
                 Modifier.testTag(EditProfileScreenTestTags.SAVE)
                     .align(Alignment.CenterHorizontally)
                     .fillMaxWidth()) {
-            Text(text = "Save")
+              Text(text = "Save")
             }
       }
 }

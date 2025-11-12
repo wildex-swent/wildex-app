@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,7 +45,7 @@ fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {
         }
       },
       actions = {
-          // Empty box to center the title
-          Box(modifier = Modifier.size(48.dp))
+        // Empty box to center the title
+        Box(modifier = Modifier.size(48.dp))
       })
 }

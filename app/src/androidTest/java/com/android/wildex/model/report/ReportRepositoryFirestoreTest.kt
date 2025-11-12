@@ -274,4 +274,22 @@ class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
       assertEquals("Report not found", e.message)
     }
   }
+
+  @Test
+  fun deleteReportsByUserDeletesCorrectReports() = runTest {
+    val report1 = report1
+    val report2 = report2
+    val report3 = report2.copy(authorId = report1.authorId, reportId = "reportId3")
+
+    repository.addReport(report1)
+    repository.addReport(report2)
+    repository.addReport(report3)
+
+    repository.deleteReportsByUser(report1.authorId)
+
+    val remainingReports = repository.getAllReports()
+    assertEquals(1, remainingReports.size)
+    assertTrue(remainingReports.all { it.authorId != report1.authorId })
+    assertEquals(listOf(report2), remainingReports)
+  }
 }

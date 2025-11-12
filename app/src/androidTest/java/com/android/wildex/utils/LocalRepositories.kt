@@ -373,6 +373,10 @@ object LocalRepositories {
       listOfReports.removeIf { it.reportId == reportId }
     }
 
+    override suspend fun deleteReportsByUser(userId: Id) {
+      listOfReports.removeIf { it.authorId == userId }
+    }
+
     override fun clear() {
       listOfReports.clear()
     }

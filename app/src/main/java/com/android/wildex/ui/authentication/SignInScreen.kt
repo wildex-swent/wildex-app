@@ -124,7 +124,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
             modifier = Modifier.fillMaxWidth()) {
               Image(
                   painter = painterResource(id = R.drawable.google_logo),
-                  contentDescription = context.getString(R.string.google_logo),
+                  contentDescription = "Google Logo",
                   modifier = Modifier.size(30.dp).padding(8.dp))
 
               Text(

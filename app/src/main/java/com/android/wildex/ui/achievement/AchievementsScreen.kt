@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
@@ -78,7 +79,10 @@ var SemanticsPropertyReceiver.achievementId by AchievementIdKey
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> Unit) {
+fun AchievementsScreen(
+    viewModel: AchievementsScreenViewModel = viewModel(),
+    onGoBack: () -> Unit = {}
+) {
   val uiState by viewModel.uiState.collectAsState()
 
   LaunchedEffect(Unit) { viewModel.loadAchievements() }
@@ -87,7 +91,7 @@ fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> U
       topBar = {
         TopAppBar(
             modifier = Modifier.testTag(AchievementsScreenTestTags.TOP_APP_BAR),
-            title = { LocalContext.current.getString(R.string.trophies) },
+            title = { Text(text = LocalContext.current.getString(R.string.trophies)) },
             navigationIcon = {
               IconButton(
                   onClick = onGoBack,
@@ -115,10 +119,7 @@ fun AchievementsScreen(viewModel: AchievementsScreenViewModel, onGoBack: () -> U
                         .padding(paddingValues)
                         .testTag(AchievementsScreenTestTags.ERROR),
                 contentAlignment = Alignment.Center) {
-                  Text(
-                      text =
-                          uiState.errorMsg ?: LocalContext.current.getString(R.string.prev_arrow),
-                      color = MaterialTheme.colorScheme.error)
+                  Text(text = uiState.errorMsg ?: "", color = MaterialTheme.colorScheme.error)
                 }
           }
           else -> {

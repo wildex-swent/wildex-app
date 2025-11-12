@@ -9,7 +9,7 @@ package com.android.wildex.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -42,37 +42,21 @@ data class HomeUIState(
 )
 
 /** Default placeholder user used when no valid user is loaded. */
-val defaultUser: SimpleUser =
-    SimpleUser(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        profilePictureURL = "",
-    )
-
-/** Default placeholder animal used when no valid animal is associated with a post. */
-val defaultAnimal: Animal =
-    Animal(
-        animalId = "defaultAnimalId",
-        name = "Default Animal",
-        species = "Unknown",
-        description = "This is a default animal.",
-        pictureURL =
-            "https://www.publicdomainpictures.net/pictures/320000/velka/background-image.png",
-    )
-
+private val defaultUser: SimpleUser =
+    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
 /**
  * Combines post data with associated metadata for display.
  *
  * @property post The base Post object.
  * @property isLiked Indicates whether the current user has liked this post.
  * @property author Simplified user information for the post author.
- * @property animal The animal referenced in the post.
+ * @property animalName The animal referenced in the post.
  */
 data class PostState(
     val post: Post,
-    val isLiked: Boolean = false,
-    val author: SimpleUser = defaultUser,
-    val animal: Animal = defaultAnimal,
+    val isLiked: Boolean,
+    val author: SimpleUser,
+    val animalName: String,
 )
 
 /**
@@ -92,12 +76,8 @@ class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId,
+    private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
   /** Backing property for the home screen state. */
@@ -145,12 +125,18 @@ class HomeScreenViewModel(
    * Retrieves posts and converts them to [PostState] objects including like status and author data.
    */
   private suspend fun fetchPosts(): List<PostState> =
-      postRepository.getAllPosts().map { post ->
-        PostState(
-            post = post,
-            isLiked = likeRepository.getLikeForPost(post.postId) != null,
-            author = userRepository.getSimpleUser(post.authorId),
-        )
+      postRepository.getAllPosts().mapNotNull { post ->
+        try {
+          PostState(
+              post = post,
+              author = userRepository.getSimpleUser(post.authorId),
+              isLiked = likeRepository.getLikeForPost(post.postId) != null,
+              animalName = animalRepository.getAnimal(post.animalId).name,
+          )
+        } catch (e: Exception) {
+          setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+          null
+        }
       }
 
   /**

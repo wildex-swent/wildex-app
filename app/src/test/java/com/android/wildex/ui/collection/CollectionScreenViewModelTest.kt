@@ -66,6 +66,13 @@ class CollectionScreenViewModelTest {
           profilePictureURL =
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png")
 
+  private val su2 =
+      SimpleUser(
+          userId = "otherUserId",
+          username = "otherUsername",
+          profilePictureURL =
+              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png")
+
   private val defaultUser: SimpleUser =
       SimpleUser(
           userId = "defaultUserId",
@@ -148,6 +155,7 @@ class CollectionScreenViewModelTest {
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2
     coEvery { userRepository.getSimpleUser("currentUserId") } returns su1
+    coEvery { userRepository.getSimpleUser("otherUserId") } returns su2
     coEvery { animalsRepository.getAnimal("animalId-1") } returns a1
     coEvery { animalsRepository.getAnimal("animalId-2") } returns a2
     coEvery { animalsRepository.getAnimal("animalId-3") } returns a3
@@ -228,6 +236,39 @@ class CollectionScreenViewModelTest {
       Assert.assertEquals(expectedStates, updatedState.animals)
       Assert.assertEquals(su1, updatedState.user)
       Assert.assertTrue(updatedState.isUserOwner)
+      Assert.assertFalse(updatedState.isLoading)
+      Assert.assertFalse(updatedState.isError)
+      Assert.assertNull(updatedState.errorMsg)
+    }
+  }
+
+  @Test
+  fun animalList_of_another_user_contains_only_unlocked_animals() {
+    mainDispatcherRule.runTest {
+      viewModel.loadUIState(userUid = "otherUserId")
+      advanceUntilIdle()
+      val expectedStates =
+          listOf(
+              AnimalState(
+                  animalId = "animalId-2",
+                  pictureURL = a2.pictureURL,
+                  name = a2.name,
+                  isUnlocked = true),
+              AnimalState(
+                  animalId = "animalId-3",
+                  pictureURL = a3.pictureURL,
+                  name = a3.name,
+                  isUnlocked = true),
+              AnimalState(
+                  animalId = "animalId-6",
+                  pictureURL = a6.pictureURL,
+                  name = a6.name,
+                  isUnlocked = true),
+          )
+      val updatedState = viewModel.uiState.value
+      Assert.assertEquals(expectedStates, updatedState.animals)
+      Assert.assertEquals(su2, updatedState.user)
+      Assert.assertFalse(updatedState.isUserOwner)
       Assert.assertFalse(updatedState.isLoading)
       Assert.assertFalse(updatedState.isError)
       Assert.assertNull(updatedState.errorMsg)

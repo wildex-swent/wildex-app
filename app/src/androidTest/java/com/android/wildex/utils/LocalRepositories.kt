@@ -2,8 +2,14 @@ package com.android.wildex.utils
 
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import android.content.Context
+import android.net.Uri
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.animaldetector.AnimalDetectResponse
+import com.android.wildex.model.animaldetector.AnimalInfoRepository
+import com.android.wildex.model.animaldetector.BoundingBox
+import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -14,6 +20,7 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
@@ -23,6 +30,7 @@ import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Input
 import kotlin.collections.mutableMapOf
+import com.android.wildex.model.utils.URL
 
 interface ClearableRepository {
   fun clear()
@@ -366,6 +374,68 @@ object LocalRepositories {
     }
   }
 
+  open class StorageRepositoryImpl() : StorageRepository, ClearableRepository {
+
+    val storage = mutableMapOf<Id, Uri>()
+
+    override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL? {
+      storage[userId] = imageUri
+      return "imageUrl:$userId"
+    }
+
+    override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL? {
+      storage[postId] = imageUri
+      return "imageUrl:$postId"
+    }
+
+    override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
+      storage[animalId] = imageUri
+      return "imageUrl:$animalId"
+    }
+
+    override suspend fun deleteUserProfilePicture(userId: Id) {
+      storage.remove(userId)
+    }
+
+    override suspend fun deletePostImage(postId: Id) {
+      storage.remove(postId)
+    }
+
+    override suspend fun deleteAnimalPicture(animalId: Id) {
+      storage.remove(animalId)
+    }
+
+    override fun clear() {
+      storage.clear()
+    }
+  }
+
+  open class AnimalInfoRepositoryImpl() : AnimalInfoRepository {
+    override suspend fun detectAnimal(
+        context: Context,
+        imageUri: Uri,
+    ): List<AnimalDetectResponse> {
+      return listOf(
+          AnimalDetectResponse(
+              "default animal",
+              0.9f,
+              BoundingBox(0f, 0f, 0f, 0f),
+              Taxonomy(
+                  "animalId",
+                  "animalClass",
+                  "animalOrder",
+                  "animalFamily",
+                  "animalGenus",
+                  "animalSpecies",
+              ),
+          ))
+    }
+
+    override suspend fun getAnimalDescription(animalName: String): String? {
+      return "This is a default animal"
+    }
+  }
+
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
@@ -376,6 +446,8 @@ object LocalRepositories {
       UserAnimalsRepositoryImpl(animalRepository = animalRepository)
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val reportRepository: ReportRepository = ReportRepositoryImpl()
+  val storageRepository: StorageRepository = StorageRepositoryImpl()
+  val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -387,6 +459,7 @@ object LocalRepositories {
     (userAnimalsRepository as ClearableRepository).clear()
     (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
+    (storageRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

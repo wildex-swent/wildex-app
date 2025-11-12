@@ -11,6 +11,9 @@ interface CommentRepository {
   /** Retrieves all Comment items associated with a specific post. */
   suspend fun getAllCommentsByPost(postId: Id): List<Comment>
 
+  /** Retrieves all Comment items associated with a specific report. */
+  suspend fun getAllCommentsByReport(reportId: Id): List<Comment>
+
   /** Adds a new Comment item to the repository. */
   suspend fun addComment(comment: Comment)
 

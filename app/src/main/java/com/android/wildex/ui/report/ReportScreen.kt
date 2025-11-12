@@ -372,7 +372,7 @@ fun ReportItem(
     // Image
     Box(
         modifier =
-            Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+            Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { onReportClick(reportState.reportId) }) {
           AsyncImage(
@@ -386,14 +386,14 @@ fun ReportItem(
     Text(
         text = reportState.description,
         color = colorScheme.tertiary,
-        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp),
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         softWrap = true,
     )
     // Buttons
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -450,9 +450,9 @@ fun ReportItem(
  */
 @Composable
 fun CancelReportButton(
+    modifier: Modifier = Modifier,
     reportId: Id = "",
     cancelReport: (Id) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
   Card(
       shape = RoundedCornerShape(50.dp),
@@ -465,7 +465,7 @@ fun CancelReportButton(
         text = LocalContext.current.getString(R.string.cancel_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally))
   }
 }
@@ -478,9 +478,9 @@ fun CancelReportButton(
  */
 @Composable
 fun SelfAssignButton(
+    modifier: Modifier = Modifier,
     reportId: Id = "",
     selfAssignReport: (Id) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
   Card(
       shape = RoundedCornerShape(50.dp),
@@ -493,7 +493,7 @@ fun SelfAssignButton(
         text = LocalContext.current.getString(R.string.self_assign_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally))
   }
 }
@@ -506,9 +506,9 @@ fun SelfAssignButton(
  */
 @Composable
 fun ResolveReportButton(
+    modifier: Modifier = Modifier,
     reportId: Id = "",
     resolveReport: (Id) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
   Card(
       shape = RoundedCornerShape(50.dp),
@@ -521,7 +521,7 @@ fun ResolveReportButton(
         text = LocalContext.current.getString(R.string.resolve_report),
         color = colorScheme.onPrimary,
         modifier =
-            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally))
   }
 }
@@ -534,9 +534,9 @@ fun ResolveReportButton(
  */
 @Composable
 fun UnSelfAssignReportButton(
+    modifier: Modifier = Modifier,
     reportId: Id = "",
     unSelfAssignReport: (Id) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
   Card(
       shape = RoundedCornerShape(50.dp),
@@ -549,7 +549,7 @@ fun UnSelfAssignReportButton(
         text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally))
   }
 }
@@ -560,7 +560,7 @@ fun UnSelfAssignReportButton(
  * @param assigneeUsername The username of the assignee.
  */
 @Composable
-fun ReportAssigneeCard(assigneeUsername: String = "", modifier: Modifier = Modifier) {
+fun ReportAssigneeCard(modifier: Modifier = Modifier, assigneeUsername: String = "") {
   Card(
       shape = RoundedCornerShape(8.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary.copy(alpha = 0.6f)),
@@ -571,7 +571,7 @@ fun ReportAssigneeCard(assigneeUsername: String = "", modifier: Modifier = Modif
                 LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
             color = colorScheme.onTertiary,
             modifier =
-                Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                     .align(Alignment.CenterHorizontally))
       }
 }

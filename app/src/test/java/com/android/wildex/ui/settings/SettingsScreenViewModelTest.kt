@@ -1,6 +1,10 @@
 package com.android.wildex.ui.settings
 
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.LikeRepository
+import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
@@ -30,6 +34,10 @@ class SettingsScreenViewModelTest {
   private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var postsRepository: PostsRepository
+  private lateinit var reportRepository: ReportRepository
+  private lateinit var likeRepository: LikeRepository
+  private lateinit var commentRepository: CommentRepository
   private lateinit var viewModel: SettingsScreenViewModel
 
   private val u1 =
@@ -66,6 +74,10 @@ class SettingsScreenViewModelTest {
     userSettingsRepository = mockk()
     userAnimalsRepository = mockk()
     userAchievementsRepository = mockk()
+    postsRepository = mockk()
+    reportRepository = mockk()
+    likeRepository = mockk()
+    commentRepository = mockk()
     viewModel =
         SettingsScreenViewModel(
             userSettingsRepository = userSettingsRepository,
@@ -76,7 +88,8 @@ class SettingsScreenViewModelTest {
                     userRepository,
                     userSettingsRepository,
                     userAnimalsRepository,
-                    userAchievementsRepository))
+                    userAchievementsRepository,
+                  postsRepository, reportRepository, likeRepository, commentRepository))
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2

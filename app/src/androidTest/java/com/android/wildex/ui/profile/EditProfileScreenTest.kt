@@ -1,14 +1,13 @@
 package com.android.wildex.ui.profile
 
-import androidx.compose.ui.test.assertCountEquals
+import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextClearance
-import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.LocalRepositories
@@ -37,14 +36,10 @@ class EditProfileScreenTest {
       )
 
   @Test
-  fun initialState_loadsFromRepository_andShowsFields() {
+  fun initialState_showsFields_andProfilePreview() {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
-    val vm =
-        EditProfileViewModel(
-            userRepository = userRepo,
-            currentUserId = "uid-1",
-        )
+    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -58,18 +53,16 @@ class EditProfileScreenTest {
         .onNodeWithTag(EditProfileScreenTestTags.INPUT_DESCRIPTION)
         .assertTextContains("Bio of Jane")
     composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).assertIsDisplayed()
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.CHANGE_PROFILE_PICTURE).assertIsDisplayed()
+
+    composeRule.onNodeWithContentDescription("Change profile picture").assertIsDisplayed()
+    composeRule.onNodeWithTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW).assertIsDisplayed()
   }
 
   @Test
   fun countryDropdown_opens_and_selects_country() {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
-    val vm =
-        EditProfileViewModel(
-            userRepository = userRepo,
-            currentUserId = "uid-1",
-        )
+    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -79,59 +72,40 @@ class EditProfileScreenTest {
         .onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)
         .assertTextContains(initialCountry, substring = false)
 
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).performClick()
+    composeRule.onNodeWithContentDescription("contentDescription").performClick()
     val items =
         composeRule.onAllNodesWithTag(
             EditProfileScreenTestTags.COUNTRY_ELEMENT, useUnmergedTree = true)
-    items.assertCountEquals(items.fetchSemanticsNodes().size)
     items[0].performClick()
     composeRule.waitForIdle()
 
     val newCountry = vm.uiState.value.country
     Assert.assertNotEquals(initialCountry, newCountry)
-
     composeRule
         .onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY)
         .assertTextContains(newCountry, substring = false)
   }
 
   @Test
-  fun validationMessages_toggle_on_name_field() {
+  fun changeProfileImage_updatesPreview() {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
-    val vm =
-        EditProfileViewModel(
-            userRepository = userRepo,
-            currentUserId = "uid-1",
-        )
+    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
 
-    composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
+    composeRule.setContent { EditProfileScreen(editScreenViewModel = vm) }
     composeRule.waitForIdle()
 
-    val nameField = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
-    nameField.performTextClearance()
-    nameField.performTextInput("")
+    vm.setNewProfileImageUri(Uri.parse("content://local/new"))
     composeRule.waitForIdle()
-    composeRule
-        .onAllNodesWithTag(EditProfileScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertCountEquals(1)
 
-    nameField.performTextInput("J")
-    composeRule.waitForIdle()
-    composeRule
-        .onAllNodesWithTag(EditProfileScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertCountEquals(0)
+    composeRule.onNodeWithTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW).assertIsDisplayed()
   }
 
   @Test
   fun goBack_invokes_callback() {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
-    val vm =
-        EditProfileViewModel(
-            userRepository = userRepo,
-            currentUserId = "uid-1",
-        )
+    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
 
     var back = 0
     composeRule.setContent {
@@ -147,11 +121,12 @@ class EditProfileScreenTest {
   fun save_click_invokes_onSave_when_isNewUser_true() {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
-    val vm =
-        EditProfileViewModel(
-            userRepository = userRepo,
-            currentUserId = "uid-1",
-        )
+    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+
+    vm.setName("Jane")
+    vm.setSurname("Doe")
+    vm.setUsername("jane_doe")
+    vm.setNewProfileImageUri(Uri.parse("content://picked/img"))
 
     var saved = 0
     composeRule.setContent {

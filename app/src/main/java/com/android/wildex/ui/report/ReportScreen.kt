@@ -288,7 +288,7 @@ fun ReportsView(
  */
 @Composable
 fun ReportItem(
-    reportState: ReportUIState = ReportUIState(),
+    reportState: ReportUIState,
     userId: Id = "",
     username: String = "",
     userType: UserType = UserType.REGULAR,

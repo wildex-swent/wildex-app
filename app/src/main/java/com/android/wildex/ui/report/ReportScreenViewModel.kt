@@ -59,7 +59,7 @@ data class ReportUIState(
     val date: String,
     val description: String,
     val author: SimpleUser,
-    val assigneeId: String,
+    val assigneeUsername: String,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -179,7 +179,7 @@ class ReportScreenViewModel(
           date = formatDate(report.date),
           description = report.description,
           author = author,
-          assigneeId = assigneeUsername,
+          assigneeUsername = assigneeUsername,
       )
     }
   }

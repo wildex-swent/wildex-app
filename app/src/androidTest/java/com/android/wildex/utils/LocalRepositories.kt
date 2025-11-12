@@ -1,9 +1,9 @@
 package com.android.wildex.utils
 
-import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.UserAchievementsRepository
 import android.content.Context
 import android.net.Uri
+import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -19,8 +19,8 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
-import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
@@ -29,8 +29,8 @@ import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Input
-import kotlin.collections.mutableMapOf
 import com.android.wildex.model.utils.URL
+import kotlin.collections.mutableMapOf
 
 interface ClearableRepository {
   fun clear()

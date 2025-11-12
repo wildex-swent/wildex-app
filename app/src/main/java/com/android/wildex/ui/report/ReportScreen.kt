@@ -314,6 +314,7 @@ fun ReportItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
       ClickableProfilePicture(
+          modifier = Modifier.testTag(ReportScreenTestTags.testTagForProfilePicture(author.userId)),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
           role = "report_author",

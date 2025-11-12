@@ -101,8 +101,8 @@ object SettingsScreenTestTags {
  * @param onGoBack callback function called when the user wants to go back to the profile page
  * @param onEditProfileClick callback function for when the user wants to edit his profile, so that
  *   he is taken to the edit profile screen
- * @param onAccountDelete callback function called when the user wants to delete his account, so
- *   that he is taken back to the authentication screen
+ * @param onAccountDeleteOrSignOut callback function called when the user wants to delete his
+ *   account or sign out, so that he is taken back to the authentication screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,8 +110,7 @@ fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
-    onSignOut: () -> Unit = {},
-    onAccountDelete: () -> Unit = {}
+    onAccountDeleteOrSignOut: () -> Unit = {}
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -173,7 +172,7 @@ fun SettingsScreen(
                         onClick = {
                           showDeletionValidation = false
                           settingsScreenViewModel.deleteAccount()
-                          onAccountDelete()
+                          onAccountDeleteOrSignOut()
                         }) {
                           Text(context.getString(R.string.delete), color = Color.Red)
                         }

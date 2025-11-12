@@ -111,7 +111,7 @@ fun WildexApp(
       SettingsScreen(
           onGoBack = { navigationActions.goBack() },
           onEditProfileClick = {},
-          onAccountDelete = { navigationActions.navigateTo(Screen.Auth) })
+          onAccountDeleteOrSignOut = { navigationActions.navigateTo(Screen.Auth) })
     }
 
     // Map

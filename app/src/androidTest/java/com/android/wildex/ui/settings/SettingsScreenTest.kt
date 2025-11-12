@@ -77,7 +77,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING).assertIsDisplayed()
@@ -100,7 +100,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = { goBackInvoked = true },
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -116,7 +116,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = { editProfileInvoked = true },
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON).performClick()
@@ -132,7 +132,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE).performClick()
@@ -149,7 +149,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule
@@ -168,7 +168,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.LIGHT_MODE_BUTTON).performClick()
@@ -191,7 +191,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = {})
+          onAccountDeleteOrSignOut = {})
     }
 
     composeTestRule
@@ -213,7 +213,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = { accountDeletionInvoked = true })
+          onAccountDeleteOrSignOut = { accountDeletionInvoked = true })
     }
 
     composeTestRule
@@ -237,7 +237,7 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDelete = { accountDeletionInvoked = true })
+          onAccountDeleteOrSignOut = { accountDeletionInvoked = true })
     }
 
     composeTestRule

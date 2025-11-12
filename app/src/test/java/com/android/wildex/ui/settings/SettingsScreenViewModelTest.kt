@@ -89,7 +89,10 @@ class SettingsScreenViewModelTest {
                     userSettingsRepository,
                     userAnimalsRepository,
                     userAchievementsRepository,
-                  postsRepository, reportRepository, likeRepository, commentRepository))
+                    postsRepository,
+                    reportRepository,
+                    likeRepository,
+                    commentRepository))
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2

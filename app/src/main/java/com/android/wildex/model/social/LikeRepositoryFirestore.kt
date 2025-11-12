@@ -73,11 +73,11 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
 
   override suspend fun deleteLikesByUser(userId: Id) {
     db.collection(LIKE_COLLECTION_PATH)
-      .whereEqualTo("userId", userId)
-      .get()
-      .await()
-      .documents
-      .forEach { it.reference.delete().await() }
+        .whereEqualTo("userId", userId)
+        .get()
+        .await()
+        .documents
+        .forEach { it.reference.delete().await() }
   }
 
   private fun convertToLike(doc: DocumentSnapshot): Like? {

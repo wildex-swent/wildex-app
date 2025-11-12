@@ -121,11 +121,9 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
   }
 
   override suspend fun deleteCommentsByUser(userId: Id) {
-    collection.whereEqualTo(CommentsFields.AUTHOR_ID, userId)
-        .get()
-        .await()
-        .documents
-        .forEach { it.reference.delete().await()}
+    collection.whereEqualTo(CommentsFields.AUTHOR_ID, userId).get().await().documents.forEach {
+      it.reference.delete().await()
+    }
   }
 
   /**

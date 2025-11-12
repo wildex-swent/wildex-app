@@ -118,12 +118,9 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
   }
 
   override suspend fun deleteReportsByUser(userId: Id) {
-    collection
-      .whereEqualTo("authorId", userId)
-      .get()
-      .await()
-      .documents
-      .forEach { it.reference.delete().await() }
+    collection.whereEqualTo("authorId", userId).get().await().documents.forEach {
+      it.reference.delete().await()
+    }
   }
 
   /**

@@ -80,11 +80,11 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
 
   override suspend fun deletePostsByUser(userId: Id) {
     db.collection(POST_COLLECTION_PATH)
-      .whereEqualTo("authorId", userId)
-      .get()
-      .await()
-      .documents
-      .forEach { it.reference.delete().await() }
+        .whereEqualTo("authorId", userId)
+        .get()
+        .await()
+        .documents
+        .forEach { it.reference.delete().await() }
   }
 
   private fun convertToPost(doc: DocumentSnapshot): Post? {

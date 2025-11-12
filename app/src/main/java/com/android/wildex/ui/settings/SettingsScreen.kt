@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
+import com.android.wildex.R
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
@@ -171,8 +172,8 @@ fun SettingsScreen(
         if (showDeletionValidation){
           AlertDialog(
             onDismissRequest = { showDeletionValidation = false },
-            title = { Text(text = "Delete account") },
-            text = { Text(text = "Are you sure you want to delete your account?")},
+            title = { Text(text = context.getString(R.string.delete_account)) },
+            text = { Text(text = context.getString(R.string.delete_account_confirmation))},
             modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
             confirmButton = {
               TextButton(
@@ -183,7 +184,7 @@ fun SettingsScreen(
                   onAccountDelete()
                 }
               ) {
-                Text("Delete", color = Color.Red)
+                Text(context.getString(R.string.delete), color = Color.Red)
               }
             },
             dismissButton = {
@@ -191,7 +192,7 @@ fun SettingsScreen(
                 modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
                 onClick = { showDeletionValidation = false }
               ) {
-                Text("Cancel")
+                Text(context.getString(R.string.cancel))
               }
             }
           )
@@ -318,7 +319,7 @@ fun SettingsScreenTopBar(
     title = {
       Text(
         modifier = Modifier.testTag(SettingsScreenTestTags.SCREEN_TITLE),
-        text = "Settings",
+        text = LocalContext.current.getString(R.string.settings),
         fontWeight = FontWeight.SemiBold
       )
     },
@@ -418,7 +419,7 @@ fun EditProfileOption(
     paddingHorizontal = paddingHorizontal,
     testTag = SettingsScreenTestTags.EDIT_PROFILE_SETTING,
     icon = Icons.Outlined.Edit,
-    settingName = "Edit profile"
+    settingName = LocalContext.current.getString(R.string.edit_profile)
   ) {
     IconButton(
       onClick = { onEditProfileClick() },
@@ -454,7 +455,7 @@ fun NotificationOption(
     paddingHorizontal = paddingHorizontal,
     testTag = SettingsScreenTestTags.NOTIFICATIONS_SETTING,
     icon = Icons.Outlined.Notifications,
-    settingName = "Notifications"
+    settingName = LocalContext.current.getString(R.string.notifications)
   ) {
     Switch(
       modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE),
@@ -514,7 +515,7 @@ fun UserStatusOption(
   onUserStatusChanged: (String) -> Unit,
   groupButtonsColors: SegmentedButtonColors
 ){
-  val options = listOf("Regular", "Professional")
+  val options = listOf(LocalContext.current.getString(R.string.regular_status), LocalContext.current.getString(R.string.professional_status))
   val testTags = listOf(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON,
     SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
   val selectedIndex = UserType.entries.indexOf(currentUserStatus)
@@ -524,7 +525,7 @@ fun UserStatusOption(
     paddingHorizontal = paddingHorizontal,
     testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
     icon = Icons.Outlined.Person,
-    settingName = "User status"
+    settingName = LocalContext.current.getString(R.string.user_status)
   ) {
     SingleChoiceSegmentedButtonRow (
       modifier = Modifier.width(screenWidth.div(1.9f))
@@ -577,9 +578,9 @@ fun AppearanceModeOption(
     paddingHorizontal = paddingHorizontal,
     testTag = SettingsScreenTestTags.APPEARANCE_MODE_SETTING,
     icon = Icons.Outlined.LightMode,
-    settingName = "Appearance"
+    settingName = LocalContext.current.getString(R.string.appearance)
   ) {
-    val options = listOf("Auto", "Light", "Dark")
+    val options = listOf(LocalContext.current.getString(R.string.system_default), LocalContext.current.getString(R.string.light_mode), LocalContext.current.getString(R.string.dark_mode))
     val testTags = listOf(SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON,
       SettingsScreenTestTags.LIGHT_MODE_BUTTON,
       SettingsScreenTestTags.DARK_MODE_BUTTON)

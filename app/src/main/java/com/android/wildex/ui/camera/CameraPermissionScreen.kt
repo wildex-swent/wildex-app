@@ -48,6 +48,8 @@ fun CameraPermissionScreen(
     onRequestPermission: () -> Unit,
     onUploadClick: () -> Unit,
     modifier: Modifier = Modifier,
+    permissionRequestMsg: String = "",
+    extraRequestMsg: String = ""
 ) {
   Box(
       modifier = modifier.fillMaxSize().background(colorScheme.background),
@@ -69,7 +71,7 @@ fun CameraPermissionScreen(
       )
 
       Text(
-          text = stringResource(R.string.camera_permission_msg_1),
+          text = permissionRequestMsg,
           style = typography.headlineMedium,
           fontWeight = FontWeight.Bold,
           color = colorScheme.onBackground,
@@ -77,14 +79,16 @@ fun CameraPermissionScreen(
           modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1),
       )
 
-      Text(
-          text = stringResource(R.string.camera_permission_msg_1),
-          style = typography.bodyLarge,
-          color = colorScheme.onSurfaceVariant,
-          textAlign = TextAlign.Center,
-          lineHeight = 24.sp,
-          modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
-      )
+      if (extraRequestMsg.isNotEmpty()) {
+          Text(
+              text = extraRequestMsg,
+              style = typography.bodyLarge,
+              color = colorScheme.onSurfaceVariant,
+              textAlign = TextAlign.Center,
+              lineHeight = 24.sp,
+              modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
+          )
+      }
 
       Spacer(modifier = Modifier.height(16.dp))
 

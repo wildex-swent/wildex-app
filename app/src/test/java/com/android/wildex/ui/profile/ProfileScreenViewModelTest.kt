@@ -230,4 +230,23 @@ class ProfileScreenViewModelTest {
       Assert.assertTrue(s.isError)
     }
   }
+
+  @Test
+  fun refreshUIState_whenPostsRepositoryFails_setsErrorMsg_andKeepsUserAndAchievements() {
+    mainDispatcherRule.runTest {
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } throws
+          RuntimeException("posts boom")
+      viewModel.refreshUIState("uid-1")
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertEquals(u1, s.user)
+      Assert.assertEquals(listOf(a1, a2), s.achievements)
+      Assert.assertTrue(s.recentPins.isEmpty())
+      Assert.assertEquals("posts boom", s.errorMsg)
+      Assert.assertFalse(s.isError)
+    }
+  }
 }

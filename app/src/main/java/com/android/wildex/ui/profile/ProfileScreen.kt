@@ -1,6 +1,7 @@
 package com.android.wildex.ui.profile
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -111,6 +112,13 @@ fun ProfileScreen(
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
+  var showMap by remember { mutableStateOf(true) }
+
+  BackHandler {
+    showMap = false
+    onGoBack()
+  }
+
   LaunchedEffect(Unit) { profileScreenViewModel.loadUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
@@ -121,7 +129,16 @@ fun ProfileScreen(
 
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = { ProfileTopBar(uiState.isUserOwner, onGoBack, onSettings) },
+      topBar = {
+        ProfileTopBar(
+            ownerProfile = uiState.isUserOwner,
+            onGoBack = {
+              showMap = false
+              onGoBack()
+            },
+            onSettings = onSettings,
+        )
+      },
   ) { pd ->
     val pullState = rememberPullToRefreshState()
 
@@ -147,6 +164,7 @@ fun ProfileScreen(
               onMap = onMap,
               onFriends = onFriends,
               onFriendRequest = onFriendRequest,
+              showMap = showMap,
           )
         }
       }
@@ -167,6 +185,7 @@ fun ProfileContent(
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
     onFriendRequest: (Id) -> Unit,
+    showMap: Boolean = true,
 ) {
   val id = user.userId
 
@@ -214,7 +233,9 @@ fun ProfileContent(
         )
 
         Spacer(modifier = Modifier.height(14.dp))
-        ProfileMap(id = id, onMap = onMap, pins = recentPins)
+        if (showMap) {
+          ProfileMap(id = id, onMap = onMap, pins = recentPins)
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
         if (!ownerProfile) {

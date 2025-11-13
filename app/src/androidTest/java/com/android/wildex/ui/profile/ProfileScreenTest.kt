@@ -13,6 +13,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -438,5 +439,18 @@ class ProfileScreenTest {
     composeRule
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun profileImageAndName_shows_professional_badge_when_professional() {
+    composeRule.setContent {
+      ProfileImageAndName(
+          name = "Jane",
+          surname = "Doe",
+          username = "jane_doe",
+          isProfessional = true,
+      )
+    }
+    composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()
   }
 }

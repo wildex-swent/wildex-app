@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Before
 import org.junit.Rule
@@ -99,7 +100,11 @@ class SubmitReportFormScreenTest {
   fun submit_button_is_enabled_and_triggers_callback() {
     composeTestRule.setContent {
       SubmitReportFormScreen(
-          uiState = SubmitReportUiState(isSubmitting = false),
+          uiState =
+              SubmitReportUiState(
+                  isSubmitting = false,
+                  description = "some description",
+                  imageUri = Uri.parse("content://test/image.jpg")),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
@@ -112,6 +117,8 @@ class SubmitReportFormScreenTest {
         .onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON)
         .assertIsEnabled()
         .performClick()
+
+    assertTrue(submitClicked)
   }
 
   @Test

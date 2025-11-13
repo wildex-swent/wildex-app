@@ -75,6 +75,7 @@ import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 
 object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
@@ -131,7 +132,7 @@ fun SettingsScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SETTINGS_SCREEN),
       topBar = { SettingsScreenTopBar(onGoBack) },
       floatingActionButton = {
         Column {

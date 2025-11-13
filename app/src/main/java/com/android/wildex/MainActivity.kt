@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
@@ -36,9 +37,9 @@ import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
+import com.android.wildex.ui.report.SubmitReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.theme.WildexTheme
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
@@ -79,25 +80,25 @@ fun WildexApp(
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
-    authComposable(credentialManager, navigationActions)
+    authComposable(navigationActions, credentialManager)
 
     // Home
     homeComposable(navigationActions)
 
     // Map
-    mapComposable(currentUser, navigationActions)
+    mapComposable(navigationActions, currentUser?.uid)
 
     // Camera
     cameraComposable(navigationActions)
 
     // Collection
-    collectionComposable(navigationActions, currentUser)
-
-    // Animal Information
-    animalInformationComposable(navigationActions)
+    collectionComposable(navigationActions, currentUser?.uid)
 
     // Reports
     reportComposable(navigationActions)
+
+    // Animal Information
+    animalInformationComposable(navigationActions)
 
     // Post Details
     postDetailComposable(navigationActions)
@@ -113,6 +114,18 @@ fun WildexApp(
 
     // Settings
     settingsComposable(navigationActions)
+
+    // Submit Form
+    submitFormComposable(navigationActions)
+  }
+}
+
+private fun NavGraphBuilder.submitFormComposable(navigationActions: NavigationActions) {
+  composable(Screen.SubmitReport.route) {
+    SubmitReportScreen(
+        onSubmitted = { navigationActions.navigateTo(Screen.Report) },
+        onGoBack = { navigationActions.goBack() },
+    )
   }
 }
 
@@ -196,7 +209,7 @@ private fun NavGraphBuilder.reportComposable(navigationActions: NavigationAction
 
 private fun NavGraphBuilder.collectionComposable(
     navigationActions: NavigationActions,
-    currentUser: FirebaseUser?,
+    currentUserId: Id?,
 ) {
   composable(Screen.Collection.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
@@ -204,10 +217,10 @@ private fun NavGraphBuilder.collectionComposable(
       CollectionScreen(
           userUid = userId,
           onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
-          onProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUser?.uid ?: "")) },
+          onProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId ?: "")) },
           onGoBack = { navigationActions.goBack() },
           bottomBar = {
-            if (userId == currentUser?.uid)
+            if (userId == currentUserId)
                 BottomNavigationMenu(Tab.Collection) {
                   navigationActions.navigateTo(it.destination)
                 }
@@ -228,8 +241,8 @@ private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationAction
 }
 
 private fun NavGraphBuilder.mapComposable(
-    currentUser: FirebaseUser?,
     navigationActions: NavigationActions,
+    currentUserId: Id?,
 ) {
   composable(Screen.Map.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
@@ -237,7 +250,7 @@ private fun NavGraphBuilder.mapComposable(
       MapScreen(
           userId = userId,
           bottomBar = {
-            if (userId == currentUser?.uid) {
+            if (userId == currentUserId) {
               BottomNavigationMenu(Tab.Map) { navigationActions.navigateTo(it.destination) }
             }
           },
@@ -260,8 +273,8 @@ private fun NavGraphBuilder.homeComposable(navigationActions: NavigationActions)
 }
 
 private fun NavGraphBuilder.authComposable(
-    credentialManager: CredentialManager,
     navigationActions: NavigationActions,
+    credentialManager: CredentialManager,
 ) {
   composable(Screen.Auth.route) {
     SignInScreen(

@@ -21,6 +21,7 @@ import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -42,10 +43,6 @@ class NavigationTest : NavigationTestUtils() {
 
   @Before
   fun setup() {
-    runBlocking {
-      FirebaseEmulator.clearAuthEmulator()
-      FirebaseEmulator.clearFirestoreEmulator()
-    }
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
@@ -67,12 +64,13 @@ class NavigationTest : NavigationTestUtils() {
       RepositoryProvider.userRepository.addUser(user)
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
       RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
+      RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
       result.user!!.uid
     }
   }
 
-  // @After
-  fun teardown() = runBlocking {
+  @After
+  fun teardown() {
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
@@ -95,7 +93,6 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun startsAtAuthScreen_whenNotAuthenticated() {
-    // Sign out first just in case
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
@@ -115,7 +112,7 @@ class NavigationTest : NavigationTestUtils() {
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateToHomeScreenFromAuth()
+    composeRule.navigateFromAuth()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
   }
@@ -211,100 +208,178 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkCollectionScreenIsDisplayed(userId)
   }
 
-    @Test
-    fun navigationCollectionScreenFromOtherProfile_AndGoBack() {
-        val userId2 = "userId"
-        val postId2 = "postId2"
-        val animal2 = "animal2"
-        runBlocking {
-            val user = User(
-                userId = userId2, name = "name2",
-                username = "username2" ,
-                surname = "surname2",
-                bio = "bio2",
-                profilePictureURL = "",
-                userType = UserType.REGULAR,
-                creationDate = Timestamp.now(),
-                country = "country2",
-                friendsCount = 2
-            )
-            RepositoryProvider.userRepository.addUser(user)
-            RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)
-            RepositoryProvider.userAchievementsRepository.initializeUserAchievements(userId2)
-            val post = post0.copy(authorId = userId2, postId = postId2, animalId = animal2)
-            RepositoryProvider.postRepository.addPost(post)
-            val animal = animal0.copy(animalId = animal2)
-            RepositoryProvider.animalRepository.addAnimal(animal)
-        }
-        composeRule.waitForIdle()
-        composeRule.checkHomeScreenIsDisplayed()
-        composeRule.navigateToPostDetailsScreenFromHome(postId2)
-        composeRule.waitForIdle()
-        composeRule.checkPostDetailsScreenIsDisplayed(postId2)
-        composeRule.navigateToProfileFromPostDetails(userId2)
-        composeRule.waitForIdle()
-        composeRule.checkProfileScreenIsDisplayed(userId2)
-        composeRule.navigateToCollectionScreenFromProfile()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId2, false)
-        composeRule.navigateBackFromCollection()
-        composeRule.waitForIdle()
-        composeRule.checkProfileScreenIsDisplayed(userId2)
+  @Test
+  fun navigationCollectionScreenFromOtherProfile_AndGoBack() {
+    val userId2 = "userId"
+    val postId2 = "postId2"
+    val animal2 = "animal2"
+    runBlocking {
+      val user =
+          User(
+              userId = userId2,
+              name = "name2",
+              username = "username2",
+              surname = "surname2",
+              bio = "bio2",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = "country2",
+              friendsCount = 2,
+          )
+      RepositoryProvider.userRepository.addUser(user)
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)
+      RepositoryProvider.userAchievementsRepository.initializeUserAchievements(userId2)
+      val post = post0.copy(authorId = userId2, postId = postId2, animalId = animal2)
+      RepositoryProvider.postRepository.addPost(post)
+      val animal = animal0.copy(animalId = animal2)
+      RepositoryProvider.animalRepository.addAnimal(animal)
     }
-    @Test
-    fun navigation_MapScreen_CurrentUser() {
-        composeRule.waitForIdle()
-        composeRule.navigateToMapScreenFromBottomBar()
-        composeRule.waitForIdle()
-        composeRule.checkMapScreenIsDisplayed(userId)
-        composeRule.checkBottomNavigationIsDisplayed()
-    }
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToPostDetailsScreenFromHome(postId2)
+    composeRule.waitForIdle()
+    composeRule.checkPostDetailsScreenIsDisplayed(postId2)
+    composeRule.navigateToProfileFromPostDetails(userId2)
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId2)
+    composeRule.navigateToCollectionScreenFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId2, false)
+    composeRule.navigateBackFromCollection()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId2)
+  }
 
-    @Test
-    fun navigation_CollectionScreen_CurrentUser() {
-        composeRule.waitForIdle()
-        assertEquals(userId, FirebaseEmulator.auth.uid)
-        composeRule.navigateToCollectionScreenFromBottomBar()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId)
-        composeRule.checkBottomNavigationIsDisplayed()
-    }
+  @Test
+  fun navigation_MapScreen_CurrentUser() {
+    composeRule.waitForIdle()
+    composeRule.navigateToMapScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkMapScreenIsDisplayed(userId)
+    composeRule.checkBottomNavigationIsDisplayed()
+  }
 
-    @Test
-    fun navigation_AnimalDetailScreen_AndGoBack() {
-        val animalId = "animal_id"
-        runBlocking {
-            val animal = Animal(animalId, "", "animal", "animal", "")
-            RepositoryProvider.animalRepository.addAnimal(animal)
-            RepositoryProvider.userAnimalsRepository.addAnimalToUserAnimals(userId, animalId)
-        }
-        assertEquals(FirebaseEmulator.auth.currentUser!!.uid, userId)
-        composeRule.waitForIdle()
-        composeRule.checkHomeScreenIsDisplayed()
-        composeRule.navigateToCollectionScreenFromBottomBar()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId)
-        composeRule.navigateToAnimalInformationScreenFromCollection(animalId)
-        composeRule.waitForIdle()
-        composeRule.checkAnimalInformationScreenIsDisplayed(animalId)
-        composeRule.navigateBackFromAnimalInformation()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId)
-    }
+  @Test
+  fun navigation_CollectionScreen_CurrentUser() {
+    composeRule.waitForIdle()
+    assertEquals(userId, FirebaseEmulator.auth.uid)
+    composeRule.navigateToCollectionScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId)
+    composeRule.checkBottomNavigationIsDisplayed()
+  }
 
-    @Test
-    fun navigation_ProfileScreen_FromCollection_CurrentUser_AndGoBack() {
-        composeRule.waitForIdle()
-        composeRule.checkHomeScreenIsDisplayed()
-        composeRule.navigateToCollectionScreenFromBottomBar()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId)
-        composeRule.navigateToMyProfileScreenFromCollection()
-        composeRule.waitForIdle()
-        composeRule.checkProfileScreenIsDisplayed(userId)
-        composeRule.navigateBackFromProfile()
-        composeRule.waitForIdle()
-        composeRule.checkCollectionScreenIsDisplayed(userId)
+  @Test
+  fun navigation_AnimalDetailScreen_AndGoBack() {
+    val animalId = "animal_id"
+    runBlocking {
+      val animal = Animal(animalId, "", "animal", "animal", "")
+      RepositoryProvider.animalRepository.addAnimal(animal)
+      RepositoryProvider.userAnimalsRepository.addAnimalToUserAnimals(userId, animalId)
     }
+    assertEquals(FirebaseEmulator.auth.currentUser!!.uid, userId)
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToCollectionScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId)
+    composeRule.navigateToAnimalInformationScreenFromCollection(animalId)
+    composeRule.waitForIdle()
+    composeRule.checkAnimalInformationScreenIsDisplayed(animalId)
+    composeRule.navigateBackFromAnimalInformation()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId)
+  }
 
+  @Test
+  fun navigation_ProfileScreen_FromCollection_CurrentUser_AndGoBack() {
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToCollectionScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId)
+    composeRule.navigateToMyProfileScreenFromCollection()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId)
+    composeRule.navigateBackFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkCollectionScreenIsDisplayed(userId)
+  }
+
+  @Test
+  fun navigation_SettingsScreen_FromMyProfile_AndGoBack() {
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToMyProfileScreenFromHome()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId)
+    composeRule.navigateToSettingsScreenFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkSettingsScreenIsDisplayed()
+    composeRule.navigateBackFromSettings()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId)
+  }
+
+  @Test
+  fun navigation_EditProfile_FromSettings_AndGoBack() {
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToMyProfileScreenFromHome()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId)
+    composeRule.navigateToSettingsScreenFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkSettingsScreenIsDisplayed()
+    composeRule.navigateToEditProfileScreenFromSettings()
+    composeRule.waitForIdle()
+    composeRule.checkEditProfileScreenIsDisplayed(false)
+    composeRule.navigateBackFromEditProfile()
+    composeRule.waitForIdle()
+    composeRule.checkSettingsScreenIsDisplayed()
+  }
+
+  @Test
+  fun navigation_MapScreen_FromOtherProfile_AndGoBack() {
+    val userId2 = "userId"
+    val postId2 = "postId2"
+    val animal2 = "animal2"
+    runBlocking {
+      val user =
+          User(
+              userId = userId2,
+              name = "name2",
+              username = "username2",
+              surname = "surname2",
+              bio = "bio2",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = "country2",
+              friendsCount = 2,
+          )
+      RepositoryProvider.userRepository.addUser(user)
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)
+      RepositoryProvider.userAchievementsRepository.initializeUserAchievements(userId2)
+      val post = post0.copy(authorId = userId2, postId = postId2, animalId = animal2)
+      RepositoryProvider.postRepository.addPost(post)
+      val animal = animal0.copy(animalId = animal2)
+      RepositoryProvider.animalRepository.addAnimal(animal)
+    }
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToPostDetailsScreenFromHome(postId2)
+    composeRule.waitForIdle()
+    composeRule.checkPostDetailsScreenIsDisplayed(postId2)
+    composeRule.navigateToProfileFromPostDetails(userId2)
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId2)
+    composeRule.navigateToMapFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkMapScreenIsDisplayed(userId2)
+    composeRule.navigateBackFromMap()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId2)
+  }
 }

@@ -10,6 +10,7 @@ import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.usecase.user.DeleteUserUseCase
+import com.android.wildex.utils.FakeAuthRepository
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -30,6 +31,12 @@ class SettingsScreenTest {
   private val userAnimalsRepository = LocalRepositories.userAnimalsRepository
 
   private val userAchievementsRepository = LocalRepositories.userAchievementsRepository
+  private val postsRepository = LocalRepositories.postsRepository
+  private val reportsRepository = LocalRepositories.reportRepository
+  private val commentsRepository = LocalRepositories.commentRepository
+  private val likesRepository = LocalRepositories.likeRepository
+
+  private val authRepository = FakeAuthRepository()
 
   private lateinit var userSettingsScreenVM: SettingsScreenViewModel
 
@@ -47,22 +54,32 @@ class SettingsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "France",
-            friendsCount = 3))
+            friendsCount = 3,
+        )
+    )
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAchievementsRepository.initializeUserAchievements("currentUserId")
 
     userSettingsScreenVM =
         SettingsScreenViewModel(
+            authRepository = authRepository,
             userRepository = userRepository,
             userSettingsRepository = userSettingsRepository,
             currentUserId = "currentUserId",
             deleteUserUseCase =
                 DeleteUserUseCase(
+                    authRepository = authRepository,
                     userRepository = userRepository,
                     userSettingsRepository = userSettingsRepository,
                     userAnimalsRepository = userAnimalsRepository,
-                    userAchievementsRepository = userAchievementsRepository))
+                    userAchievementsRepository = userAchievementsRepository,
+                    postsRepository = postsRepository,
+                    likeRepository = likesRepository,
+                    commentRepository = commentsRepository,
+                    reportRepository = reportsRepository,
+                ),
+        )
   }
 
   @After
@@ -77,7 +94,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING).assertIsDisplayed()
@@ -100,7 +118,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = { goBackInvoked = true },
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -116,7 +135,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = { editProfileInvoked = true },
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON).performClick()
@@ -132,7 +152,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE).performClick()
@@ -149,7 +170,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule
@@ -168,7 +190,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.LIGHT_MODE_BUTTON).performClick()
@@ -181,7 +204,8 @@ class SettingsScreenTest {
         initialState != newState &&
             initialState != anotherState &&
             newState == AppearanceMode.LIGHT &&
-            anotherState == AppearanceMode.DARK)
+            anotherState == AppearanceMode.DARK
+    )
   }
 
   @Test
@@ -193,7 +217,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { signOutInvoked = true })
+          onAccountDeleteOrSignOut = { signOutInvoked = true },
+      )
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.SIGN_OUT_BUTTON).performClick()
@@ -207,7 +232,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {})
+          onAccountDeleteOrSignOut = {},
+      )
     }
 
     composeTestRule
@@ -229,7 +255,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { accountDeletionInvoked = true })
+          onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
+      )
     }
 
     composeTestRule
@@ -253,7 +280,8 @@ class SettingsScreenTest {
           settingsScreenViewModel = userSettingsScreenVM,
           onGoBack = {},
           onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { accountDeletionInvoked = true })
+          onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
+      )
     }
 
     composeTestRule

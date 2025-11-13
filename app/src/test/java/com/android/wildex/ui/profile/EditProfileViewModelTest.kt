@@ -61,7 +61,7 @@ class EditProfileViewModelTest {
     Assert.assertEquals("", s.surname)
     Assert.assertEquals("", s.username)
     Assert.assertEquals("", s.description)
-    Assert.assertEquals("Switzerland", s.country)
+    Assert.assertEquals("", s.country)
     Assert.assertFalse(s.isLoading)
     Assert.assertFalse(s.isError)
     Assert.assertNull(s.errorMsg)

@@ -86,6 +86,7 @@ class SettingsScreenViewModelTest {
 
     viewModel =
         SettingsScreenViewModel(
+            authRepository = authRepository,
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
             currentUserId = "currentUserId",

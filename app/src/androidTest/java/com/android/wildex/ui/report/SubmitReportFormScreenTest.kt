@@ -56,6 +56,9 @@ class SubmitReportFormScreenTest {
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
     composeTestRule
+        .onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR_TEXT)
+        .assertIsDisplayed()
+    composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.BACK_BUTTON)
         .assertIsDisplayed()
         .performClick()
@@ -93,6 +96,7 @@ class SubmitReportFormScreenTest {
     val text = "There’s an injured fox near the river"
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD)
+        .assertIsDisplayed()
         .performTextInput(text)
   }
 

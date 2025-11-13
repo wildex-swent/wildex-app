@@ -42,6 +42,7 @@ import com.android.wildex.R
 /** Test tags for the Submit Report Form Screen components. */
 object SubmitReportFormScreenTestTags {
   const val TOP_APP_BAR = "submit_report_top_app_bar"
+  const val TOP_APP_BAR_TEXT = "submit_report_top_app_bar_text"
   const val BACK_BUTTON = "submit_report_back_button"
   const val IMAGE_BOX = "image_box"
   const val SELECTED_IMAGE = "selected_image"
@@ -74,7 +75,11 @@ fun SubmitReportFormScreen(
       topBar = {
         TopAppBar(
             modifier = Modifier.testTag(SubmitReportFormScreenTestTags.TOP_APP_BAR),
-            title = { Text(text = context.getString(R.string.report)) },
+            title = {
+              Text(
+                  text = context.getString(R.string.report),
+                  modifier = Modifier.testTag(SubmitReportFormScreenTestTags.TOP_APP_BAR_TEXT))
+            },
             navigationIcon = {
               IconButton(
                   onClick = onGoBack,

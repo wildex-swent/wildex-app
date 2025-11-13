@@ -151,7 +151,10 @@ fun SubmitReportFormScreen(
 
           Button(
               onClick = onSubmitClick,
-              enabled = !uiState.isSubmitting,
+              enabled =
+                  !uiState.isSubmitting &&
+                      uiState.imageUri != null &&
+                      uiState.description.isNotBlank(),
               colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
               shape = RoundedCornerShape(6.dp),
               modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),

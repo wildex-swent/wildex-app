@@ -161,7 +161,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(pendingProfileImageUri = uri)
   }
 
-  fun setProfileSaved(new: Boolean) {
-    _uiState.value = _uiState.value.copy(profileSaved = new)
+  fun clearProfileSaved() {
+    _uiState.value = _uiState.value.copy(profileSaved = false)
   }
 }

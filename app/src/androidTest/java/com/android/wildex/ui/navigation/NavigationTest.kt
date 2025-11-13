@@ -48,7 +48,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }
 
-  /*@Test
+  @Test
   fun navigation_AuthScreen_ToEditProfile_ToHome() {
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
@@ -59,7 +59,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromEditProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }*/
+  }
 
   @Test
   fun navigation_HomeScreen_FromBottomBar() {

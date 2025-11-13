@@ -22,7 +22,7 @@ data class EditProfileUIState(
     val surname: String = "",
     val username: String = "",
     val description: String = "",
-    val country: String = "Switzerland",
+    val country: String = "",
     val profileSaved: Boolean = false,
     val pendingProfileImageUri: Uri? = null,
     val isLoading: Boolean = false,
@@ -94,9 +94,11 @@ class EditProfileViewModel(
       try {
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
-        val newURL =
+        val newURL = _uiState.value.pendingProfileImageUri?.let {
             storageRepository.uploadUserProfilePicture(
-                currentUserId, _uiState.value.pendingProfileImageUri!!) ?: user.profilePictureURL
+                currentUserId, it) ?: user.profilePictureURL
+        } ?: user.profilePictureURL
+
         val newUser =
             User(
                 userId = currentUserId,

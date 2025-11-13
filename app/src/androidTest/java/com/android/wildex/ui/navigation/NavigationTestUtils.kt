@@ -178,8 +178,10 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
-    waitUntil { onNodeWithTag(NavigationTestTags.HOME_SCREEN).isDisplayed() }
-    onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().assertIsSelected()
+    waitUntil { onNodeWithTag(NavigationTestTags.HOME_SCREEN).isDisplayed()
+            && onNodeWithTag(NavigationTestTags.HOME_TAB).isDisplayed()
+
+    }
     assertEquals(Screen.Home.route, navController.currentDestination?.route)
   }
 

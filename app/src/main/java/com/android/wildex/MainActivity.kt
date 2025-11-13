@@ -81,6 +81,7 @@ fun WildexApp(
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
+
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
@@ -169,7 +170,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -218,7 +220,8 @@ private fun NavGraphBuilder.reportComposable(
     ReportScreen(
         bottomBar = {
           if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
-        })
+        }
+    )
   }
 }
 
@@ -251,11 +254,11 @@ private fun BottomNavigation(
 ) {
   BottomNavigationMenu(tab) {
     when (it) {
-      Tab.Collection -> navigationActions.navigateTo(Screen.Collection(currentUserId))
       Tab.Home -> navigationActions.navigateTo(Screen.Home)
       Tab.Map -> navigationActions.navigateTo(Screen.Map(currentUserId))
-      Tab.Report -> navigationActions.navigateTo(Screen.Report)
       Tab.Camera -> navigationActions.navigateTo(Screen.Camera)
+      Tab.Collection -> navigationActions.navigateTo(Screen.Collection(currentUserId))
+      Tab.Report -> navigationActions.navigateTo(Screen.Report)
     }
   }
 }

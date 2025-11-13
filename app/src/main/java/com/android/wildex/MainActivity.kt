@@ -20,6 +20,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -43,6 +44,7 @@ import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 
 /** Provide an OkHttpClient client for network requests. */
@@ -73,7 +75,24 @@ fun WildexApp(
     navController: NavHostController = rememberNavController(),
 ) {
   var currentUser by remember { mutableStateOf(Firebase.auth.currentUser) }
-  LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUser = it.currentUser } }
+  LaunchedEffect(Unit) {
+    Firebase.auth.addAuthStateListener {
+      val uid = it.uid
+      if (uid != null) {
+        runBlocking {
+          val user =
+              try {
+                RepositoryProvider.userRepository.getUser(uid)
+              } catch (_: Exception) {
+                null
+              }
+          if (user != null && user.username.isNotBlank()) {
+            currentUser = it.currentUser
+          }
+        }
+      }
+    }
+  }
 
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route

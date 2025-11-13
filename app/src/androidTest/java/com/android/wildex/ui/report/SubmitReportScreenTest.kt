@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -95,6 +96,38 @@ class SubmitReportScreenTest {
 
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun showsCameraPermission_whenCameraClicked() {
+    composeTestRule.setContent {
+      SubmitReportScreen(
+          viewModel = viewModel,
+          onSubmitted = onSubmitted,
+          onGoBack = onGoBack,
+      )
+    }
+
+    composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).performClick()
+    assertCameraPermissionScreenIsDisplayed()
+  }
+
+  private fun assertCameraPermissionScreenIsDisplayed() {
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
         .assertIsDisplayed()
   }
 }

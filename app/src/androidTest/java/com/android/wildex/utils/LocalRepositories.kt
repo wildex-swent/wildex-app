@@ -120,8 +120,7 @@ object LocalRepositories {
     }
   }
 
-  open class UserSettingsRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      UserSettingsRepository, ClearableRepository {
+  open class UserSettingsRepositoryImpl() : UserSettingsRepository, ClearableRepository {
 
     val mapUserToSettings = mutableMapOf<Id, UserSettings>()
 
@@ -130,7 +129,7 @@ object LocalRepositories {
     }
 
     override suspend fun initializeUserSettings(userId: String) {
-      mapUserToSettings.put(userId, UserSettings())
+      mapUserToSettings[userId] = UserSettings()
     }
 
     override suspend fun getEnableNotification(userId: String): Boolean {
@@ -140,10 +139,9 @@ object LocalRepositories {
 
     override suspend fun setEnableNotification(userId: String, enable: Boolean) {
       val userSettings = mapUserToSettings[userId]
-      mapUserToSettings.put(
-          userId,
-          userSettings?.copy(enableNotifications = enable)
+      ((userSettings?.copy(enableNotifications = enable)
               ?: throw Exception("No User with id $userId found"))
+          .also { mapUserToSettings[userId] = it })
     }
 
     override suspend fun getAppearanceMode(userId: String): AppearanceMode {
@@ -153,10 +151,9 @@ object LocalRepositories {
 
     override suspend fun setAppearanceMode(userId: String, mode: AppearanceMode) {
       val userSettings = mapUserToSettings[userId]
-      mapUserToSettings.put(
-          userId,
-          userSettings?.copy(appearanceMode = mode)
+      ((userSettings?.copy(appearanceMode = mode)
               ?: throw Exception("No User with id $userId found"))
+          .also { mapUserToSettings[userId] = it })
     }
 
     override suspend fun deleteUserSettings(userId: Id) {
@@ -168,8 +165,7 @@ object LocalRepositories {
     }
   }
 
-  open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      UserRepository, ClearableRepository {
+  open class UserRepositoryImpl() : UserRepository, ClearableRepository {
     val listOfUsers = mutableListOf<User>()
 
     init {
@@ -205,8 +201,7 @@ object LocalRepositories {
     }
   }
 
-  open class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      CommentRepository, ClearableRepository {
+  open class CommentRepositoryImpl() : CommentRepository, ClearableRepository {
     val listOfComments = mutableListOf<Comment>()
 
     init {
@@ -284,7 +279,7 @@ object LocalRepositories {
     }
 
     override suspend fun initializeUserAnimals(userId: Id) {
-      mapUserToAnimals.put(userId, mutableListOf())
+      mapUserToAnimals[userId] = mutableListOf()
     }
 
     override suspend fun getAllAnimalsByUser(userId: Id): List<Animal> {
@@ -298,13 +293,13 @@ object LocalRepositories {
     override suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.add(animalRepository.getAnimal(animalId))
-      mapUserToAnimals.put(userId, oldList)
+      mapUserToAnimals[userId] = oldList
     }
 
     override suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.removeIf { it.animalId == animalId }
-      mapUserToAnimals.put(userId, oldList)
+      mapUserToAnimals[userId] = oldList
     }
 
     override suspend fun deleteUserAnimals(userId: Id) {
@@ -312,7 +307,7 @@ object LocalRepositories {
     }
 
     override fun clear() {
-      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
+      mapUserToAnimals.forEach { (p0, _) -> mapUserToAnimals[p0] = mutableListOf() }
     }
   }
 
@@ -320,7 +315,7 @@ object LocalRepositories {
     val mapUserToAchievements = mutableMapOf<Id, List<Achievement>>()
 
     override suspend fun initializeUserAchievements(userId: Id) {
-      mapUserToAchievements.put(userId, mutableListOf())
+      mapUserToAchievements[userId] = mutableListOf()
     }
 
     override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
@@ -353,8 +348,7 @@ object LocalRepositories {
     }
   }
 
-  open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      ReportRepository, ClearableRepository {
+  open class ReportRepositoryImpl() : ReportRepository, ClearableRepository {
 
     val listOfReports = mutableListOf<Report>()
 
@@ -464,38 +458,6 @@ object LocalRepositories {
     }
   }
 
-  open class UserAchievementsRepositoryImpl(val currentUserId: Id = "currentUserId-1") :
-      UserAchievementsRepository, ClearableRepository {
-
-    val mapUserToAchievements = mutableMapOf<Id, MutableList<Achievement>>()
-
-    override suspend fun initializeUserAchievements(userId: Id) {
-      mapUserToAchievements[userId] = mutableListOf()
-    }
-
-    override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
-      return mapUserToAchievements[userId]?.toList() ?: throw Exception("User not found")
-    }
-
-    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> {
-      return getAllAchievementsByUser(currentUserId)
-    }
-
-    override suspend fun getAllAchievements(): List<Achievement> {
-      return mapUserToAchievements.values.flatten()
-    }
-
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
-
-    override suspend fun getAchievementsCountOfUser(userId: Id): Int {
-      return mapUserToAchievements[userId]?.size ?: 0
-    }
-
-    override fun clear() {
-      mapUserToAchievements.clear()
-    }
-  }
-
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
@@ -504,7 +466,6 @@ object LocalRepositories {
   val userSettingsRepository: UserSettingsRepository = UserSettingsRepositoryImpl()
   val userAnimalsRepository: UserAnimalsRepository =
       UserAnimalsRepositoryImpl(animalRepository = animalRepository)
-  val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val reportRepository: ReportRepository = ReportRepositoryImpl()
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()

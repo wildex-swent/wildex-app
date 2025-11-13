@@ -12,12 +12,18 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserType
+import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.LocalRepositories
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -54,7 +60,9 @@ class SignInViewModelTest {
   private lateinit var viewModel: SignInViewModel
 
   private lateinit var userRepository: UserRepository
+  private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var userSettingsRepository: UserSettingsRepository
   private val fakeUserIdToken = "fakeUserIdToken"
   private val testDispatcher = StandardTestDispatcher()
 
@@ -69,10 +77,25 @@ class SignInViewModelTest {
     Dispatchers.setMain(testDispatcher)
     context = ApplicationProvider.getApplicationContext()
     userRepository = LocalRepositories.userRepository
+    userAnimalsRepository = LocalRepositories.userAnimalsRepository
     userAchievementsRepository = LocalRepositories.userAchievementsRepository
+    userSettingsRepository = LocalRepositories.userSettingsRepository
+    val initializeUserUseCase =
+        InitializeUserUseCase(
+            userRepository,
+            userSettingsRepository,
+            userAnimalsRepository,
+            userAchievementsRepository,
+        )
     authRepository = mockk(relaxed = true)
     credentialManager = FakeCredentialManager.create("fakeToken")
-    viewModel = SignInViewModel(authRepository, userRepository, userAchievementsRepository)
+    viewModel =
+        SignInViewModel(
+            authRepository,
+            userRepository,
+            userSettingsRepository,
+            initializeUserUseCase,
+        )
   }
 
   @After
@@ -105,7 +128,7 @@ class SignInViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertEquals(SignInViewModel.startUser.username, state.username)
+      assertEquals("", state.username)
       assertTrue(state.isNewUser)
       assertFalse(state.isLoading)
       assertNull(state.errorMsg)
@@ -121,8 +144,24 @@ class SignInViewModelTest {
       Mockito.`when`(fakeUser.uid).thenReturn("fake-uid")
 
       runBlocking {
-        userRepository.addUser(
-            SignInViewModel.startUser.copy(userId = "fake-uid", username = "fake-username"))
+        val user =
+            User(
+                "fake-uid",
+                "fake-username",
+                "",
+                "",
+                "",
+                "",
+                UserType.REGULAR,
+                Timestamp.now(),
+                "",
+                0,
+            )
+
+        userRepository.addUser(user)
+        userAchievementsRepository.initializeUserAchievements(user.userId)
+        userSettingsRepository.initializeUserSettings(user.userId)
+        userAnimalsRepository.initializeUserAnimals(user.userId)
       }
 
       val fakeCredential =

@@ -13,6 +13,7 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,11 +39,13 @@ data class AuthUIState(
 /**
  * ViewModel for the Sign-In view.
  *
- * @property repository The repository used to perform authentication operations.
+ * @property authRepository The repository used to perform authentication operations.
  */
 class SignInViewModel(
-    private val repository: AuthRepository = RepositoryProvider.authRepository,
+    private val authRepository: AuthRepository = RepositoryProvider.authRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val userSettingsRepository: UserSettingsRepository =
+        RepositoryProvider.userSettingsRepository,
     private val initializeUserUseCase: InitializeUserUseCase = InitializeUserUseCase(),
 ) : ViewModel() {
 
@@ -62,15 +65,14 @@ class SignInViewModel(
     viewModelScope.launch {
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id)
-              )
+                  serverClientId = context.getString(R.string.default_web_client_id))
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
       try {
         val credential = credentialManager.getCredential(context, signInRequest).credential
 
-        repository
+        authRepository
             .signInWithGoogle(credential)
             .fold(
                 onSuccess = { firebaseUser ->
@@ -78,8 +80,7 @@ class SignInViewModel(
                   val (username, isNewUser) =
                       try {
                         val user = userRepository.getUser(userId)
-                        AppTheme.appearanceMode =
-                            RepositoryProvider.userSettingsRepository.getAppearanceMode(userId)
+                        AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
                         user.username to false
                       } catch (_: Exception) {
                         initializeUserUseCase(userId)

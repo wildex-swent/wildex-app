@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -79,7 +80,7 @@ fun WildexApp(
   val nullUserUID = context.getString(R.string.null_user_uid)
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
-  val signInViewModel = SignInViewModel()
+  val signInViewModel: SignInViewModel = viewModel()
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth

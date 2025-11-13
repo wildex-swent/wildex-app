@@ -1,6 +1,8 @@
 package com.android.wildex.ui.report
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -8,10 +10,13 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.core.content.ContextCompat
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
+import com.android.wildex.ui.camera.CameraPreviewScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -21,7 +26,6 @@ import org.junit.Test
 class SubmitReportScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
-
   private lateinit var context: Context
   private lateinit var reportRepository: ReportRepository
   private lateinit var storageRepository: StorageRepository
@@ -75,7 +79,6 @@ class SubmitReportScreenTest {
 
   @Test
   fun submitButton_click_triggers_submitReport() {
-    //    fakeStateFlow.value = SubmitReportUiState(isSubmitting = false)
     composeTestRule.setContent {
       SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
     }
@@ -104,11 +107,19 @@ class SubmitReportScreenTest {
   @Test
   fun showsCameraPermission_whenCameraClicked() {
     composeTestRule.setContent {
-      SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      SubmitReportScreen(
+          viewModel = viewModel,
+          onSubmitted = onSubmitted,
+          onGoBack = onGoBack,
+      )
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).performClick()
-    assertCameraPermissionScreenIsDisplayed()
+    if (!hasPermission()) {
+      assertCameraPermissionScreenIsDisplayed()
+    } else {
+      assertCameraPreviewScreenIsDisplayed()
+    }
   }
 
   private fun assertCameraPermissionScreenIsDisplayed() {
@@ -127,5 +138,17 @@ class SubmitReportScreenTest {
     composeTestRule
         .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
         .assertIsDisplayed()
+  }
+
+  private fun assertCameraPreviewScreenIsDisplayed() {
+    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.CAPTURE_BUTTON).assertIsDisplayed()
+  }
+
+  private fun hasPermission(): Boolean {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    return ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
+        PackageManager.PERMISSION_GRANTED
   }
 }

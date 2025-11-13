@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -160,19 +161,19 @@ class PostDetailsScreenTest {
     commentRepository.addComment(
         Comment(
             commentId = "comment1",
-            postId = post.postId,
+            parentId = post.postId,
             authorId = commenter1.userId,
             text = "Amazing shot!",
             date = Timestamp.now(),
-        ))
+            tag = CommentTag.POST_COMMENT))
     commentRepository.addComment(
         Comment(
             commentId = "comment2",
-            postId = post.postId,
+            parentId = post.postId,
             authorId = commenter2.userId,
             text = "Love this!",
             date = Timestamp.now(),
-        ))
+            tag = CommentTag.POST_COMMENT))
 
     val animal =
         Animal(

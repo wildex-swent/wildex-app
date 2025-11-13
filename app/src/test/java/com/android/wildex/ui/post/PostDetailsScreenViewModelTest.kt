@@ -4,6 +4,7 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -72,32 +73,32 @@ class PostDetailsScreenViewModelTest {
       listOf(
           Comment(
               commentId = "comment1",
-              postId = "post1",
+              parentId = "post1",
               authorId = "commentAuthor1",
               text = "Great post!",
               date = Timestamp.now(),
-          ),
+              tag = CommentTag.POST_COMMENT),
           Comment(
               commentId = "comment2",
-              postId = "post1",
+              parentId = "post1",
               authorId = "commentAuthor1",
               text = "Thanks for sharing!",
               date = Timestamp.now(),
-          ),
+              tag = CommentTag.POST_COMMENT),
           Comment(
               commentId = "comment3",
-              postId = "post1",
+              parentId = "post1",
               authorId = "commentAuthor1",
               text = "It's beautiful!",
               date = Timestamp.now(),
-          ),
+              tag = CommentTag.POST_COMMENT),
           Comment(
               commentId = "comment4",
-              postId = "post1",
+              parentId = "post1",
               authorId = "commentAuthor1",
               text = "Would love to see it in person.",
               date = Timestamp.now(),
-          ),
+              tag = CommentTag.POST_COMMENT),
       )
 
   @Before

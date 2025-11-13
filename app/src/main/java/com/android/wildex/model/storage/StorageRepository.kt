@@ -30,6 +30,15 @@ interface StorageRepository {
   suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL?
 
   /**
+   * Uploads an image associated with a report to the storage.
+   *
+   * @param reportId The unique identifier of the report.
+   * @param imageUri The local URI of the report image to be uploaded.
+   * @return The download URL of the uploaded report image, or null if the upload fails.
+   */
+  suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL?
+
+  /**
    * Uploads an image associated with an animal to the storage.
    *
    * @param animalId The unique identifier of the animal.
@@ -51,6 +60,13 @@ interface StorageRepository {
    * @param postId The unique identifier of the post whose image is to be deleted.
    */
   suspend fun deletePostImage(postId: Id)
+
+  /**
+   * Deletes an image associated with a report from the storage.
+   *
+   * @param reportId The unique identifier of the report whose image is to be deleted.
+   */
+  suspend fun deleteReportImage(reportId: Id)
 
   /**
    * Deletes an image associated with an animal from the storage.

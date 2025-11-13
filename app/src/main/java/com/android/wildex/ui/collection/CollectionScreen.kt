@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -169,7 +169,8 @@ fun CollectionTopBar(
         ) {
           Icon(
               imageVector =
-                  if (isUserOwner) Icons.Default.Notifications else Icons.Default.ArrowBack,
+                  if (isUserOwner) Icons.Default.Notifications
+                  else Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = if (isUserOwner) "Notifications" else "Back",
               tint = colorScheme.onBackground,
           )

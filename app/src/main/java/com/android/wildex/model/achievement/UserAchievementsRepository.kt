@@ -54,4 +54,11 @@ interface UserAchievementsRepository {
    * @return The count of Achievement items associated with the specified user.
    */
   suspend fun getAchievementsCountOfUser(userId: Id): Int
+
+  /**
+   * Deletes the UserAchievements object linked to the given user
+   *
+   * @param userId identifier of the user whose achievement collection we want to delete
+   */
+  suspend fun deleteUserAchievements(userId: Id)
 }

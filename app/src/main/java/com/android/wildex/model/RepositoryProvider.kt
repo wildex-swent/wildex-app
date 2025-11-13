@@ -9,6 +9,8 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.AnimalRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.relationship.RelationshipRepository
+import com.android.wildex.model.relationship.RelationshipRepositoryFirestore
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.report.ReportRepositoryFirestore
 import com.android.wildex.model.social.CommentRepository
@@ -55,5 +57,8 @@ object RepositoryProvider {
   }
   val userSettingsRepository: UserSettingsRepository by lazy {
     UserSettingsRepositoryFirestore(Firebase.firestore)
+  }
+  val relationshipRepository: RelationshipRepository by lazy {
+    RelationshipRepositoryFirestore(Firebase.firestore)
   }
 }

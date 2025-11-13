@@ -18,14 +18,14 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
   @Test
   fun getNewCommentIdReturnsUniqueIDs() = runTest {
     val numberIds = 100
-    val postIds = (0 until numberIds).toSet().map { repository.getNewCommentId() }.toSet()
+    val commentIds = (0 until numberIds).toSet().map { repository.getNewCommentId() }.toSet()
 
-    assertEquals(postIds.size, numberIds)
+    assertEquals(commentIds.size, numberIds)
   }
 
   @Test
   fun getAllCommentsByPostWhenNoPostsExist() = runTest {
-    val postId = comment1.postId
+    val postId = comment1.parentId
     val comments = repository.getAllCommentsByPost(postId)
 
     assertTrue(comments.isEmpty())
@@ -36,7 +36,7 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     repository.addComment(comment1)
     repository.addComment(comment2)
 
-    val postId = "noPost"
+    val postId = "noParent"
     val comments = repository.getAllCommentsByPost(postId)
 
     assertTrue(comments.isEmpty())
@@ -48,16 +48,71 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     repository.addComment(comment2)
 
     for (i in 1..2) {
-      val postId =
+      val parentId =
           when (i) {
-            1 -> comment1.postId
-            2 -> comment2.postId
+            1 -> comment1.parentId
+            2 -> comment2.parentId
             else -> throw IllegalStateException("Unexpected comment index")
           }
-      val comments = repository.getAllCommentsByPost(postId)
 
-      assertEquals(1, comments.size)
-      assertTrue(comments.all { it.postId == postId })
+      val comments = repository.getAllCommentsByPost(parentId)
+
+      when (i) {
+        1 -> {
+          assertEquals(1, comments.size)
+          assertTrue(comments.all { it.parentId == parentId })
+        }
+        2 -> {
+          assertTrue(comments.isEmpty())
+        }
+        else -> throw IllegalStateException("Unexpected comment index")
+      }
+    }
+  }
+
+  @Test
+  fun getAllCommentsByReportWhenNoReportsExist() = runTest {
+    val reportId = comment2.parentId
+    val comments = repository.getAllCommentsByReport(reportId)
+
+    assertTrue(comments.isEmpty())
+  }
+
+  @Test
+  fun getAllCommentsByReportWhenNoCorrespondingReportsExist() = runTest {
+    repository.addComment(comment1)
+    repository.addComment(comment2)
+
+    val reportId = "noParent"
+    val comments = repository.getAllCommentsByReport(reportId)
+
+    assertTrue(comments.isEmpty())
+  }
+
+  @Test
+  fun getAllCommentsByReportWhenCorrespondingReportsExist() = runTest {
+    repository.addComment(comment1)
+    repository.addComment(comment2)
+
+    for (i in 1..2) {
+      val parentId =
+          when (i) {
+            1 -> comment1.parentId
+            2 -> comment2.parentId
+            else -> throw IllegalStateException("Unexpected comment index")
+          }
+      val comments = repository.getAllCommentsByReport(parentId)
+
+      when (i) {
+        1 -> {
+          assertTrue(comments.isEmpty())
+        }
+        2 -> {
+          assertEquals(1, comments.size)
+          assertTrue(comments.all { it.parentId == parentId })
+        }
+        else -> throw IllegalStateException("Unexpected comment index")
+      }
     }
   }
 
@@ -73,7 +128,7 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment1.postId)
+    val comments = repository.getAllCommentsByPost(comment1.parentId)
     assertEquals(1, comments.size)
     assertEquals(comment1, comments[0])
   }
@@ -120,13 +175,13 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
     assert(!exceptionThrown)
 
-    var comments = repository.getAllCommentsByPost(comment1.postId)
+    var comments = repository.getAllCommentsByPost(comment1.parentId)
     assertTrue(comments.isEmpty())
 
-    comments = repository.getAllCommentsByPost(comment2.postId)
+    comments = repository.getAllCommentsByReport(comment2.parentId)
     assertEquals(1, comments.size)
     assertEquals(comment1.commentId, comments[0].commentId)
-    assertEquals(comment2.postId, comments[0].postId)
+    assertEquals(comment2.parentId, comments[0].parentId)
     assertEquals(comment2.authorId, comments[0].authorId)
     assertEquals(comment2.text, comments[0].text)
     assertEquals(comment2.date, comments[0].date)
@@ -138,14 +193,14 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     var exceptionThrown = false
 
     try {
-      repository.deleteAllCommentsOfPost(comment2.postId)
+      repository.deleteAllCommentsOfPost(comment2.parentId)
     } catch (e: IllegalArgumentException) {
       exceptionThrown = true
     }
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment2.postId)
+    val comments = repository.getAllCommentsByReport(comment2.parentId)
 
     assertEquals(1, comments.size)
     assertTrue(comments.contains(comment2))
@@ -157,14 +212,14 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     var exceptionThrown = false
 
     try {
-      repository.deleteAllCommentsOfPost(comment1.postId)
+      repository.deleteAllCommentsOfPost(comment1.parentId)
     } catch (e: IllegalArgumentException) {
       exceptionThrown = true
     }
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment1.postId)
+    val comments = repository.getAllCommentsByPost(comment1.parentId)
 
     assertTrue(comments.isEmpty())
   }
@@ -175,14 +230,14 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     var exceptionThrown = false
 
     try {
-      repository.deleteAllCommentsOfReport(comment2.postId)
+      repository.deleteAllCommentsOfReport(comment2.parentId)
     } catch (e: IllegalArgumentException) {
       exceptionThrown = true
     }
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment2.postId)
+    val comments = repository.getAllCommentsByReport(comment2.parentId)
 
     assertTrue(comments.isEmpty())
   }
@@ -193,14 +248,14 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
     var exceptionThrown = false
 
     try {
-      repository.deleteAllCommentsOfReport(comment1.postId)
+      repository.deleteAllCommentsOfReport(comment1.parentId)
     } catch (e: IllegalArgumentException) {
       exceptionThrown = true
     }
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment1.postId)
+    val comments = repository.getAllCommentsByPost(comment1.parentId)
 
     assertEquals(1, comments.size)
     assertTrue(comments.contains(comment1))
@@ -233,7 +288,7 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
     assert(!exceptionThrown)
 
-    val comments = repository.getAllCommentsByPost(comment1.postId)
+    val comments = repository.getAllCommentsByPost(comment1.parentId)
     assertTrue(comments.isEmpty())
   }
 
@@ -257,5 +312,22 @@ class CommentRepositoryFirestoreTest : FirestoreTest(COMMENTS_COLLECTION_PATH) {
 
     assertEquals(expectedCount, comments.size)
     assertTrue(comments.all { it.authorId == targetUserId })
+  }
+
+  @Test
+  fun deleteCommentsByUserDeletesCorrectComments() = runTest {
+    repository.addComment(comment1)
+    repository.addComment(comment2)
+
+    val targetUserId = comment1.authorId
+
+    repository.deleteCommentsByUser(targetUserId)
+
+    val commentsUser1 = repository.getCommentsByUser(targetUserId)
+    val commentsUser2 = repository.getCommentsByUser(comment2.authorId)
+
+    assertTrue(commentsUser1.isEmpty())
+    assertEquals(1, commentsUser2.size)
+    assertEquals(comment2, commentsUser2[0])
   }
 }

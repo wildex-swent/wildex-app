@@ -6,13 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,12 +32,16 @@ data class ProfileUIState(
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
+    val recentPins: List<Point> = emptyList(),
 )
 
 class ProfileScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val achievementRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
+    private val postRepository: PostsRepository = RepositoryProvider.postRepository,
+    private val updateUserAchievements: UpdateUserAchievementsUseCase =
+        UpdateUserAchievementsUseCase(),
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
 
@@ -67,12 +74,14 @@ class ProfileScreenViewModel(
     try {
       val user = userRepository.getUser(userId)
       val achievements = fetchAchievements(userId)
+      val pins = fetchPostPins(userId)
       _uiState.value =
           _uiState.value.copy(
               user = user,
               isUserOwner = (currentUserId != null && user.userId == currentUserId),
               achievements = achievements,
               isLoading = false,
+              recentPins = pins,
               isRefreshing = false,
               errorMsg = _uiState.value.errorMsg,
               isError = false,
@@ -93,11 +102,32 @@ class ProfileScreenViewModel(
   }
 
   private suspend fun fetchAchievements(userId: String): List<Achievement> {
-    return try {
-      achievementRepository.getAllAchievementsByUser(userId)
-    } catch (e: Exception) {
-      setErrorMsg(e.message ?: "Failed to load achievements")
-      emptyList()
-    }
+    return runCatching {
+          updateUserAchievements(userId)
+          achievementRepository.getAllAchievementsByUser(userId)
+        }
+        .getOrElse {
+          setErrorMsg(it.message ?: "Failed to load achievements")
+          emptyList()
+        }
+  }
+
+  private suspend fun fetchPostPins(authorId: Id, limit: Int = 30): List<Point> {
+    val posts =
+        try {
+          postRepository.getAllPostsByGivenAuthor(authorId)
+        } catch (e: Exception) {
+          setErrorMsg(e.message ?: "Failed to load user's posts")
+          emptyList()
+        }
+    val sorted = posts.sortedByDescending { it.date }
+    return sorted
+        .asSequence()
+        .mapNotNull { p ->
+          val loc = p.location ?: return@mapNotNull null
+          Point.fromLngLat(loc.longitude, loc.latitude)
+        }
+        .take(limit)
+        .toList()
   }
 }

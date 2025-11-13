@@ -72,4 +72,11 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     val userAchievements = collection.toObject(UserAchievements::class.java)
     return userAchievements?.achievementsCount ?: 0
   }
+
+  override suspend fun deleteUserAchievements(userId: Id) {
+    val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
+    val doc = docRef.get().await()
+    require(doc.exists()) { "A userAchievements with userId '$userId' does not exist." }
+    docRef.delete().await()
+  }
 }

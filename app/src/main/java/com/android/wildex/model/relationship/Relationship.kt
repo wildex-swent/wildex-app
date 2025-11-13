@@ -9,7 +9,11 @@ import com.android.wildex.model.utils.Id
  * @property receiverId The ID of the user who received the relationship request.
  * @property status The status of the relationship, defined by the StatusEnum.
  */
-data class Relationship(val senderId: Id, val receiverId: Id, val status: StatusEnum)
+data class Relationship(
+    val senderId: Id,
+    val receiverId: Id,
+    val status: StatusEnum = StatusEnum.PENDING
+)
 
 /** Enum class representing the status of a relationship. */
 enum class StatusEnum {

@@ -2,6 +2,8 @@ package com.android.wildex.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.view.Window
+import android.view.WindowInsets
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -13,7 +15,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
+import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
     darkColorScheme(
@@ -57,18 +59,24 @@ private val LightColorScheme =
 
 @Composable
 fun WildexTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    theme: AppearanceMode = AppearanceMode.AUTOMATIC,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+  val isDarkTheme =
+      when (theme) {
+        AppearanceMode.LIGHT -> false
+        AppearanceMode.DARK -> true
+        AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+      }
   val colorScheme =
       when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
           val context = LocalContext.current
-          if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+          if (isDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
+        isDarkTheme -> DarkColorScheme
         else -> LightColorScheme
       }
   val view = LocalView.current
@@ -77,11 +85,21 @@ fun WildexTheme(
       val window = (view.context as? Activity)?.window
       if (window != null && view.isAttachedToWindow) {
         // Set Status bar color to match the theme
-        window.statusBarColor = colorScheme.primary.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        setStatusBarColor(window, Green.toArgb())
       }
     }
   }
 
   MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+}
+
+fun setStatusBarColor(window: Window, color: Int) {
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) { // Android 15+
+    window.decorView.setOnApplyWindowInsetsListener { view, insets ->
+      val statusBarInsets = insets.getInsets(WindowInsets.Type.statusBars())
+      view.setBackgroundColor(color)
+      view.setPadding(0, statusBarInsets.top, 0, 0)
+      insets
+    }
+  }
 }

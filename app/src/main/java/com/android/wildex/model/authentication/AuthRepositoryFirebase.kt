@@ -57,4 +57,16 @@ class AuthRepositoryFirebase(
           IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
     }
   }
+
+  override fun deleteUserAuth(): Result<Unit> {
+    return try {
+      // Firebase delete user
+      auth.currentUser?.delete()
+
+      Result.success(Unit)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Delete failed: ${e.localizedMessage ?: "Unexpected error."}"))
+    }
+  }
 }

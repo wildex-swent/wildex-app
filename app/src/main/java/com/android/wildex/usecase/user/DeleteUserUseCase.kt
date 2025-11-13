@@ -2,6 +2,7 @@ package com.android.wildex.usecase.user
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -10,8 +11,6 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 /**
  * Use case: Delete a user's account
@@ -31,6 +30,7 @@ class DeleteUserUseCase(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
+    private val authRepository: AuthRepository = RepositoryProvider.authRepository,
 ) {
 
   /**
@@ -47,6 +47,6 @@ class DeleteUserUseCase(
     reportRepository.deleteReportsByUser(userId)
     likeRepository.deleteLikesByUser(userId)
     commentRepository.deleteCommentsByUser(userId)
-    Firebase.auth.currentUser?.delete()
+    authRepository.deleteUserAuth()
   }
 }

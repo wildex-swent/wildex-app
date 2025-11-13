@@ -1,6 +1,7 @@
 package com.android.wildex.ui.settings
 
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -38,6 +39,7 @@ class SettingsScreenViewModelTest {
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
   private lateinit var commentRepository: CommentRepository
+  private lateinit var authRepository: AuthRepository
   private lateinit var viewModel: SettingsScreenViewModel
 
   private val u1 =
@@ -52,7 +54,8 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3)
+          friendsCount = 3,
+      )
 
   private val u2 =
       User(
@@ -66,7 +69,8 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3)
+          friendsCount = 3,
+      )
 
   @Before
   fun setUp() {
@@ -78,6 +82,8 @@ class SettingsScreenViewModelTest {
     reportRepository = mockk()
     likeRepository = mockk()
     commentRepository = mockk()
+    authRepository = mockk()
+
     viewModel =
         SettingsScreenViewModel(
             userSettingsRepository = userSettingsRepository,
@@ -92,7 +98,10 @@ class SettingsScreenViewModelTest {
                     postsRepository,
                     reportRepository,
                     likeRepository,
-                    commentRepository))
+                    commentRepository,
+                    authRepository,
+                ),
+        )
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2

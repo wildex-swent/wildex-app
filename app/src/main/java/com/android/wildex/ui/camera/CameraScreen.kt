@@ -85,8 +85,7 @@ fun CameraScreen(
               onUploadClick = { imagePickerLauncher.launch("image/*") },
               modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
               permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
-              extraRequestMsg = context.getString(R.string.camera_permission_msg_2)
-          )
+              extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
         }
         uiState.isDetecting ->
             DetectingScreen(

@@ -80,14 +80,14 @@ fun CameraPermissionScreen(
       )
 
       if (extraRequestMsg.isNotEmpty()) {
-          Text(
-              text = extraRequestMsg,
-              style = typography.bodyLarge,
-              color = colorScheme.onSurfaceVariant,
-              textAlign = TextAlign.Center,
-              lineHeight = 24.sp,
-              modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
-          )
+        Text(
+            text = extraRequestMsg,
+            style = typography.bodyLarge,
+            color = colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            lineHeight = 24.sp,
+            modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
+        )
       }
 
       Spacer(modifier = Modifier.height(16.dp))

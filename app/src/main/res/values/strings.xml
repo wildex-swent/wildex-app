@@ -82,6 +82,12 @@
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>
 
+    <!--   Submit report screen   -->
+    <string name="report">Report</string>
+    <string name="submit_rescue_alert">Submit a Rescue Alert</string>
+    <string name="camera_request_msg_1">We need your camera so you can take pictures of animals that might be hurt or need help</string>
+    <string name="camera_request_msg_2">Your photos help rescuers understand what is happening and act quickly</string>
+
     <!-- Report screen -->
     <string name="report_title_regular">My Reports</string>
     <string name="report_title_professional">Reports</string>

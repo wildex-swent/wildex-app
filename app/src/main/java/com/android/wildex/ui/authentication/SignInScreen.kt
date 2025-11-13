@@ -101,7 +101,9 @@ fun SignInScreen(
             }
             else -> {
               Text(
-                  text = context.getString(R.string.welcome),
+                  text =
+                      if (uiState.username!!.isEmpty()) context.getString(R.string.welcome)
+                      else "Welcome back ${uiState.username}!",
                   style = MaterialTheme.typography.headlineLarge,
                   fontWeight = FontWeight.Bold,
                   textAlign = TextAlign.Center,

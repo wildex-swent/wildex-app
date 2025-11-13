@@ -13,7 +13,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =

@@ -67,6 +67,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.R
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import java.util.Locale
@@ -158,8 +159,7 @@ fun EditView(
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
   val defaultUri: Uri =
-      "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg"
-          .toUri()
+      LocalContext.current.getString(R.string.create_profile_title).toUri()
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(20.dp),

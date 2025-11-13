@@ -32,6 +32,7 @@ import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
+import com.mapbox.geojson.Point
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
@@ -452,5 +453,23 @@ class ProfileScreenTest {
       )
     }
     composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()
+  }
+
+  @Test
+  fun staticMiniMap_withPins_executesLocalSubsetAndCameraLogic() {
+    val pins =
+        listOf(
+            Point.fromLngLat(6.632, 46.519),
+            Point.fromLngLat(6.64, 46.525),
+            Point.fromLngLat(6.65, 46.53),
+        )
+    composeRule.setContent {
+      ProfileMap(
+          id = "u-1",
+          onMap = {},
+          pins = pins,
+      )
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
   }
 }

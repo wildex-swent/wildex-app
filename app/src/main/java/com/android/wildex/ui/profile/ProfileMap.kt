@@ -30,9 +30,13 @@ import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.MapView
+import com.mapbox.maps.MapboxMap
+import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.gestures
@@ -105,69 +109,31 @@ fun StaticMiniMap(
     fallbackZoom: Double = 11.0,
     context: Context,
 ) {
-  val minZoom = 6.0
   val fitPadding = EdgeInsets(30.0, 30.0, 30.0, 30.0)
-  // Choose a local subset (or fallback to at least one pin)
+
   val localPins =
       filterPinsWithinRadius(pins).ifEmpty { pins.takeIf { it.isNotEmpty() } ?: emptyList() }
 
   Box(modifier) {
     MapboxMap(modifier = Modifier.matchParentSize(), scaleBar = {}, logo = {}, attribution = {}) {
-      MapEffect(localPins, isDark, styleUri, styleImportId) { mv ->
-        mv.gestures.apply {
-          rotateEnabled = false
-          pinchToZoomEnabled = false
-          scrollEnabled = false
-          pitchEnabled = false
-          doubleTapToZoomInEnabled = false
-          quickZoomEnabled = false
-        }
-        val mapboxMap = mv.mapboxMap
+      MapEffect(localPins, isDark, styleUri, styleImportId) { mapView ->
+        configureStaticGestures(mapView)
+
+        val mapboxMap = mapView.mapboxMap
         mapboxMap.loadStyle(styleUri) { style ->
-          runCatching {
-            style.setStyleImportConfigProperty(
-                styleImportId,
-                "lightPreset",
-                (if (isDark) "night" else "day").toValue(),
-            )
-          }
+          applyLightPreset(style, styleImportId, isDark)
 
-          val pinBmp = loadVectorAsBitmap(context, R.drawable.ic_map_pin)
-          val manager = mv.annotations.createPointAnnotationManager().apply { deleteAll() }
-          localPins.forEach { pt ->
-            manager.create(PointAnnotationOptions().withPoint(pt).withIconImage(pinBmp))
-          }
+          val pinBitmap = loadVectorAsBitmap(context, R.drawable.ic_map_pin)
+          val manager = createPinManager(mapView)
+          addPins(manager, localPins, pinBitmap)
 
-          if (localPins.isNotEmpty()) {
-            mapboxMap.cameraForCoordinates(
-                localPins,
-                CameraOptions.Builder().build(),
-                fitPadding,
-                null,
-                null,
-            ) { cam ->
-              if (!cam.isEmpty) {
-                val z = cam.zoom ?: fallbackZoom
-                val cappedZoom = max(z, minZoom)
-                mapboxMap.setCamera(
-                    CameraOptions.Builder()
-                        .center(cam.center ?: fallbackCenter)
-                        .zoom(cappedZoom)
-                        .bearing(0.0)
-                        .pitch(0.0)
-                        .build())
-              }
-            }
-          } else {
-            // No pins at all -> fallback
-            mapboxMap.setCamera(
-                CameraOptions.Builder()
-                    .center(fallbackCenter)
-                    .zoom(fallbackZoom)
-                    .bearing(0.0)
-                    .pitch(0.0)
-                    .build())
-          }
+          updateCameraForPins(
+              mapboxMap = mapboxMap,
+              pins = localPins,
+              fallbackCenter = fallbackCenter,
+              fallbackZoom = fallbackZoom,
+              fitPadding = fitPadding,
+          )
         }
       }
     }
@@ -191,6 +157,99 @@ private fun loadVectorAsBitmap(
   d.setBounds(0, 0, 64, 64)
   d.draw(canvas)
   return bmp
+}
+
+/* ---------------- Map helpers ---------------- */
+
+/** Configure the MapView to disable all user gestures for a static map. */
+private fun configureStaticGestures(mapView: MapView) {
+  mapView.gestures.apply {
+    rotateEnabled = false
+    pinchToZoomEnabled = false
+    scrollEnabled = false
+    pitchEnabled = false
+    doubleTapToZoomInEnabled = false
+    quickZoomEnabled = false
+  }
+}
+
+/** Apply light/dark preset to the map style import configuration. */
+private fun applyLightPreset(style: Style, styleImportId: String, isDark: Boolean) {
+  runCatching {
+    style.setStyleImportConfigProperty(
+        styleImportId,
+        "lightPreset",
+        (if (isDark) "night" else "day").toValue(),
+    )
+  }
+}
+
+/** Create a PointAnnotationManager and clear existing annotations. */
+private fun createPinManager(mapView: MapView): PointAnnotationManager {
+  return mapView.annotations.createPointAnnotationManager().apply { deleteAll() }
+}
+
+/** Add pins to the PointAnnotationManager. */
+private fun addPins(
+    manager: PointAnnotationManager,
+    pins: List<Point>,
+    pinBitmap: Bitmap,
+) {
+  pins.forEach { pt ->
+    manager.create(
+        PointAnnotationOptions().withPoint(pt).withIconImage(pinBitmap),
+    )
+  }
+}
+
+/** Update the camera to fit the given pins with padding, or use fallback if no pins. */
+private fun updateCameraForPins(
+    mapboxMap: MapboxMap,
+    pins: List<Point>,
+    fallbackCenter: Point,
+    fallbackZoom: Double,
+    minZoom: Double = 6.0,
+    fitPadding: EdgeInsets,
+) {
+  if (pins.isEmpty()) {
+    setFallbackCamera(mapboxMap, fallbackCenter, fallbackZoom)
+    return
+  }
+
+  mapboxMap.cameraForCoordinates(
+      pins,
+      CameraOptions.Builder().build(),
+      fitPadding,
+      null,
+      null,
+  ) { cam ->
+    if (cam.isEmpty) return@cameraForCoordinates
+
+    val zoom = cam.zoom ?: fallbackZoom
+    val cappedZoom = max(zoom, minZoom)
+    mapboxMap.setCamera(
+        CameraOptions.Builder()
+            .center(cam.center ?: fallbackCenter)
+            .zoom(cappedZoom)
+            .bearing(0.0)
+            .pitch(0.0)
+            .build())
+  }
+}
+
+/** Set the camera to a fallback center and zoom. */
+private fun setFallbackCamera(
+    mapboxMap: MapboxMap,
+    fallbackCenter: Point,
+    fallbackZoom: Double,
+) {
+  mapboxMap.setCamera(
+      CameraOptions.Builder()
+          .center(fallbackCenter)
+          .zoom(fallbackZoom)
+          .bearing(0.0)
+          .pitch(0.0)
+          .build())
 }
 
 /* ---------------- Local-subset helpers ---------------- */

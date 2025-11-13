@@ -28,7 +28,9 @@ fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
           Text(
-              text = if (isNewUser) LocalContext.current.getString(R.string.create_profile_title) else LocalContext.current.getString(R.string.edit_profile_title),
+              text =
+                  if (isNewUser) LocalContext.current.getString(R.string.create_profile_title)
+                  else LocalContext.current.getString(R.string.edit_profile_title),
               fontWeight = FontWeight.SemiBold,
               color = cs.onBackground,
           )

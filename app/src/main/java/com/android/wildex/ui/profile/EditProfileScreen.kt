@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,18 +29,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MenuAnchorType
@@ -61,9 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.PopupProperties
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -80,7 +72,7 @@ object EditProfileScreenTestTags {
   const val INPUT_DESCRIPTION = "edit_profile_screen_input_description"
   const val DROPDOWN_COUNTRY = "edit_profile_screen_dropdown_country"
   const val COUNTRY_ELEMENT = "edit_profile_screen_country_element_"
-  //const val CHANGE_PROFILE_PICTURE = "edit_profile_screen_change_profile_picture_button"
+  // const val CHANGE_PROFILE_PICTURE = "edit_profile_screen_change_profile_picture_button"
   const val PROFILE_PICTURE_PREVIEW = "edit_profile_screen_profile_picture_preview"
   const val SAVE = "edit_profile_screen_go_save_button"
   const val ERROR_MESSAGE = "edit_profile_screen_error_message"
@@ -103,10 +95,10 @@ fun EditProfileScreen(
       remember(userLocale) {
         Locale.getISOCountries()
             .map { code ->
-                val locale = Locale("", code)
-                val name = locale.getDisplayCountry(userLocale)
-                val flag = code.toFlagEmoji()
-                "$flag  $name"
+              val locale = Locale("", code)
+              val name = locale.getDisplayCountry(userLocale)
+              val flag = code.toFlagEmoji()
+              "$flag  $name"
             }
             .sorted()
       }
@@ -158,8 +150,7 @@ fun EditView(
 ) {
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
-  val defaultUri: Uri =
-      LocalContext.current.getString(R.string.create_profile_title).toUri()
+  val defaultUri: Uri = LocalContext.current.getString(R.string.create_profile_title).toUri()
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(20.dp),
@@ -190,7 +181,7 @@ fun EditView(
                       .background(cs.secondary)
                       .padding(4.dp))
         }
-      Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(30.dp))
         // Name Input
         OutlinedTextField(
             value = uiState.name,
@@ -249,34 +240,34 @@ fun EditView(
             label = { Text("Description") },
             placeholder = { Text("Description") },
             modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_DESCRIPTION))
-      Spacer(modifier = Modifier.height(4.dp))
-      // Country Input with dropdown
-      CountryDropdown(
-          selectedCountry = uiState.country,
-          countries = countryNames,
-          onCountrySelected = {
+        Spacer(modifier = Modifier.height(4.dp))
+        // Country Input with dropdown
+        CountryDropdown(
+            selectedCountry = uiState.country,
+            countries = countryNames,
+            onCountrySelected = {
               editScreenViewModel.setCountry(it)
               editScreenViewModel.clearProfileSaved()
-          },
-      )
-      if (uiState.profileSaved) {
+            },
+        )
+        if (uiState.profileSaved) {
           Row(
               modifier = Modifier.align(Alignment.CenterHorizontally),
               verticalAlignment = Alignment.CenterVertically,
           ) {
-              Icon(
-                  imageVector = Icons.Filled.CheckCircle,
-                  contentDescription = "Saved successfully",
-                  tint = cs.primary,
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                  text = "Profile changes saved successfully",
-                  color = cs.primary,
-              )
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = "Saved successfully",
+                tint = cs.primary,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Profile changes saved successfully",
+                color = cs.primary,
+            )
           }
-      }
-      Spacer(modifier = Modifier.height(8.dp))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         /*Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
           val icon =
               if (showDropdown) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
@@ -357,46 +348,48 @@ fun CountryDropdown(
     countries: List<String>,
     onCountrySelected: (String) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
+  ExposedDropdownMenuBox(
+      expanded = expanded,
+      onExpandedChange = { expanded = !expanded },
+      modifier = modifier.testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY),
+  ) {
+    OutlinedTextField(
+        value = selectedCountry,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text(label) },
+        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
+        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+    )
 
-    ExposedDropdownMenuBox(
+    ExposedDropdownMenu(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier.testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY),
+        onDismissRequest = { expanded = false },
+        modifier = Modifier.background(colorScheme.surface),
     ) {
-        OutlinedTextField(
-            value = selectedCountry,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+      countries.forEach { countryName ->
+        DropdownMenuItem(
+            modifier = Modifier.testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT + countryName),
+            text = { Text(countryName) },
+            onClick = {
+              val startIndex = countryName.indexOfFirst { it.isLetter() }
+              val cleaned =
+                  if (startIndex >= 0) countryName.substring(startIndex).trim()
+                  else countryName.trim()
+              onCountrySelected(cleaned)
+              expanded = false
+            },
         )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(colorScheme.surface),
-        ) {
-            countries.forEach { countryName ->
-                DropdownMenuItem(
-                    modifier = Modifier.testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT + countryName),
-                    text = { Text(countryName) },
-                    onClick = {
-                        val startIndex = countryName.indexOfFirst { it.isLetter() }
-                        val cleaned = if (startIndex >= 0) countryName.substring(startIndex).trim() else countryName.trim()
-                        onCountrySelected(cleaned)
-                        expanded = false
-                    },
-                )
-            }
-        }
+      }
     }
+  }
 }
+
 fun String.toFlagEmoji(): String {
-    val first = Character.codePointAt(this, 0) - 0x41 + 0x1F1E6
-    val second = Character.codePointAt(this, 1) - 0x41 + 0x1F1E6
-    return String(Character.toChars(first)) + String(Character.toChars(second))
+  val first = Character.codePointAt(this, 0) - 0x41 + 0x1F1E6
+  val second = Character.codePointAt(this, 1) - 0x41 + 0x1F1E6
+  return String(Character.toChars(first)) + String(Character.toChars(second))
 }

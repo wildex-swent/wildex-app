@@ -1,12 +1,21 @@
 package com.android.wildex.ui.navigation
 
+import android.Manifest
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.test.rule.GrantPermissionRule
+import com.android.wildex.BuildConfig
+import com.android.wildex.WildexApp
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
@@ -21,22 +30,77 @@ import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.ui.settings.SettingsScreenTestTags
+import com.android.wildex.ui.theme.WildexTheme
+import com.android.wildex.utils.FakeCredentialManager
+import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
+import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Rule
 
 private const val DEFAULT_TIMEOUT = 5_000L
 
 /** Base class for all Wildex tests, providing common setup and utility functions. */
 abstract class NavigationTestUtils {
-
   protected lateinit var navController: NavHostController
+
+  protected lateinit var userId: Id
 
   init {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
     }
   }
+
+  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+  @Before
+  fun setup() {
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
+
+    composeRule.setContent {
+      navController = rememberNavController()
+      WildexTheme {
+        WildexApp(
+            context = LocalContext.current,
+            navController = navController,
+            credentialManager = fakeCredentialManager,
+        )
+      }
+    }
+    userId = runBlocking {
+      val result = FirebaseEmulator.auth.signInAnonymously().await()
+      val user = user0.copy(userId = result.user!!.uid)
+      RepositoryProvider.userRepository.addUser(user)
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
+      RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
+      RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
+      result.user!!.uid
+    }
+  }
+
+  @After
+  fun teardown() {
+    FirebaseEmulator.auth.signOut()
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
+  }
+
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION,
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.CAMERA,
+      )
 
   open val user0 =
       User(
@@ -280,9 +344,7 @@ abstract class NavigationTestUtils {
     performClickOnTag(SettingsScreenTestTags.GO_BACK_BUTTON)
   }
 
-  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {
-
-  }
+  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {}
 
   fun ComposeTestRule.navigateToEditProfileScreenFromSettings() {
     performClickOnTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)

@@ -1,88 +1,23 @@
 package com.android.wildex.ui.navigation
 
-import android.Manifest
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.navigation.compose.rememberNavController
-import androidx.test.rule.GrantPermissionRule
-import com.android.wildex.BuildConfig
-import com.android.wildex.WildexApp
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
-import com.android.wildex.model.utils.Id
-import com.android.wildex.ui.theme.WildexTheme
-import com.android.wildex.utils.FakeCredentialManager
-import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
-import com.mapbox.common.MapboxOptions
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
 class NavigationTest : NavigationTestUtils() {
-
-  @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
-
-  private lateinit var userId: Id
-
-  @Before
-  fun setup() {
-    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
-    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
-
-    composeRule.setContent {
-      navController = rememberNavController()
-      WildexTheme {
-        WildexApp(
-            context = LocalContext.current,
-            navController = navController,
-            credentialManager = fakeCredentialManager,
-        )
-      }
-    }
-    userId = runBlocking {
-      val result = FirebaseEmulator.auth.signInAnonymously().await()
-      val user = user0.copy(userId = result.user!!.uid)
-      RepositoryProvider.userRepository.addUser(user)
-      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
-      RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
-      RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
-      result.user!!.uid
-    }
-  }
-
-  @After
-  fun teardown() {
-    FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
-  }
-
-  @get:Rule
-  val permissionRule: GrantPermissionRule =
-      GrantPermissionRule.grant(
-          Manifest.permission.ACCESS_FINE_LOCATION,
-          Manifest.permission.ACCESS_COARSE_LOCATION,
-          Manifest.permission.CAMERA,
-      )
 
   @Test
   fun startsAtHomeScreen_whenAuthenticated() {

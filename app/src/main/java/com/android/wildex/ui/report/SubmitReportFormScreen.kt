@@ -165,7 +165,9 @@ fun SubmitReportFormScreen(
               modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
           ) {
             Text(
-                text = if (uiState.isSubmitting) "Submitting..." else "Submit!",
+                text =
+                    if (uiState.isSubmitting) context.getString(R.string.submitting)
+                    else context.getString(R.string.submitted),
                 color = Color.White,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )

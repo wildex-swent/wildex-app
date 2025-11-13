@@ -31,4 +31,7 @@ interface CommentRepository {
 
   /** Retrieves all Comment items authored by a specific user. */
   suspend fun getCommentsByUser(userId: Id): List<Comment>
+
+  /** Deletes all Comment items authored by a specific user. */
+  suspend fun deleteCommentsByUser(userId: Id)
 }

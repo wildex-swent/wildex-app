@@ -174,4 +174,25 @@ class LikeRepositoryFirestoreTest : FirestoreTest(LIKE_COLLECTION_PATH) {
     val storedLikes = likesByUser.toSet()
     assertEquals(expectedLikes, storedLikes)
   }
+
+  @Test
+  fun deleteLikesByUserDeletesCorrectLikes() = runTest {
+    val userIdToDelete = "author1"
+    val like1ForUser = like1.copy(userId = userIdToDelete)
+    val like2ForUser = like2.copy(userId = userIdToDelete)
+    val like3ForOtherUser = like3.copy(userId = "author2")
+
+    repository.addLike(like1ForUser)
+    repository.addLike(like2ForUser)
+    repository.addLike(like3ForOtherUser)
+
+    repository.deleteLikesByUser(userIdToDelete)
+
+    val remainingLikes = getLikesCount()
+    assertEquals(1, remainingLikes)
+
+    val likesByOtherUser = repository.getAllLikesByUser("author2")
+    assertEquals(1, likesByOtherUser.size)
+    assertEquals(like3ForOtherUser, likesByOtherUser.first())
+  }
 }

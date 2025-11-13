@@ -20,4 +20,7 @@ interface UserAnimalsRepository {
 
   /** Delete an Animal to the UserAnimals of a specific User. */
   suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id)
+
+  /** Delete the UserAnimals linked to the given user */
+  suspend fun deleteUserAnimals(userId: Id)
 }

@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.android.wildex.model.user.AppearanceMode
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -29,10 +30,16 @@ class WildexThemeComposeTest {
           object : AbstractComposeView(context) {
             override fun isInEditMode() = isInEditMode
 
+            val theme =
+                when (darkTheme) {
+                  true -> AppearanceMode.DARK
+                  false -> AppearanceMode.LIGHT
+                }
+
             @Composable
             override fun Content() {
               CompositionLocalProvider(LocalView provides this) {
-                WildexTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) { content() }
+                WildexTheme(theme = theme, dynamicColor = dynamicColor) { content() }
               }
             }
           }

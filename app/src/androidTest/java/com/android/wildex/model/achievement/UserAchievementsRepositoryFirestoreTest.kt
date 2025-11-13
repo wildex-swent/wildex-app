@@ -216,4 +216,35 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     val achievements2 = repository.getAllAchievementsByUser(userId2)
     assertTrue(achievements2.isEmpty())
   }
+
+  @Test
+  fun deleteUserAchievementsWhenNoUserExists() = runTest {
+    var exceptionThrown = false
+
+    try {
+      repository.deleteUserAchievements(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+
+      assertEquals("A userAchievements with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
+  }
+
+  @Test
+  fun deleteAccountWhenUserExists() = runTest {
+    var exceptionThrown = false
+    repository.initializeUserAchievements(user1.userId)
+
+    repository.deleteUserAchievements(user1.userId)
+    try {
+      repository.deleteUserAchievements(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+      assertEquals("A userAchievements with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
+  }
 }

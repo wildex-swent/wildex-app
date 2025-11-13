@@ -28,4 +28,7 @@ interface ReportRepository {
 
   /** Deletes a Report item from the repository. */
   suspend fun deleteReport(reportId: Id)
+
+  /** Deletes all Report items made by a specific user. */
+  suspend fun deleteReportsByUser(userId: Id)
 }

@@ -78,6 +78,15 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
     docRef.delete().await()
   }
 
+  override suspend fun deletePostsByUser(userId: Id) {
+    db.collection(POST_COLLECTION_PATH)
+        .whereEqualTo("authorId", userId)
+        .get()
+        .await()
+        .documents
+        .forEach { it.reference.delete().await() }
+  }
+
   private fun convertToPost(doc: DocumentSnapshot): Post? {
     return try {
       val postId = doc.id

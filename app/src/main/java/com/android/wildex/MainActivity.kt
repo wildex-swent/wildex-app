@@ -36,6 +36,7 @@ import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
+import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
@@ -56,11 +57,12 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-      setContent {
-          WildexTheme(theme = AppTheme.appearanceMode) {
-              Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
-          }
-      }  }
+    setContent {
+      WildexTheme(theme = AppTheme.appearanceMode) {
+        Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+      }
+    }
+  }
 }
 
 @Composable
@@ -108,6 +110,19 @@ fun WildexApp(
 
     // Achievements
     achievementsComposable(navigationActions)
+
+    // Settings
+    settingsComposable(navigationActions)
+  }
+}
+
+private fun NavGraphBuilder.settingsComposable(navigationActions: NavigationActions) {
+  composable(Screen.Settings.route) {
+    SettingsScreen(
+        onGoBack = { navigationActions.goBack() },
+        onEditProfileClick = { navigationActions.navigateTo(Screen.EditProfile(false)) },
+        onAccountDeleteOrSignOut = { navigationActions.navigateTo(Screen.Auth) },
+    )
   }
 }
 
@@ -150,6 +165,7 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
+          onSettings = { navigationActions.navigateTo(Screen.Settings) },
       )
     }
   }

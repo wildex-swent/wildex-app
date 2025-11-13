@@ -12,6 +12,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.LocalRepositories
@@ -146,7 +147,7 @@ class EditProfileScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE).performClick()
+    composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE).performScrollTo().performClick()
     Assert.assertEquals(1, saved)
   }
 }

@@ -59,7 +59,7 @@ data class ReportUIState(
     val date: String,
     val description: String,
     val author: SimpleUser,
-    val assigneeId: Id,
+    val assigneeUsername: String,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -159,6 +159,19 @@ class ReportScreenViewModel(
             )
             defaultUser
           }
+      val assigneeUsername =
+          if (report.assigneeId.isNullOrEmpty()) {
+            ""
+          } else {
+            try {
+              userRepository.getSimpleUser(report.assigneeId).username
+            } catch (e: Exception) {
+              handleException(
+                  "Error loading assignee ${report.assigneeId} user data for report ${report.assigneeId}",
+                  e)
+              ""
+            }
+          }
       ReportUIState(
           reportId = report.reportId,
           imageURL = report.imageURL,
@@ -166,7 +179,7 @@ class ReportScreenViewModel(
           date = formatDate(report.date),
           description = report.description,
           author = author,
-          assigneeId = report.assigneeId ?: "",
+          assigneeUsername = assigneeUsername,
       )
     }
   }
@@ -186,6 +199,7 @@ class ReportScreenViewModel(
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error canceling report $reportId", e)
       }
@@ -198,6 +212,7 @@ class ReportScreenViewModel(
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = currentUserId))
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error self-assigning report $reportId", e)
       }
@@ -210,6 +225,7 @@ class ReportScreenViewModel(
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = null))
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error unself-assigning report $reportId", e)
       }
@@ -221,6 +237,7 @@ class ReportScreenViewModel(
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
+        refreshUIState()
       } catch (e: Exception) {
         handleException("Error resolving report $reportId", e)
       }
@@ -229,7 +246,7 @@ class ReportScreenViewModel(
 
   /** Returns a formatted date string from a [Timestamp]. */
   private fun formatDate(ts: Timestamp): String {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     return dateFormat.format(ts.toDate())
   }
 

@@ -82,4 +82,17 @@
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>
 
+    <!-- Report screen -->
+    <string name="report_title_regular">My Reports</string>
+    <string name="report_title_professional">Reports</string>
+    <string name="no_reports">Nothing to see here...</string>
+    <string name="report_author">Reported by</string>
+    <string name="report_author_current">me</string>
+    <string name="submit_report">Submit a Report!</string>
+    <string name="cancel_report">Cancel Report</string>
+    <string name="self_assign_report">I got this!</string>
+    <string name="resolve_report">Resolved!</string>
+    <string name="cancel_self_assigned_report">Cancel</string>
+    <string name="report_assignee">Assigned to:</string>
+
 </resources>

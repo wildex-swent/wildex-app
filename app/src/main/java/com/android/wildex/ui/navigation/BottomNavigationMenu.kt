@@ -24,38 +24,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 
-sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Home : Tab("Home", Icons.Filled.Home, Screen.Home)
+sealed class Tab(val name: String, val icon: ImageVector) {
+  object Home : Tab("Home", Icons.Filled.Home)
 
-  object Map :
-      Tab(
-          "Map",
-          Icons.Filled.LocationOn,
-          Screen.Map(userUid = Firebase.auth.uid ?: ""),
-      )
+  object Map : Tab("Map", Icons.Filled.LocationOn)
 
-  object Camera : Tab("Camera", Icons.Filled.AddCircle, Screen.Camera)
+  object Camera : Tab("Camera", Icons.Filled.AddCircle)
 
-  object Collection :
-      Tab(
-          "Collection",
-          Icons.Filled.EmojiEvents,
-          Screen.Collection(userUid = Firebase.auth.uid ?: ""),
-      )
+  object Collection : Tab("Collection", Icons.Filled.EmojiEvents)
 
-  object Report : Tab("Report", Icons.Filled.Warning, Screen.Report)
+  object Report : Tab("Report", Icons.Filled.Warning)
 }
 
 private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Report)
 
 @Composable
-fun BottomNavigationMenu(
-    selectedTab: Tab,
-    onTabSelected: (Tab) -> Unit = {},
-) {
+fun BottomNavigationMenu(selectedTab: Tab, onTabSelected: (Tab) -> Unit = {}) {
   val cs = MaterialTheme.colorScheme
   val shape = RoundedCornerShape(24.dp)
 

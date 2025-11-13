@@ -44,8 +44,9 @@ import com.android.wildex.ui.animal.AnimalInformationScreenTestTags.BACK_BUTTON
 import com.android.wildex.ui.navigation.NavigationTestTags
 
 object AnimalInformationScreenTestTags {
-    const val BACK_BUTTON = "back_button"
+  const val BACK_BUTTON = "back_button"
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalInformationScreen(

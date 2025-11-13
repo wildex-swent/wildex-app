@@ -27,6 +27,7 @@ import com.android.wildex.ui.animal.AnimalInformationScreenTestTags
 import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.ui.collection.CollectionScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
+import com.android.wildex.ui.map.MapContentTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
@@ -38,7 +39,6 @@ import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -185,10 +185,10 @@ abstract class NavigationTestUtils {
 
   fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     onNodeWithTag(NavigationTestTags.MAP_SCREEN).assertIsDisplayed()
+    assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
     if (isCurrentUser)
         onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
-    assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkCameraScreenIsDisplayed() {
@@ -198,10 +198,10 @@ abstract class NavigationTestUtils {
 
   fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     onNodeWithTag(NavigationTestTags.COLLECTION_SCREEN).assertIsDisplayed()
+    assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
     if (isCurrentUser)
         onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
-    assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkReportScreenIsDisplayed() {
@@ -295,7 +295,9 @@ abstract class NavigationTestUtils {
     performClickOnTag(ProfileScreenTestTags.MAP_CTA)
   }
 
-  fun ComposeTestRule.navigateBackFromMap() {}
+  fun ComposeTestRule.navigateBackFromMap() {
+    performClickOnTag(MapContentTestTags.BACK_BUTTON)
+  }
 
   fun ComposeTestRule.navigateToCameraScreenFromBottomBar() {
     onNodeWithTag(NavigationTestTags.CAMERA_TAB).assertIsDisplayed().performClick()

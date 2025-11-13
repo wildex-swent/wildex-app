@@ -124,8 +124,7 @@ object FirebaseEmulator {
             .newCall(
                 Request.Builder()
                     .url(
-                        "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key"
-                    )
+                        "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key")
                     .post(
                         """
             {
@@ -135,10 +134,8 @@ object FirebaseEmulator {
             }
         """
                             .trimIndent()
-                            .toRequestBody()
-                    )
-                    .build()
-            )
+                            .toRequestBody())
+                    .build())
             .execute()
     assert(response.isSuccessful) {
       "Failed to change email in Auth Emulator: ${response.code} ${response.message}"
@@ -150,8 +147,7 @@ object FirebaseEmulator {
       val request =
           Request.Builder()
               .url(
-                  "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:query?key=fake-api-key"
-              )
+                  "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:query?key=fake-api-key")
               .build()
 
       Log.d("FirebaseEmulator", "Fetching users with request: ${request.url.toString()}")

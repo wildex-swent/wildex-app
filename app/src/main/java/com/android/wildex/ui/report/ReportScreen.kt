@@ -329,15 +329,14 @@ fun ReportItem(
         modifier =
             Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onReportClick(reportState.reportId) }
-    ) {
-      AsyncImage(
-          model = reportState.imageURL,
-          contentDescription = "Report Image",
-          modifier = Modifier.fillMaxWidth(),
-          contentScale = ContentScale.FillWidth,
-      )
-    }
+                .clickable { onReportClick(reportState.reportId) }) {
+          AsyncImage(
+              model = reportState.imageURL,
+              contentDescription = "Report Image",
+              modifier = Modifier.fillMaxWidth(),
+              contentScale = ContentScale.FillWidth,
+          )
+        }
     // Description
     Text(
         text = reportState.description,
@@ -431,7 +430,8 @@ fun CancelReportButton(
         text = LocalContext.current.getString(R.string.cancel_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                .align(Alignment.CenterHorizontally),
     )
   }
 }
@@ -459,7 +459,8 @@ fun SelfAssignButton(
         text = LocalContext.current.getString(R.string.self_assign_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                .align(Alignment.CenterHorizontally),
     )
   }
 }
@@ -487,7 +488,8 @@ fun ResolveReportButton(
         text = LocalContext.current.getString(R.string.resolve_report),
         color = colorScheme.onPrimary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                .align(Alignment.CenterHorizontally),
     )
   }
 }
@@ -515,7 +517,8 @@ fun UnSelfAssignReportButton(
         text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                .align(Alignment.CenterHorizontally),
     )
   }
 }
@@ -537,7 +540,8 @@ fun ReportAssigneeCard(modifier: Modifier = Modifier, assigneeUsername: String =
         text = LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                .align(Alignment.CenterHorizontally),
     )
   }
 }

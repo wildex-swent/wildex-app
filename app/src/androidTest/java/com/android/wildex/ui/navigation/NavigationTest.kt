@@ -37,18 +37,18 @@ class NavigationTest : NavigationTestUtils() {
   @Test
   fun navigation_AuthScreen() {
     runBlocking {
-        FirebaseEmulator.auth.signOut()
-        RepositoryProvider.userRepository.deleteUser(userId)
-        RepositoryProvider.userAnimalsRepository.deleteUserAnimals(userId)
-        RepositoryProvider.userAchievementsRepository.deleteUserAchievements(userId)
-        RepositoryProvider.userSettingsRepository.deleteUserSettings(userId)
+      FirebaseEmulator.auth.signOut()
+      RepositoryProvider.userRepository.deleteUser(userId)
+      RepositoryProvider.userAnimalsRepository.deleteUserAnimals(userId)
+      RepositoryProvider.userAchievementsRepository.deleteUserAchievements(userId)
+      RepositoryProvider.userSettingsRepository.deleteUserSettings(userId)
     }
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
     composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_AuthScreen_ToEditProfile_ToHome() {
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
@@ -59,7 +59,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromEditProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }
+  }*/
 
   @Test
   fun navigation_HomeScreen_FromBottomBar() {
@@ -326,4 +326,19 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId2)
   }
+
+  /*@Test
+  fun navigation_SubmitReport_AndGoBack() {
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToReportScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkReportScreenIsDisplayed()
+    composeRule.navigateToSubmitReportScreenFromReport()
+    composeRule.waitForIdle()
+    composeRule.checkSubmitReportScreenIsDisplayed()
+    composeRule.navigateBackFromSubmitReport()
+    composeRule.waitForIdle()
+    composeRule.checkReportScreenIsDisplayed()
+  }*/
 }

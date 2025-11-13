@@ -23,7 +23,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -48,7 +47,6 @@ import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 
 /** Provide an OkHttpClient client for network requests. */
@@ -78,47 +76,30 @@ fun WildexApp(
     credentialManager: CredentialManager = CredentialManager.create(context),
     navController: NavHostController = rememberNavController(),
 ) {
-  var currentUser by remember { mutableStateOf(Firebase.auth.currentUser) }
-  LaunchedEffect(Unit) {
-    Firebase.auth.addAuthStateListener {
-      val uid = it.uid
-      if (uid != null) {
-        runBlocking {
-          val user =
-              try {
-                RepositoryProvider.userRepository.getUser(uid)
-              } catch (_: Exception) {
-                null
-              }
-          if (user != null && user.username.isNotBlank()) {
-            currentUser = it.currentUser
-          }
-        }
-      }
-    }
-  }
+  var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
+  LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
-  val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
+  val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
     authComposable(navigationActions, credentialManager, signInViewModel)
 
     // Home
-    homeComposable(navigationActions)
+    homeComposable(navigationActions, currentUserId)
 
     // Map
-    mapComposable(navigationActions, currentUser?.uid)
+    mapComposable(navigationActions, currentUserId)
 
     // Camera
-    cameraComposable(navigationActions)
+    cameraComposable(navigationActions, currentUserId)
 
     // Collection
-    collectionComposable(navigationActions, currentUser?.uid)
+    collectionComposable(navigationActions, currentUserId)
 
     // Reports
-    reportComposable(navigationActions)
+    reportComposable(navigationActions, currentUserId)
 
     // Animal Information
     animalInformationComposable(navigationActions)
@@ -188,8 +169,7 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }
-          ),
+              }),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -230,13 +210,15 @@ private fun NavGraphBuilder.postDetailComposable(navigationActions: NavigationAc
   }
 }
 
-private fun NavGraphBuilder.reportComposable(navigationActions: NavigationActions) {
+private fun NavGraphBuilder.reportComposable(
+    navigationActions: NavigationActions,
+    currentUserId: Id?,
+) {
   composable(Screen.Report.route) {
     ReportScreen(
         bottomBar = {
-          BottomNavigationMenu(Tab.Report) { navigationActions.navigateTo(it.destination) }
-        }
-    )
+          if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
+        })
   }
 }
 
@@ -254,20 +236,38 @@ private fun NavGraphBuilder.collectionComposable(
           onGoBack = { navigationActions.goBack() },
           bottomBar = {
             if (userId == currentUserId)
-                BottomNavigationMenu(Tab.Collection) {
-                  navigationActions.navigateTo(it.destination)
-                }
+                BottomNavigation(Tab.Collection, navigationActions, currentUserId)
           },
       )
     }
   }
 }
 
-private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationActions) {
+@Composable
+private fun BottomNavigation(
+    tab: Tab,
+    navigationActions: NavigationActions,
+    currentUserId: String,
+) {
+  BottomNavigationMenu(tab) {
+    when (it) {
+      Tab.Collection -> navigationActions.navigateTo(Screen.Collection(currentUserId))
+      Tab.Home -> navigationActions.navigateTo(Screen.Home)
+      Tab.Map -> navigationActions.navigateTo(Screen.Map(currentUserId))
+      Tab.Report -> navigationActions.navigateTo(Screen.Report)
+      Tab.Camera -> navigationActions.navigateTo(Screen.Camera)
+    }
+  }
+}
+
+private fun NavGraphBuilder.cameraComposable(
+    navigationActions: NavigationActions,
+    currentUserId: Id?,
+) {
   composable(Screen.Camera.route) {
     CameraScreen(
         bottomBar = {
-          BottomNavigationMenu(Tab.Camera) { navigationActions.navigateTo(it.destination) }
+          if (currentUserId != null) BottomNavigation(Tab.Camera, navigationActions, currentUserId)
         },
         onPost = { navigationActions.navigateTo(Screen.Home) },
     )
@@ -285,20 +285,25 @@ private fun NavGraphBuilder.mapComposable(
           userId = userId,
           bottomBar = {
             if (userId == currentUserId) {
-              BottomNavigationMenu(Tab.Map) { navigationActions.navigateTo(it.destination) }
+              BottomNavigation(Tab.Map, navigationActions, currentUserId)
             }
           },
           onPost = { navigationActions.navigateTo(Screen.PostDetails(it)) },
+          isCurrentUser = currentUserId == userId,
+          onGoBack = { navigationActions.goBack() },
       )
     }
   }
 }
 
-private fun NavGraphBuilder.homeComposable(navigationActions: NavigationActions) {
+private fun NavGraphBuilder.homeComposable(
+    navigationActions: NavigationActions,
+    currentUserId: Id?,
+) {
   composable(Screen.Home.route) {
     HomeScreen(
         bottomBar = {
-          BottomNavigationMenu(Tab.Home) { navigationActions.navigateTo(it.destination) }
+          if (currentUserId != null) BottomNavigation(Tab.Home, navigationActions, currentUserId)
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },

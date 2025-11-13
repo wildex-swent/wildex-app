@@ -73,7 +73,8 @@ object PostDetailsScreenTestTags {
   fun testTagForProfilePicture(profileId: String, role: String = ""): String {
     return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
   }
-    const val BACK_BUTTON = "backButton"
+
+  const val BACK_BUTTON = "backButton"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -226,9 +227,7 @@ private fun PostPicture(pictureURL: URL) {
                     Brush.verticalGradient(
                         0f to Color.Black.copy(alpha = 0.7f),
                         1f to Color.Transparent,
-                    )
-                )
-    )
+                    )))
     // bottom gradient to transition into sheet
     Box(
         modifier =
@@ -239,9 +238,7 @@ private fun PostPicture(pictureURL: URL) {
                     Brush.verticalGradient(
                         0f to Color.Transparent,
                         1f to colorScheme.background,
-                    )
-                )
-    )
+                    )))
   }
 }
 
@@ -439,50 +436,48 @@ fun CommentInput(
                   color = colorScheme.onBackground.copy(alpha = 0.06f),
                   shape = RoundedCornerShape(0.dp),
               )
-              .padding(horizontal = 12.dp, vertical = 8.dp)
-  ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      ClickableProfilePicture(
-          modifier = Modifier.size(44.dp),
-          profileId = userId,
-          profilePictureURL = userProfilePictureURL,
-          role = "comment_input",
-          onProfile = onProfile,
-      )
+              .padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          ClickableProfilePicture(
+              modifier = Modifier.size(44.dp),
+              profileId = userId,
+              profilePictureURL = userProfilePictureURL,
+              role = "comment_input",
+              onProfile = onProfile,
+          )
 
-      Spacer(modifier = Modifier.width(8.dp))
+          Spacer(modifier = Modifier.width(8.dp))
 
-      var text by remember { mutableStateOf("") }
+          var text by remember { mutableStateOf("") }
 
-      OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
-          placeholder = { Text("Add a comment …") },
-          modifier = Modifier.weight(1f),
-          shape = RoundedCornerShape(32.dp),
-          singleLine = true,
-          trailingIcon = {
-            IconButton(
-                onClick = {
-                  if (text.isNotBlank()) {
-                    postDetailsScreenViewModel.addComment(text)
-                    text = ""
-                  }
-                }
-            ) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Send,
-                  contentDescription = "Send comment",
-                  tint = colorScheme.primary,
-              )
-            }
-          },
-      )
-    }
-  }
+          OutlinedTextField(
+              value = text,
+              onValueChange = { text = it },
+              placeholder = { Text("Add a comment …") },
+              modifier = Modifier.weight(1f),
+              shape = RoundedCornerShape(32.dp),
+              singleLine = true,
+              trailingIcon = {
+                IconButton(
+                    onClick = {
+                      if (text.isNotBlank()) {
+                        postDetailsScreenViewModel.addComment(text)
+                        text = ""
+                      }
+                    }) {
+                      Icon(
+                          imageVector = Icons.AutoMirrored.Filled.Send,
+                          contentDescription = "Send comment",
+                          tint = colorScheme.primary,
+                      )
+                    }
+              },
+          )
+        }
+      }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

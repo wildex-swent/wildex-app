@@ -26,13 +26,15 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
         )
       },
       navigationIcon = {
-        IconButton(onClick = onGoBack, modifier = Modifier.testTag(PostDetailsScreenTestTags.BACK_BUTTON)) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back to Homepage",
-              tint = MaterialTheme.colorScheme.primary,
-          )
-        }
+        IconButton(
+            onClick = onGoBack,
+            modifier = Modifier.testTag(PostDetailsScreenTestTags.BACK_BUTTON)) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                  contentDescription = "Back to Homepage",
+                  tint = MaterialTheme.colorScheme.primary,
+              )
+            }
       },
   )
 }

@@ -94,7 +94,7 @@ class MapScreenViewModel(
    *
    * @param userUid The user ID for whom to load the map data. Defaults to the current user.
    */
-  fun loadUIState(userUid: Id = currentUserId) {
+  fun loadUIState(userUid: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true, isError = false, errorMsg = null)
     viewModelScope.launch { updateUIState(userUid) }
   }
@@ -104,7 +104,7 @@ class MapScreenViewModel(
    *
    * @param userUid The user ID for whom to refresh the map data. Defaults to the current user.
    */
-  fun refreshUIState(userUid: Id = currentUserId) {
+  fun refreshUIState(userUid: Id) {
     _uiState.value =
         _uiState.value.copy(
             isRefreshing = true, isError = false, errorMsg = null, isLoading = false)
@@ -167,7 +167,7 @@ class MapScreenViewModel(
    * @param tab The selected [MapTab].
    * @param userUid The user ID for whom to load the map data. Defaults to the current user.
    */
-  fun onTabSelected(tab: MapTab, userUid: Id = currentUserId) {
+  fun onTabSelected(tab: MapTab, userUid: Id) {
     if (tab !in _uiState.value.availableTabs) return
     _uiState.value = _uiState.value.copy(activeTab = tab, selected = null)
     refreshUIState(userUid)

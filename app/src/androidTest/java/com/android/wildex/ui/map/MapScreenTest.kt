@@ -142,9 +142,10 @@ class MapScreenTest {
       vm: MapScreenViewModel = viewModel,
       uid: Id = currentUserId,
       skipThread: Boolean = true,
+      isCurrentUser: Boolean = true,
   ) = compose {
     CompositionLocalProvider(LocalSkipWorkerThread provides skipThread) {
-      MapScreen(userId = uid, bottomBar = {}, viewModel = vm)
+      MapScreen(userId = uid, bottomBar = {}, viewModel = vm, isCurrentUser = isCurrentUser)
     }
   }
 
@@ -164,7 +165,7 @@ class MapScreenTest {
         onReport = onReport,
         onDismiss = onDismiss,
         onToggleLike = onToggleLike,
-    )
+        isCurrentUser = true)
   }
 
   private fun node(tag: String, unmerged: Boolean = false) =
@@ -176,7 +177,7 @@ class MapScreenTest {
   // ---------- Tests ----------
   @Test
   fun mapScreen_initialDisplay_coreElementsVisible_selectionHidden() {
-    setMapScreen(uid = "u3", skipThread = false)
+    setMapScreen(uid = "u3", skipThread = false, isCurrentUser = false)
     composeTestRule.waitForIdle()
     node(MapContentTestTags.ROOT).assertIsDisplayed()
     node(MapContentTestTags.TAB_SWITCHER).assertIsDisplayed()
@@ -184,6 +185,7 @@ class MapScreenTest {
     node(MapContentTestTags.MAP_CANVAS).assertIsDisplayed()
     node(MapContentTestTags.MAP_PINS).assertIsDisplayed()
     node(MapContentTestTags.REFRESH).assertIsDisplayed()
+    node(MapContentTestTags.BACK_BUTTON).assertIsDisplayed()
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()
   }
@@ -404,7 +406,7 @@ class MapScreenTest {
             onReport = {},
             onDismiss = {},
             onToggleLike = {},
-        )
+            isCurrentUser = true)
       }
     }
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertDoesNotExist()

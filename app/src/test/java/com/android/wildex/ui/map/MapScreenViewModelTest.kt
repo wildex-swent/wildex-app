@@ -99,7 +99,7 @@ class MapScreenViewModelTest {
         coEvery { reportRepository.getAllReports() } returns emptyList()
         coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("a", "b", "c")
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         val regState = viewModel.uiState.value
         Assert.assertEquals(listOf(MapTab.Posts, MapTab.MyPosts), regState.availableTabs)
@@ -107,7 +107,7 @@ class MapScreenViewModelTest {
 
         coEvery { userRepository.getUser(loggedInUserId) } returns proUser
         coEvery { reportRepository.getAllReports() } returns listOf(report1)
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         val proState = viewModel.uiState.value
         Assert.assertTrue(MapTab.Reports in proState.availableTabs)
@@ -121,15 +121,15 @@ class MapScreenViewModelTest {
         coEvery { postsRepository.getAllPostsByGivenAuthor(any()) } returns listOf(post2)
         coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("a", "b", "c")
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
-        viewModel.onTabSelected(MapTab.MyPosts)
+        viewModel.onTabSelected(MapTab.MyPosts, loggedInUserId)
         advanceUntilIdle()
         val myPosts = viewModel.uiState.value
         Assert.assertEquals(MapTab.MyPosts, myPosts.activeTab)
         Assert.assertEquals(1, myPosts.pins.size)
 
-        viewModel.refreshUIState()
+        viewModel.refreshUIState(loggedInUserId)
         advanceUntilIdle()
         Assert.assertFalse(viewModel.uiState.value.isRefreshing)
       }
@@ -145,13 +145,13 @@ class MapScreenViewModelTest {
         coEvery { reportRepository.getAllReports() } returns listOf(report1)
         coEvery { reportRepository.getReport("r1") } returns report1
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
         Assert.assertTrue(viewModel.uiState.value.selected is PinDetails.PostDetails)
 
-        viewModel.onTabSelected(MapTab.Reports)
+        viewModel.onTabSelected(MapTab.Reports, loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("r1")
         advanceUntilIdle()
@@ -168,7 +168,7 @@ class MapScreenViewModelTest {
         coEvery { likeRepository.getLikeForPost("p1") } returns null
         coEvery { likeRepository.getNewLikeId() } returns "like-1"
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
@@ -184,7 +184,7 @@ class MapScreenViewModelTest {
   fun clearFunctions_andErrorHandling_workCorrectly() =
       mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } throws RuntimeException("boom")
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         val s = viewModel.uiState.value
         Assert.assertTrue(s.isError)
@@ -245,7 +245,7 @@ class MapScreenViewModelTest {
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { reportRepository.getAllReports() } returns emptyList()
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
 
         coEvery { postsRepository.getPost("p1") } throws RuntimeException("boom")
@@ -279,7 +279,7 @@ class MapScreenViewModelTest {
                 animalRepository = animalRepository,
                 currentUserId = "",
             )
-        vmBlank.loadUIState()
+        vmBlank.loadUIState(loggedInUserId)
         advanceUntilIdle()
         Assert.assertTrue(vmBlank.uiState.value.isError)
         Assert.assertTrue(vmBlank.uiState.value.errorMsg?.contains("No logged in user.") == true)
@@ -299,7 +299,7 @@ class MapScreenViewModelTest {
         coEvery { likeRepository.getLikeForPost("p1") } returns Like("lk1", "p1", loggedInUserId)
         coEvery { likeRepository.deleteLike("lk1") } returns Unit
 
-        viewModel.loadUIState()
+        viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()

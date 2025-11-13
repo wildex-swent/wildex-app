@@ -325,4 +325,25 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         val exception = runCatching { repository.getPost("nonExistentId") }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
       }
+
+  @Test
+  fun deletePostsByUserDeletesCorrectPosts() =
+      runTest(timeout = 60.seconds) {
+        val authorIdToDelete = "author1"
+        val post1 = post1.copy(authorId = authorIdToDelete)
+        val post2 = post2.copy(authorId = authorIdToDelete)
+
+        repository.addPost(post1)
+        repository.addPost(post2)
+        repository.addPost(post3)
+
+        assertEquals(3, repository.getAllPosts().size)
+
+        repository.deletePostsByUser(authorIdToDelete)
+
+        val posts = repository.getAllPosts()
+        assertEquals(1, posts.size)
+        assertTrue(posts.all { it.authorId != authorIdToDelete })
+        assertEquals(listOf(post3), posts)
+      }
 }

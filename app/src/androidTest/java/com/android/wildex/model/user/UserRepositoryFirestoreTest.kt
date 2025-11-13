@@ -97,13 +97,6 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   }
 
   @Test
-  fun getNewUidReturnsUniqueIDs() = runTest {
-    val numberIDs = 100
-    val ids = (0 until numberIDs).map { repository.getNewUid() }.toSet()
-    assertEquals(numberIDs, ids.size)
-  }
-
-  @Test
   fun canDeleteAUserByID() = runTest {
     repository.addUser(user1)
     repository.addUser(user2)

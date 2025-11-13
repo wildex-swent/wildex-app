@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 private const val COMMENTS_COLLECTION_PATH = "comments"
 
 private object CommentsFields {
-  const val POST_ID = "postId"
+  const val PARENT_ID = "parentId"
   const val AUTHOR_ID = "authorId"
   const val TEXT = "text"
   const val DATE = "date"
@@ -38,7 +38,24 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
    */
   override suspend fun getAllCommentsByPost(postId: String): List<Comment> {
     return collection
-        .whereEqualTo(CommentsFields.POST_ID, postId)
+        .whereEqualTo(CommentsFields.PARENT_ID, postId)
+        .whereEqualTo(CommentsFields.TAG, CommentTag.POST_COMMENT)
+        .get()
+        .await()
+        .documents
+        .mapNotNull { documentToComment(it) }
+  }
+
+  /**
+   * Retrieves all Comment items associated with a specific report.
+   *
+   * @param reportId The ID of the report for which to retrieve comments.
+   * @return A list of [Comment] items associated with the specified report.
+   */
+  override suspend fun getAllCommentsByReport(reportId: Id): List<Comment> {
+    return collection
+        .whereEqualTo(CommentsFields.PARENT_ID, reportId)
+        .whereEqualTo(CommentsFields.TAG, CommentTag.REPORT_COMMENT)
         .get()
         .await()
         .documents
@@ -71,9 +88,9 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
   /**
    * Deletes all Comment items of a post from the repository.
    *
-   * @param postId The ID of the post whose comments are to be deleted.
+   * @param postId The ID of the parent whose comments are to be deleted.
    */
-  override suspend fun deleteAllCommentsOfPost(postId: Id) {
+  override suspend fun deleteAllCommentsOfPost(postId: String) {
     getAllCommentsByPost(postId).forEach {
       if (it.tag == CommentTag.POST_COMMENT) {
         deleteComment(it.commentId)
@@ -87,7 +104,7 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
    * @param reportId The ID of the report whose comments are to be deleted.
    */
   override suspend fun deleteAllCommentsOfReport(reportId: Id) {
-    getAllCommentsByPost(reportId).forEach {
+    getAllCommentsByReport(reportId).forEach {
       if (it.tag == CommentTag.REPORT_COMMENT) {
         deleteComment(it.commentId)
       }
@@ -120,6 +137,12 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
         .mapNotNull { documentToComment(it) }
   }
 
+  override suspend fun deleteCommentsByUser(userId: Id) {
+    collection.whereEqualTo(CommentsFields.AUTHOR_ID, userId).get().await().documents.forEach {
+      it.reference.delete().await()
+    }
+  }
+
   /**
    * Ensures no Comment item in the document reference has a specific commentId.
    *
@@ -148,12 +171,12 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
    * @param document The document to be converted into a comment.
    * @return The transformed [Comment] object.
    */
-  fun documentToComment(document: DocumentSnapshot): Comment? {
+  private fun documentToComment(document: DocumentSnapshot): Comment? {
     return try {
       val commentId = document.id
-      val postId =
-          document.getString(CommentsFields.POST_ID)
-              ?: throwMissingFieldException(CommentsFields.POST_ID)
+      val parentId =
+          document.getString(CommentsFields.PARENT_ID)
+              ?: throwMissingFieldException(CommentsFields.PARENT_ID)
       val authorId =
           document.getString(CommentsFields.AUTHOR_ID)
               ?: throwMissingFieldException(CommentsFields.AUTHOR_ID)
@@ -168,7 +191,7 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
 
       Comment(
           commentId = commentId,
-          postId = postId,
+          parentId = parentId,
           authorId = authorId,
           text = text,
           date = date,

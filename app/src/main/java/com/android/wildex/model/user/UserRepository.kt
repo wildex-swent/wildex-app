@@ -5,9 +5,6 @@ import com.android.wildex.model.utils.Id
 /** Represents a repository that manages Users. */
 interface UserRepository {
 
-  /** Generates and returns a new unique identifier for a user. */
-  fun getNewUid(): String
-
   /**
    * Retrieves a user by their unique identifier.
    *

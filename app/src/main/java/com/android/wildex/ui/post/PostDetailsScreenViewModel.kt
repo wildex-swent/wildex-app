@@ -7,6 +7,7 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
@@ -271,11 +272,11 @@ class PostDetailsScreenViewModel(
         commentRepository.addComment(
             Comment(
                 commentId = commentId,
-                postId = postId,
+                parentId = postId,
                 authorId = currentUserId,
                 text = text,
                 date = now,
-            ))
+                tag = CommentTag.POST_COMMENT))
 
         // 3) Update count in the post (optional to keep server in sync)
         try {

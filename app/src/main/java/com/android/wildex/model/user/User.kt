@@ -74,9 +74,9 @@ data class UserSettings(
 
 /** Enum class representing the appearance mode preference of a user. */
 enum class AppearanceMode {
+  AUTOMATIC,
   LIGHT,
   DARK,
-  AUTOMATIC
 }
 
 /** Enum class representing the type of user. */

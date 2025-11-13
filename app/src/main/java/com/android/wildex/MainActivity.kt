@@ -22,7 +22,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.ui.authentication.SignInScreen
+import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
@@ -34,6 +36,7 @@ import com.android.wildex.ui.navigation.Tab
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.ProfileScreen
 import com.android.wildex.ui.report.ReportScreen
+import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.mapbox.common.MapboxOptions
@@ -44,11 +47,19 @@ object HttpClientProvider {
   val client: OkHttpClient = OkHttpClient()
 }
 
+object AppTheme {
+  var appearanceMode by mutableStateOf(AppearanceMode.AUTOMATIC)
+}
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    setContent { WildexTheme { Surface(modifier = Modifier.fillMaxSize()) { WildexApp() } } }
+    setContent {
+      WildexTheme(theme = AppTheme.appearanceMode) {
+        Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+      }
+    }
   }
 }
 
@@ -68,11 +79,13 @@ fun WildexApp(
   val nullUserUID = context.getString(R.string.null_user_uid)
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
+  val signInViewModel = SignInViewModel()
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
     composable(Screen.Auth.route) {
       SignInScreen(
+          authViewModel = signInViewModel,
           credentialManager = credentialManager,
           onSignedIn = { navigationActions.navigateTo(Screen.Home) },
       )
@@ -92,6 +105,15 @@ fun WildexApp(
           onNotificationClick = {},
       )
     }
+
+    // Settings
+    composable(Screen.Settings.route) {
+      SettingsScreen(
+          onGoBack = { navigationActions.goBack() },
+          onEditProfileClick = {},
+          onAccountDeleteOrSignOut = { navigationActions.navigateTo(Screen.Auth) })
+    }
+
     // Map
     composable("${Screen.Map.PATH}/{userUid}") { backStackEntry ->
       val userId = backStackEntry.arguments?.getString("userUid")
@@ -190,7 +212,7 @@ fun WildexApp(
             userUid = userId,
             onGoBack = { navigationActions.goBack() },
             onCollection = { navigationActions.navigateTo(Screen.Collection(it)) },
-        )
+            onSettings = { navigationActions.navigateTo(Screen.Settings) })
       } else {
         Log.e("ProfileScreen", nullUserUID)
         Toast.makeText(context, nullUserUID, Toast.LENGTH_SHORT).show()

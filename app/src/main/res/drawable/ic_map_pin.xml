@@ -1,0 +1,17 @@
+<!-- app/src/main/res/drawable/ic_map_pin.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Outer pin -->
+    <path
+        android:fillColor="#FF3A5A"
+        android:pathData="M12,2 C8.13,2 5,5.13 5,9 c0,4.25 4.72,9.35 6.33,10.87 0.38,0.36 0.96,0.36 1.34,0 C14.28,18.35 19,13.25 19,9 19,5.13 15.87,2 12,2z"/>
+
+    <!-- Inner circle -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,7 m-2,2 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
+</vector>

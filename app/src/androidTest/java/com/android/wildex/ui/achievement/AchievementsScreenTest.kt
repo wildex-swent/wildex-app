@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import kotlinx.coroutines.CompletableDeferred
@@ -139,6 +140,8 @@ class AchievementsScreenTest {
     ) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int = unlocked.size
+
+    override suspend fun deleteUserAchievements(userId: Id) {}
   }
 
   @Before

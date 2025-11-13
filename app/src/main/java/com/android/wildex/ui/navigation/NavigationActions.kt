@@ -11,6 +11,8 @@ sealed class Screen(
 
   object Home : Screen(route = "home", name = "Home", isTopLevelDestination = true)
 
+  object Settings : Screen(route = "settings", name = "Settings", isTopLevelDestination = false)
+
   data class PostDetails(val postUid: String) :
       Screen(route = "post_details/${postUid}", name = "Post Details") {
     companion object {

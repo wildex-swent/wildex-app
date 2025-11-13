@@ -49,8 +49,7 @@ sealed class MapPin {
   /**
    * Data class representing a report pin on the map.
    *
-   * @property status The status of the report.
-   * @property assigneeId The ID of the user assigned to handle the report (if any).
+   * @property assigneeId The ID of the user assigned to handle the report, if any
    */
   data class ReportPin(
       override val id: Id,

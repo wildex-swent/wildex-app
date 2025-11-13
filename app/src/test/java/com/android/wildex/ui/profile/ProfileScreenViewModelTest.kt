@@ -2,12 +2,16 @@ package com.android.wildex.ui.profile
 
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Location
+import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -23,6 +27,8 @@ class ProfileScreenViewModelTest {
 
   private lateinit var userRepository: UserRepository
   private lateinit var achievementsRepository: UserAchievementsRepository
+  private lateinit var postsRepository: PostsRepository
+  private lateinit var updateUserAchievements: UpdateUserAchievementsUseCase
   private lateinit var viewModel: ProfileScreenViewModel
 
   private val u1 =
@@ -48,10 +54,18 @@ class ProfileScreenViewModelTest {
   fun setUp() {
     userRepository = mockk()
     achievementsRepository = mockk()
+    postsRepository = mockk()
+    updateUserAchievements = mockk()
+
+    coEvery { updateUserAchievements(any()) } returns Unit
+    coEvery { postsRepository.getAllPostsByGivenAuthor(any()) } returns emptyList()
+
     viewModel =
         ProfileScreenViewModel(
             userRepository = userRepository,
             achievementRepository = achievementsRepository,
+            postRepository = postsRepository,
+            updateUserAchievements = updateUserAchievements,
             currentUserId = "uid-1",
         )
   }
@@ -64,14 +78,24 @@ class ProfileScreenViewModelTest {
     Assert.assertFalse(s.isLoading)
     Assert.assertFalse(s.isRefreshing)
     Assert.assertTrue(s.achievements.isEmpty())
+    Assert.assertTrue(s.recentPins.isEmpty())
     Assert.assertNull(s.errorMsg)
   }
 
   @Test
-  fun refreshUIState_owner_true_and_false_paths() {
+  fun refreshUIState_owner_true_and_false_paths_includesRecentPins() {
     mainDispatcherRule.runTest {
+      val pWithLoc = mockk<com.android.wildex.model.social.Post>(relaxed = true)
+      every { pWithLoc.location } returns Location(latitude = 46.5, longitude = 6.6, name = "")
+      every { pWithLoc.date } returns Timestamp(1000, 0)
+
+      val pNoLoc = mockk<com.android.wildex.model.social.Post>(relaxed = true)
+      every { pNoLoc.location } returns null
+      every { pNoLoc.date } returns Timestamp(500, 0)
+
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(pNoLoc, pWithLoc)
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
@@ -79,15 +103,21 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u1, s1.user)
       Assert.assertTrue(s1.isUserOwner)
       Assert.assertEquals(listOf(a1, a2), s1.achievements)
+      Assert.assertEquals(1, s1.recentPins.size)
+      Assert.assertEquals(6.6, s1.recentPins[0].longitude(), 0.0)
+      Assert.assertEquals(46.5, s1.recentPins[0].latitude(), 0.0)
 
       viewModel =
           ProfileScreenViewModel(
               userRepository = userRepository,
               achievementRepository = achievementsRepository,
+              postRepository = postsRepository,
+              updateUserAchievements = updateUserAchievements,
               currentUserId = "someone-else",
           )
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
@@ -95,6 +125,7 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u1, s2.user)
       Assert.assertFalse(s2.isUserOwner)
       Assert.assertTrue(s2.achievements.isEmpty())
+      Assert.assertTrue(s2.recentPins.isEmpty())
     }
   }
 
@@ -103,6 +134,7 @@ class ProfileScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
@@ -114,6 +146,7 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } throws
           RuntimeException("x")
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
@@ -121,19 +154,35 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u1, e2.user)
       Assert.assertTrue(e2.achievements.isEmpty())
       Assert.assertEquals("x", e2.errorMsg)
+      Assert.assertTrue(e2.recentPins.isEmpty())
+      Assert.assertFalse(e2.isError)
     }
   }
 
   @Test
-  fun refreshUIState_multipleCalls_updatesWithLatestData() {
+  fun refreshUIState_multipleCalls_updatesWithLatestData_includingPins() {
     mainDispatcherRule.runTest {
+      val p1 = mockk<com.android.wildex.model.social.Post>(relaxed = true)
+      every { p1.location } returns Location(46.5, 6.6, "")
+      every { p1.date } returns Timestamp(1000, 0)
+
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(p1)
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
+      val p2 = mockk<com.android.wildex.model.social.Post>(relaxed = true)
+      every { p2.location } returns Location(48.8, 8.8, "")
+      every { p2.date } returns Timestamp(2000, 0)
+
+      val pOldNoLoc = mockk<com.android.wildex.model.social.Post>(relaxed = true)
+      every { pOldNoLoc.location } returns null
+      every { pOldNoLoc.date } returns Timestamp(1500, 0)
+
       coEvery { userRepository.getUser("uid-1") } returns u2
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a2)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(pOldNoLoc, p2)
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
@@ -141,6 +190,9 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u2, s.user)
       Assert.assertEquals(listOf(a2), s.achievements)
       Assert.assertTrue(s.isUserOwner)
+      Assert.assertEquals(1, s.recentPins.size)
+      Assert.assertEquals(8.8, s.recentPins[0].longitude(), 0.0)
+      Assert.assertEquals(48.8, s.recentPins[0].latitude(), 0.0)
     }
   }
 
@@ -154,6 +206,7 @@ class ProfileScreenViewModelTest {
       Assert.assertFalse(s.isLoading)
       Assert.assertTrue(s.isError)
       Assert.assertFalse(s.isUserOwner)
+      Assert.assertTrue(s.recentPins.isEmpty())
 
       viewModel.clearErrorMsg()
       Assert.assertNull(viewModel.uiState.value.errorMsg)
@@ -164,15 +217,36 @@ class ProfileScreenViewModelTest {
   fun refreshUIState_whenUnexpectedErrorAfterFetch_hitsOuterCatch() {
     mainDispatcherRule.runTest {
       val badUser = mockk<User>(relaxed = true)
-      io.mockk.every { badUser.userId } throws RuntimeException("kaboom")
+      every { badUser.userId } throws RuntimeException("kaboom")
       coEvery { userRepository.getUser("uid-1") } returns badUser
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
       val s = viewModel.uiState.value
       Assert.assertTrue(s.errorMsg?.startsWith("Unexpected error: kaboom") == true)
       Assert.assertFalse(s.isLoading)
+      Assert.assertTrue(s.isError)
+    }
+  }
+
+  @Test
+  fun refreshUIState_whenPostsRepositoryFails_setsErrorMsg_andKeepsUserAndAchievements() {
+    mainDispatcherRule.runTest {
+      coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
+      coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } throws
+          RuntimeException("posts boom")
+      viewModel.refreshUIState("uid-1")
+      advanceUntilIdle()
+
+      val s = viewModel.uiState.value
+      Assert.assertEquals(u1, s.user)
+      Assert.assertEquals(listOf(a1, a2), s.achievements)
+      Assert.assertTrue(s.recentPins.isEmpty())
+      Assert.assertEquals("posts boom", s.errorMsg)
+      Assert.assertFalse(s.isError)
     }
   }
 }

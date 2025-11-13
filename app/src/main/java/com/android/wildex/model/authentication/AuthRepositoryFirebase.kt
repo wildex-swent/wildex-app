@@ -22,6 +22,9 @@ import kotlinx.coroutines.tasks.await
 class AuthRepositoryFirebase(
     private val auth: FirebaseAuth = Firebase.auth,
 ) : AuthRepository {
+  companion object {
+    private const val NO_KNOWN_ERROR_MSG = "Unexpected error."
+  }
 
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
     return try {
@@ -42,7 +45,7 @@ class AuthRepositoryFirebase(
       }
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error."}"))
+          IllegalStateException("Login failed: ${e.localizedMessage ?: NO_KNOWN_ERROR_MSG}"))
     }
   }
 
@@ -54,7 +57,19 @@ class AuthRepositoryFirebase(
       Result.success(Unit)
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
+          IllegalStateException("Logout failed: ${e.localizedMessage ?: NO_KNOWN_ERROR_MSG}"))
+    }
+  }
+
+  override fun deleteUserAuth(): Result<Unit> {
+    return try {
+      // Firebase delete user
+      auth.currentUser?.delete()
+
+      Result.success(Unit)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Delete failed: ${e.localizedMessage ?: NO_KNOWN_ERROR_MSG}"))
     }
   }
 }

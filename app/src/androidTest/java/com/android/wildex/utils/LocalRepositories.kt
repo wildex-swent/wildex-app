@@ -2,6 +2,8 @@ package com.android.wildex.utils
 
 import android.content.Context
 import android.net.Uri
+import com.android.wildex.model.achievement.Achievement
+import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -18,12 +20,17 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettings
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Input
 import com.android.wildex.model.utils.URL
+import kotlin.collections.mutableMapOf
 
 interface ClearableRepository {
   fun clear()
@@ -64,6 +71,10 @@ object LocalRepositories {
       listOfPosts.removeIf { it.postId == postId }
     }
 
+    override suspend fun deletePostsByUser(userId: Id) {
+      listOfPosts.removeIf { it.authorId == userId }
+    }
+
     override fun clear() {
       listOfPosts.clear()
     }
@@ -100,20 +111,66 @@ object LocalRepositories {
       return listOfLikes.filter { it.userId == userId }
     }
 
+    override suspend fun deleteLikesByUser(userId: Id) {
+      listOfLikes.removeIf { it.userId == userId }
+    }
+
     override fun clear() {
       listOfLikes.clear()
     }
   }
 
-  open class UserRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      UserRepository, ClearableRepository {
-    val listOfUsers = mutableListOf<User>()
+  open class UserSettingsRepositoryImpl() : UserSettingsRepository, ClearableRepository {
+
+    val mapUserToSettings = mutableMapOf<Id, UserSettings>()
 
     init {
       clear()
     }
 
-    override fun getNewUid(): String = "newUserId"
+    override suspend fun initializeUserSettings(userId: String) {
+      mapUserToSettings[userId] = UserSettings()
+    }
+
+    override suspend fun getEnableNotification(userId: String): Boolean {
+      return mapUserToSettings[userId]?.enableNotifications
+          ?: throw Exception("No User with id $userId found")
+    }
+
+    override suspend fun setEnableNotification(userId: String, enable: Boolean) {
+      val userSettings = mapUserToSettings[userId]
+      ((userSettings?.copy(enableNotifications = enable)
+              ?: throw Exception("No User with id $userId found"))
+          .also { mapUserToSettings[userId] = it })
+    }
+
+    override suspend fun getAppearanceMode(userId: String): AppearanceMode {
+      return mapUserToSettings[userId]?.appearanceMode
+          ?: throw Exception("No User with id $userId found")
+    }
+
+    override suspend fun setAppearanceMode(userId: String, mode: AppearanceMode) {
+      val userSettings = mapUserToSettings[userId]
+      ((userSettings?.copy(appearanceMode = mode)
+              ?: throw Exception("No User with id $userId found"))
+          .also { mapUserToSettings[userId] = it })
+    }
+
+    override suspend fun deleteUserSettings(userId: Id) {
+      mapUserToSettings.remove(userId)
+    }
+
+    override fun clear() {
+      mapUserToSettings.clear()
+    }
+  }
+
+  open class UserRepositoryImpl() : UserRepository, ClearableRepository {
+    val listOfUsers = mutableListOf<User>()
+
+    init {
+      clear()
+    }
 
     override suspend fun getUser(userId: Id): User = listOfUsers.find { it.userId == userId }!!
 
@@ -144,8 +201,7 @@ object LocalRepositories {
     }
   }
 
-  open class CommentRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      CommentRepository, ClearableRepository {
+  open class CommentRepositoryImpl() : CommentRepository, ClearableRepository {
     val listOfComments = mutableListOf<Comment>()
 
     init {
@@ -155,7 +211,10 @@ object LocalRepositories {
     override fun getNewCommentId(): String = "newCommentId"
 
     override suspend fun getAllCommentsByPost(postId: String): List<Comment> =
-        listOfComments.filter { it.postId == postId }
+        listOfComments.filter { it.parentId == postId }
+
+    override suspend fun getAllCommentsByReport(reportId: Id): List<Comment> =
+        listOfComments.filter { it.parentId == reportId }
 
     override suspend fun addComment(comment: Comment) {
       listOfComments.add(comment)
@@ -180,6 +239,10 @@ object LocalRepositories {
 
     override suspend fun getCommentsByUser(userId: String): List<Comment> =
         listOfComments.filter { it.authorId == userId }
+
+    override suspend fun deleteCommentsByUser(userId: Id) {
+      listOfComments.removeIf { it.authorId == userId }
+    }
 
     override fun clear() {
       listOfComments.clear()
@@ -216,7 +279,7 @@ object LocalRepositories {
     }
 
     override suspend fun initializeUserAnimals(userId: Id) {
-      mapUserToAnimals.put(userId, mutableListOf())
+      mapUserToAnimals[userId] = mutableListOf()
     }
 
     override suspend fun getAllAnimalsByUser(userId: Id): List<Animal> {
@@ -230,22 +293,62 @@ object LocalRepositories {
     override suspend fun addAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.add(animalRepository.getAnimal(animalId))
-      mapUserToAnimals.put(userId, oldList)
+      mapUserToAnimals[userId] = oldList
     }
 
     override suspend fun deleteAnimalToUserAnimals(userId: Id, animalId: Id) {
       val oldList = mapUserToAnimals.getValue(userId)
       oldList.removeIf { it.animalId == animalId }
-      mapUserToAnimals.put(userId, oldList)
+      mapUserToAnimals[userId] = oldList
+    }
+
+    override suspend fun deleteUserAnimals(userId: Id) {
+      mapUserToAnimals.remove(userId)
     }
 
     override fun clear() {
-      mapUserToAnimals.forEach { p0, p1 -> mapUserToAnimals.put(p0, mutableListOf()) }
+      mapUserToAnimals.forEach { (p0, _) -> mapUserToAnimals[p0] = mutableListOf() }
     }
   }
 
-  open class ReportRepositoryImpl(private val currentUserId: Id = "currentUserId-1") :
-      ReportRepository, ClearableRepository {
+  open class UserAchievementsRepositoryImpl() : UserAchievementsRepository, ClearableRepository {
+    val mapUserToAchievements = mutableMapOf<Id, List<Achievement>>()
+
+    override suspend fun initializeUserAchievements(userId: Id) {
+      mapUserToAchievements[userId] = mutableListOf()
+    }
+
+    override suspend fun getAllAchievementsByUser(userId: Id): List<Achievement> {
+      return mapUserToAchievements[userId] ?: throw Exception("User not found")
+    }
+
+    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> {
+      // Not needed for tests
+      return emptyList()
+    }
+
+    override suspend fun getAllAchievements(): List<Achievement> {
+      return mapUserToAchievements.values.flatten().distinct()
+    }
+
+    override suspend fun updateUserAchievements(userId: String, inputs: Input) {
+      // Not needed for tests
+    }
+
+    override suspend fun getAchievementsCountOfUser(userId: Id): Int {
+      return getAllAchievementsByUser(userId).size
+    }
+
+    override suspend fun deleteUserAchievements(userId: Id) {
+      mapUserToAchievements.remove(userId)
+    }
+
+    override fun clear() {
+      mapUserToAchievements.clear()
+    }
+  }
+
+  open class ReportRepositoryImpl() : ReportRepository, ClearableRepository {
 
     val listOfReports = mutableListOf<Report>()
 
@@ -275,6 +378,10 @@ object LocalRepositories {
       listOfReports.removeIf { it.reportId == reportId }
     }
 
+    override suspend fun deleteReportsByUser(userId: Id) {
+      listOfReports.removeIf { it.authorId == userId }
+    }
+
     override fun clear() {
       listOfReports.clear()
     }
@@ -294,6 +401,11 @@ object LocalRepositories {
       return "imageUrl:$postId"
     }
 
+    override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL? {
+      storage[reportId] = imageUri
+      return "imageUrl:$reportId"
+    }
+
     override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
       storage[animalId] = imageUri
       return "imageUrl:$animalId"
@@ -305,6 +417,10 @@ object LocalRepositories {
 
     override suspend fun deletePostImage(postId: Id) {
       storage.remove(postId)
+    }
+
+    override suspend fun deleteReportImage(reportId: Id) {
+      storage.remove(reportId)
     }
 
     override suspend fun deleteAnimalPicture(animalId: Id) {
@@ -347,11 +463,13 @@ object LocalRepositories {
   val userRepository: UserRepository = UserRepositoryImpl()
   val commentRepository: CommentRepository = CommentRepositoryImpl()
   val animalRepository: AnimalRepository = AnimalRepositoryImpl()
+  val userSettingsRepository: UserSettingsRepository = UserSettingsRepositoryImpl()
   val userAnimalsRepository: UserAnimalsRepository =
       UserAnimalsRepositoryImpl(animalRepository = animalRepository)
   val reportRepository: ReportRepository = ReportRepositoryImpl()
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
+  val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -359,9 +477,12 @@ object LocalRepositories {
     (userRepository as ClearableRepository).clear()
     (commentRepository as ClearableRepository).clear()
     (animalRepository as ClearableRepository).clear()
+    (userSettingsRepository as ClearableRepository).clear()
     (userAnimalsRepository as ClearableRepository).clear()
+    (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
     (storageRepository as ClearableRepository).clear()
+    (userAchievementsRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

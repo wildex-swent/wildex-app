@@ -25,4 +25,7 @@ interface LikeRepository {
 
   /** Retrieves all Like items made by the given user. */
   suspend fun getAllLikesByUser(userId: Id): List<Like>
+
+  /** Deletes all Like items made by the given user. */
+  suspend fun deleteLikesByUser(userId: Id)
 }

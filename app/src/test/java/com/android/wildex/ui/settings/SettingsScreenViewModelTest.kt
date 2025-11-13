@@ -1,13 +1,23 @@
 package com.android.wildex.ui.settings
 
+import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.LikeRepository
+import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.usecase.user.DeleteUserUseCase
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,6 +33,13 @@ class SettingsScreenViewModelTest {
 
   private lateinit var userRepository: UserRepository
   private lateinit var userSettingsRepository: UserSettingsRepository
+  private lateinit var userAnimalsRepository: UserAnimalsRepository
+  private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var postsRepository: PostsRepository
+  private lateinit var reportRepository: ReportRepository
+  private lateinit var likeRepository: LikeRepository
+  private lateinit var commentRepository: CommentRepository
+  private lateinit var authRepository: AuthRepository
   private lateinit var viewModel: SettingsScreenViewModel
 
   private val u1 =
@@ -37,7 +54,8 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3)
+          friendsCount = 3,
+      )
 
   private val u2 =
       User(
@@ -51,17 +69,39 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3)
+          friendsCount = 3,
+      )
 
   @Before
   fun setUp() {
     userRepository = mockk()
     userSettingsRepository = mockk()
+    userAnimalsRepository = mockk()
+    userAchievementsRepository = mockk()
+    postsRepository = mockk()
+    reportRepository = mockk()
+    likeRepository = mockk()
+    commentRepository = mockk()
+    authRepository = mockk()
+
     viewModel =
         SettingsScreenViewModel(
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
-            currentUserId = "currentUserId")
+            currentUserId = "currentUserId",
+            deleteUserUseCase =
+                DeleteUserUseCase(
+                    userRepository,
+                    userSettingsRepository,
+                    userAnimalsRepository,
+                    userAchievementsRepository,
+                    postsRepository,
+                    reportRepository,
+                    likeRepository,
+                    commentRepository,
+                    authRepository,
+                ),
+        )
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2
@@ -70,6 +110,8 @@ class SettingsScreenViewModelTest {
         AppearanceMode.DARK
     coEvery { userSettingsRepository.getEnableNotification("otherUserId") } returns true
     coEvery { userSettingsRepository.getAppearanceMode("otherUserId") } returns AppearanceMode.LIGHT
+    coEvery { userAnimalsRepository.deleteUserAnimals("currentUserId") } just Runs
+    coEvery { userAchievementsRepository.deleteUserAchievements("currentUserId") } just Runs
   }
 
   @Test

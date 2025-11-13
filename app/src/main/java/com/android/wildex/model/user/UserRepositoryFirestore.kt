@@ -11,10 +11,6 @@ private const val TAG = "UserRepositoryFirestore"
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
-  override fun getNewUid(): String {
-    return db.collection(USERS_COLLECTION_PATH).document().id
-  }
-
   override suspend fun getUser(userId: Id): User {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
     if (!document.exists()) {

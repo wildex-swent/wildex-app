@@ -214,4 +214,35 @@ class UserAnimalsRepositoryFirestoreTest : FirestoreTest(USER_ANIMALS_COLLECTION
     assertEquals(1, animalsId.size)
     assertEquals(1, animalsCount)
   }
+
+  @Test
+  fun deleteUserAnimalsWhenNoUserExists() = runTest {
+    var exceptionThrown = false
+
+    try {
+      repository.deleteUserAnimals(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+
+      assertEquals("A userAnimal with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
+  }
+
+  @Test
+  fun deleteUserAnimalsWhenUserExists() = runTest {
+    var exceptionThrown = false
+    repository.initializeUserAnimals(user1.userId)
+
+    repository.deleteUserAnimals(user1.userId)
+    try {
+      repository.getAllAnimalsByUser(user1.userId)
+    } catch (e: IllegalArgumentException) {
+      exceptionThrown = true
+      assertEquals("A userAnimal with userId '${user1.userId}' does not exist.", e.message)
+    }
+
+    assertTrue(exceptionThrown)
+  }
 }

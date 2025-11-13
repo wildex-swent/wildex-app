@@ -4,6 +4,7 @@ import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -67,17 +68,19 @@ class UpdateUserAchievementsUseCaseTest {
   private val c1 =
       Comment(
           commentId = "c1",
-          postId = "p1",
+          parentId = "p1",
           authorId = userId,
           text = "t1",
-          date = Timestamp.Companion.now())
+          date = Timestamp.Companion.now(),
+          tag = CommentTag.POST_COMMENT)
   private val c2 =
       Comment(
           commentId = "c2",
-          postId = "p2",
+          parentId = "p2",
           authorId = userId,
           text = "t2",
-          date = Timestamp.Companion.now())
+          date = Timestamp.Companion.now(),
+          tag = CommentTag.POST_COMMENT)
 
   @Before
   fun setUp() {

@@ -118,6 +118,42 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
+  fun uploadReportImage_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
+    val reportId = "report456"
+
+    try {
+      val result = storageRepository.uploadReportImage(reportId, testImageUri)
+
+      assertNotNull("Upload should return a URL", result)
+      assertTrue("URL should contain reportId", result!!.contains(reportId))
+      assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
+  fun uploadReportImage_createsFileAtCorrectPath() = runBlocking {
+    val reportId = "testReport321"
+    try {
+      val url = storageRepository.uploadReportImage(reportId, testImageUri)
+
+      assertNotNull("Upload should succeed", url)
+      val expectedPathSegment = "reports%2F$reportId.jpg"
+      assertTrue(
+          "URL should contain correct path: $expectedPathSegment",
+          url!!.contains(expectedPathSegment),
+      )
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
   fun uploadAnimalPicture_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
     val animalId = "animal123"
 
@@ -348,6 +384,43 @@ class StorageRepositoryFirebaseTest {
     } finally {
       runCatching {
         FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
+  fun deleteReportImage_succeeds_afterUpload() = runBlocking {
+    val reportId = "reportToDelete"
+
+    try {
+      storageRepository.uploadReportImage(reportId, testImageUri)
+
+      storageRepository.deleteReportImage(reportId)
+
+      assertFalse(FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").exists())
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").delete().await()
+      }
+    }
+  }
+
+  @Test
+  fun deleteReportImage_catchesException_whenFileDoesNotExist() = runBlocking {
+    val reportId = "nonExistentReportDelete"
+
+    try {
+      // Attempt to delete non-existent file - should catch exception and log it
+      storageRepository.deleteReportImage(reportId)
+
+      // If we reach here, exception was caught (not propagated)
+      assertFalse(
+          "File should not exist",
+          FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").exists(),
+      )
+    } finally {
+      runCatching {
+        FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").delete().await()
       }
     }
   }

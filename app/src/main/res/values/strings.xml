@@ -23,9 +23,12 @@
     <!-- Profile screen -->
     <string name="profile">My Profile</string>
     <string name="user_profile">User Profile</string>
+    <string name="prev_arrow">Prev</string>
+    <string name="next_arrow">Next</string>
     <string name="view_map">View in full screen →</string>
-    <string name="default_description">No description yet.</string>
+    <string name="default_description">No bio yet.</string>
     <string name="send_friend_request">Send Friend Request</string>
+    <string name="cancel_friend_request">Cancel Friend Request</string>
     <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
 
@@ -34,6 +37,22 @@
     <string name="create_profile_title">Create Profile</string>
     <string name="edit_profile_save_successfully">Profile changes saved successfully</string>
     <string name="default_profile_picture_link">https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg</string>
+    <!-- Settings screen -->
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_confirmation">Are you sure you want to delete your account?</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings">Settings</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="notifications">Notifications</string>
+    <string name="user_status">User status</string>
+    <string name="regular_status">Regular</string>
+    <string name="professional_status">Professional</string>
+    <string name="appearance">Appearance</string>
+    <string name="light_mode">Light</string>
+    <string name="dark_mode">Dark</string>
+    <string name="system_default">Auto</string>
+    <string name="sign_out">Sign out</string>
 
     <!-- Collection screen -->
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
@@ -45,6 +64,7 @@
     <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>
+    <string name="fallback_url">https://media.istockphoto.com/id/1223671392/vector/default-profile-picture-avatar-photo-placeholder-vector-illustration.jpg?s=612x612&amp;w=0&amp;k=20&amp;c=s0aTdmT5aU6b8ot7VKm11DeID6NctRCpB755rA1BIP0=</string>
 
     <!-- Achievements screen -->
     <string name="trophies">Your trophies</string>

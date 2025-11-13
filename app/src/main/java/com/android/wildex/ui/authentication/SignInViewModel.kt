@@ -13,9 +13,9 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -25,27 +25,30 @@ import kotlinx.coroutines.launch
  * Represents the UI state for authentication.
  *
  * @property isLoading Whether an authentication operation is in progress.
- * @property user The currently signed-in [FirebaseUser], or null if not signed in.
+ * @property isNewUser True if the signed in user is a new user, false otherwise.
+ * @property username The username currently signed-in user, or null if not signed in yet.
  * @property errorMsg The error message to display, or null if there is no error.
- * @property signedOut True if a sign-out operation has completed.
  */
 data class AuthUIState(
+    val username: String? = null,
+    val isNewUser: Boolean = false,
     val isLoading: Boolean = false,
-    val firebaseUser: FirebaseUser? = null,
     val errorMsg: String? = null,
-    val signedOut: Boolean = false
 )
 
 /**
  * ViewModel for the Sign-In view.
  *
- * @property repository The repository used to perform authentication operations.
+ * @property authRepository The repository used to perform authentication operations.
  */
 class SignInViewModel(
-    private val repository: AuthRepository = RepositoryProvider.authRepository,
+    private val authRepository: AuthRepository = RepositoryProvider.authRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val initializeUserUseCase: InitializeUserUseCase = InitializeUserUseCase()
+    private val userSettingsRepository: UserSettingsRepository =
+        RepositoryProvider.userSettingsRepository,
+    private val initializeUserUseCase: InitializeUserUseCase = InitializeUserUseCase(),
 ) : ViewModel() {
+
   private val _uiState = MutableStateFlow(AuthUIState())
   val uiState: StateFlow<AuthUIState> = _uiState
 
@@ -58,9 +61,8 @@ class SignInViewModel(
   fun signIn(context: Context, credentialManager: CredentialManager) {
     if (_uiState.value.isLoading) return
 
+    _uiState.update { it.copy(isLoading = true, errorMsg = null) }
     viewModelScope.launch {
-      _uiState.update { it.copy(isLoading = true, errorMsg = null) }
-
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
                   serverClientId = context.getString(R.string.default_web_client_id))
@@ -70,55 +72,66 @@ class SignInViewModel(
       try {
         val credential = credentialManager.getCredential(context, signInRequest).credential
 
-        repository.signInWithGoogle(credential).fold({ firebaseUser ->
-          _uiState.update {
-            it.copy(
-                isLoading = false, firebaseUser = firebaseUser, errorMsg = null, signedOut = false)
-          }
-          val userId = firebaseUser.uid
-          try {
-            userRepository.getUser(userId)
-            AppTheme.appearanceMode =
-                RepositoryProvider.userSettingsRepository.getAppearanceMode(userId)
-          } catch (_: Exception) {
-            initializeUserUseCase(userId)
-            AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
-          }
-        }) { failure ->
-          _uiState.update {
-            it.copy(
-                isLoading = false,
-                firebaseUser = null,
-                errorMsg = failure.localizedMessage,
-                signedOut = true)
-          }
-        }
-      } catch (e: GetCredentialCancellationException) {
+        authRepository
+            .signInWithGoogle(credential)
+            .fold(
+                onSuccess = { firebaseUser ->
+                  val userId = firebaseUser.uid
+                  val (username, isNewUser) =
+                      try {
+                        val user = userRepository.getUser(userId)
+                        AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
+                        user.username to false
+                      } catch (_: Exception) {
+                        initializeUserUseCase(userId)
+                        AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+                        ("" to true)
+                      }
+                  _uiState.update {
+                    it.copy(
+                        username = username,
+                        isNewUser = isNewUser,
+                        isLoading = false,
+                        errorMsg = null,
+                    )
+                  }
+                },
+                onFailure = { failure ->
+                  _uiState.update {
+                    it.copy(
+                        username = null,
+                        isLoading = false,
+                        errorMsg = failure.localizedMessage,
+                    )
+                  }
+                },
+            )
+      } catch (_: GetCredentialCancellationException) {
         // User cancelled the sign-in operation
         _uiState.update {
           it.copy(
+              username = null,
               isLoading = false,
-              firebaseUser = null,
               errorMsg = context.getString(R.string.cancel_sign_in),
-              signedOut = true)
+          )
         }
       } catch (e: GetCredentialException) {
         // Other credential errors
         _uiState.update {
           it.copy(
+              username = null,
               isLoading = false,
-              firebaseUser = null,
               errorMsg = "Failed to get credentials: ${e.localizedMessage}",
-              signedOut = true)
+          )
         }
       } catch (e: Exception) {
         // Unexpected errors
         _uiState.update {
           it.copy(
+              username = null,
               isLoading = false,
-              firebaseUser = null,
               errorMsg = "Unexpected error: ${e.localizedMessage}",
-              signedOut = true)
+          )
         }
       }
     }

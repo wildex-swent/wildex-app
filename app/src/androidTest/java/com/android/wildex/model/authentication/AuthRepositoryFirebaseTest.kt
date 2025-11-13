@@ -67,7 +67,9 @@ class AuthRepositoryFirebaseTest {
     val clientId = context.getString(resourceId)
 
     assertTrue(
-        "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
+        "Invalid Google client ID format: $clientId",
+        clientId.endsWith(".googleusercontent.com"),
+    )
   }
 
   @Test
@@ -127,5 +129,20 @@ class AuthRepositoryFirebaseTest {
 
     assertTrue(result.isFailure)
     assertTrue(result.exceptionOrNull()!!.message!!.contains("Logout failed"))
+  }
+
+  @Test
+  fun deleteUserAuthThrowsExceptionReturnsFailure() {
+    Mockito.doThrow(RuntimeException("Boom")).`when`(mockAuth).currentUser?.delete()
+    val result = mockRepository.deleteUserAuth()
+    assertTrue(result.isFailure)
+    assertTrue(result.exceptionOrNull()!!.message!!.contains("Delete failed"))
+  }
+
+  @Test
+  fun deleteUserAuthSucceeds() {
+    val result = repository.deleteUserAuth()
+    whenever(mockAuth.currentUser?.delete()).thenReturn(null)
+    assertTrue(result.isSuccess)
   }
 }

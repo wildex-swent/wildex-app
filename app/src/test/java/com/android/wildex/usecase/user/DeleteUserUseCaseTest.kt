@@ -1,6 +1,7 @@
 package com.android.wildex.usecase.user
 
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -31,6 +32,7 @@ class DeleteUserUseCaseTest {
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
   private lateinit var commentRepository: CommentRepository
+  private lateinit var authRepository: AuthRepository
   private lateinit var useCase: DeleteUserUseCase
 
   private val userId = "userId"
@@ -45,6 +47,7 @@ class DeleteUserUseCaseTest {
     reportRepository = mockk()
     likeRepository = mockk()
     commentRepository = mockk()
+    authRepository = mockk()
 
     useCase =
         DeleteUserUseCase(
@@ -55,7 +58,9 @@ class DeleteUserUseCaseTest {
             postsRepository,
             reportRepository,
             likeRepository,
-            commentRepository)
+            commentRepository,
+            authRepository,
+        )
   }
 
   @Test
@@ -95,6 +100,7 @@ class DeleteUserUseCaseTest {
       coEvery { reportRepository.deleteReportsByUser(userId) } just Runs
       coEvery { likeRepository.deleteLikesByUser(userId) } just Runs
       coEvery { commentRepository.deleteCommentsByUser(userId) } just Runs
+      coEvery { authRepository.deleteUserAuth() } returns Result.success(Unit)
 
       try {
         useCase(userId)

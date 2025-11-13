@@ -19,4 +19,11 @@ interface AuthRepository {
    * @return A [Result] indication success of failure.
    */
   fun signOut(): Result<Unit>
+
+  /**
+   * Deletes the user's authentication entry.
+   *
+   * @return A [Result] indication success of failure.
+   */
+  fun deleteUserAuth(): Result<Unit>
 }

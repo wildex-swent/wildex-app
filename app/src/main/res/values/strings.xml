@@ -87,6 +87,7 @@
     <string name="submit_rescue_alert">Submit a Rescue Alert</string>
     <string name="camera_request_msg_1">We need your camera so you can take pictures of animals that might be hurt or need help</string>
     <string name="camera_request_msg_2">Your photos help rescuers understand what is happening and act quickly</string>
+    <string name="description">Description</string>
 
     <!-- Report screen -->
     <string name="report_title_regular">My Reports</string>

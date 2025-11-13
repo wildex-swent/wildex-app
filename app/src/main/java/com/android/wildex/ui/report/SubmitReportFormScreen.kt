@@ -145,7 +145,7 @@ fun SubmitReportFormScreen(
           OutlinedTextField(
               value = uiState.description,
               onValueChange = onDescriptionChange,
-              label = { Text("Description") },
+              label = { Text(context.getString(R.string.description)) },
               modifier =
                   Modifier.fillMaxWidth(0.9f)
                       .height(100.dp)

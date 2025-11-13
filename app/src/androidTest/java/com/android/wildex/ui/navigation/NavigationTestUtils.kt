@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.test.rule.GrantPermissionRule
@@ -218,7 +219,7 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkEditProfileScreenIsDisplayed(isNewUser: Boolean) {
-    onNodeWithTag(NavigationTestTags.EDIT_PROFILE_SCREEN).assertIsDisplayed()
+    waitUntil { onNodeWithTag(NavigationTestTags.EDIT_PROFILE_SCREEN).isDisplayed() }
     assertEquals(Screen.EditProfile.PATH, navController.currentDestination?.route)
     assertEquals(isNewUser, navController.currentBackStackEntry?.arguments?.getBoolean("isNewUser"))
   }
@@ -257,6 +258,23 @@ abstract class NavigationTestUtils {
   }
 
   // Navigation helpers
+
+  fun ComposeTestRule.navigateFromEditProfile() {
+    val nameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
+    val surnameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_SURNAME)
+    val usernameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
+    val saveNode = onNodeWithTag(EditProfileScreenTestTags.SAVE)
+    waitUntil(DEFAULT_TIMEOUT) {
+      nameNode.isDisplayed() &&
+          surnameNode.isDisplayed() &&
+          usernameNode.isDisplayed() &&
+          saveNode.isDisplayed()
+    }
+    nameNode.performClick().performTextInput("James")
+    surnameNode.performClick().performTextInput("Bond")
+    usernameNode.performClick().performTextInput("007")
+    saveNode.performClick()
+  }
 
   fun ComposeTestRule.navigateToHomeScreenFromBottomBar() {
     onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().performClick()

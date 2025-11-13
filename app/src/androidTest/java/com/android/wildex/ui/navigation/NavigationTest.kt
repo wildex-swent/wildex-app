@@ -20,7 +20,7 @@ import org.junit.runners.JUnit4
 class NavigationTest : NavigationTestUtils() {
 
   @Test
-  fun startsAtHomeScreen_whenAuthenticated() {
+  fun startsAtHomeScreen_whenAuthenticated_oldUser() {
     composeRule.waitForIdle()
     assertNotNull(FirebaseEmulator.auth.currentUser)
     composeRule.checkHomeScreenIsDisplayed()
@@ -40,6 +40,19 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
     composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun navigation_AuthScreen_ToEditProfile_ToHome() {
+    runBlocking { FirebaseEmulator.auth.signOut() }
+    composeRule.waitForIdle()
+    composeRule.checkAuthScreenIsDisplayed()
+    composeRule.navigateFromAuth()
+    composeRule.waitForIdle()
+    composeRule.checkEditProfileScreenIsDisplayed(true)
+    composeRule.navigateFromEditProfile()
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
   }
 
   @Test

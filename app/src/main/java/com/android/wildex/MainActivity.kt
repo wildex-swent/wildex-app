@@ -15,17 +15,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
+import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
@@ -93,13 +97,13 @@ fun WildexApp(
       }
     }
   }
-
+  val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUser == null) Screen.Auth.route else Screen.Home.route
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
-    authComposable(navigationActions, credentialManager)
+    authComposable(navigationActions, credentialManager, signInViewModel)
 
     // Home
     homeComposable(navigationActions)
@@ -177,7 +181,16 @@ private fun NavGraphBuilder.achievementsComposable(navigationActions: Navigation
 }
 
 private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationActions) {
-  composable(Screen.EditProfile.PATH) { backStackEntry ->
+  composable(
+      Screen.EditProfile.PATH,
+      arguments =
+          listOf(
+              navArgument("isNewUser") {
+                type = NavType.BoolType
+                defaultValue = false
+              }
+          ),
+  ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
         onGoBack = { navigationActions.goBack() },
@@ -198,6 +211,7 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
           onSettings = { navigationActions.navigateTo(Screen.Settings) },
+          onFriendRequest = {},
       )
     }
   }
@@ -254,7 +268,8 @@ private fun NavGraphBuilder.cameraComposable(navigationActions: NavigationAction
     CameraScreen(
         bottomBar = {
           BottomNavigationMenu(Tab.Camera) { navigationActions.navigateTo(it.destination) }
-        }
+        },
+        onPost = { navigationActions.navigateTo(Screen.Home) },
     )
   }
 }
@@ -273,6 +288,7 @@ private fun NavGraphBuilder.mapComposable(
               BottomNavigationMenu(Tab.Map) { navigationActions.navigateTo(it.destination) }
             }
           },
+          onPost = { navigationActions.navigateTo(Screen.PostDetails(it)) },
       )
     }
   }
@@ -294,11 +310,16 @@ private fun NavGraphBuilder.homeComposable(navigationActions: NavigationActions)
 private fun NavGraphBuilder.authComposable(
     navigationActions: NavigationActions,
     credentialManager: CredentialManager,
+    signInViewModel: SignInViewModel,
 ) {
   composable(Screen.Auth.route) {
     SignInScreen(
+        authViewModel = signInViewModel,
         credentialManager = credentialManager,
-        onSignedIn = { navigationActions.navigateTo(Screen.Home) },
+        onSignedIn = {
+          if (it) navigationActions.navigateTo(Screen.EditProfile(true))
+          else navigationActions.navigateTo(Screen.Home)
+        },
     )
   }
 }

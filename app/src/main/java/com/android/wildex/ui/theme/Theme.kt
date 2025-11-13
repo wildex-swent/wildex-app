@@ -2,6 +2,8 @@ package com.android.wildex.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.view.Window
+import android.view.WindowInsets
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -83,10 +85,24 @@ fun WildexTheme(
       val window = (view.context as? Activity)?.window
       if (window != null && view.isAttachedToWindow) {
         // Set Status bar color to match the theme
-        window.statusBarColor = Green.toArgb()
+        setStatusBarColor(window, Green.toArgb())
       }
     }
   }
 
   MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+}
+
+fun setStatusBarColor(window: Window, color: Int) {
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) { // Android 15+
+    window.decorView.setOnApplyWindowInsetsListener { view, insets ->
+      val statusBarInsets = insets.getInsets(WindowInsets.Type.statusBars())
+      view.setBackgroundColor(color)
+      view.setPadding(0, statusBarInsets.top, 0, 0)
+      insets
+    }
+  } else {
+    // For Android 14 and below
+    window.statusBarColor = color
+  }
 }

@@ -101,8 +101,5 @@ fun setStatusBarColor(window: Window, color: Int) {
       view.setPadding(0, statusBarInsets.top, 0, 0)
       insets
     }
-  } else {
-    // For Android 14 and below
-    window.statusBarColor = color
   }
 }

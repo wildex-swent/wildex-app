@@ -1,8 +1,6 @@
 package com.android.wildex.ui.report
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -10,13 +8,9 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.core.content.ContextCompat
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.platform.app.InstrumentationRegistry
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
-import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
-import com.android.wildex.ui.camera.CameraPreviewScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before

@@ -39,6 +39,13 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.util.isEmpty
 import kotlin.math.*
 
+/**
+ * Profile map card with static mini-map and "View Map" button.
+ *
+ * @param id The profile ID to view on the map.
+ * @param onMap Callback when "View Map" button is clicked.
+ * @param pins List of geodetic points to show as pins on the mini-map.
+ */
 @Composable
 fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyList()) {
   val cs = colorScheme
@@ -105,7 +112,7 @@ fun StaticMiniMap(
       filterPinsWithinRadius(pins).ifEmpty { pins.takeIf { it.isNotEmpty() } ?: emptyList() }
 
   Box(modifier) {
-    MapboxMap(modifier = Modifier.matchParentSize(), scaleBar = {}, logo = {}) {
+    MapboxMap(modifier = Modifier.matchParentSize(), scaleBar = {}, logo = {}, attribution = {}) {
       MapEffect(localPins, isDark, styleUri, styleImportId) { mv ->
         mv.gestures.apply {
           rotateEnabled = false
@@ -167,6 +174,13 @@ fun StaticMiniMap(
   }
 }
 
+/**
+ * Load a vector drawable as a Bitmap for Mapbox pin icon.
+ *
+ * @param context The Android context.
+ * @param resId The resource ID of the vector drawable.
+ * @return The loaded Bitmap.
+ */
 private fun loadVectorAsBitmap(
     context: Context,
     resId: Int,

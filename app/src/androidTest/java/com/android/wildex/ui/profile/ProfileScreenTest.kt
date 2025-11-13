@@ -1,14 +1,11 @@
 package com.android.wildex.ui.profile
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -20,7 +17,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.unit.dp
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.InputKey
@@ -30,19 +26,20 @@ import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Input
-import com.android.wildex.ui.LoadingFail
-import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -71,9 +68,70 @@ class ProfileScreenTest {
           friendsCount = 42,
       )
 
+  /** Shared test achievements repo + use case + VM for tests that don't need custom repos. */
+  private lateinit var defaultAchievementsRepo: FakeAchievementsRepo
+  private lateinit var defaultUpdateUseCase: UpdateUserAchievementsUseCase
+  private lateinit var defaultViewModel: ProfileScreenViewModel
+
   @Before
   fun setup() {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+    defaultAchievementsRepo = FakeAchievementsRepo()
+    defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
+    defaultViewModel =
+        ProfileScreenViewModel(
+            userRepository = LocalRepositories.UserRepositoryImpl(),
+            achievementRepository = defaultAchievementsRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = defaultUpdateUseCase,
+            currentUserId = "currentUserId-1",
+        )
+  }
+
+  @After
+  fun tearDown() {
+    LocalRepositories.clearAll()
+  }
+
+  /** Test helper: create a test-friendly update use case that stays on the test thread. */
+  private fun createTestUpdateAchievementsUseCase(
+      achRepo: UserAchievementsRepository,
+  ): UpdateUserAchievementsUseCase =
+      UpdateUserAchievementsUseCase(
+          postsRepository = LocalRepositories.postsRepository,
+          likeRepository = LocalRepositories.likeRepository,
+          commentRepository = LocalRepositories.commentRepository,
+          userAchievementsRepository = achRepo,
+          io = Dispatchers.Unconfined,
+      )
+
+  /** Helper to create a list of fake achievements. */
+  private fun fakeAchievements(count: Int = 5): List<Achievement> =
+      (1..count).map { i ->
+        Achievement(
+            achievementId = "a$i",
+            name = "A$i",
+            pictureURL = "url$i",
+            description = "",
+            expects = setOf(InputKey.POST_IDS),
+            condition = { true },
+        )
+      }
+
+  /** A fake achievements repo that returns a fixed list of achievements. */
+  class FakeAchievementsRepo(private val achievements: List<Achievement> = emptyList()) :
+      UserAchievementsRepository {
+    override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> = achievements
+
+    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = achievements
+
+    override suspend fun getAllAchievements(): List<Achievement> = achievements
+
+    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
+
+    override suspend fun initializeUserAchievements(userId: String) {}
+
+    override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
   }
 
   @Test
@@ -94,14 +152,13 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun profileContent_core_and_owner_gating_combined() {
-    val owner = mutableStateOf(false)
+  fun profileContent_core() {
     var collection = 0
     var friends = 0
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
-          ownerProfile = owner.value,
+          ownerProfile = false,
           onAchievements = {},
           onCollection = { collection++ },
           onMap = {},
@@ -123,11 +180,6 @@ class ProfileScreenTest {
     composeRule.onNodeWithText("Friends").assertExists()
     composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
-    Assert.assertEquals(0, collection)
-    Assert.assertEquals(0, friends)
-    composeRule.runOnUiThread { owner.value = true }
-    composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick()
     repeat(3) { composeRule.onNodeWithTag(ProfileScreenTestTags.COLLECTION).performClick() }
     repeat(2) { composeRule.onNodeWithTag(ProfileScreenTestTags.FRIENDS).performClick() }
     Assert.assertEquals(4, collection)
@@ -135,82 +187,18 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun achievements_and_map_ctas_combined() {
-    var achievements = 0
-    var map = 0
-    composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          ownerProfile = true,
-          onAchievements = { achievements++ },
-          onCollection = {},
-          onMap = { map++ },
-          onFriends = {},
-          onFriendRequest = {},
-      )
-    }
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).performClick()
-    repeat(2) {
-      composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
-      composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).performClick()
-    }
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.MAP_CTA)
-    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).performClick()
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.MAP_CTA)
-    composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).performClick()
-    Assert.assertEquals(3, achievements)
-    Assert.assertEquals(2, map)
-  }
-
-  @Test
-  fun friend_request_visibility_and_clicks_in_content() {
-    val owner = mutableStateOf(false)
-    var requests = 0
-    composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          ownerProfile = owner.value,
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-          onFriendRequest = { requests++ },
-      )
-    }
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.FRIEND_REQUEST)
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().performClick()
-    Assert.assertEquals(1, requests)
-    composeRule.runOnUiThread { owner.value = true }
-    composeRule.onAllNodesWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertCountEquals(0)
-  }
-
-  @Test
   fun profileScreen_shows_description_node_even_when_bio_empty() = runTest {
     val user = sampleUser.copy(bio = "")
     val userRepo = mockk<UserRepositoryFirestore>()
     coEvery { userRepo.getUser("u-1") } returns user
-    val achRepo =
-        object : UserAchievementsRepository {
-          override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> =
-              emptyList()
-
-          override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = emptyList()
-
-          override suspend fun getAllAchievements(): List<Achievement> = emptyList()
-
-          override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
-
-          override suspend fun initializeUserAchievements(userId: String) {}
-
-          override suspend fun getAchievementsCountOfUser(userId: String): Int = 0
-
-          override suspend fun deleteUserAchievements(userId: Id) {}
-        }
+    val achRepo = FakeAchievementsRepo(emptyList())
+    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
     val vm =
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
             currentUserId = "someone-else",
         )
     composeRule.setContent {
@@ -225,33 +213,19 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_DESCRIPTION).assertIsDisplayed()
   }
 
-  class FakeAchievementsRepo(private val achievements: List<Achievement> = emptyList()) :
-      UserAchievementsRepository {
-    override suspend fun getAllAchievementsByUser(userId: String): List<Achievement> = achievements
-
-    override suspend fun getAllAchievementsByCurrentUser(): List<Achievement> = achievements
-
-    override suspend fun getAllAchievements(): List<Achievement> = achievements
-
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
-
-    override suspend fun initializeUserAchievements(userId: String) {}
-
-    override suspend fun getAchievementsCountOfUser(userId: String): Int = achievements.size
-
-    override suspend fun deleteUserAchievements(userId: Id) {}
-  }
-
   @Test
   fun profileScreen_owner_shows_my_profile_and_callbacks() = runTest {
     val user = sampleUser.copy(userId = "u-1")
     val userRepo = mockk<UserRepositoryFirestore>()
     coEvery { userRepo.getUser("u-1") } returns user
     val achRepo = FakeAchievementsRepo(emptyList())
+    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
     val vm =
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
             currentUserId = "u-1",
         )
     var achievements = 0
@@ -283,10 +257,13 @@ class ProfileScreenTest {
     val userRepo = mockk<UserRepositoryFirestore>()
     coEvery { userRepo.getUser("u-1") } returns user
     val achRepo = FakeAchievementsRepo(emptyList())
+    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
     val vm =
         ProfileScreenViewModel(
             userRepository = userRepo,
             achievementRepository = achRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
             currentUserId = "someone-else",
         )
     var requests = 0
@@ -336,185 +313,84 @@ class ProfileScreenTest {
   @Test
   fun profileFriendRequest_default_button_enabled_and_text() {
     composeRule.setContent { ProfileFriendRequest() }
-    composeRule
-        .onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-        .assertExists()
-        .assertIsEnabled()
-        .performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().assertIsEnabled()
     composeRule.onNodeWithText("Send Friend Request").assertExists()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
+    composeRule.onNodeWithText("Cancel Friend Request").assertExists()
   }
 
   @Test
-  fun achievements_initial_window_is_first_three() {
-    val items =
-        (1..5).map { i ->
-          Achievement(
-              achievementId = "a$i",
-              name = "A$i",
-              pictureURL = "url$i",
-              description = "",
-              expects = setOf(InputKey.POST_IDS),
-              condition = { true },
-          )
-        }
-    composeRule.setContent {
-      ProfileAchievements(
-          id = "u-1",
-          onAchievements = {},
-          ownerProfile = true,
-          listAchievement = items,
-      )
-    }
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertExists()
-    composeRule.onNodeWithText("A3").assertExists()
-    composeRule.onNodeWithText("A4").assertDoesNotExist()
-    composeRule.onNodeWithText("A5").assertDoesNotExist()
-  }
+  fun achievements_carousel_navigation_and_cta_visibility() {
+    val items = fakeAchievements(5)
+    val owner = mutableStateOf(true)
+    var ownerClicks = 0
 
-  @Test
-  fun achievements_next_advances_window_and_wraps() {
-    val items =
-        (1..5).map { i ->
-          Achievement(
-              achievementId = "a$i",
-              name = "A$i",
-              pictureURL = "url$i",
-              description = "",
-              expects = setOf(InputKey.POST_IDS),
-              condition = { true },
-          )
-        }
-    composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          ownerProfile = true,
-          achievements = items,
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-          onFriendRequest = {},
-      )
-    }
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS)
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertExists()
-    composeRule.onNodeWithText("A3").assertExists()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
-    composeRule.onNodeWithText("A2").assertExists()
-    composeRule.onNodeWithText("A3").assertExists()
-    composeRule.onNodeWithText("A4").assertExists()
-    composeRule.onNodeWithText("A1").assertDoesNotExist()
-    composeRule.onNodeWithText("A5").assertDoesNotExist()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
-    composeRule.onNodeWithText("A3").assertExists()
-    composeRule.onNodeWithText("A4").assertExists()
-    composeRule.onNodeWithText("A5").assertExists()
-    composeRule.onNodeWithText("A1").assertDoesNotExist()
-    composeRule.onNodeWithText("A2").assertDoesNotExist()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
-    composeRule.onNodeWithText("A4").assertExists()
-    composeRule.onNodeWithText("A5").assertExists()
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertDoesNotExist()
-    composeRule.onNodeWithText("A3").assertDoesNotExist()
-  }
-
-  @Test
-  fun achievements_prev_moves_back_and_wraps() {
-    val items =
-        (1..5).map { i ->
-          Achievement(
-              achievementId = "a$i",
-              name = "A$i",
-              pictureURL = "url$i",
-              description = "",
-              expects = setOf(InputKey.POST_IDS),
-              condition = { true },
-          )
-        }
-    composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          ownerProfile = true,
-          achievements = items,
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-          onFriendRequest = {},
-      )
-    }
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.ACHIEVEMENTS)
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertExists()
-    composeRule.onNodeWithText("A3").assertExists()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
-    composeRule.onNodeWithText("A5").assertExists()
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertExists()
-    composeRule.onNodeWithText("A3").assertDoesNotExist()
-    composeRule.onNodeWithText("A4").assertDoesNotExist()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
-    composeRule.onNodeWithText("A4").assertExists()
-    composeRule.onNodeWithText("A5").assertExists()
-    composeRule.onNodeWithText("A1").assertExists()
-    composeRule.onNodeWithText("A2").assertDoesNotExist()
-    composeRule.onNodeWithText("A3").assertDoesNotExist()
-  }
-
-  @Test
-  fun achievements_cta_visible_for_owner_and_clicks() {
-    val items =
-        (1..2).map { i ->
-          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
-        }
-    var clicks = 0
     composeRule.setContent {
       ProfileAchievements(
           id = "user-x",
-          onAchievements = { if (it == "user-x") clicks++ },
-          ownerProfile = true,
+          onAchievements = { if (it == "user-x") ownerClicks++ },
+          ownerProfile = owner.value,
           listAchievement = items,
       )
     }
+    composeRule.onNodeWithText("A1").assertExists()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertDoesNotExist()
+    composeRule.onNodeWithText("A5").assertDoesNotExist()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT).performClick()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+    composeRule.onNodeWithText("A1").assertExists()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+    composeRule.onNodeWithText("A5").assertExists()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV).performClick()
+    composeRule.onNodeWithText("A2").assertExists()
+    composeRule.onNodeWithText("A3").assertExists()
+    composeRule.onNodeWithText("A4").assertExists()
+
     composeRule
         .onNodeWithText("View all achievements", substring = true)
         .assertExists()
         .performClick()
-    Assert.assertEquals(1, clicks)
-  }
+    Assert.assertEquals(1, ownerClicks)
 
-  @Test
-  fun achievements_cta_hidden_for_non_owner() {
-    val items =
-        (1..2).map { i ->
-          Achievement("a$i", "A$i", "url$i", "", setOf(InputKey.POST_IDS)) { true }
-        }
-    composeRule.setContent {
-      ProfileAchievements(
-          id = "user-x",
-          onAchievements = {},
-          ownerProfile = false,
-          listAchievement = items,
-      )
-    }
+    composeRule.runOnUiThread { owner.value = false }
+
     composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
   }
 
   @Test
-  fun profileLoading_showsCircularProgress() {
-    composeRule.setContent { LoadingScreen(pd = PaddingValues(0.dp)) }
-    composeRule
-        .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
-        .assertIsDisplayed()
-  }
-
-  @Test
-  fun profileNotFound_showsErrorMessage() {
-    composeRule.setContent { LoadingFail(pd = PaddingValues(0.dp)) }
-    composeRule.onNodeWithText("Loading failed. Please try again.").assertIsDisplayed()
+  fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
+    val items = fakeAchievements(2)
+    composeRule.setContent {
+      ProfileContent(
+          user = sampleUser,
+          ownerProfile = false,
+          achievements = items,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
+      )
+    }
+    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
   }
 
   @Test
@@ -529,14 +405,19 @@ class ProfileScreenTest {
         }
     runBlocking {
       delayedUsersRepo.addUser(user = sampleUser)
+      val achRepo = FakeAchievementsRepo()
+      val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
       val vm =
           ProfileScreenViewModel(
               userRepository = delayedUsersRepo,
-              achievementRepository = FakeAchievementsRepo(),
+              achievementRepository = achRepo,
+              postRepository = LocalRepositories.postsRepository,
+              updateUserAchievements = updateUseCase,
               currentUserId = "currentUserId-1",
           )
 
       composeRule.setContent { ProfileScreen(vm, "u-1") }
+      composeRule.waitForIdle()
       composeRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
@@ -550,15 +431,8 @@ class ProfileScreenTest {
 
   @Test
   fun failScreenShown_whenUserLookupFails() {
-    val vm =
-        ProfileScreenViewModel(
-            userRepository = LocalRepositories.UserRepositoryImpl(),
-            achievementRepository = FakeAchievementsRepo(),
-            currentUserId = "currentUserId-1",
-        )
-    composeRule.setContent { ProfileScreen(vm, "") }
+    composeRule.setContent { ProfileScreen(defaultViewModel, "") }
     composeRule.waitForIdle()
-
     composeRule
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()

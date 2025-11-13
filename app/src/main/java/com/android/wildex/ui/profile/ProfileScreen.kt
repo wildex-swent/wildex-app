@@ -46,7 +46,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,11 +90,11 @@ object ProfileScreenTestTags {
   const val SCROLL = "ProfileScreenScroll"
   const val ACHIEVEMENTS_CTA = "ProfileScreenAchievementsCTA"
   const val MAP_CTA = "ProfileScreenMapCTA"
-
   const val ACHIEVEMENTS_PREV = "ProfileScreenAchievementsPrev"
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
 }
 
+/** Profile Screen Composable */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -152,6 +154,7 @@ fun ProfileScreen(
   }
 }
 
+/** Profile Content Composable */
 @Composable
 fun ProfileContent(
     user: User,
@@ -191,7 +194,6 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onCollection = onCollection,
-              ownerProfile = ownerProfile,
               animalCount = animalCount,
           )
           Spacer(modifier = Modifier.width(12.dp))
@@ -199,7 +201,6 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-              ownerProfile = ownerProfile,
               friendCount = user.friendsCount,
           )
         }
@@ -223,6 +224,7 @@ fun ProfileContent(
       }
 }
 
+/** Profile Image And Name Composable */
 @Composable
 fun ProfileImageAndName(
     name: String = "Name",
@@ -347,6 +349,7 @@ fun ProfileImageAndName(
   }
 }
 
+/** Profile Description Composable */
 @Composable
 fun ProfileDescription(description: String = "Bio:...") {
   val cs = colorScheme
@@ -391,6 +394,7 @@ fun ProfileDescription(description: String = "Bio:...") {
   }
 }
 
+/** Profile Stat Card Composable */
 @Composable
 private fun ProfileStatCard(
     modifier: Modifier = Modifier,
@@ -458,12 +462,12 @@ private fun ProfileStatCard(
   }
 }
 
+/** Profile Animals Composable */
 @Composable
 fun ProfileAnimals(
     modifier: Modifier = Modifier,
     id: Id = "",
     onCollection: (Id) -> Unit = {},
-    ownerProfile: Boolean,
     animalCount: Int = 17,
 ) {
   val cs = colorScheme
@@ -481,17 +485,17 @@ fun ProfileAnimals(
       },
       title = "Animals",
       value = "$animalCount",
-      onClick = { if (ownerProfile) onCollection(id) },
+      onClick = { onCollection(id) },
       testTag = ProfileScreenTestTags.COLLECTION,
   )
 }
 
+/** Profile Friends Composable */
 @Composable
 fun ProfileFriends(
     modifier: Modifier = Modifier,
     id: Id = "",
     onFriends: (Id) -> Unit = {},
-    ownerProfile: Boolean,
     friendCount: Int = 42,
 ) {
   val cs = colorScheme
@@ -509,30 +513,40 @@ fun ProfileFriends(
       },
       title = "Friends",
       value = "$friendCount",
-      onClick = { if (ownerProfile) onFriends(id) },
+      onClick = { onFriends(id) },
       testTag = ProfileScreenTestTags.FRIENDS,
   )
 }
 
+/** Friend Request Button Composable For now, not connected to the backend. */
 @Composable
 fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
   val cs = colorScheme
+  val context = LocalContext.current
+  var requestSent by remember { mutableStateOf(false) }
+
   Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
     Button(
         modifier =
-            Modifier.testTag(ProfileScreenTestTags.FRIEND_REQUEST)
-                .height(48.dp)
-                .width(183.dp)
-                .align(Alignment.Center),
-        onClick = { onFriendRequest(id) },
+            Modifier.height(48.dp)
+                .width(190.dp)
+                .align(Alignment.Center)
+                .testTag(ProfileScreenTestTags.FRIEND_REQUEST),
+        onClick = {
+          requestSent = !requestSent
+          onFriendRequest(id)
+        },
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = cs.secondary,
+                containerColor = if (!requestSent) cs.secondary else cs.tertiary,
                 contentColor = cs.onSecondary,
             ),
         shape = RoundedCornerShape(10.dp),
     ) {
-      Text(text = LocalContext.current.getString(R.string.send_friend_request))
+      Text(
+          text =
+              if (requestSent) context.getString(R.string.cancel_friend_request)
+              else context.getString(R.string.send_friend_request))
     }
   }
 }

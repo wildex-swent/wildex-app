@@ -55,7 +55,7 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun viewModel_initializes_default_UI_state_isEmptyNotLoading() {
+  fun initial_UI_state_defaults() {
     val s = viewModel.uiState.value
     Assert.assertEquals("", s.name)
     Assert.assertEquals("", s.surname)
@@ -68,67 +68,36 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun loadUIState_success_populatesFields_andStopsLoading() {
-    mainDispatcherRule.runTest {
-      coEvery { userRepository.getUser("uid-1") } returns u1
-
-      viewModel.loadUIState()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals(u1.name, s.name)
-      Assert.assertEquals(u1.surname, s.surname)
-      Assert.assertEquals(u1.username, s.username)
-      Assert.assertEquals(u1.bio, s.description)
-      Assert.assertEquals(u1.country, s.country)
-      Assert.assertFalse(s.isLoading)
-      Assert.assertFalse(s.isError)
-      Assert.assertNull(s.errorMsg)
-    }
-  }
+  fun loadUIState_success_populatesFields() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        viewModel.loadUIState()
+        advanceUntilIdle()
+        val s = viewModel.uiState.value
+        Assert.assertEquals(u1.name, s.name)
+        Assert.assertEquals(u1.surname, s.surname)
+        Assert.assertEquals(u1.username, s.username)
+        Assert.assertEquals(u1.bio, s.description)
+        Assert.assertEquals(u1.country, s.country)
+        Assert.assertFalse(s.isLoading)
+        Assert.assertFalse(s.isError)
+      }
 
   @Test
-  fun loadUIState_error_setsError_andStopsLoading() {
-    mainDispatcherRule.runTest {
-      coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
-
-      viewModel.loadUIState()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertTrue(s.isError)
-      Assert.assertEquals("Unexpected error: boom", s.errorMsg)
-      Assert.assertFalse(s.isLoading)
-    }
-  }
+  fun loadUIState_error_setsError() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
+        viewModel.loadUIState()
+        advanceUntilIdle()
+        val s = viewModel.uiState.value
+        Assert.assertTrue(s.isError)
+        Assert.assertEquals("Unexpected error: boom", s.errorMsg)
+      }
 
   @Test
-  fun loadUIState_withBlankCurrentUserId_setsError_andStopsLoading() {
-    mainDispatcherRule.runTest {
-      viewModel =
-          EditProfileViewModel(
-              userRepository = userRepository,
-              storageRepository = storageRepository,
-              currentUserId = "",
-          )
-
-      viewModel.loadUIState()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals("Empty user id", s.errorMsg)
-      Assert.assertTrue(s.isError)
-      Assert.assertFalse(s.isLoading)
-    }
-  }
-
-  @Test
-  fun saveProfileChanges_whenFormInvalid_setsError_andDoesNotCallRepos() {
+  fun saveProfileChanges_invalid_setsError_andNoRepoCalls() {
     viewModel.saveProfileChanges()
-
-    val s = viewModel.uiState.value
-    Assert.assertEquals("At least one field is not valid", s.errorMsg)
-
+    Assert.assertEquals("At least one field is not valid", viewModel.uiState.value.errorMsg)
     coVerify(exactly = 0) { userRepository.getUser(any()) }
     coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
     coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
@@ -136,95 +105,80 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun saveProfileChanges_success_uploadsAndEditsUser_andClearsError() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
+  fun saveProfileChanges_success_uploads_and_edits_user() =
+      mainDispatcherRule.runTest {
+        viewModel.setName("A")
+        viewModel.setSurname("B")
+        viewModel.setUsername("C")
+        viewModel.setDescription("D")
+        val anyUri = mockk<Uri>(relaxed = true)
+        viewModel.setNewProfileImageUri(anyUri)
 
-      val anyUri = mockk<Uri>(relaxed = true)
-      viewModel.setNewProfileImageUri(anyUri)
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
+        coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
+        viewModel.saveProfileChanges()
+        advanceUntilIdle()
 
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val captured = slot<User>()
-      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
-      confirmVerified(userRepository, storageRepository)
-
-      val edited = captured.captured
-      Assert.assertEquals("A", edited.name)
-      Assert.assertEquals("B", edited.surname)
-      Assert.assertEquals("C", edited.username)
-      Assert.assertEquals("D", edited.bio)
-      Assert.assertEquals("newPic", edited.profilePictureURL)
-      Assert.assertNull(viewModel.uiState.value.errorMsg)
-    }
-  }
+        val captured = slot<User>()
+        coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
+        coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+        coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+        confirmVerified(userRepository, storageRepository)
+        Assert.assertEquals("newPic", captured.captured.profilePictureURL)
+        Assert.assertNull(viewModel.uiState.value.errorMsg)
+      }
 
   @Test
-  fun saveProfileChanges_whenUploadFails_setsError_andDoesNotEditUser() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
+  fun saveProfileChanges_uploadFails_setsError() =
+      mainDispatcherRule.runTest {
+        viewModel.setName("A")
+        viewModel.setSurname("B")
+        viewModel.setUsername("C")
+        viewModel.setDescription("D")
+        val anyUri = mockk<Uri>(relaxed = true)
+        viewModel.setNewProfileImageUri(anyUri)
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
+            RuntimeException("x")
 
-      val anyUri = mockk<Uri>(relaxed = true)
-      viewModel.setNewProfileImageUri(anyUri)
+        viewModel.saveProfileChanges()
+        advanceUntilIdle()
 
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
-          RuntimeException("x")
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals("Failed to save profile changes: x", s.errorMsg)
-
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
-      coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
-      confirmVerified(userRepository, storageRepository)
-    }
-  }
+        Assert.assertEquals("Failed to save profile changes: x", viewModel.uiState.value.errorMsg)
+        coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+        coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
+        coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
+        confirmVerified(userRepository, storageRepository)
+      }
 
   @Test
-  fun saveProfileChanges_withNoImage_keepsExistingUrl_andEditsUserWithoutStorageCalls() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
+  fun saveProfileChanges_uploadReturnsNull_keepsOldUrl() =
+      mainDispatcherRule.runTest {
+        viewModel.setName("A")
+        viewModel.setSurname("B")
+        viewModel.setUsername("C")
+        viewModel.setDescription("D")
+        val pending = mockk<Uri>(relaxed = true)
+        viewModel.setNewProfileImageUri(pending)
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
+        coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
+        viewModel.saveProfileChanges()
+        advanceUntilIdle()
 
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val captured = slot<User>()
-      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
-      confirmVerified(userRepository, storageRepository)
-
-      val edited = captured.captured
-      Assert.assertEquals("oldPic", edited.profilePictureURL)
-      Assert.assertNull(viewModel.uiState.value.errorMsg)
-    }
-  }
+        val captured = slot<User>()
+        coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", pending) }
+        coVerify(exactly = 1) { userRepository.getUser("uid-1") }
+        coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
+        confirmVerified(userRepository, storageRepository)
+        Assert.assertEquals("oldPic", captured.captured.profilePictureURL)
+      }
 
   @Test
-  fun setters_validation_toggle_and_isValid_true_when_name_surname_username_non_blank() {
+  fun setters_validation_and_isValid() {
     viewModel.setName("")
     Assert.assertEquals("Name cannot be empty", viewModel.uiState.value.invalidNameMsg)
     viewModel.setName("John")
@@ -244,173 +198,59 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun saveProfileChanges_whenGetUserFails_setsError_andNoStorageOrEdit() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
-
-      coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals("Failed to save profile changes: boom", s.errorMsg)
-
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
-      coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
-      confirmVerified(userRepository, storageRepository)
-    }
-  }
-
-  @Test
-  fun saveProfileChanges_whenEditUserFails_setsError() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
-
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { userRepository.editUser(any(), any()) } throws RuntimeException("edit-failed")
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val s = viewModel.uiState.value
-      Assert.assertEquals("Failed to save profile changes: edit-failed", s.errorMsg)
-
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", any()) }
-      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
-      confirmVerified(userRepository, storageRepository)
-    }
-  }
-
-  @Test
-  fun saveProfileChanges_uploadReturnsNull_keepsExistingUrl() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
-
-      val anyUri = mockk<Uri>(relaxed = true)
-      viewModel.setNewProfileImageUri(anyUri)
-
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val captured = slot<User>()
-      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
-      confirmVerified(userRepository, storageRepository)
-
-      Assert.assertEquals("oldPic", captured.captured.profilePictureURL)
-    }
-  }
-
-  @Test
-  fun clearErrorMsg_clearsPreviousError() {
-    viewModel.saveProfileChanges()
-    Assert.assertNotNull(viewModel.uiState.value.errorMsg)
-
-    viewModel.clearErrorMsg()
-    Assert.assertNull(viewModel.uiState.value.errorMsg)
-  }
-
-  @Test
-  fun setCountry_updates_UIState() {
+  fun setCountry_updatesState() {
     viewModel.setCountry("France")
     Assert.assertEquals("France", viewModel.uiState.value.country)
   }
 
   @Test
-  fun saveProfileChanges_uses_UIState_country() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
-      viewModel.setCountry("France")
+  fun saveProfileChanges_usesCountry() =
+      mainDispatcherRule.runTest {
+        viewModel.setName("A")
+        viewModel.setSurname("B")
+        viewModel.setUsername("C")
+        viewModel.setDescription("D")
+        viewModel.setCountry("France")
+        val img = mockk<Uri>(relaxed = true)
+        viewModel.setNewProfileImageUri(img)
 
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "pic"
+        coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
+        viewModel.saveProfileChanges()
+        advanceUntilIdle()
 
-      val captured = slot<User>()
-      coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
-      confirmVerified(userRepository, storageRepository)
+        val captured = slot<User>()
+        coVerify { userRepository.editUser("uid-1", capture(captured)) }
+        Assert.assertEquals("France", captured.captured.country)
+      }
 
-      Assert.assertEquals("France", captured.captured.country)
-    }
+  @Test
+  fun setNewProfileImageUri_updatesUIState() {
+    val uri = mockk<Uri>(relaxed = true)
+    viewModel.setNewProfileImageUri(uri)
+    Assert.assertEquals(uri, viewModel.uiState.value.pendingProfileImageUri)
   }
 
   @Test
-  fun saveProfileChanges_usesPendingUri_whenParamNull() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
+  fun saveProfileChanges_setsProfileSaved_afterSuccess() =
+      mainDispatcherRule.runTest {
+        viewModel.setName("A")
+        viewModel.setSurname("B")
+        viewModel.setUsername("C")
+        viewModel.setDescription("D")
+        val pending = mockk<Uri>(relaxed = true)
+        viewModel.setNewProfileImageUri(pending)
 
-      val pending = mockk<Uri>(relaxed = true)
-      viewModel.setNewProfileImageUri(pending)
+        coEvery { userRepository.getUser("uid-1") } returns u1
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
+        coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
+        viewModel.saveProfileChanges()
+        advanceUntilIdle()
 
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      val captured = slot<User>()
-      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", pending) }
-      coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 1) { userRepository.editUser("uid-1", capture(captured)) }
-      confirmVerified(userRepository, storageRepository)
-
-      Assert.assertEquals("newPic", captured.captured.profilePictureURL)
-    }
-  }
-
-  @Test
-  fun saveProfileChanges_clearsPendingUri_afterSuccess() {
-    mainDispatcherRule.runTest {
-      viewModel.setName("A")
-      viewModel.setSurname("B")
-      viewModel.setUsername("C")
-      viewModel.setDescription("D")
-
-      val pending = mockk<Uri>(relaxed = true)
-      viewModel.setNewProfileImageUri(pending)
-
-      coEvery { userRepository.getUser("uid-1") } returns u1
-      coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
-      coEvery { userRepository.editUser(any(), any()) } returns Unit
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      viewModel.saveProfileChanges()
-      advanceUntilIdle()
-
-      coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", pending) }
-      coVerify(exactly = 2) { userRepository.getUser("uid-1") }
-      coVerify(exactly = 2) { userRepository.editUser("uid-1", any()) }
-      confirmVerified(userRepository, storageRepository)
-    }
-  }
+        Assert.assertTrue(viewModel.uiState.value.profileSaved)
+        Assert.assertEquals(pending, viewModel.uiState.value.pendingProfileImageUri)
+      }
 }

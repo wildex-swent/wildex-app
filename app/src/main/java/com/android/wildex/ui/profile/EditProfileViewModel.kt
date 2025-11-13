@@ -2,6 +2,7 @@ package com.android.wildex.ui.profile
 
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -9,7 +10,6 @@ import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +23,8 @@ data class EditProfileUIState(
     val username: String = "",
     val description: String = "",
     val country: String = "Switzerland",
+    val profileSaved: Boolean = false,
+    val pendingProfileImageUri: Uri? = null,
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
@@ -43,18 +45,10 @@ data class EditProfileUIState(
 class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val currentUserId: Id =
-        if (Firebase.auth.uid != null) {
-          Firebase.auth.uid
-        } else {
-          ""
-        } ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
-
-  // Saves selected Uri
-  private var pendingProfileImageUri: Uri? = null
 
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
@@ -62,15 +56,6 @@ class EditProfileViewModel(
   }
 
   private suspend fun updateUIState() {
-    if (currentUserId.isBlank()) {
-      setErrorMsg("Empty user id")
-      _uiState.value =
-          _uiState.value.copy(
-              isLoading = false,
-              isError = true,
-          )
-      return
-    }
     try {
       val user = userRepository.getUser(currentUserId)
       _uiState.value =
@@ -80,10 +65,11 @@ class EditProfileViewModel(
               username = user.username,
               description = user.bio,
               country = user.country,
+              pendingProfileImageUri =
+                  if (!user.profilePictureURL.isBlank()) user.profilePictureURL.toUri() else null,
               isLoading = false,
               errorMsg = null,
-              isError = false,
-          )
+              isError = false)
     } catch (e: Exception) {
       Log.e("EditProfileScreenViewModel", "Error refreshing UI state", e)
       setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
@@ -108,14 +94,9 @@ class EditProfileViewModel(
       try {
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
-        val newURL: URL
-        if (pendingProfileImageUri != null) {
-          newURL =
-              storageRepository.uploadUserProfilePicture(currentUserId, pendingProfileImageUri!!)
-                  ?: user.profilePictureURL
-        } else {
-          newURL = user.profilePictureURL
-        }
+        val newURL =
+            storageRepository.uploadUserProfilePicture(
+                currentUserId, _uiState.value.pendingProfileImageUri!!) ?: user.profilePictureURL
         val newUser =
             User(
                 userId = currentUserId,
@@ -134,9 +115,9 @@ class EditProfileViewModel(
             newUser = newUser,
         )
         // Reset the pending Uri after successful upload
-        pendingProfileImageUri = null
         clearErrorMsg()
-        _uiState.value = _uiState.value.copy(isLoading = false, isError = false)
+        _uiState.value =
+            _uiState.value.copy(isLoading = false, isError = false, profileSaved = true)
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")
@@ -174,6 +155,10 @@ class EditProfileViewModel(
   }
 
   fun setNewProfileImageUri(uri: Uri?) {
-    pendingProfileImageUri = uri
+    _uiState.value = _uiState.value.copy(pendingProfileImageUri = uri)
+  }
+
+  fun clearProfileSaved() {
+    _uiState.value = _uiState.value.copy(profileSaved = false)
   }
 }

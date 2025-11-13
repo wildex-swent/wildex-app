@@ -34,11 +34,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -72,7 +72,6 @@ object EditProfileScreenTestTags {
   const val INPUT_DESCRIPTION = "edit_profile_screen_input_description"
   const val DROPDOWN_COUNTRY = "edit_profile_screen_dropdown_country"
   const val COUNTRY_ELEMENT = "edit_profile_screen_country_element_"
-  // const val CHANGE_PROFILE_PICTURE = "edit_profile_screen_change_profile_picture_button"
   const val PROFILE_PICTURE_PREVIEW = "edit_profile_screen_profile_picture_preview"
   const val SAVE = "edit_profile_screen_go_save_button"
   const val ERROR_MESSAGE = "edit_profile_screen_error_message"
@@ -149,8 +148,8 @@ fun EditView(
     pickImageLauncher: ManagedActivityResultLauncher<String, Uri?>
 ) {
   // State for dropdown visibility
-  var showDropdown by remember { mutableStateOf(false) }
-  val defaultUri: Uri = LocalContext.current.getString(R.string.create_profile_title).toUri()
+  val defaultUri: Uri =
+      LocalContext.current.getString(R.string.default_profile_picture_link).toUri()
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(20.dp),
@@ -262,60 +261,12 @@ fun EditView(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Profile changes saved successfully",
+                text = LocalContext.current.getString(R.string.edit_profile_save_successfully),
                 color = cs.primary,
             )
           }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        /*Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-          val icon =
-              if (showDropdown) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
-          OutlinedTextField(
-              value = uiState.country,
-              readOnly = true,
-              onValueChange = { /* No-operation: handled by dropdown */},
-              modifier =
-                  Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY),
-              label = { Text("Label") },
-              trailingIcon = {
-                Icon(
-                    icon,
-                    "contentDescription",
-                    Modifier.clickable {
-                      showDropdown = !showDropdown
-                      editScreenViewModel.clearProfileSaved()
-                    })
-              })
-
-          // Dropdown to show location suggestions
-          DropdownMenu(
-              expanded = showDropdown && countryNames.isNotEmpty(),
-              onDismissRequest = { showDropdown = false },
-              properties = PopupProperties(focusable = false),
-              modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)) {
-                countryNames.forEach { country ->
-                  DropdownMenuItem(
-                      text = {
-                        Text(text = country, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                      },
-                      onClick = {
-                        editScreenViewModel.setCountry(country)
-                        showDropdown = false
-                      },
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(horizontal = 16.dp, vertical = 8.dp)
-                              .testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT))
-                  HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-                }
-              }
-        }*/
-        /*if (uiState.profileSaved) {
-          Text(
-              text = "Profile changes saved successfully",
-              modifier = Modifier.align(Alignment.CenterHorizontally))
-        }*/
         Button(
             onClick = {
               editScreenViewModel.saveProfileChanges()
@@ -361,7 +312,9 @@ fun CountryDropdown(
         readOnly = true,
         label = { Text(label) },
         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
+        modifier =
+            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
+                .fillMaxWidth(),
         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
     )
 

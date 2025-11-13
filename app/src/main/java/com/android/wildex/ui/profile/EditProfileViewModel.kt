@@ -50,9 +50,6 @@ class EditProfileViewModel(
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
 
-  // Saves selected Uri
-  // private var pendingProfileImageUri: Uri? = null
-
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
     viewModelScope.launch { updateUIState() }

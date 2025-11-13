@@ -36,7 +36,13 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_AuthScreen() {
-    runBlocking { FirebaseEmulator.auth.signOut() }
+    runBlocking {
+        FirebaseEmulator.auth.signOut()
+        RepositoryProvider.userRepository.deleteUser(userId)
+        RepositoryProvider.userAnimalsRepository.deleteUserAnimals(userId)
+        RepositoryProvider.userAchievementsRepository.deleteUserAchievements(userId)
+        RepositoryProvider.userSettingsRepository.deleteUserSettings(userId)
+    }
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
     composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
@@ -51,16 +57,6 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.checkEditProfileScreenIsDisplayed(true)
     composeRule.navigateFromEditProfile()
-    composeRule.waitForIdle()
-    composeRule.checkHomeScreenIsDisplayed()
-  }
-
-  @Test
-  fun navigation_HomeScreen_FromAuth() {
-    runBlocking { FirebaseEmulator.auth.signOut() }
-    composeRule.waitForIdle()
-    composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateFromAuth()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
   }
@@ -325,7 +321,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkProfileScreenIsDisplayed(userId2)
     composeRule.navigateToMapFromProfile()
     composeRule.waitForIdle()
-    composeRule.checkMapScreenIsDisplayed(userId2)
+    composeRule.checkMapScreenIsDisplayed(userId2, false)
     composeRule.navigateBackFromMap()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId2)

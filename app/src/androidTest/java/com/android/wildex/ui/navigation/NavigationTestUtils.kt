@@ -30,6 +30,7 @@ import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
+import com.android.wildex.ui.report.ReportScreenTestTags
 import com.android.wildex.ui.settings.SettingsScreenTestTags
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FakeCredentialManager
@@ -37,6 +38,7 @@ import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -176,14 +178,15 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.HOME_SCREEN).assertIsDisplayed()
+    waitUntil { onNodeWithTag(NavigationTestTags.HOME_SCREEN).isDisplayed() }
     onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(Screen.Home.route, navController.currentDestination?.route)
   }
 
-  fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id) {
+  fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     onNodeWithTag(NavigationTestTags.MAP_SCREEN).assertIsDisplayed()
-    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
+    if (isCurrentUser)
+        onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
     assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
   }
@@ -362,7 +365,11 @@ abstract class NavigationTestUtils {
     performClickOnTag(SettingsScreenTestTags.GO_BACK_BUTTON)
   }
 
-  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {}
+  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {
+    performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT)
+  }
+
+  fun ComposeTestRule.navigateBackFromSubmitReport() {}
 
   fun ComposeTestRule.navigateToEditProfileScreenFromSettings() {
     performClickOnTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)

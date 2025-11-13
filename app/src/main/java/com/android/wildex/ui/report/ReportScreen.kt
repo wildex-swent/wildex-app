@@ -58,13 +58,14 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 
-
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
   const val NOTIFICATION_BUTTON = "report_screen_notification_button"
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
   const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
+
+  const val SUBMIT_REPORT = "report_screen_submit_report"
 
   fun testTagForReport(reportId: Id, element: String): String =
       "ReportScreen_report_${reportId}_$element"
@@ -92,7 +93,7 @@ fun ReportScreen(
     onNotificationClick: () -> Unit = {},
     onReportClick: (Id) -> Unit = {},
     onSubmitReportClick: () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {}
+    bottomBar: @Composable () -> Unit = {},
 ) {
   val uiState by reportScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -114,55 +115,59 @@ fun ReportScreen(
             userType = uiState.currentUserType,
             userProfilePictureURL = uiState.currentUser.profilePictureURL,
             onProfileClick = onProfileClick,
-            onNotificationClick = onNotificationClick)
-      }) { innerPadding ->
-        val pullState = rememberPullToRefreshState()
+            onNotificationClick = onNotificationClick,
+        )
+      },
+  ) { innerPadding ->
+    val pullState = rememberPullToRefreshState()
 
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-          PullToRefreshBox(
-              state = pullState,
-              isRefreshing = uiState.isRefreshing,
-              onRefresh = { reportScreenViewModel.refreshUIState() }) {
-                when {
-                  uiState.isError -> LoadingFail()
-                  uiState.isLoading -> LoadingScreen()
-                  uiState.reports.isEmpty() -> NoReportsView()
-                  else -> {
-                    ReportsView(
-                        reports = uiState.reports,
-                        userId = uiState.currentUser.userId,
-                        username = uiState.currentUser.username,
-                        userType = uiState.currentUserType,
-                        onProfileClick = onProfileClick,
-                        onReportClick = onReportClick,
-                        cancelReport = reportScreenViewModel::cancelReport,
-                        selfAssignReport = reportScreenViewModel::selfAssignReport,
-                        resolveReport = reportScreenViewModel::resolveReport,
-                        unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
-                    )
-                  }
-                }
-              }
-          // Submit Report button
-          Card(
-              shape = RoundedCornerShape(8.dp),
-              colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
-              border =
-                  BorderStroke(width = 8.dp, color = colorScheme.secondary.copy(alpha = 0.28f)),
-              elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-              modifier =
-                  Modifier.align(Alignment.BottomCenter)
-                      .padding(horizontal = 16.dp, vertical = 16.dp)
-                      .clickable { onSubmitReportClick() },
-          ) {
-            Text(
-                text = context.getString(R.string.submit_report),
-                color = colorScheme.onSecondary,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp))
+    Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+      PullToRefreshBox(
+          state = pullState,
+          isRefreshing = uiState.isRefreshing,
+          onRefresh = { reportScreenViewModel.refreshUIState() },
+      ) {
+        when {
+          uiState.isError -> LoadingFail()
+          uiState.isLoading -> LoadingScreen()
+          uiState.reports.isEmpty() -> NoReportsView()
+          else -> {
+            ReportsView(
+                reports = uiState.reports,
+                userId = uiState.currentUser.userId,
+                username = uiState.currentUser.username,
+                userType = uiState.currentUserType,
+                onProfileClick = onProfileClick,
+                onReportClick = onReportClick,
+                cancelReport = reportScreenViewModel::cancelReport,
+                selfAssignReport = reportScreenViewModel::selfAssignReport,
+                resolveReport = reportScreenViewModel::resolveReport,
+                unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+            )
           }
         }
       }
+      // Submit Report button
+      Card(
+          shape = RoundedCornerShape(8.dp),
+          colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
+          border = BorderStroke(width = 8.dp, color = colorScheme.secondary.copy(alpha = 0.28f)),
+          elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+          modifier =
+              Modifier.align(Alignment.BottomCenter)
+                  .padding(horizontal = 16.dp, vertical = 16.dp)
+                  .clickable { onSubmitReportClick() }
+                  .testTag(ReportScreenTestTags.SUBMIT_REPORT),
+      ) {
+        Text(
+            text = context.getString(R.string.submit_report),
+            color = colorScheme.onSecondary,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+        )
+      }
+    }
+  }
 }
 
 /**
@@ -208,7 +213,8 @@ fun ReportsView(
           cancelReport = cancelReport,
           selfAssignReport = selfAssignReport,
           resolveReport = resolveReport,
-          unSelfAssignReport = unSelfAssignReport)
+          unSelfAssignReport = unSelfAssignReport,
+      )
     }
   }
 }
@@ -262,7 +268,8 @@ fun ReportItem(
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
           role = "author",
-          onProfile = onProfileClick)
+          onProfile = onProfileClick,
+      )
       Spacer(modifier = Modifier.width(10.dp))
       Column(modifier = Modifier.weight(1f)) {
         Text(
@@ -311,7 +318,8 @@ fun ReportItem(
                 style = MaterialTheme.typography.labelMedium,
                 color = colorScheme.tertiary,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis)
+                overflow = TextOverflow.Ellipsis,
+            )
           }
         }
       }
@@ -321,14 +329,15 @@ fun ReportItem(
         modifier =
             Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onReportClick(reportState.reportId) }) {
-          AsyncImage(
-              model = reportState.imageURL,
-              contentDescription = "Report Image",
-              modifier = Modifier.fillMaxWidth(),
-              contentScale = ContentScale.FillWidth,
-          )
-        }
+                .clickable { onReportClick(reportState.reportId) }
+    ) {
+      AsyncImage(
+          model = reportState.imageURL,
+          contentDescription = "Report Image",
+          modifier = Modifier.fillMaxWidth(),
+          contentScale = ContentScale.FillWidth,
+      )
+    }
     // Description
     Text(
         text = reportState.description,
@@ -348,40 +357,50 @@ fun ReportItem(
         UserType.REGULAR -> {
           if (reportState.assigneeUsername.isNotEmpty())
               ReportAssigneeCard(
-                  assigneeUsername = reportState.assigneeUsername, modifier = Modifier.weight(1f))
+                  assigneeUsername = reportState.assigneeUsername,
+                  modifier = Modifier.weight(1f),
+              )
           CancelReportButton(
               reportId = reportState.reportId,
               cancelReport = cancelReport,
-              modifier = Modifier.weight(1f))
+              modifier = Modifier.weight(1f),
+          )
         }
         UserType.PROFESSIONAL -> {
           if (reportState.assigneeUsername.isEmpty()) {
             SelfAssignButton(
                 reportId = reportState.reportId,
                 selfAssignReport = selfAssignReport,
-                modifier = Modifier.weight(1f))
+                modifier = Modifier.weight(1f),
+            )
             if (author.userId == userId)
                 CancelReportButton(
                     reportId = reportState.reportId,
                     cancelReport = cancelReport,
-                    modifier = Modifier.weight(1f))
+                    modifier = Modifier.weight(1f),
+                )
           } else if (reportState.assigneeUsername == username) {
             ResolveReportButton(
                 reportId = reportState.reportId,
                 resolveReport = resolveReport,
-                modifier = Modifier.weight(1f))
+                modifier = Modifier.weight(1f),
+            )
             UnSelfAssignReportButton(
                 reportId = reportState.reportId,
                 unSelfAssignReport = unSelfAssignReport,
-                modifier = Modifier.weight(1f))
+                modifier = Modifier.weight(1f),
+            )
           } else {
             ReportAssigneeCard(
-                assigneeUsername = reportState.assigneeUsername, modifier = Modifier.weight(1f))
+                assigneeUsername = reportState.assigneeUsername,
+                modifier = Modifier.weight(1f),
+            )
             if (author.userId == userId)
                 CancelReportButton(
                     reportId = reportState.reportId,
                     cancelReport = cancelReport,
-                    modifier = Modifier.weight(1f))
+                    modifier = Modifier.weight(1f),
+                )
           }
         }
       }
@@ -412,8 +431,8 @@ fun CancelReportButton(
         text = LocalContext.current.getString(R.string.cancel_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
-                .align(Alignment.CenterHorizontally))
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+    )
   }
 }
 
@@ -440,8 +459,8 @@ fun SelfAssignButton(
         text = LocalContext.current.getString(R.string.self_assign_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
-                .align(Alignment.CenterHorizontally))
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+    )
   }
 }
 
@@ -468,8 +487,8 @@ fun ResolveReportButton(
         text = LocalContext.current.getString(R.string.resolve_report),
         color = colorScheme.onPrimary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
-                .align(Alignment.CenterHorizontally))
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+    )
   }
 }
 
@@ -496,8 +515,8 @@ fun UnSelfAssignReportButton(
         text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
         color = colorScheme.onTertiary,
         modifier =
-            Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
-                .align(Alignment.CenterHorizontally))
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+    )
   }
 }
 
@@ -512,15 +531,15 @@ fun ReportAssigneeCard(modifier: Modifier = Modifier, assigneeUsername: String =
       shape = RoundedCornerShape(8.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.tertiary.copy(alpha = 0.6f)),
       border = BorderStroke(width = 1.dp, color = colorScheme.tertiary.copy(alpha = 0.28f)),
-      modifier = modifier.padding(horizontal = 16.dp)) {
-        Text(
-            text =
-                LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
-            color = colorScheme.onTertiary,
-            modifier =
-                Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
-                    .align(Alignment.CenterHorizontally))
-      }
+      modifier = modifier.padding(horizontal = 16.dp),
+  ) {
+    Text(
+        text = LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
+        color = colorScheme.onTertiary,
+        modifier =
+            Modifier.padding(horizontal = 6.dp, vertical = 6.dp).align(Alignment.CenterHorizontally),
+    )
+  }
 }
 
 /** A composable that displays a message when there are no reports. */

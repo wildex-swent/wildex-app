@@ -48,7 +48,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 
-private const val DEFAULT_TIMEOUT = 5_000L
+const val DEFAULT_TIMEOUT = 5_000L
 
 /** Base class for all Wildex tests, providing common setup and utility functions. */
 abstract class NavigationTestUtils {
@@ -169,25 +169,27 @@ abstract class NavigationTestUtils {
           description = "The lion is a species in the family Felidae",
       )
 
+  private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
+    waitUntil(2000) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
+  }
+
   fun ComposeTestRule.checkBottomNavigationIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
   }
 
   fun ComposeTestRule.checkAuthScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.SIGN_IN_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.SIGN_IN_SCREEN)
     assertEquals(Screen.Auth.route, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
-    waitUntil {
-      onNodeWithTag(NavigationTestTags.HOME_SCREEN).isDisplayed() &&
-          onNodeWithTag(NavigationTestTags.HOME_TAB).isDisplayed()
-    }
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.HOME_SCREEN)
+    onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(Screen.Home.route, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
-    onNodeWithTag(NavigationTestTags.MAP_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.MAP_SCREEN)
     assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
     if (isCurrentUser)
         onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().assertIsSelected()
@@ -195,12 +197,12 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkCameraScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.CAMERA_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.CAMERA_SCREEN)
     assertEquals(Screen.Camera.route, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
-    onNodeWithTag(NavigationTestTags.COLLECTION_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.COLLECTION_SCREEN)
     assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
     if (isCurrentUser)
         onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().assertIsSelected()
@@ -208,48 +210,48 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkReportScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.REPORT_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.REPORT_SCREEN)
     onNodeWithTag(NavigationTestTags.REPORT_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(Screen.Report.route, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed(userId: Id) {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.PROFILE_SCREEN)
     assertEquals(Screen.Profile.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
-    onNodeWithTag(NavigationTestTags.PROFILE_SCREEN).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.SETTINGS_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.SETTINGS_SCREEN)
     assertEquals(Screen.Settings.route, navController.currentDestination?.route)
   }
 
   fun ComposeTestRule.checkEditProfileScreenIsDisplayed(isNewUser: Boolean) {
-    waitUntil { onNodeWithTag(NavigationTestTags.EDIT_PROFILE_SCREEN).isDisplayed() }
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.EDIT_PROFILE_SCREEN)
     assertEquals(Screen.EditProfile.PATH, navController.currentDestination?.route)
     assertEquals(isNewUser, navController.currentBackStackEntry?.arguments?.getBoolean("isNewUser"))
   }
 
   fun ComposeTestRule.checkPostDetailsScreenIsDisplayed(postUid: Id) {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.POST_DETAILS_SCREEN)
     assertEquals(Screen.PostDetails.PATH, navController.currentDestination?.route)
     assertEquals(postUid, navController.currentBackStackEntry?.arguments?.getString("postUid"))
-    onNodeWithTag(NavigationTestTags.POST_DETAILS_SCREEN).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkAnimalInformationScreenIsDisplayed(animalUid: Id) {
-    onNodeWithTag(NavigationTestTags.ANIMAL_INFORMATION_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.ANIMAL_INFORMATION_SCREEN)
     assertEquals(Screen.AnimalInformation.PATH, navController.currentDestination?.route)
     assertEquals(animalUid, navController.currentBackStackEntry?.arguments?.getString("animalUid"))
   }
 
   fun ComposeTestRule.checkAchievementsScreenIsDisplayed(userId: Id) {
-    onNodeWithTag(NavigationTestTags.ACHIEVEMENTS_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.ACHIEVEMENTS_SCREEN)
     assertEquals(Screen.Achievements.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
   }
 
   fun ComposeTestRule.checkSubmitReportScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.SUBMIT_REPORT_SCREEN).assertIsDisplayed()
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.SUBMIT_REPORT_SCREEN)
     assertEquals(Screen.SubmitReport.route, navController.currentDestination?.route)
   }
 
@@ -274,15 +276,15 @@ abstract class NavigationTestUtils {
     val usernameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
     val saveNode = onNodeWithTag(EditProfileScreenTestTags.SAVE)
     waitUntil(DEFAULT_TIMEOUT) {
-      nameNode.isDisplayed() &&
-          surnameNode.isDisplayed() &&
-          usernameNode.isDisplayed() &&
+      nameNode.isDisplayed() ||
+          surnameNode.isDisplayed() ||
+          usernameNode.isDisplayed() ||
           saveNode.isDisplayed()
     }
-    nameNode.performClick().performTextInput("James")
-    surnameNode.performClick().performTextInput("Bond")
-    usernameNode.performClick().performTextInput("007")
-    saveNode.performClick()
+    nameNode.performScrollTo().performClick().performTextInput("James")
+    surnameNode.performScrollTo().performClick().performTextInput("Bond")
+    usernameNode.performScrollTo().performClick().performTextInput("007")
+    saveNode.performScrollTo().performClick()
   }
 
   fun ComposeTestRule.navigateToHomeScreenFromBottomBar() {

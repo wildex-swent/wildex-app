@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -32,6 +33,7 @@ import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.ui.report.ReportScreenTestTags
+import com.android.wildex.ui.report.SubmitReportFormScreenTestTags
 import com.android.wildex.ui.settings.SettingsScreenTestTags
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FakeCredentialManager
@@ -257,6 +259,9 @@ abstract class NavigationTestUtils {
       timeout: Long = DEFAULT_TIMEOUT,
   ) {
     val node = onNodeWithTag(tag, useUnmergedTree)
+    try {
+      node.performScrollTo()
+    } catch (_: AssertionError) {}
     waitUntil(timeout) { node.isDisplayed() }
     node.performClick()
   }
@@ -372,7 +377,9 @@ abstract class NavigationTestUtils {
     performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT)
   }
 
-  fun ComposeTestRule.navigateBackFromSubmitReport() {}
+  fun ComposeTestRule.navigateBackFromSubmitReport() {
+    performClickOnTag(SubmitReportFormScreenTestTags.BACK_BUTTON)
+  }
 
   fun ComposeTestRule.navigateToEditProfileScreenFromSettings() {
     performClickOnTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)

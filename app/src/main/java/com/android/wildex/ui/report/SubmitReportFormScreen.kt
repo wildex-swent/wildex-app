@@ -71,82 +71,83 @@ fun SubmitReportFormScreen(
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.fillMaxWidth()
-  ) {
-    Spacer(modifier = Modifier.height(32.dp))
+      modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.height(32.dp))
 
-    Text(
-        text = context.getString(R.string.submit_rescue_alert),
-        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-        color = colorScheme.primary,
-    )
-
-    Spacer(modifier = Modifier.height(64.dp))
-
-    Box(
-        modifier =
-            Modifier.fillMaxWidth(0.9f)
-                .height(200.dp)
-                .clickable { onCameraClick() }
-                .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
-        contentAlignment = Alignment.Center,
-    ) {
-      if (uiState.imageUri != null) {
-        AsyncImage(
-            model = uiState.imageUri,
-            contentDescription = "Selected Image",
-            modifier =
-                Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
-            contentScale = ContentScale.Crop,
+        Text(
+            text = context.getString(R.string.submit_rescue_alert),
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = colorScheme.primary,
         )
-      } else {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxSize(),
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Box(
+            modifier =
+                Modifier.fillMaxWidth(0.9f)
+                    .height(200.dp)
+                    .clickable { onCameraClick() }
+                    .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
+            contentAlignment = Alignment.Center,
         ) {
-          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = null,
-                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+          if (uiState.imageUri != null) {
+            AsyncImage(
+                model = uiState.imageUri,
+                contentDescription = "Selected Image",
                 modifier =
-                    Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
+                    Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
+                contentScale = ContentScale.Crop,
             )
+          } else {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier =
+                        Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
+                )
+              }
+            }
           }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = uiState.description,
+            onValueChange = onDescriptionChange,
+            label = { Text(context.getString(R.string.description)) },
+            modifier =
+                Modifier.fillMaxWidth(0.9f)
+                    .height(100.dp)
+                    .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onSubmitClick,
+            enabled =
+                !uiState.isSubmitting &&
+                    uiState.imageUri != null &&
+                    uiState.description.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+            shape = RoundedCornerShape(6.dp),
+            modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
+        ) {
+          Text(
+              text =
+                  if (uiState.isSubmitting) context.getString(R.string.submitting)
+                  else context.getString(R.string.submitted),
+              color = Color.White,
+              modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+          )
+        }
       }
-    }
-
-    Spacer(modifier = Modifier.height(32.dp))
-
-    OutlinedTextField(
-        value = uiState.description,
-        onValueChange = onDescriptionChange,
-        label = { Text(context.getString(R.string.description)) },
-        modifier =
-            Modifier.fillMaxWidth(0.9f)
-                .height(100.dp)
-                .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
-    )
-
-    Spacer(modifier = Modifier.height(32.dp))
-
-    Button(
-        onClick = onSubmitClick,
-        enabled =
-            !uiState.isSubmitting && uiState.imageUri != null && uiState.description.isNotBlank(),
-        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
-        shape = RoundedCornerShape(6.dp),
-        modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
-    ) {
-      Text(
-          text =
-              if (uiState.isSubmitting) context.getString(R.string.submitting)
-              else context.getString(R.string.submitted),
-          color = Color.White,
-          modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-      )
-    }
-  }
 }

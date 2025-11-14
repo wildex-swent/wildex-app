@@ -327,7 +327,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkProfileScreenIsDisplayed(userId2)
   }
 
-  /*@Test
+  @Test
   fun navigation_SubmitReport_AndGoBack() {
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
@@ -340,5 +340,5 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateBackFromSubmitReport()
     composeRule.waitForIdle()
     composeRule.checkReportScreenIsDisplayed()
-  }*/
+  }
 }

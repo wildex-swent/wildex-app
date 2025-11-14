@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.AlertDialog
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
@@ -271,49 +273,51 @@ fun CommentInput(
                   color = colorScheme.onBackground.copy(alpha = 0.06f),
                   shape = RoundedCornerShape(0.dp),
               )
-              .padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          ClickableProfilePicture(
-              modifier =
-                  Modifier.size(44.dp)
-                      .testTag(
-                          testTagForProfilePicture(profileId = userId, role = "comment_input")),
-              profileId = userId,
-              profilePictureURL = userProfilePictureURL,
-              profileUserType = userUserType,
-              onProfile = onProfile,
-          )
+              .padding(horizontal = 12.dp, vertical = 8.dp)
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClickableProfilePicture(
+          modifier =
+              Modifier.size(44.dp)
+                  .testTag(testTagForProfilePicture(profileId = userId, role = "comment_input")),
+          profileId = userId,
+          profilePictureURL = userProfilePictureURL,
+          profileUserType = userUserType,
+          onProfile = onProfile,
+      )
 
-          Spacer(modifier = Modifier.width(8.dp))
+      Spacer(modifier = Modifier.width(8.dp))
 
-          var text by remember { mutableStateOf("") }
+      var text by remember { mutableStateOf("") }
 
-          OutlinedTextField(
-              value = text,
-              onValueChange = { text = it },
-              placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
-              modifier = Modifier.weight(1f),
-              shape = RoundedCornerShape(32.dp),
-              singleLine = true,
-              trailingIcon = {
-                IconButton(
-                    onClick = {
-                      if (text.isNotBlank()) {
-                        postDetailsScreenViewModel.addComment(text)
-                        text = ""
-                      }
-                    }) {
-                      Icon(
-                          imageVector = Icons.AutoMirrored.Filled.Send,
-                          contentDescription = "Send comment",
-                          tint = colorScheme.primary,
-                      )
-                    }
-              },
-          )
-        }
-      }
+      OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
+          modifier = Modifier.weight(1f),
+          shape = RoundedCornerShape(32.dp),
+          singleLine = true,
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+          trailingIcon = {
+            IconButton(
+                onClick = {
+                  if (text.isNotBlank()) {
+                    postDetailsScreenViewModel.addComment(text)
+                    text = ""
+                  }
+                }
+            ) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Send,
+                  contentDescription = "Send comment",
+                  tint = colorScheme.primary,
+              )
+            }
+          },
+      )
+    }
+  }
 }

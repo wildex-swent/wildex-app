@@ -1,4 +1,4 @@
-package com.android.wildex.ui.navigation
+package com.android.wildex.ui.end2end
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -17,6 +17,8 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
+import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
+import com.android.wildex.ui.navigation.NavigationTestUtils
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.ui.report.ReportScreenTestTags
@@ -29,6 +31,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
+// @Ignore("Succeeding locally but failing on CI")
 class End2EndTest2 : NavigationTestUtils() {
 
   @Test

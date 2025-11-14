@@ -1,4 +1,4 @@
-package com.android.wildex.ui.navigation
+package com.android.wildex.ui.end2end
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
@@ -22,6 +22,8 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
+import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
+import com.android.wildex.ui.navigation.NavigationTestUtils
 import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags

@@ -170,7 +170,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -219,7 +220,12 @@ private fun NavGraphBuilder.reportComposable(
     ReportScreen(
         bottomBar = {
           if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
-        })
+        },
+        onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
+        onReportClick = {},
+        onNotificationClick = {},
+    )
   }
 }
 

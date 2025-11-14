@@ -43,16 +43,7 @@ class SubmitReportFormScreenTest {
 
   @Test
   fun topAppBar_and_backButton_areDisplayed_andClickable() {
-    composeTestRule.setContent {
-      SubmitReportFormScreen(
-          uiState = SubmitReportUiState(),
-          onCameraClick = onCameraClick,
-          onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
-    }
+    composeTestRule.setContent { SubmitReportScreen(onGoBack = onGoBack) }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
     composeTestRule
@@ -108,7 +99,8 @@ class SubmitReportFormScreenTest {
               SubmitReportUiState(
                   isSubmitting = false,
                   description = "some description",
-                  imageUri = Uri.parse("content://test/image.jpg")),
+                  imageUri = Uri.parse("content://test/image.jpg"),
+              ),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,13 +20,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,107 +67,86 @@ fun SubmitReportFormScreen(
     context: Context,
     onGoBack: () -> Unit,
 ) {
-  Scaffold(
-      topBar = {
-        TopAppBar(
-            modifier = Modifier.testTag(SubmitReportFormScreenTestTags.TOP_APP_BAR),
-            title = {
-              Text(
-                  text = context.getString(R.string.report),
-                  modifier = Modifier.testTag(SubmitReportFormScreenTestTags.TOP_APP_BAR_TEXT))
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = onGoBack,
-                  modifier = Modifier.testTag(SubmitReportFormScreenTestTags.BACK_BUTTON),
-              ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-              }
-            },
+
+  Column(
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.fillMaxWidth()
+  ) {
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Text(
+        text = context.getString(R.string.submit_rescue_alert),
+        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        color = colorScheme.primary,
+    )
+
+    Spacer(modifier = Modifier.height(64.dp))
+
+    Box(
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(200.dp)
+                .clickable { onCameraClick() }
+                .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
+        contentAlignment = Alignment.Center,
+    ) {
+      if (uiState.imageUri != null) {
+        AsyncImage(
+            model = uiState.imageUri,
+            contentDescription = "Selected Image",
+            modifier =
+                Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
+            contentScale = ContentScale.Crop,
         )
-      }) { paddingValues ->
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(paddingValues),
+      } else {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
-          Spacer(modifier = Modifier.height(32.dp))
-
-          Text(
-              text = context.getString(R.string.submit_rescue_alert),
-              style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-              color = colorScheme.primary,
-          )
-
-          Spacer(modifier = Modifier.height(64.dp))
-
-          Box(
-              modifier =
-                  Modifier.fillMaxWidth(0.9f)
-                      .height(200.dp)
-                      .clickable { onCameraClick() }
-                      .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
-              contentAlignment = Alignment.Center,
-          ) {
-            if (uiState.imageUri != null) {
-              AsyncImage(
-                  model = uiState.imageUri,
-                  contentDescription = "Selected Image",
-                  modifier =
-                      Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
-                  contentScale = ContentScale.Crop,
-              )
-            } else {
-              Card(
-                  colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-                  shape = RoundedCornerShape(8.dp),
-                  modifier = Modifier.fillMaxSize(),
-              ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                  Icon(
-                      imageVector = Icons.Default.CameraAlt,
-                      contentDescription = null,
-                      tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                      modifier =
-                          Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
-                  )
-                }
-              }
-            }
-          }
-
-          Spacer(modifier = Modifier.height(32.dp))
-
-          OutlinedTextField(
-              value = uiState.description,
-              onValueChange = onDescriptionChange,
-              label = { Text(context.getString(R.string.description)) },
-              modifier =
-                  Modifier.fillMaxWidth(0.9f)
-                      .height(100.dp)
-                      .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
-          )
-
-          Spacer(modifier = Modifier.height(32.dp))
-
-          Button(
-              onClick = onSubmitClick,
-              enabled =
-                  !uiState.isSubmitting &&
-                      uiState.imageUri != null &&
-                      uiState.description.isNotBlank(),
-              colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
-              shape = RoundedCornerShape(6.dp),
-              modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
-          ) {
-            Text(
-                text =
-                    if (uiState.isSubmitting) context.getString(R.string.submitting)
-                    else context.getString(R.string.submitted),
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier =
+                    Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
             )
           }
         }
       }
+    }
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    OutlinedTextField(
+        value = uiState.description,
+        onValueChange = onDescriptionChange,
+        label = { Text(context.getString(R.string.description)) },
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(100.dp)
+                .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+        onClick = onSubmitClick,
+        enabled =
+            !uiState.isSubmitting && uiState.imageUri != null && uiState.description.isNotBlank(),
+        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+        shape = RoundedCornerShape(6.dp),
+        modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
+    ) {
+      Text(
+          text =
+              if (uiState.isSubmitting) context.getString(R.string.submitting)
+              else context.getString(R.string.submitted),
+          color = Color.White,
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+      )
+    }
+  }
 }

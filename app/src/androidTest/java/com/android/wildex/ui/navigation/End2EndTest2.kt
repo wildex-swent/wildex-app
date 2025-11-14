@@ -1,29 +1,31 @@
 package com.android.wildex.ui.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsToggleable
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.social.Post
+import com.android.wildex.model.report.Report
 import com.android.wildex.model.user.User
-import com.android.wildex.model.utils.Id
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.ui.home.HomeScreenTestTags
-import com.android.wildex.ui.post.PostDetailsScreenTestTags
+import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
+import com.android.wildex.ui.report.ReportScreenTestTags
+import com.android.wildex.ui.report.SubmitReportFormScreenTestTags
+import com.android.wildex.ui.settings.SettingsScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -31,8 +33,66 @@ class End2EndTest2 : NavigationTestUtils() {
 
   @Test
   fun userFlow() {
-    /* User authenticates, creates his profile, checks his profile, checks his achievements, goes back, goes to Settings, switch appearance mode to Dark, enables notifications and logs out */
-    runBlocking { FirebaseEmulator.auth.signOut() }
+    /* User authenticates, creates his profile, checks his profile, checks his settings,
+    switches appearance to Dark mode and status to professional,
+    goes back to Profile and then to Home Screen, check the camera tab,
+    checks the report tab, sees all reports, tries to submit a form,
+    backs out and goes back to report tab, check his profile, goes to settings and logs out.*/
+    val user0 =
+        User(
+            "author0",
+            "name0",
+            "surname0",
+            "username0",
+            "regular user 0",
+            "",
+            UserType.REGULAR,
+            Timestamp.now(),
+            "country 0",
+            0,
+        )
+    val user1 =
+        User(
+            "author1",
+            "name1",
+            "surname1",
+            "username1",
+            "regular user 1",
+            "",
+            UserType.REGULAR,
+            Timestamp.now(),
+            "country 1",
+            0,
+        )
+    val report0 =
+        Report(
+            reportId = "report0",
+            authorId = "author0",
+            imageURL = "",
+            location = Location(10.0, 10.0, "location0"),
+            description = "description0",
+            assigneeId = null,
+            date = Timestamp.now(),
+        )
+    val report1 =
+        Report(
+            reportId = "report1",
+            authorId = "author1",
+            imageURL = "",
+            location = Location(20.0, 20.0, "location1"),
+            description = "description1",
+            assigneeId = null,
+            date = Timestamp.now(),
+        )
+
+    runBlocking {
+      FirebaseEmulator.auth.signOut()
+      initUser(user0)
+      initUser(user1)
+      RepositoryProvider.reportRepository.addReport(report0)
+      RepositoryProvider.reportRepository.addReport(report1)
+    }
+
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
     composeRule.navigateFromAuth()
@@ -54,38 +114,53 @@ class End2EndTest2 : NavigationTestUtils() {
     saveNode.performScrollTo().performClick()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+
     composeRule.waitUntilAfterLoadingScreen()
-    composeRule.navigateToCameraScreenFromBottomBar()
-    composeRule.waitForIdle()
-    composeRule.checkCameraScreenIsDisplayed()
-    composeRule.navigateToMapScreenFromBottomBar()
-    composeRule.waitForIdle()
-    /*composeRule.navigateToMyProfileScreenFromHome()
+    composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
     composeRule.checkMyProfileScreenIsDisplayed()
+    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.navigateToSettingsScreenFromProfile()
+    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.waitForIdle()
+    composeRule.switchAndCheckProfileSettings()
 
-
+    composeRule.navigateBackFromSettings()
+    composeRule.waitForIdle()
     composeRule.navigateBackFromProfile()
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
-    composeRule.checkHomeScreenIsDisplayed()
-    composeRule.checkFullHomeScreenIsDisplayedFor(listOf(post0.postId, post1.postId))
-    composeRule.navigateToPostDetailsScreenFromHome(post0.postId)
-    composeRule.waitUntilAfterLoadingScreen()
+
+    composeRule.navigateToCameraScreenFromBottomBar()
     composeRule.waitForIdle()
-    composeRule.checkFullPostDetailsIsDisplayedFor(post0, animal0)
-    composeRule.likePostAndCheckLikes(post0.likesCount)
-    composeRule.waitForIdle()
-    composeRule.navigateBackFromPostDetails()
+    composeRule.checkCameraScreenIsDisplayed()
+    composeRule.checkFullCameraPermissionScreenIsDisplayed()
+
+    composeRule.navigateToReportScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.waitUntilAfterLoadingScreen()
-    composeRule.navigateToPostDetailsScreenFromHome(post1.postId)
+    composeRule.checkFullReportScreenIsDisplayed(listOf(report0, report1))
+
+    composeRule.navigateToSubmitReportScreenFromReport()
+    composeRule.waitForIdle()
+    composeRule.checkSubmitReportScreenIsDisplayed()
+    composeRule.checkFullSubmitScreenIsDisplayed()
+    composeRule.navigateBackFromSubmitReport()
+    composeRule.waitForIdle()
+
+    composeRule.checkReportScreenIsDisplayed()
+    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.navigateToMyProfileScreenFromReport(Firebase.auth.uid!!)
     composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
-    composeRule.commentPostAndCheckComments(post1.commentsCount)
+    composeRule.checkMyProfileScreenIsDisplayed()
+    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.navigateToSettingsScreenFromProfile()
+    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
-    composeRule.navigateBackFromPostDetails()*/
+    composeRule.navigateFromSettingsScreen_LogOut()
+    composeRule.waitForIdle()
+    composeRule.checkAuthScreenIsDisplayed()
   }
 
   private suspend fun initUser(user: User) {
@@ -93,29 +168,6 @@ class End2EndTest2 : NavigationTestUtils() {
     RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
     RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
     RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
-  }
-
-  private fun ComposeTestRule.likePostAndCheckLikes(likesCount: Int) {
-    onNodeWithText(likesCount.toString()).performScrollTo().assertIsDisplayed()
-    onNode(hasContentDescription("Like status")).performScrollTo().performClick()
-    onNodeWithText((likesCount + 1).toString()).performScrollTo().assertIsDisplayed()
-  }
-
-  private fun ComposeTestRule.commentPostAndCheckComments(commentsCount: Int) {
-    if (commentsCount == 1) {
-      onNodeWithText("1 Comment").performScrollTo().assertIsDisplayed()
-    } else {
-      onNodeWithText("$commentsCount Comments").performScrollTo().assertIsDisplayed()
-    }
-    onNode(hasText("Add a comment …") and hasSetTextAction()).performTextInput("New comment")
-    onNode(hasContentDescription("Send comment")).performClick()
-    onNodeWithText("New comment").performScrollTo().assertIsDisplayed()
-    if (commentsCount + 1 == 1) {
-      onNodeWithText("1 Comment").performScrollTo().assertIsDisplayed()
-    } else {
-      onNodeWithText("${commentsCount + 1} Comments").performScrollTo().assertIsDisplayed()
-    }
-    onNode(hasText("Add a comment …") and hasSetTextAction()).performImeAction()
   }
 
   private fun ComposeTestRule.checkMyProfileScreenIsDisplayed() {
@@ -134,40 +186,84 @@ class End2EndTest2 : NavigationTestUtils() {
     onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
   }
 
-  private fun ComposeTestRule.checkFullHomeScreenIsDisplayedFor(postIds: List<Id>) {
-    checkHomeScreenIsDisplayed()
-    onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
-    onNodeWithTag(HomeScreenTestTags.POSTS_LIST).assertIsDisplayed()
-    onNodeWithTag(HomeScreenTestTags.TITLE).assertIsDisplayed()
-    postIds.forEach {
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.imageTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.authorPictureTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.commentTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.likeButtonTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.likeTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.locationTag(it))
-    }
-  }
-
-  private fun ComposeTestRule.checkFullPostDetailsIsDisplayedFor(post: Post, animal: Animal) {
-    onNodeWithText(post.location!!.name, useUnmergedTree = true)
-        .performScrollTo()
-        .assertIsDisplayed()
-    onNodeWithText(animal.species, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-    onNodeWithText("${post.likesCount}", useUnmergedTree = true)
-        .performScrollTo()
-        .assertIsDisplayed()
-    onNodeWithText(post.description, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-    onNodeWithTag(PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"), true)
-        .performScrollTo()
-        .assertIsDisplayed()
-  }
-
   private fun ComposeTestRule.checkNodeWithTagScrollAndDisplay(tag: String) {
     onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
   }
 
   private fun ComposeTestRule.waitUntilAfterLoadingScreen() {
     waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
+  }
+
+  private fun ComposeTestRule.switchAndCheckProfileSettings() {
+    onNodeWithTag(SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertIsSelected()
+    onNodeWithTag(SettingsScreenTestTags.DARK_MODE_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    onNodeWithTag(SettingsScreenTestTags.DARK_MODE_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertIsSelected()
+
+    onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertIsToggleable()
+
+    onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertIsSelected()
+    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    waitUntil {
+      onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+          .isDisplayed()
+    }
+    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+        .assertIsSelected()
+  }
+
+  private fun ComposeTestRule.checkFullCameraPermissionScreenIsDisplayed() {
+    onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
+        .assertIsDisplayed()
+    onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1).assertIsDisplayed()
+    onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2).assertIsDisplayed()
+    onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_BUTTON).assertIsDisplayed()
+    onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON).assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.checkFullReportScreenIsDisplayed(reports: List<Report>) {
+    onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT, useUnmergedTree = true).assertIsDisplayed()
+    onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE, useUnmergedTree = true).assertIsDisplayed()
+    onNodeWithTag(ReportScreenTestTags.REPORT_LIST, useUnmergedTree = true).assertIsDisplayed()
+    reports.forEach {
+      onNodeWithTag(
+              ReportScreenTestTags.testTagForReport(it.reportId, "full"),
+              useUnmergedTree = true,
+          )
+          .assertIsDisplayed()
+      onNodeWithTag(
+              ReportScreenTestTags.testTagForProfilePicture(it.authorId, "author"),
+              useUnmergedTree = true,
+          )
+          .assertIsDisplayed()
+    }
+  }
+
+  private fun ComposeTestRule.checkFullSubmitScreenIsDisplayed() {
+    onNodeWithTag(SubmitReportFormScreenTestTags.CAMERA_ICON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR_TEXT, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX, useUnmergedTree = true).performClick()
+    checkFullCameraPermissionScreenIsDisplayed()
   }
 }

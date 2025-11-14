@@ -388,4 +388,17 @@ abstract class NavigationTestUtils {
   fun ComposeTestRule.navigateBackFromEditProfile() {
     performClickOnTag(EditProfileScreenTestTags.GO_BACK)
   }
+
+  fun ComposeTestRule.navigateFromSettingsScreen_LogOut() {
+    performClickOnTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)
+  }
+
+  fun ComposeTestRule.navigateFromSettingsScreen_DeleteAccount() {
+    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
+  }
+
+  fun ComposeTestRule.navigateToMyProfileScreenFromReport(userId: Id) {
+    performClickOnTag(ReportScreenTestTags.testTagForProfilePicture(userId, "user"))
+  }
 }

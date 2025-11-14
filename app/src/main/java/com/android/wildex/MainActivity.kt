@@ -192,7 +192,6 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
           onSettings = { navigationActions.navigateTo(Screen.Settings) },
-          onFriendRequest = {},
       )
     }
   }
@@ -222,8 +221,6 @@ private fun NavGraphBuilder.reportComposable(
         },
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
         onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
-        onReportClick = {},
-        onNotificationClick = {},
     )
   }
 }
@@ -313,7 +310,6 @@ private fun NavGraphBuilder.homeComposable(
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
-        onNotificationClick = {},
     )
   }
 }

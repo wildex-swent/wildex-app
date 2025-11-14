@@ -20,6 +20,31 @@ import org.junit.runners.JUnit4
 class NavigationTest : NavigationTestUtils() {
 
   @Test
+  fun navigation_Auth_toEditProfile_toHome_toProfile_toSettings_toAuth_toHome() {
+    runBlocking { FirebaseEmulator.auth.signOut() }
+    composeRule.waitForIdle()
+    composeRule.checkAuthScreenIsDisplayed()
+    composeRule.navigateFromAuth()
+    composeRule.waitForIdle()
+    composeRule.checkEditProfileScreenIsDisplayed(true)
+    composeRule.navigateFromEditProfile()
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToMyProfileScreenFromHome()
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
+    composeRule.navigateToSettingsScreenFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkSettingsScreenIsDisplayed()
+    composeRule.navigateFromSettingsScreen_LogOut()
+    composeRule.waitForIdle()
+    composeRule.checkAuthScreenIsDisplayed()
+    composeRule.navigateFromAuth()
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+  }
+
+  @Test
   fun startsAtHomeScreen_whenAuthenticated_oldUser() {
     composeRule.waitForIdle()
     assertNotNull(FirebaseEmulator.auth.currentUser)
@@ -59,6 +84,11 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromEditProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+  }
+
+  @Test
+  fun navigation_HomeScreen_FromAuth() {
+    composeRule.waitForIdle()
   }
 
   @Test
@@ -338,6 +368,21 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.checkSubmitReportScreenIsDisplayed()
     composeRule.navigateBackFromSubmitReport()
+    composeRule.waitForIdle()
+    composeRule.checkReportScreenIsDisplayed()
+  }
+
+  @Test
+  fun navigation_Profile_FromReport_AndGoBack() {
+    composeRule.waitForIdle()
+    composeRule.checkHomeScreenIsDisplayed()
+    composeRule.navigateToReportScreenFromBottomBar()
+    composeRule.waitForIdle()
+    composeRule.checkReportScreenIsDisplayed()
+    composeRule.navigateToMyProfileScreenFromReport(userId)
+    composeRule.waitForIdle()
+    composeRule.checkProfileScreenIsDisplayed(userId)
+    composeRule.navigateBackFromProfile()
     composeRule.waitForIdle()
     composeRule.checkReportScreenIsDisplayed()
   }

@@ -25,13 +25,9 @@ import kotlinx.coroutines.launch
  * Represents the UI state for authentication.
  *
  * @property isLoading Whether an authentication operation is in progress.
- * @property isNewUser True if the signed in user is a new user, false otherwise.
- * @property username The username currently signed-in user, or null if not signed in yet.
  * @property errorMsg The error message to display, or null if there is no error.
  */
 data class AuthUIState(
-    val username: String? = null,
-    val isNewUser: Boolean = false,
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
 )
@@ -58,7 +54,11 @@ class SignInViewModel(
   }
 
   /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
-  fun signIn(context: Context, credentialManager: CredentialManager) {
+  fun signIn(
+      context: Context,
+      credentialManager: CredentialManager,
+      onSignedIn: (Boolean) -> Unit,
+  ) {
     if (_uiState.value.isLoading) return
 
     _uiState.update { it.copy(isLoading = true, errorMsg = null) }
@@ -77,32 +77,22 @@ class SignInViewModel(
             .fold(
                 onSuccess = { firebaseUser ->
                   val userId = firebaseUser.uid
-                  val (username, isNewUser) =
+                  val isNewUser =
                       try {
-                        val user = userRepository.getUser(userId)
+                        userRepository.getUser(userId)
                         AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
-                        user.username to false
+                        false
                       } catch (_: Exception) {
                         initializeUserUseCase(userId)
                         AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
-                        ("" to true)
+                        true
                       }
-                  _uiState.update {
-                    it.copy(
-                        username = username,
-                        isNewUser = isNewUser,
-                        isLoading = false,
-                        errorMsg = null,
-                    )
-                  }
+                  _uiState.update { it.copy(isLoading = false, errorMsg = null) }
+                  onSignedIn(isNewUser)
                 },
                 onFailure = { failure ->
                   _uiState.update {
-                    it.copy(
-                        username = null,
-                        isLoading = false,
-                        errorMsg = failure.localizedMessage,
-                    )
+                    it.copy(isLoading = false, errorMsg = failure.localizedMessage)
                   }
                 },
             )
@@ -110,7 +100,6 @@ class SignInViewModel(
         // User cancelled the sign-in operation
         _uiState.update {
           it.copy(
-              username = null,
               isLoading = false,
               errorMsg = context.getString(R.string.cancel_sign_in),
           )
@@ -119,7 +108,6 @@ class SignInViewModel(
         // Other credential errors
         _uiState.update {
           it.copy(
-              username = null,
               isLoading = false,
               errorMsg = "Failed to get credentials: ${e.localizedMessage}",
           )
@@ -128,7 +116,6 @@ class SignInViewModel(
         // Unexpected errors
         _uiState.update {
           it.copy(
-              username = null,
               isLoading = false,
               errorMsg = "Unexpected error: ${e.localizedMessage}",
           )

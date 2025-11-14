@@ -294,8 +294,7 @@ fun SettingsContent(
                   "Professional" -> UserType.PROFESSIONAL
                   else ->
                       throw IllegalArgumentException(
-                          "The new user Type [$newUserStatusString] is not recognized"
-                      )
+                          "The new user Type [$newUserStatusString] is not recognized")
                 }
             settingsScreenViewModel.setUserType(newUserType)
           },
@@ -316,8 +315,7 @@ fun SettingsContent(
                   "Dark" -> AppearanceMode.DARK
                   else ->
                       throw IllegalArgumentException(
-                          "The new appearance mode [$newAppearanceModeString] is not recognized"
-                      )
+                          "The new appearance mode [$newAppearanceModeString] is not recognized")
                 }
             settingsScreenViewModel.setAppearanceMode(newAppearanceMode)
             AppTheme.appearanceMode = newAppearanceMode

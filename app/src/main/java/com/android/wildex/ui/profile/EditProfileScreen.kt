@@ -63,7 +63,6 @@ import com.android.wildex.R
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
-import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -133,7 +132,8 @@ fun EditProfileScreen(
               uiState = uiState,
               countryNames = countryNames,
               cs = cs,
-              pickImageLauncher = pickImageLauncher)
+              pickImageLauncher = pickImageLauncher,
+          )
     }
   }
 }
@@ -147,7 +147,7 @@ fun EditView(
     uiState: EditProfileUIState,
     countryNames: List<String> = emptyList(),
     cs: ColorScheme,
-    pickImageLauncher: ManagedActivityResultLauncher<String, Uri?>
+    pickImageLauncher: ManagedActivityResultLauncher<String, Uri?>,
 ) {
   // State for dropdown visibility
   val defaultUri: Uri =
@@ -155,141 +155,150 @@ fun EditView(
   Column(
       modifier =
           Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(pd).padding(20.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-          AsyncImage(
-              model = uiState.pendingProfileImageUri ?: defaultUri,
-              contentDescription = "Profile picture",
-              modifier =
-                  Modifier.width(96.dp)
-                      .aspectRatio(1f)
-                      .clip(CircleShape)
-                      .border(1.dp, cs.outline, CircleShape)
-                      .clickable {
-                        pickImageLauncher.launch("image/*")
-                        editScreenViewModel.clearProfileSaved()
-                      }
-                      .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
-              contentScale = ContentScale.Crop)
-          Icon(
-              imageVector = Icons.Filled.Create,
-              contentDescription = "Change profile picture",
-              tint = cs.onPrimary,
-              modifier =
-                  Modifier.align(Alignment.TopEnd)
-                      .size(20.dp)
-                      .clip(CircleShape)
-                      .background(cs.secondary)
-                      .padding(4.dp))
-        }
-        Spacer(modifier = Modifier.height(30.dp))
-        // Name Input
-        OutlinedTextField(
-            value = uiState.name,
-            onValueChange = {
-              editScreenViewModel.setName(it)
-              editScreenViewModel.clearProfileSaved()
-            },
-            label = { Text("Name") },
-            placeholder = { Text("Name") },
-            isError = uiState.invalidNameMsg != null,
-            supportingText = {
-              uiState.invalidNameMsg?.let {
-                Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
-              }
-            },
-            modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_NAME))
-        // Surname Input
-        OutlinedTextField(
-            value = uiState.surname,
-            onValueChange = {
-              editScreenViewModel.setSurname(it)
-              editScreenViewModel.clearProfileSaved()
-            },
-            label = { Text("Surname") },
-            placeholder = { Text("Surname") },
-            isError = uiState.invalidSurnameMsg != null,
-            supportingText = {
-              uiState.invalidSurnameMsg?.let {
-                Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
-              }
-            },
-            modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_SURNAME))
-        // User Input
-        OutlinedTextField(
-            value = uiState.username,
-            onValueChange = {
-              editScreenViewModel.setUsername(it)
-              editScreenViewModel.clearProfileSaved()
-            },
-            label = { Text("Username") },
-            placeholder = { Text("Username") },
-            isError = uiState.invalidUsernameMsg != null,
-            supportingText = {
-              uiState.invalidUsernameMsg?.let {
-                Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
-              }
-            },
-            modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_USERNAME))
-        // Description Input
-        OutlinedTextField(
-            value = uiState.description,
-            onValueChange = {
-              editScreenViewModel.setDescription(it)
-              editScreenViewModel.clearProfileSaved()
-            },
-            label = { Text("Description") },
-            placeholder = { Text("Description") },
-            modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_DESCRIPTION))
-        Spacer(modifier = Modifier.height(4.dp))
-        // Country Input with dropdown
-        CountryDropdown(
-            selectedCountry = uiState.country,
-            countries = countryNames,
-            onCountrySelected = {
-              editScreenViewModel.setCountry(it)
-              editScreenViewModel.clearProfileSaved()
-            },
-        )
-        if (uiState.profileSaved) {
-          Row(
-              modifier = Modifier.align(Alignment.CenterHorizontally),
-              verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "Saved successfully",
-                tint = cs.primary,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = LocalContext.current.getString(R.string.edit_profile_save_successfully),
-                color = cs.primary,
-            )
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+      AsyncImage(
+          model = uiState.pendingProfileImageUri ?: defaultUri,
+          contentDescription = "Profile picture",
+          modifier =
+              Modifier.width(96.dp)
+                  .aspectRatio(1f)
+                  .clip(CircleShape)
+                  .border(1.dp, cs.outline, CircleShape)
+                  .clickable {
+                    pickImageLauncher.launch("image/*")
+                    editScreenViewModel.clearProfileSaved()
+                  }
+                  .testTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW),
+          contentScale = ContentScale.Crop,
+      )
+      Icon(
+          imageVector = Icons.Filled.Create,
+          contentDescription = "Change profile picture",
+          tint = cs.onPrimary,
+          modifier =
+              Modifier.align(Alignment.TopEnd)
+                  .size(20.dp)
+                  .clip(CircleShape)
+                  .background(cs.secondary)
+                  .padding(4.dp),
+      )
+    }
+    Spacer(modifier = Modifier.height(30.dp))
+    // Name Input
+    OutlinedTextField(
+        value = uiState.name,
+        onValueChange = {
+          editScreenViewModel.setName(it)
+          editScreenViewModel.clearProfileSaved()
+        },
+        label = { Text("Name") },
+        placeholder = { Text("Name") },
+        isError = uiState.invalidNameMsg != null,
+        supportingText = {
+          uiState.invalidNameMsg?.let {
+            Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
           }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = {
-              editScreenViewModel.saveProfileChanges()
-              if (isNewUser) {
-                onSave()
-              }
-            },
-            enabled = uiState.isValid,
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = cs.secondary,
-                    contentColor = cs.onSecondary,
-                ),
-            shape = RoundedCornerShape(8.dp),
-            modifier =
-                Modifier.testTag(EditProfileScreenTestTags.SAVE)
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth()) {
-              Text(text = "Save")
-            }
+        },
+        modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_NAME),
+    )
+    // Surname Input
+    OutlinedTextField(
+        value = uiState.surname,
+        onValueChange = {
+          editScreenViewModel.setSurname(it)
+          editScreenViewModel.clearProfileSaved()
+        },
+        label = { Text("Surname") },
+        placeholder = { Text("Surname") },
+        isError = uiState.invalidSurnameMsg != null,
+        supportingText = {
+          uiState.invalidSurnameMsg?.let {
+            Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
+          }
+        },
+        modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_SURNAME),
+    )
+    // User Input
+    OutlinedTextField(
+        value = uiState.username,
+        onValueChange = {
+          editScreenViewModel.setUsername(it)
+          editScreenViewModel.clearProfileSaved()
+        },
+        label = { Text("Username") },
+        placeholder = { Text("Username") },
+        isError = uiState.invalidUsernameMsg != null,
+        supportingText = {
+          uiState.invalidUsernameMsg?.let {
+            Text(it, modifier = Modifier.testTag(EditProfileScreenTestTags.ERROR_MESSAGE))
+          }
+        },
+        modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_USERNAME),
+    )
+    // Description Input
+    OutlinedTextField(
+        value = uiState.description,
+        onValueChange = {
+          editScreenViewModel.setDescription(it)
+          editScreenViewModel.clearProfileSaved()
+        },
+        label = { Text("Description") },
+        placeholder = { Text("Description") },
+        modifier = Modifier.fillMaxWidth().testTag(EditProfileScreenTestTags.INPUT_DESCRIPTION),
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    // Country Input with dropdown
+    CountryDropdown(
+        selectedCountry = uiState.country,
+        countries = countryNames,
+        onCountrySelected = {
+          editScreenViewModel.setCountry(it)
+          editScreenViewModel.clearProfileSaved()
+        },
+    )
+    if (uiState.profileSaved) {
+      Row(
+          modifier = Modifier.align(Alignment.CenterHorizontally),
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Icon(
+            imageVector = Icons.Filled.CheckCircle,
+            contentDescription = "Saved successfully",
+            tint = cs.primary,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = LocalContext.current.getString(R.string.edit_profile_save_successfully),
+            color = cs.primary,
+        )
       }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(
+        onClick = {
+          editScreenViewModel.saveProfileChanges {
+            if (isNewUser) {
+              onSave()
+            }
+          }
+        },
+        enabled = uiState.isValid,
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = cs.secondary,
+                contentColor = cs.onSecondary,
+            ),
+        shape = RoundedCornerShape(8.dp),
+        modifier =
+            Modifier.testTag(EditProfileScreenTestTags.SAVE)
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth(),
+    ) {
+      Text(text = "Save")
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

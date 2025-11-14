@@ -90,10 +90,10 @@ class SettingsScreenViewModel(
   fun setAppearanceMode(mode: AppearanceMode) {
     viewModelScope.launch {
       try {
-          userSettingsRepository.setAppearanceMode(currentUserId, mode)
-          _uiState.value = _uiState.value.copy(appearanceMode = mode)
+        userSettingsRepository.setAppearanceMode(currentUserId, mode)
+        _uiState.value = _uiState.value.copy(appearanceMode = mode)
       } catch (e: Exception) {
-          setErrorMsg(e.localizedMessage ?: "Failed to update appearance mode.")
+        setErrorMsg(e.localizedMessage ?: "Failed to update appearance mode.")
       }
     }
   }
@@ -106,12 +106,12 @@ class SettingsScreenViewModel(
   fun setUserType(type: UserType) {
     viewModelScope.launch {
       try {
-          val user = userRepository.getUser(currentUserId)
-          val updatedUser = user.copy(userType = type)
-          userRepository.editUser(currentUserId, updatedUser)
-          _uiState.value = _uiState.value.copy(userType = type)
+        val user = userRepository.getUser(currentUserId)
+        val updatedUser = user.copy(userType = type)
+        userRepository.editUser(currentUserId, updatedUser)
+        _uiState.value = _uiState.value.copy(userType = type)
       } catch (e: Exception) {
-          setErrorMsg(e.localizedMessage ?: "Failed to update user type.")
+        setErrorMsg(e.localizedMessage ?: "Failed to update user type.")
       }
     }
   }

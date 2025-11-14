@@ -55,8 +55,7 @@ class SettingsScreenTest {
             creationDate = Timestamp.now(),
             country = "France",
             friendsCount = 3,
-        )
-    )
+        ))
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAchievementsRepository.initializeUserAchievements("currentUserId")
@@ -204,8 +203,7 @@ class SettingsScreenTest {
         initialState != newState &&
             initialState != anotherState &&
             newState == AppearanceMode.LIGHT &&
-            anotherState == AppearanceMode.DARK
-    )
+            anotherState == AppearanceMode.DARK)
   }
 
   @Test

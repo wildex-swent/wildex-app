@@ -4,7 +4,9 @@ import android.Manifest
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -113,48 +115,50 @@ fun SubmitReportScreen(
             },
         )
       },
-  ) {
-    when {
-      showCamera && hasCameraPermission -> {
-        CameraPreviewScreen(
-            onPhotoTaken = { uri ->
-              viewModel.updateImage(uri)
-              showCamera = false
-            },
-            onUploadClick = {
-              showCamera = false
-              imagePickerLauncher.launch("image/*")
-            },
-        )
-      }
-      showCamera && !hasCameraPermission -> {
-        CameraPermissionScreen(
-            onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
-            onUploadClick = { imagePickerLauncher.launch("image/*") },
-            permissionRequestMsg = context.getString(R.string.camera_request_msg_1),
-            extraRequestMsg = context.getString(R.string.camera_request_msg_2),
-        )
-      }
-      uiState.isSubmitting -> {
-        LoadingScreen()
-      }
-      else -> {
-        SubmitReportFormScreen(
-            uiState = uiState,
-            onCameraClick = { showCamera = true },
-            onDescriptionChange = viewModel::updateDescription,
-            onSubmitClick = {
-              if (!hasLocationPermission) {
-                locationRequested = true
-                locationPermissionState.launchPermissionRequest()
-              } else {
-                viewModel.fetchUserLocation(locationClient)
-                viewModel.submitReport(onSubmitted)
-              }
-            },
-            context = context,
-            onGoBack = onGoBack,
-        )
+  ) { pd ->
+    Box(modifier = Modifier.fillMaxSize().padding(pd)) {
+      when {
+        showCamera && hasCameraPermission -> {
+          CameraPreviewScreen(
+              onPhotoTaken = { uri ->
+                viewModel.updateImage(uri)
+                showCamera = false
+              },
+              onUploadClick = {
+                showCamera = false
+                imagePickerLauncher.launch("image/*")
+              },
+          )
+        }
+        showCamera && !hasCameraPermission -> {
+          CameraPermissionScreen(
+              onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
+              onUploadClick = { imagePickerLauncher.launch("image/*") },
+              permissionRequestMsg = context.getString(R.string.camera_request_msg_1),
+              extraRequestMsg = context.getString(R.string.camera_request_msg_2),
+          )
+        }
+        uiState.isSubmitting -> {
+          LoadingScreen()
+        }
+        else -> {
+          SubmitReportFormScreen(
+              uiState = uiState,
+              onCameraClick = { showCamera = true },
+              onDescriptionChange = viewModel::updateDescription,
+              onSubmitClick = {
+                if (!hasLocationPermission) {
+                  locationRequested = true
+                  locationPermissionState.launchPermissionRequest()
+                } else {
+                  viewModel.fetchUserLocation(locationClient)
+                  viewModel.submitReport(onSubmitted)
+                }
+              },
+              context = context,
+              onGoBack = onGoBack,
+          )
+        }
       }
     }
   }

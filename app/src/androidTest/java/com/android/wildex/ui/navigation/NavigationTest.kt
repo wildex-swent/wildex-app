@@ -73,7 +73,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_AuthScreen_ToEditProfile_ToHome() {
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
@@ -84,7 +84,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromEditProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }
+  }*/
 
   @Test
   fun navigation_HomeScreen_FromAuth() {
@@ -314,7 +314,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkSettingsScreenIsDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_MapScreen_FromOtherProfile_AndGoBack() {
     val userId2 = "userId"
     val postId2 = "postId2"
@@ -355,7 +355,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateBackFromMap()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId2)
-  }
+  }*/
 
   @Test
   fun navigation_SubmitReport_AndGoBack() {

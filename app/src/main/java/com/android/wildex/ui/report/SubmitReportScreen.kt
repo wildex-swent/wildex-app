@@ -1,7 +1,26 @@
 package com.android.wildex.ui.report
 
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.R
+import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.camera.CameraPermissionScreen
+import com.android.wildex.ui.camera.CameraPreviewScreen
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.LocationServices
 
 /**
  * Screen displaying the Submit Report Screen.
@@ -10,9 +29,92 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * @param onSubmitted Callback invoked when the report has been successfully submitted.
  * @param onGoBack Callback invoked when the user wants to go back to the previous screen.
  */
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SubmitReportScreen(
     viewModel: SubmitReportScreenViewModel = viewModel(),
     onSubmitted: () -> Unit = {},
     onGoBack: () -> Unit = {}
-) {}
+) {
+  val uiState by viewModel.uiState.collectAsState()
+  val context = LocalContext.current
+
+  var showCamera by remember { mutableStateOf(false) }
+  var locationRequested by remember { mutableStateOf(false) }
+
+  val imagePickerLauncher =
+      rememberLauncherForActivityResult(
+          contract = ActivityResultContracts.GetContent(),
+      ) {
+        viewModel.updateImage(it)
+        showCamera = false
+      }
+
+  val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+  val hasCameraPermission = cameraPermissionState.status.isGranted
+
+  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+  val hasLocationPermission = locationPermissionState.status.isGranted
+
+  val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+  // Display error messages as Toasts
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      viewModel.clearErrorMsg()
+    }
+  }
+
+  // Fetch location when permission is granted
+  LaunchedEffect(hasLocationPermission, locationRequested) {
+    if (hasLocationPermission && locationRequested) {
+      viewModel.fetchUserLocation(locationClient)
+    } else if (!hasLocationPermission && locationRequested) {
+      Toast.makeText(
+              context, "Location permission is required to submit a report", Toast.LENGTH_SHORT)
+          .show()
+    }
+  }
+
+  when {
+    showCamera && hasCameraPermission -> {
+      CameraPreviewScreen(
+          onPhotoTaken = { uri ->
+            viewModel.updateImage(uri)
+            showCamera = false
+          },
+          onUploadClick = {
+            showCamera = false
+            imagePickerLauncher.launch("image/*")
+          })
+    }
+    showCamera && !hasCameraPermission -> {
+      CameraPermissionScreen(
+          onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
+          onUploadClick = { imagePickerLauncher.launch("image/*") },
+          permissionRequestMsg = context.getString(R.string.camera_request_msg_1),
+          extraRequestMsg = context.getString(R.string.camera_request_msg_2))
+    }
+    uiState.isSubmitting -> {
+      LoadingScreen()
+    }
+    else -> {
+      SubmitReportFormScreen(
+          uiState = uiState,
+          onCameraClick = { showCamera = true },
+          onDescriptionChange = viewModel::updateDescription,
+          onSubmitClick = {
+            if (!hasLocationPermission) {
+              locationRequested = true
+              locationPermissionState.launchPermissionRequest()
+            } else {
+              viewModel.fetchUserLocation(locationClient)
+              viewModel.submitReport(onSubmitted)
+            }
+          },
+          context = context,
+          onGoBack = onGoBack)
+    }
+  }
+}

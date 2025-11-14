@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.R
 import com.android.wildex.ui.LoadingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -83,7 +84,8 @@ fun CameraScreen(
               onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
               onUploadClick = { imagePickerLauncher.launch("image/*") },
               modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
-          )
+              permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
+              extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
         }
         uiState.isDetecting ->
             DetectingScreen(

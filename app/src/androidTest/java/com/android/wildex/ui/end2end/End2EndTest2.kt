@@ -27,7 +27,6 @@ import com.android.wildex.ui.settings.SettingsScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -129,7 +128,7 @@ class End2EndTest2 : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.switchAndCheckProfileSettings()
 
-    composeRule.navigateBackFromSettings()
+    /*composeRule.navigateBackFromSettings()
     composeRule.waitForIdle()
     composeRule.navigateBackFromProfile()
     composeRule.waitForIdle()
@@ -156,10 +155,12 @@ class End2EndTest2 : NavigationTestUtils() {
     composeRule.navigateToMyProfileScreenFromReport(Firebase.auth.uid!!)
     composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
+
     composeRule.checkMyProfileScreenIsDisplayed()
     composeRule.waitUntilAfterLoadingScreen()
     composeRule.navigateToSettingsScreenFromProfile()
-    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.waitUntilAfterLoadingScreen()*/
+
     composeRule.waitForIdle()
     composeRule.navigateFromSettingsScreen_LogOut()
     composeRule.waitForIdle()

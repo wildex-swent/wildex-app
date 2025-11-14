@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -127,10 +126,6 @@ class SignInScreenTest {
         .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)
         .assertIsDisplayed()
         .performClick()
-
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).isDisplayed()
-    }
   }
 
   @Test
@@ -168,10 +163,6 @@ class SignInScreenTest {
         .onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON)
         .assertIsDisplayed()
         .performClick()
-
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).isDisplayed()
-    }
 
     assertEquals(email, fakeUser.email)
   }

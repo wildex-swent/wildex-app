@@ -70,11 +70,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
-import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 
 object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
@@ -114,7 +114,7 @@ fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
     onGoBack: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
-    onAccountDeleteOrSignOut: () -> Unit = {}
+    onAccountDeleteOrSignOut: () -> Unit = {},
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -131,15 +131,12 @@ fun SettingsScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SETTINGS_SCREEN),
       topBar = { SettingsScreenTopBar(onGoBack) },
       floatingActionButton = {
         Column {
           FloatingActionButton(
-              onClick = {
-                RepositoryProvider.authRepository.signOut()
-                onAccountDeleteOrSignOut()
-              },
+              onClick = { settingsScreenViewModel.signOut { onAccountDeleteOrSignOut() } },
               shape = RoundedCornerShape(16.dp),
               containerColor = colorScheme.onTertiary,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
@@ -149,14 +146,16 @@ fun SettingsScreen(
                       .fillMaxWidth()
                       .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
                       .height(55.dp)
-                      .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)) {
-                Text(
-                    text = context.getString(R.string.sign_out),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorScheme.tertiary,
-                    modifier = Modifier.padding(horizontal = 30.dp))
-              }
+                      .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON),
+          ) {
+            Text(
+                text = context.getString(R.string.sign_out),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.tertiary,
+                modifier = Modifier.padding(horizontal = 30.dp),
+            )
+          }
           FloatingActionButton(
               onClick = { showDeletionValidation = true },
               shape = RoundedCornerShape(16.dp),
@@ -168,58 +167,64 @@ fun SettingsScreen(
                       .fillMaxWidth()
                       .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
                       .height(55.dp)
-                      .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)) {
-                Text(
-                    text = context.getString(R.string.delete_account),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorScheme.onTertiary,
-                    modifier = Modifier.padding(horizontal = 30.dp))
-              }
-        }
-      },
-      floatingActionButtonPosition = FabPosition.Center) { paddingValues ->
-        when {
-          uiState.isError -> LoadingFail()
-          uiState.isLoading -> LoadingScreen()
-          else -> {
-            SettingsContent(
-                screenHeight,
-                screenWidth,
-                onEditProfileClick,
-                paddingValues,
-                uiState,
-                settingsScreenViewModel)
-            if (showDeletionValidation) {
-              AlertDialog(
-                  onDismissRequest = { showDeletionValidation = false },
-                  title = { Text(text = context.getString(R.string.delete_account)) },
-                  text = { Text(text = context.getString(R.string.delete_account_confirmation)) },
-                  modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
-                  confirmButton = {
-                    TextButton(
-                        modifier =
-                            Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON),
-                        onClick = {
-                          showDeletionValidation = false
-                          settingsScreenViewModel.deleteAccount()
-                          onAccountDeleteOrSignOut()
-                        }) {
-                          Text(context.getString(R.string.delete), color = Color.Red)
-                        }
-                  },
-                  dismissButton = {
-                    TextButton(
-                        modifier =
-                            Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
-                        onClick = { showDeletionValidation = false }) {
-                          Text(context.getString(R.string.cancel))
-                        }
-                  })
-            }
+                      .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON),
+          ) {
+            Text(
+                text = context.getString(R.string.delete_account),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onTertiary,
+                modifier = Modifier.padding(horizontal = 30.dp),
+            )
           }
         }
+      },
+      floatingActionButtonPosition = FabPosition.Center,
+  ) { paddingValues ->
+    when {
+      uiState.isError -> LoadingFail()
+      uiState.isLoading -> LoadingScreen()
+      else -> {
+        SettingsContent(
+            screenHeight,
+            screenWidth,
+            onEditProfileClick,
+            paddingValues,
+            uiState,
+            settingsScreenViewModel,
+        )
+        if (showDeletionValidation) {
+          AlertDialog(
+              onDismissRequest = { showDeletionValidation = false },
+              title = { Text(text = context.getString(R.string.delete_account)) },
+              text = { Text(text = context.getString(R.string.delete_account_confirmation)) },
+              modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
+              confirmButton = {
+                TextButton(
+                    modifier =
+                        Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON),
+                    onClick = {
+                      showDeletionValidation = false
+                      settingsScreenViewModel.deleteAccount { onAccountDeleteOrSignOut() }
+                    },
+                ) {
+                  Text(context.getString(R.string.delete), color = Color.Red)
+                }
+              },
+              dismissButton = {
+                TextButton(
+                    modifier =
+                        Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
+                    onClick = { showDeletionValidation = false },
+                ) {
+                  Text(context.getString(R.string.cancel))
+                }
+              },
+          )
+        }
       }
+    }
+  }
 }
 
 /**
@@ -243,7 +248,7 @@ fun SettingsContent(
     onEditProfileClick: () -> Unit,
     paddingValues: PaddingValues,
     uiState: SettingsUIState,
-    settingsScreenViewModel: SettingsScreenViewModel
+    settingsScreenViewModel: SettingsScreenViewModel,
 ) {
   val groupButtonsColors =
       SegmentedButtonColors(
@@ -292,7 +297,8 @@ fun SettingsContent(
                           "The new user Type [$newUserStatusString] is not recognized")
                 }
             settingsScreenViewModel.setUserType(newUserType)
-          })
+          },
+      )
       SettingsDivider()
     }
     item {
@@ -314,7 +320,8 @@ fun SettingsContent(
             settingsScreenViewModel.setAppearanceMode(newAppearanceMode)
             AppTheme.appearanceMode = newAppearanceMode
           },
-          groupButtonsColors = groupButtonsColors)
+          groupButtonsColors = groupButtonsColors,
+      )
       SettingsDivider()
     }
   }
@@ -334,18 +341,22 @@ fun SettingsScreenTopBar(onGoBack: () -> Unit) {
         Text(
             modifier = Modifier.testTag(SettingsScreenTestTags.SCREEN_TITLE),
             text = LocalContext.current.getString(R.string.settings),
-            fontWeight = FontWeight.SemiBold)
+            fontWeight = FontWeight.SemiBold,
+        )
       },
       navigationIcon = {
         IconButton(
             onClick = { onGoBack() },
-            modifier = Modifier.testTag(SettingsScreenTestTags.GO_BACK_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Default.ArrowBack,
-                  contentDescription = "Go Back",
-                  tint = colorScheme.onBackground)
-            }
-      })
+            modifier = Modifier.testTag(SettingsScreenTestTags.GO_BACK_BUTTON),
+        ) {
+          Icon(
+              imageVector = Icons.Default.ArrowBack,
+              contentDescription = "Go Back",
+              tint = colorScheme.onBackground,
+          )
+        }
+      },
+  )
 }
 
 /**
@@ -355,7 +366,10 @@ fun SettingsScreenTopBar(onGoBack: () -> Unit) {
 @Composable
 fun SettingsDivider() {
   HorizontalDivider(
-      thickness = 1.dp, color = colorScheme.onBackground, modifier = Modifier.fillMaxWidth())
+      thickness = 1.dp,
+      color = colorScheme.onBackground,
+      modifier = Modifier.fillMaxWidth(),
+  )
 }
 
 /**
@@ -381,7 +395,7 @@ fun SettingTemplate(
     testTag: String = "",
     icon: ImageVector,
     settingName: String,
-    interactableElement: @Composable (() -> Unit)
+    interactableElement: @Composable (() -> Unit),
 ) {
   Row(
       modifier =
@@ -390,19 +404,22 @@ fun SettingTemplate(
               .padding(horizontal = paddingHorizontal)
               .testTag(testTag),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.Start) {
-        Icon(
-            imageVector = icon,
-            contentDescription = settingName,
-            tint = colorScheme.onBackground,
-            modifier = Modifier.padding(end = paddingHorizontal))
-        Text(
-            text = settingName,
-            color = colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f))
-        interactableElement()
-      }
+      horizontalArrangement = Arrangement.Start,
+  ) {
+    Icon(
+        imageVector = icon,
+        contentDescription = settingName,
+        tint = colorScheme.onBackground,
+        modifier = Modifier.padding(end = paddingHorizontal),
+    )
+    Text(
+        text = settingName,
+        color = colorScheme.onBackground,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.weight(1f),
+    )
+    interactableElement()
+  }
 }
 
 /**
@@ -419,23 +436,26 @@ fun SettingTemplate(
 fun EditProfileOption(
     paddingHorizontal: Dp,
     settingHeight: Dp,
-    onEditProfileClick: () -> Unit = {}
+    onEditProfileClick: () -> Unit = {},
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.EDIT_PROFILE_SETTING,
       icon = Icons.Outlined.Edit,
-      settingName = LocalContext.current.getString(R.string.edit_profile)) {
-        IconButton(
-            onClick = { onEditProfileClick() },
-            modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Filled.ArrowForward,
-                  contentDescription = "Edit Profile Navigate Icon",
-                  tint = colorScheme.onBackground)
-            }
-      }
+      settingName = LocalContext.current.getString(R.string.edit_profile),
+  ) {
+    IconButton(
+        onClick = { onEditProfileClick() },
+        modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON),
+    ) {
+      Icon(
+          imageVector = Icons.Filled.ArrowForward,
+          contentDescription = "Edit Profile Navigate Icon",
+          tint = colorScheme.onBackground,
+      )
+    }
+  }
 }
 
 /**
@@ -452,46 +472,49 @@ fun NotificationOption(
     paddingHorizontal: Dp,
     settingHeight: Dp,
     currentNotificationState: Boolean,
-    onNotificationStateChanged: (Boolean) -> Unit
+    onNotificationStateChanged: (Boolean) -> Unit,
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.NOTIFICATIONS_SETTING,
       icon = Icons.Outlined.Notifications,
-      settingName = LocalContext.current.getString(R.string.notifications)) {
-        Switch(
-            modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE),
-            checked = currentNotificationState,
-            colors =
-                SwitchColors(
-                    colorScheme.onPrimary,
-                    colorScheme.primary,
-                    colorScheme.primary,
-                    colorScheme.primary,
-                    colorScheme.tertiary,
-                    colorScheme.onTertiary,
-                    colorScheme.tertiary,
-                    colorScheme.primary,
-                    Color(1),
-                    Color(1),
-                    Color(1),
-                    Color(1),
-                    Color(1),
-                    Color(1),
-                    Color(1),
-                    Color(1)),
-            onCheckedChange = { onNotificationStateChanged(it) },
-            thumbContent = {
-              if (currentNotificationState) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize),
-                )
-              }
-            })
-      }
+      settingName = LocalContext.current.getString(R.string.notifications),
+  ) {
+    Switch(
+        modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE),
+        checked = currentNotificationState,
+        colors =
+            SwitchColors(
+                colorScheme.onPrimary,
+                colorScheme.primary,
+                colorScheme.primary,
+                colorScheme.primary,
+                colorScheme.tertiary,
+                colorScheme.onTertiary,
+                colorScheme.tertiary,
+                colorScheme.primary,
+                Color(1),
+                Color(1),
+                Color(1),
+                Color(1),
+                Color(1),
+                Color(1),
+                Color(1),
+                Color(1),
+            ),
+        onCheckedChange = { onNotificationStateChanged(it) },
+        thumbContent = {
+          if (currentNotificationState) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                modifier = Modifier.size(SwitchDefaults.IconSize),
+            )
+          }
+        },
+    )
+  }
 }
 
 /**
@@ -513,16 +536,18 @@ fun UserStatusOption(
     screenWidth: Dp,
     currentUserStatus: UserType,
     onUserStatusChanged: (String) -> Unit,
-    groupButtonsColors: SegmentedButtonColors
+    groupButtonsColors: SegmentedButtonColors,
 ) {
   val options =
       listOf(
           LocalContext.current.getString(R.string.regular_status),
-          LocalContext.current.getString(R.string.professional_status))
+          LocalContext.current.getString(R.string.professional_status),
+      )
   val testTags =
       listOf(
           SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON,
-          SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
+          SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON,
+      )
   val selectedIndex = UserType.entries.indexOf(currentUserStatus)
 
   SettingTemplate(
@@ -530,25 +555,27 @@ fun UserStatusOption(
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
       icon = Icons.Outlined.Person,
-      settingName = LocalContext.current.getString(R.string.user_status)) {
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.9f))) {
-          options.forEachIndexed { index, option ->
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                onClick = { onUserStatusChanged(option) },
-                selected = selectedIndex == index,
-                colors = groupButtonsColors,
-                modifier = Modifier.height(35.dp).testTag(testTags[index])) {
-                  Text(
-                      text = option,
-                      fontSize = 12.sp,
-                      color =
-                          if (index == selectedIndex) colorScheme.onPrimary
-                          else colorScheme.onBackground)
-                }
-          }
+      settingName = LocalContext.current.getString(R.string.user_status),
+  ) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.9f))) {
+      options.forEachIndexed { index, option ->
+        SegmentedButton(
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+            onClick = { onUserStatusChanged(option) },
+            selected = selectedIndex == index,
+            colors = groupButtonsColors,
+            modifier = Modifier.height(35.dp).testTag(testTags[index]),
+        ) {
+          Text(
+              text = option,
+              fontSize = 12.sp,
+              color =
+                  if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+          )
         }
       }
+    }
+  }
 }
 
 /**
@@ -571,62 +598,64 @@ fun AppearanceModeOption(
     settingHeight: Dp,
     currentAppearanceMode: AppearanceMode,
     onAppearanceModeChanged: (String) -> Unit,
-    groupButtonsColors: SegmentedButtonColors
+    groupButtonsColors: SegmentedButtonColors,
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.APPEARANCE_MODE_SETTING,
       icon = Icons.Outlined.LightMode,
-      settingName = LocalContext.current.getString(R.string.appearance)) {
-        val options =
-            listOf(
-                LocalContext.current.getString(R.string.system_default),
-                LocalContext.current.getString(R.string.light_mode),
-                LocalContext.current.getString(R.string.dark_mode))
-        val testTags =
-            listOf(
-                SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON,
-                SettingsScreenTestTags.LIGHT_MODE_BUTTON,
-                SettingsScreenTestTags.DARK_MODE_BUTTON)
-        val unCheckedIcons =
-            listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
-        val checkedIcons =
-            listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
-        val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
+      settingName = LocalContext.current.getString(R.string.appearance),
+  ) {
+    val options =
+        listOf(
+            LocalContext.current.getString(R.string.system_default),
+            LocalContext.current.getString(R.string.light_mode),
+            LocalContext.current.getString(R.string.dark_mode),
+        )
+    val testTags =
+        listOf(
+            SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON,
+            SettingsScreenTestTags.LIGHT_MODE_BUTTON,
+            SettingsScreenTestTags.DARK_MODE_BUTTON,
+        )
+    val unCheckedIcons =
+        listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
+    val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
+    val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.8f))) {
-          options.forEachIndexed { index, option ->
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                onClick = { onAppearanceModeChanged(option) },
-                selected = index == selectedIndex,
-                modifier = Modifier.height(35.dp).testTag(testTags[index]),
-                icon = {},
-                colors = groupButtonsColors) {
-                  Row(
-                      horizontalArrangement = Arrangement.SpaceBetween,
-                      verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector =
-                                if (index == selectedIndex) checkedIcons[index]
-                                else unCheckedIcons[index],
-                            contentDescription = option,
-                            tint =
-                                if (index == selectedIndex) colorScheme.onPrimary
-                                else colorScheme.onBackground,
-                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = option,
-                            fontSize = 12.sp,
-                            color =
-                                if (index == selectedIndex) colorScheme.onPrimary
-                                else colorScheme.onBackground,
-                        )
-                      }
-                }
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.8f))) {
+      options.forEachIndexed { index, option ->
+        SegmentedButton(
+            shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+            onClick = { onAppearanceModeChanged(option) },
+            selected = index == selectedIndex,
+            modifier = Modifier.height(35.dp).testTag(testTags[index]),
+            icon = {},
+            colors = groupButtonsColors,
+        ) {
+          Row(
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector =
+                    if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
+                contentDescription = option,
+                tint =
+                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = option,
+                fontSize = 12.sp,
+                color =
+                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+            )
           }
         }
       }
+    }
+  }
 }

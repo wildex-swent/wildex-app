@@ -1,11 +1,11 @@
 package com.android.wildex.utils
 
 import android.util.Log
-import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.storage
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import io.mockk.InternalPlatformDsl.toArray
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

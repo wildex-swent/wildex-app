@@ -133,8 +133,7 @@ class HomeScreenViewModel(
               isLiked = likeRepository.getLikeForPost(post.postId) != null,
               animalName = animalRepository.getAnimal(post.animalId).name,
           )
-        } catch (e: Exception) {
-          setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
+        } catch (_: Exception) {
           null
         }
       }

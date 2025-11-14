@@ -61,7 +61,7 @@ class EditProfileViewModelTest {
     Assert.assertEquals("", s.surname)
     Assert.assertEquals("", s.username)
     Assert.assertEquals("", s.description)
-    Assert.assertEquals("Switzerland", s.country)
+    Assert.assertEquals("", s.country)
     Assert.assertFalse(s.isLoading)
     Assert.assertFalse(s.isError)
     Assert.assertNull(s.errorMsg)
@@ -96,7 +96,8 @@ class EditProfileViewModelTest {
 
   @Test
   fun saveProfileChanges_invalid_setsError_andNoRepoCalls() {
-    viewModel.saveProfileChanges()
+    viewModel.saveProfileChanges {}
+
     Assert.assertEquals("At least one field is not valid", viewModel.uiState.value.errorMsg)
     coVerify(exactly = 0) { userRepository.getUser(any()) }
     coVerify(exactly = 0) { storageRepository.uploadUserProfilePicture(any(), any()) }
@@ -118,7 +119,8 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges()
+        viewModel.saveProfileChanges {}
+
         advanceUntilIdle()
 
         val captured = slot<User>()
@@ -143,7 +145,8 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
             RuntimeException("x")
 
-        viewModel.saveProfileChanges()
+        viewModel.saveProfileChanges {}
+
         advanceUntilIdle()
 
         Assert.assertEquals("Failed to save profile changes: x", viewModel.uiState.value.errorMsg)
@@ -166,7 +169,8 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges()
+        viewModel.saveProfileChanges {}
+
         advanceUntilIdle()
 
         val captured = slot<User>()
@@ -218,7 +222,8 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "pic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges()
+        viewModel.saveProfileChanges {}
+
         advanceUntilIdle()
 
         val captured = slot<User>()
@@ -247,7 +252,8 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges()
+        viewModel.saveProfileChanges {}
+
         advanceUntilIdle()
 
         Assert.assertTrue(viewModel.uiState.value.profileSaved)

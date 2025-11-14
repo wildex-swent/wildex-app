@@ -74,6 +74,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.mapbox.geojson.Point
 
 object ProfileScreenTestTags {
@@ -128,7 +129,7 @@ fun ProfileScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.PROFILE_SCREEN),
       topBar = {
         ProfileTopBar(
             ownerProfile = uiState.isUserOwner,

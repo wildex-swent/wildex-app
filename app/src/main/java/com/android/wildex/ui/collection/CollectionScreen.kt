@@ -53,6 +53,7 @@ import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -106,7 +107,7 @@ fun CollectionScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.COLLECTION_SCREEN),
       bottomBar = { bottomBar() },
       topBar = {
         if (!uiState.isLoading) {

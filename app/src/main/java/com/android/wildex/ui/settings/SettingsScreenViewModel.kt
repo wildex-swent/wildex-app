@@ -3,6 +3,7 @@ package com.android.wildex.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
@@ -22,15 +23,16 @@ data class SettingsUIState(
     val userType: UserType = UserType.REGULAR,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
 )
 
 class SettingsScreenViewModel(
+    private val authRepository: AuthRepository = RepositoryProvider.authRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
-    private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase()
+    private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase(),
 ) : ViewModel() {
 
   /** Backing property for the settings screen state. */
@@ -71,8 +73,12 @@ class SettingsScreenViewModel(
    */
   fun setNotificationsEnabled(enabled: Boolean) {
     viewModelScope.launch {
-      userSettingsRepository.setEnableNotification(currentUserId, enabled)
-      _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+      try {
+        userSettingsRepository.setEnableNotification(currentUserId, enabled)
+        _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+      } catch (e: Exception) {
+        setErrorMsg(e.localizedMessage ?: "Failed to update notifications settings.")
+      }
     }
   }
 
@@ -83,8 +89,12 @@ class SettingsScreenViewModel(
    */
   fun setAppearanceMode(mode: AppearanceMode) {
     viewModelScope.launch {
-      userSettingsRepository.setAppearanceMode(currentUserId, mode)
-      _uiState.value = _uiState.value.copy(appearanceMode = mode)
+      try {
+        userSettingsRepository.setAppearanceMode(currentUserId, mode)
+        _uiState.value = _uiState.value.copy(appearanceMode = mode)
+      } catch (e: Exception) {
+        setErrorMsg(e.localizedMessage ?: "Failed to update appearance mode.")
+      }
     }
   }
 
@@ -95,16 +105,38 @@ class SettingsScreenViewModel(
    */
   fun setUserType(type: UserType) {
     viewModelScope.launch {
-      val user = userRepository.getUser(currentUserId)
-      val updatedUser = user.copy(userType = type)
-      userRepository.editUser(currentUserId, updatedUser)
-      _uiState.value = _uiState.value.copy(userType = type)
+      try {
+        val user = userRepository.getUser(currentUserId)
+        val updatedUser = user.copy(userType = type)
+        userRepository.editUser(currentUserId, updatedUser)
+        _uiState.value = _uiState.value.copy(userType = type)
+      } catch (e: Exception) {
+        setErrorMsg(e.localizedMessage ?: "Failed to update user type.")
+      }
     }
   }
 
   /** Deletes the account of the current user */
-  fun deleteAccount() {
-    viewModelScope.launch { deleteUserUseCase(currentUserId) }
+  fun deleteAccount(onAccountDeleted: () -> Unit) {
+    viewModelScope.launch {
+      try {
+        deleteUserUseCase(currentUserId)
+        onAccountDeleted()
+      } catch (e: Exception) {
+        setErrorMsg(e.localizedMessage ?: "Failed to delete account.")
+      }
+    }
+  }
+
+  fun signOut(onSignOut: () -> Unit) {
+    viewModelScope.launch {
+      authRepository
+          .signOut()
+          .fold(
+              onSuccess = { onSignOut() },
+              onFailure = { setErrorMsg(it.localizedMessage ?: "Failed to sign out.") },
+          )
+    }
   }
 
   /** Clears any existing error message from the UI state. */

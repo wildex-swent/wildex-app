@@ -66,9 +66,15 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.post.PostDetailsScreenTestTags.testTagForProfilePicture
 
-fun testTagForProfilePicture(profileId: String, role: String = ""): String {
-  return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
+object PostDetailsScreenTestTags {
+  fun testTagForProfilePicture(profileId: String, role: String = ""): String {
+    return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
+  }
+
+  const val BACK_BUTTON = "backButton"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +98,7 @@ fun PostDetailsScreen(
   }
 
   Scaffold(
+      modifier = Modifier.testTag(NavigationTestTags.POST_DETAILS_SCREEN),
       topBar = { PostDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
         // Pinned comment input – content scrolls behind it

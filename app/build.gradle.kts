@@ -128,24 +128,24 @@ sonar {
     // Comma-separated paths to the various directories containing the *.xml JUnit report files.
     // Each path may be absolute or relative to the project base directory.
     property(
-      "sonar.junit.reportPaths",
-      listOf(
-        "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
-        "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
-      )
-        .joinToString(","),
+        "sonar.junit.reportPaths",
+        listOf(
+                "${project.layout.buildDirectory.get()}/test-results/testDebugUnitTest/",
+                "${project.layout.buildDirectory.get()}/outputs/androidTest-results/connected/debug/",
+            )
+            .joinToString(","),
     )
 
     // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will
     // have to be changed too.
     property(
-      "sonar.androidLint.reportPaths",
-      "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
+        "sonar.androidLint.reportPaths",
+        "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml",
     )
     // Paths to JaCoCo XML coverage report files.
     property(
-      "sonar.coverage.jacoco.xmlReportPaths",
-      "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
+        "sonar.coverage.jacoco.xmlReportPaths",
+        "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml",
     )
   }
 }
@@ -253,7 +253,6 @@ dependencies {
   // Play Services location
   implementation(libs.play.services.location)
 
-
   // CameraX
   implementation(libs.camera.core)
   implementation(libs.camera.compose)
@@ -262,7 +261,6 @@ dependencies {
 
   // Lottie
   implementation(libs.lottie.compose)
-
 }
 
 tasks.withType<Test> {
@@ -270,6 +268,8 @@ tasks.withType<Test> {
     junitXml.required.set(true)
     html.required.set(true)
   }
+
+  maxParallelForks = 1
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true
@@ -286,28 +286,28 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
   }
 
   val fileFilter =
-    listOf(
-      "**/R.class",
-      "**/R$*.class",
-      "**/BuildConfig.*",
-      "**/Manifest*.*",
-      "**/*Test*.*",
-      "android/**/*.*",
-    )
+      listOf(
+          "**/R.class",
+          "**/R$*.class",
+          "**/BuildConfig.*",
+          "**/Manifest*.*",
+          "**/*Test*.*",
+          "android/**/*.*",
+      )
 
   val debugTree =
-    fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-      exclude(fileFilter)
-    }
+      fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+      }
 
   val mainSrc = "${project.layout.projectDirectory}/src/main/java"
   sourceDirectories.setFrom(files(mainSrc))
   classDirectories.setFrom(files(debugTree))
   executionData.setFrom(
-    fileTree(project.layout.buildDirectory.get()) {
-      include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
-      include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
-    }
+      fileTree(project.layout.buildDirectory.get()) {
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
+      }
   )
 }
 

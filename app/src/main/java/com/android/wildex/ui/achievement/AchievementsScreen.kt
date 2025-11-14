@@ -49,6 +49,7 @@ import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 
 object AchievementsScreenTestTags {
   const val ACHIEVEMENT_ITEM = "achievementItem"
@@ -88,6 +89,7 @@ fun AchievementsScreen(
   LaunchedEffect(Unit) { viewModel.loadAchievements() }
 
   Scaffold(
+      modifier = Modifier.testTag(NavigationTestTags.ACHIEVEMENTS_SCREEN),
       topBar = {
         TopAppBar(
             modifier = Modifier.testTag(AchievementsScreenTestTags.TOP_APP_BAR),

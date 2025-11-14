@@ -17,7 +17,10 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -77,7 +80,8 @@ class EditProfileScreenTest {
         .onNode(
             hasClickAction()
                 .and(hasAnyAncestor(hasTestTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY))),
-            useUnmergedTree = true)
+            useUnmergedTree = true,
+        )
         .performClick()
 
     val countryItemMatcher =
@@ -130,8 +134,9 @@ class EditProfileScreenTest {
     Assert.assertEquals(1, back)
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun save_click_invokes_onSave_when_isNewUser_true() {
+  fun save_click_invokes_onSave_when_isNewUser_true() = runTest {
     val userRepo = LocalRepositories.UserRepositoryImpl()
     runBlocking { userRepo.addUser(sampleUser()) }
     val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
@@ -148,6 +153,7 @@ class EditProfileScreenTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE).performScrollTo().performClick()
+    advanceUntilIdle()
     Assert.assertEquals(1, saved)
   }
 }

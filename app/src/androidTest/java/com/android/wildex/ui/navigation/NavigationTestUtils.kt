@@ -102,7 +102,6 @@ abstract class NavigationTestUtils {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION,
           Manifest.permission.ACCESS_COARSE_LOCATION,
-          Manifest.permission.CAMERA,
       )
 
   open val user0 =

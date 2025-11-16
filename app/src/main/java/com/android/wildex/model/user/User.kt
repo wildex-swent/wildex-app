@@ -58,6 +58,19 @@ data class UserAnimals(
 )
 
 /**
+ * Represents a summary of a user's friends.
+ *
+ * @property userId The unique identifier of the user to whom these friends belong.
+ * @property friendsId A list of unique identifiers of the friends the user has.
+ * @property friendsCount The total number of friends the user has.
+ */
+data class UserFriends(
+    val userId: Id = "",
+    val friendsId: List<Id> = emptyList(),
+    val friendsCount: Int = 0,
+)
+
+/**
  * Represents the settings of a user.
  *
  * @property userId The unique identifier of the user to whom these settings belong.

@@ -10,6 +10,9 @@ import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
+import com.android.wildex.model.relationship.Relationship
+import com.android.wildex.model.relationship.RelationshipRepository
+import com.android.wildex.model.relationship.StatusEnum
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -24,6 +27,7 @@ import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
@@ -174,6 +178,10 @@ object LocalRepositories {
 
     override suspend fun getUser(userId: Id): User = listOfUsers.find { it.userId == userId }!!
 
+    override suspend fun getAllUsers(): List<User> {
+      return listOfUsers
+    }
+
     override suspend fun getSimpleUser(userId: Id): SimpleUser {
       val user = listOfUsers.find { it.userId == userId }!!
       return SimpleUser(
@@ -308,6 +316,97 @@ object LocalRepositories {
 
     override fun clear() {
       mapUserToAnimals.forEach { (p0, _) -> mapUserToAnimals[p0] = mutableListOf() }
+    }
+  }
+
+  open class UserFriendsRepositoryImpl() : UserFriendsRepository, ClearableRepository{
+    val mapUserToFriends = mutableMapOf<Id, MutableList<Id>>()
+
+    init {
+      clear()
+    }
+
+    override suspend fun initializeUserFriends(userId: Id) {
+      mapUserToFriends[userId] = mutableListOf()
+    }
+
+    override suspend fun getAllFriendsOfUser(userId: Id): List<Id> {
+      return mapUserToFriends[userId]?.toList() ?: throw Exception("User not found")
+    }
+
+    override suspend fun getFriendsCountOfUser(userId: Id): Int {
+      return getAllFriendsOfUser(userId).size
+    }
+
+    override suspend fun addFriendToUserFriendsOfUser(
+      friendId: Id,
+      userId: Id
+    ) {
+      mapUserToFriends[userId]?.add(friendId) ?: throw Exception("User not found")
+    }
+
+    override suspend fun deleteFriendToUserFriendsOfUser(
+      friendId: Id,
+      userId: Id
+    ) {
+      mapUserToFriends[userId]?.remove(friendId) ?: throw Exception("User not found")
+    }
+
+    override suspend fun deleteUserFriendsOfUser(userId: Id) {
+      mapUserToFriends.remove(userId)
+    }
+
+    override fun clear() {
+      mapUserToFriends.clear()
+    }
+
+  }
+
+  open class RelationshipRepositoryImpl(): RelationshipRepository, ClearableRepository{
+
+    val listOfRelationships = mutableListOf<Relationship>()
+
+    init {
+      clear()
+    }
+
+    override suspend fun initializeRelationship(
+      senderId: Id,
+      receiverId: Id
+    ) {
+      listOfRelationships.add(Relationship(senderId, receiverId, StatusEnum.PENDING))
+    }
+
+    override suspend fun getAllPendingRelationshipsBySender(senderId: Id): List<Relationship> {
+      return listOfRelationships.filter { it.senderId == senderId && it.status == StatusEnum.PENDING }
+    }
+
+    override suspend fun getAllPendingRelationshipsByReceiver(receiverId: Id): List<Relationship> {
+      return listOfRelationships.filter { it.receiverId == receiverId && it.status == StatusEnum.PENDING }
+    }
+
+    override suspend fun getAllAcceptedRelationshipsByUser(userId: Id): List<Relationship> {
+      return listOfRelationships.filter {
+        (it.receiverId == userId || it.senderId == userId) && it.status == StatusEnum.ACCEPTED
+      }
+    }
+
+    override suspend fun acceptRelationship(relationship: Relationship) {
+      val pendingRelationship = listOfRelationships.find { it == relationship }
+      if (pendingRelationship != null) {
+        listOfRelationships.remove(pendingRelationship)
+        listOfRelationships.add(relationship.copy(status = StatusEnum.ACCEPTED))
+      } else {
+        throw Exception("Relationship not found")
+      }
+    }
+
+    override suspend fun deleteRelationship(relationship: Relationship) {
+      listOfRelationships.remove(relationship)
+    }
+
+    override fun clear() {
+      listOfRelationships.clear()
     }
   }
 
@@ -470,6 +569,8 @@ object LocalRepositories {
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
+  val userFriendsRepository: UserFriendsRepository = UserFriendsRepositoryImpl()
+  val relationshipRepository: RelationshipRepository = RelationshipRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -482,7 +583,8 @@ object LocalRepositories {
     (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
     (storageRepository as ClearableRepository).clear()
-    (userAchievementsRepository as ClearableRepository).clear()
+    (userFriendsRepository as ClearableRepository).clear()
+    (relationshipRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

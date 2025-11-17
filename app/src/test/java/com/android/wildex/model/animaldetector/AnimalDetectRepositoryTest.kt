@@ -12,7 +12,7 @@ abstract class AnimalDetectRepositoryTest {
 
   protected lateinit var mockWebServer: MockWebServer
   protected lateinit var client: OkHttpClient
-  protected lateinit var repository: AnimalRepositoryHttp
+  protected lateinit var repository: AnimalInfoRepositoryHttp
   protected lateinit var context: Context
   protected lateinit var contentResolver: ContentResolver
   abstract val urlPropName: String
@@ -23,7 +23,7 @@ abstract class AnimalDetectRepositoryTest {
     mockWebServer.start()
 
     client = OkHttpClient()
-    repository = AnimalRepositoryHttp(client)
+    repository = AnimalInfoRepositoryHttp(client)
 
     // Mock context and its content resolver
     context = Mockito.mock(Context::class.java)

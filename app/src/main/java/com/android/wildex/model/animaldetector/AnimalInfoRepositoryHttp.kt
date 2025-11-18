@@ -10,6 +10,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -17,7 +18,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 
 /**
  * Repository class for interacting with the AnimalDetect API.
@@ -86,7 +86,7 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
 
         val request =
             Request.Builder()
-                .url("https://youssef-9511-speciesnetapi.hf.space/gradio_api/call/predict/$eventId")
+                .url("$speciesNetUrl/$eventId")
                 .addHeader("Authorization", "Bearer $hfApikey")
                 .get()
                 .build()
@@ -97,78 +97,90 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
           val responseBody = response.body!!.string()
           if (responseBody.isEmpty()) throw IOException("Empty GET response")
 
-          parseAnimalDetectResponse(responseBody)
+          try {
+            parseAnimalDetectResponse(responseBody)
+          } catch (_: Exception) {
+            throw IOException("Invalid JSON response")
+          }
         }
       }
 
-  private fun parseAnimalDetectResponse(raw: String): List<AnimalDetectResponse> {
-    /* Example raw:
-       event: complete
-       data: [
-               {
-                 "predictions": [
-                   {
-                     "filepath": "/tmp/tmp7mg1vv12.jpg",
-                     "classifications": {
-                       "classes": [
-                         "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
-                         "fdc27cfb-3756-4794-992d-1d512f7c5474;mammalia;rodentia;sciuridae;cynomys;ludovicianus;arizona black-tailed prairie dog",
-                         "b1352069-a39c-4a84-a949-60044271c0c1;aves;;;;;bird",
-                         "6ffe2064-cabd-4fcb-8c1b-f168bf381aab;mammalia;cetartiodactyla;bovidae;tragelaphus;oryx;common eland",
-                         "3d80f1d6-b1df-4966-9ff4-94053c7a902a;mammalia;carnivora;canidae;canis;familiaris;domestic dog"
-                       ],
-                       "scores": [
-                         0.9870538115501404,
-                         0.006546854041516781,
-                         0.003047803184017539,
-                         0.0005521145649254322,
-                         0.00034705971484072506
-                       ]
-                     },
-                     "detections": [
-                       {
-                         "category": "1",
-                         "label": "animal",
-                         "conf": 0.8112816214561462,
-                         "bbox": [
-                           0.1919642984867096,
-                           0.0,
-                           0.7633928656578064,
-                           0.9822221994400024
-                         ]
-                       }
+  /* Example raw:
+     event: complete
+     data: [
+             {
+               "predictions": [
+                 {
+                   "filepath": "/tmp/tmp7mg1vv12.jpg",
+                   "classifications": {
+                     "classes": [
+                       "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
+                       "fdc27cfb-3756-4794-992d-1d512f7c5474;mammalia;rodentia;sciuridae;cynomys;ludovicianus;arizona black-tailed prairie dog",
+                       "b1352069-a39c-4a84-a949-60044271c0c1;aves;;;;;bird",
+                       "6ffe2064-cabd-4fcb-8c1b-f168bf381aab;mammalia;cetartiodactyla;bovidae;tragelaphus;oryx;common eland",
+                       "3d80f1d6-b1df-4966-9ff4-94053c7a902a;mammalia;carnivora;canidae;canis;familiaris;domestic dog"
                      ],
-                     "prediction": "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
-                     "prediction_score": 0.9870538115501404,
-                     "prediction_source": "classifier",
-                     "model_version": "4.0.1a"
-                   }
-                 ]
-               }
-             ]
-    */
-
+                     "scores": [
+                       0.9870538115501404,
+                       0.006546854041516781,
+                       0.003047803184017539,
+                       0.0005521145649254322,
+                       0.00034705971484072506
+                     ]
+                   },
+                   "detections": [
+                     {
+                       "category": "1",
+                       "label": "animal",
+                       "conf": 0.8112816214561462,
+                       "bbox": [
+                         0.1919642984867096,
+                         0.0,
+                         0.7633928656578064,
+                         0.9822221994400024
+                       ]
+                     }
+                   ],
+                   "prediction": "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
+                   "prediction_score": 0.9870538115501404,
+                   "prediction_source": "cla
+    contentResolver = Mockito.mock(ContentResolver::class.java)
+    Mockito.`when`(context.contentResolver).thenReturn(contentResolver)ssifier",
+                   "model_version": "4.0.1a"
+                 }
+               ]
+             }
+           ]
+  */
+  private fun parseAnimalDetectResponse(raw: String): List<AnimalDetectResponse> {
     val jsonArrayText = raw.substringAfter("data: ").trim()
-    val dataArray = JSONArray(jsonArrayText)
+    val dataArray = Json.parseToJsonElement(jsonArrayText)
 
-    val dataObj = dataArray.getJSONObject(0)
-    val predictions = dataObj.getJSONArray("predictions")
+    val classificationsObject =
+        dataArray.jsonArray
+            .firstOrNull()
+            ?.jsonObject
+            ?.get("predictions")
+            ?.jsonArray
+            ?.firstOrNull()
+            ?.jsonObject
+            ?.get("classifications")
+            ?.jsonObject ?: throw IOException("No classifications found")
 
-    val predictionsObject = predictions.getJSONObject(0)
-    val classificationsObject = predictionsObject.getJSONObject("classifications")
-    val classesArray = classificationsObject.getJSONArray("classes")
-    val scoresArray = classificationsObject.getJSONArray("scores")
-    val length = minOf(classesArray.length(), scoresArray.length())
+    val classesArray = classificationsObject["classes"]?.jsonArray
+    val scoresArray = classificationsObject["scores"]?.jsonArray
+    if (classesArray == null || scoresArray == null) throw IOException("No classes or scores found")
+    val length = minOf(classesArray.size, scoresArray.size)
+
     return (0 until length).mapNotNull { i ->
-      val className = classesArray.getString(i)
-      val score = scoresArray.getDouble(i)
+      val className = classesArray[i].jsonPrimitive.content
+      val score = scoresArray[i].jsonPrimitive.float
       if (score < 0.5) null
       else {
         val (taxonomy, animalType) = parseClassification(className)
         AnimalDetectResponse(
             animalType = animalType,
-            confidence = score.toFloat(),
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
+            confidence = score,
             taxonomy = taxonomy,
         )
       }
@@ -236,19 +248,23 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
           if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
           val body = response.body?.string() ?: throw IOException("Empty response body")
-          val json = Json.parseToJsonElement(body)
-          json.jsonObject["choices"]
-              ?.jsonArray
-              ?.firstOrNull()
-              ?.jsonObject
-              ?.get("message")
-              ?.jsonObject
-              ?.get("content")
-              ?.jsonPrimitive
-              ?.takeIf { it.isString }
-              ?.content
-              ?.replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
-              ?.trim() ?: throw IOException("No content found")
+          try {
+            val json = Json.parseToJsonElement(body)
+            json.jsonObject["choices"]
+                ?.jsonArray
+                ?.firstOrNull()
+                ?.jsonObject
+                ?.get("message")
+                ?.jsonObject
+                ?.get("content")
+                ?.jsonPrimitive
+                ?.takeIf { it.isString }
+                ?.content
+                ?.replace(Regex("<think>[\\s\\S]*?</think>", RegexOption.IGNORE_CASE), "")
+                ?.trim() ?: throw IOException("No content found")
+          } catch (_: IllegalArgumentException) {
+            throw IOException("Invalid JSON response")
+          }
         }
       }
 }

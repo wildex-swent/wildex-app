@@ -8,7 +8,6 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
-import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -441,7 +440,6 @@ object LocalRepositories {
           AnimalDetectResponse(
               "default animal",
               0.9f,
-              BoundingBox(0f, 0f, 0f, 0f),
               Taxonomy(
                   "animalId",
                   "animalClass",

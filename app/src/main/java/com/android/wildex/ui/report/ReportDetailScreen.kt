@@ -1,0 +1,757 @@
+package com.android.wildex.ui.report
+
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.URL
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
+
+object ReportDetailsScreenTestTags {
+  const val SCREEN = "report_details_screen"
+  const val PULL_TO_REFRESH = "report_details_pull_to_refresh"
+  const val CONTENT_LIST = "report_details_content_list"
+  const val BACK_BUTTON = "report_details_back_button"
+  const val HERO_IMAGE_BOX = "report_details_hero_image_box"
+  const val HERO_IMAGE = "report_details_hero_image"
+  const val HERO_TOP_GRADIENT = "report_details_hero_top_gradient"
+  const val HERO_BOTTOM_GRADIENT = "report_details_hero_bottom_gradient"
+  const val INFO_BAR = "report_details_info_bar"
+  const val INFO_AUTHOR_NAME = "report_details_author_name"
+  const val INFO_DATE = "report_details_date"
+  const val INFO_LOCATION_PILL = "report_details_location_pill"
+  const val ACTION_ROW = "report_details_action_row"
+  const val ACTION_CANCEL = "report_details_action_cancel"
+  const val ACTION_SELF_ASSIGN = "report_details_action_self_assign"
+  const val ACTION_RESOLVE = "report_details_action_resolve"
+  const val ACTION_UNSELFASSIGN = "report_details_action_unselfassign"
+  const val DESCRIPTION_CARD = "report_details_description_card"
+  const val DESCRIPTION_TEXT = "report_details_description_text"
+  const val ASSIGNEE_CARD = "report_details_assignee_card"
+  const val ASSIGNEE_TEXT = "report_details_assignee_text"
+  const val COMMENTS_HEADER = "report_details_comments_header"
+  const val COMMENTS_COUNT = "report_details_comments_count"
+  const val COMMENT_CARD = "report_details_comment_card"
+  const val COMMENT_AUTHOR = "report_details_comment_author"
+  const val COMMENT_DATE = "report_details_comment_date"
+  const val COMMENT_BODY = "report_details_comment_body"
+  const val COMMENT_EXPANDABLE = "report_details_comment_expandable"
+  const val COMMENT_TOGGLE = "report_details_comment_toggle"
+  const val COMMENT_INPUT_BAR = "report_details_comment_input_bar"
+  const val COMMENT_INPUT_FIELD = "report_details_comment_input_field"
+  const val COMMENT_INPUT_SEND = "report_details_comment_input_send"
+}
+
+/** Full-screen report details view. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReportDetailsScreen(
+    reportId: Id,
+    reportDetailsViewModel: ReportDetailsScreenViewModel = viewModel(),
+    onGoBack: () -> Unit = {},
+    onProfile: (Id) -> Unit = {},
+) {
+  val uiState by reportDetailsViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+
+  var showCompletionDialog by remember { mutableStateOf(false) }
+  var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
+
+  // Initial load
+  LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }
+
+  // Error toast
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      reportDetailsViewModel.clearErrorMsg()
+    }
+  }
+
+  // One-shot completion events -> popup
+  LaunchedEffect(Unit) {
+    reportDetailsViewModel.events.collect { event ->
+      when (event) {
+        is ReportDetailsEvent.ShowCompletion -> {
+          completionType = event.type
+          showCompletionDialog = true
+        }
+      }
+    }
+  }
+
+  // Completion dialog
+  if (showCompletionDialog && completionType != null) {
+    ReportCompletionDialog(
+        type = completionType!!,
+        onDismiss = { showCompletionDialog = false },
+        onConfirm = {
+          showCompletionDialog = false
+          onGoBack()
+        },
+    )
+  }
+
+  Scaffold(
+      modifier = Modifier.testTag(ReportDetailsScreenTestTags.SCREEN),
+      topBar = { ReportDetailsTopBar(onGoBack = onGoBack) },
+      bottomBar = {
+        ReportCommentInput(
+            user = uiState.currentUser,
+            onProfile = onProfile,
+            onSend = { text -> reportDetailsViewModel.addComment(text) },
+        )
+      },
+  ) { innerPadding ->
+    val pullState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier =
+            Modifier.fillMaxSize()
+                .padding(innerPadding)
+                .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (!showCompletionDialog) {
+            reportDetailsViewModel.refreshReportDetails(reportId)
+          }
+        },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else ->
+            ReportDetailsContent(
+                uiState = uiState,
+                onProfile = onProfile,
+                onCancel = { reportDetailsViewModel.cancelReport() },
+                onSelfAssign = { reportDetailsViewModel.selfAssignReport() },
+                onResolve = { reportDetailsViewModel.resolveReport() },
+                onUnSelfAssign = { reportDetailsViewModel.unselfAssignReport() },
+            )
+      }
+    }
+  }
+}
+
+/**
+ * Main content when the report is loaded.
+ *
+ * Hero image + sheet + description + assignee + comments.
+ */
+@Composable
+private fun ReportDetailsContent(
+    uiState: ReportDetailsUIState,
+    onProfile: (Id) -> Unit = {},
+    onCancel: () -> Unit = {},
+    onSelfAssign: () -> Unit = {},
+    onResolve: () -> Unit = {},
+    onUnSelfAssign: () -> Unit = {},
+) {
+  Box(Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().testTag(ReportDetailsScreenTestTags.CONTENT_LIST),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+      // HERO IMAGE
+      item { ReportPicture(uiState.imageURL) }
+
+      // SHEET with info, buttons, description, assignee pill, comments header
+      item {
+        Surface(
+            color = colorScheme.background,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+          Column(
+              modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+          ) {
+            Spacer(Modifier.height(8.dp))
+
+            ReportInfoBar(
+                author = uiState.author,
+                date = uiState.date,
+                location = uiState.location,
+                onProfile = onProfile,
+                onLocationClick = { /* TODO later */},
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            ReportDetailsActionRow(
+                uiState = uiState,
+                onCancel = onCancel,
+                onSelfAssign = onSelfAssign,
+                onResolve = onResolve,
+                onUnSelfAssign = onUnSelfAssign,
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            if (uiState.description.isNotBlank()) {
+              Card(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 16.dp)
+                          .testTag(ReportDetailsScreenTestTags.DESCRIPTION_CARD),
+                  shape = RoundedCornerShape(24.dp),
+                  colors =
+                      CardDefaults.cardColors(
+                          containerColor = colorScheme.surfaceVariant,
+                      ),
+                  elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+              ) {
+                Text(
+                    text = uiState.description,
+                    color = colorScheme.onSurfaceVariant,
+                    modifier =
+                        Modifier.padding(14.dp)
+                            .testTag(ReportDetailsScreenTestTags.DESCRIPTION_TEXT),
+                    style = typography.bodyMedium,
+                )
+              }
+
+              Spacer(Modifier.height(10.dp))
+            }
+
+            uiState.assignee?.let { assignee ->
+              ReportAssigneeDetailsCard(
+                  assignee = assignee,
+                  onProfile = onProfile,
+              )
+              Spacer(Modifier.height(6.dp))
+            }
+
+            Column(
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .testTag(ReportDetailsScreenTestTags.COMMENTS_HEADER),
+            ) {
+              val count = uiState.commentsUI.size
+              val label = if (count == 1) "1 Comment" else "$count Comments"
+              Text(
+                  text = label,
+                  style = typography.titleSmall,
+                  color = colorScheme.onBackground,
+                  modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENTS_COUNT),
+              )
+            }
+          }
+        }
+      }
+
+      // COMMENTS LIST
+      items(uiState.commentsUI) { commentUI ->
+        ReportCommentRow(commentUI = commentUI, onProfile = onProfile)
+      }
+
+      item { Spacer(Modifier.height(96.dp)) } // leave space above bottom input
+    }
+  }
+}
+
+/** Big header picture at the top, with subtle gradient similar to PostDetails. */
+@Composable
+private fun ReportPicture(imageURL: URL) {
+  Box(
+      Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.HERO_IMAGE_BOX),
+  ) {
+    AsyncImage(
+        model = imageURL,
+        contentDescription = "Report image",
+        contentScale = ContentScale.FillWidth,
+        modifier = Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.HERO_IMAGE),
+    )
+    // top gradient
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(72.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.7f),
+                        1f to Color.Transparent,
+                    ),
+                )
+                .testTag(ReportDetailsScreenTestTags.HERO_TOP_GRADIENT),
+    )
+    // bottom gradient
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(72.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        1f to colorScheme.background,
+                    ),
+                )
+                .testTag(ReportDetailsScreenTestTags.HERO_BOTTOM_GRADIENT),
+    )
+  }
+}
+
+/** Header row: avatar + author + date + location tag. */
+@Composable
+private fun ReportInfoBar(
+    author: SimpleUser,
+    date: String,
+    location: String,
+    onProfile: (Id) -> Unit = {},
+    onLocationClick: () -> Unit = {},
+) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp, vertical = 10.dp)
+              .testTag(ReportDetailsScreenTestTags.INFO_BAR),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.weight(1f),
+    ) {
+      ClickableProfilePicture(
+          modifier = Modifier.size(48.dp),
+          profileId = author.userId,
+          profilePictureURL = author.profilePictureURL,
+          role = "author",
+          onProfile = onProfile,
+      )
+
+      Column(modifier = Modifier.weight(1f)) {
+        Text(
+            text = author.username.ifBlank { "Unknown reporter" },
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag(ReportDetailsScreenTestTags.INFO_AUTHOR_NAME),
+        )
+        if (date.isNotBlank()) {
+          Spacer(Modifier.height(2.dp))
+          Text(
+              text = date,
+              color = colorScheme.tertiary,
+              style = typography.labelMedium,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.testTag(ReportDetailsScreenTestTags.INFO_DATE),
+          )
+        }
+      }
+    }
+
+    if (location.isNotBlank()) {
+      Spacer(Modifier.width(8.dp))
+      LocationTagButton(
+          location = location,
+          onClick = onLocationClick,
+      )
+    }
+  }
+}
+
+/** Clickable location “pill” in the header row. */
+@Composable
+private fun LocationTagButton(
+    location: String,
+    onClick: () -> Unit = {},
+) {
+  Surface(
+      shape = RoundedCornerShape(32.dp),
+      color = colorScheme.background,
+      border = BorderStroke(1.dp, colorScheme.primary),
+      tonalElevation = 0.dp,
+      modifier = Modifier.testTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL),
+  ) {
+    Row(
+        modifier =
+            Modifier.clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Filled.LocationOn,
+          contentDescription = "Location",
+          tint = colorScheme.primary,
+          modifier = Modifier.size(18.dp),
+      )
+      Text(
+          text = location,
+          style = typography.labelMedium,
+          color = colorScheme.primary,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+      )
+    }
+  }
+}
+
+/** Adaptive action row using pill buttons. */
+@Composable
+private fun ReportDetailsActionRow(
+    uiState: ReportDetailsUIState,
+    onCancel: () -> Unit = {},
+    onSelfAssign: () -> Unit = {},
+    onResolve: () -> Unit = {},
+    onUnSelfAssign: () -> Unit = {},
+) {
+  val hasAssignee = uiState.assignee != null
+
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp)
+              .testTag(ReportDetailsScreenTestTags.ACTION_ROW),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    when (uiState.currentUserType) {
+      UserType.REGULAR -> {
+        if (uiState.isCreatedByCurrentUser) {
+          ReportOutlinedActionButton(
+              text = "Cancel report",
+              onClick = onCancel,
+              modifier = Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
+          )
+        }
+      }
+      UserType.PROFESSIONAL -> {
+        when {
+          !hasAssignee -> {
+            ReportFilledActionButton(
+                text = "I got this!",
+                onClick = onSelfAssign,
+                modifier =
+                    Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_SELF_ASSIGN),
+            )
+            if (uiState.isCreatedByCurrentUser) {
+              ReportOutlinedActionButton(
+                  text = "Cancel",
+                  onClick = onCancel,
+                  modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
+              )
+            }
+          }
+          uiState.isAssignedToCurrentUser -> {
+            ReportFilledActionButton(
+                text = "Resolved!",
+                onClick = onResolve,
+                modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_RESOLVE),
+            )
+            ReportOutlinedActionButton(
+                text = "Cancel",
+                onClick = onUnSelfAssign,
+                modifier =
+                    Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_UNSELFASSIGN),
+            )
+          }
+          else -> {
+            if (uiState.isCreatedByCurrentUser) {
+              ReportOutlinedActionButton(
+                  text = "Cancel report",
+                  onClick = onCancel,
+                  modifier =
+                      Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun ReportFilledActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+  Button(
+      onClick = onClick,
+      modifier = modifier.height(44.dp),
+      shape = RoundedCornerShape(999.dp),
+      colors =
+          ButtonDefaults.buttonColors(
+              containerColor = colorScheme.primary,
+              contentColor = colorScheme.onPrimary,
+          ),
+  ) {
+    Text(text = text, style = typography.labelLarge)
+  }
+}
+
+@Composable
+private fun ReportOutlinedActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+  OutlinedButton(
+      onClick = onClick,
+      modifier = modifier.height(44.dp),
+      shape = RoundedCornerShape(999.dp),
+      colors =
+          ButtonDefaults.outlinedButtonColors(
+              contentColor = colorScheme.tertiary,
+          ),
+      border = BorderStroke(1.dp, colorScheme.tertiary),
+  ) {
+    Text(text = text, style = typography.labelLarge)
+  }
+}
+
+/** Assignee pill displayed under the description. */
+@Composable
+private fun ReportAssigneeDetailsCard(
+    assignee: SimpleUser,
+    onProfile: (Id) -> Unit = {},
+) {
+  Card(
+      shape = RoundedCornerShape(32.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+      border = BorderStroke(width = 1.dp, color = colorScheme.primary),
+      elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp, vertical = 6.dp)
+              .testTag(ReportDetailsScreenTestTags.ASSIGNEE_CARD),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      ClickableProfilePicture(
+          modifier = Modifier.size(40.dp),
+          profileId = assignee.userId,
+          profilePictureURL = assignee.profilePictureURL,
+          role = "assignee",
+          onProfile = onProfile,
+      )
+      Text(
+          text = "Assigned to ${assignee.username}",
+          style = typography.titleMedium,
+          color = colorScheme.onBackground,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ASSIGNEE_TEXT),
+      )
+    }
+  }
+}
+
+/** One comment row for report details. */
+@Composable
+private fun ReportCommentRow(
+    commentUI: ReportCommentWithAuthorUI,
+    onProfile: (Id) -> Unit = {},
+) {
+  Card(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp, vertical = 6.dp)
+              .testTag(ReportDetailsScreenTestTags.COMMENT_CARD),
+      shape = RoundedCornerShape(32.dp),
+      colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+      border = BorderStroke(1.dp, colorScheme.primary),
+      elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+      ClickableProfilePicture(
+          modifier = Modifier.size(40.dp),
+          profileId = commentUI.authorId,
+          profilePictureURL = commentUI.authorProfilePictureUrl,
+          role = "commenter",
+          onProfile = onProfile,
+      )
+
+      Spacer(modifier = Modifier.width(10.dp))
+
+      Column(modifier = Modifier.weight(1f)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = commentUI.authorUserName,
+              style = typography.labelLarge,
+              color = colorScheme.onBackground,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_AUTHOR),
+          )
+          Text(
+              text = commentUI.date,
+              style = typography.labelSmall,
+              color = colorScheme.onBackground.copy(alpha = 0.7f),
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_DATE),
+          )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+
+        ExpandableCommentText(
+            text = commentUI.text,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun ExpandableCommentText(
+    text: String,
+    collapsedLines: Int = 3,
+) {
+  var expanded by remember { mutableStateOf(false) }
+  var hasOverflow by remember { mutableStateOf(false) }
+
+  Column(modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_EXPANDABLE)) {
+    Text(
+        text = text,
+        style = typography.bodyMedium,
+        color = colorScheme.onBackground,
+        maxLines = if (expanded) Int.MAX_VALUE else collapsedLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { result -> hasOverflow = result.hasVisualOverflow },
+        modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_BODY),
+    )
+
+    if (hasOverflow || expanded) {
+      Spacer(Modifier.height(2.dp))
+      Text(
+          text = if (expanded) "Show less" else "Read more",
+          style = typography.labelSmall,
+          color = colorScheme.tertiary,
+          modifier =
+              Modifier.align(Alignment.End)
+                  .clickable { expanded = !expanded }
+                  .testTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE),
+      )
+    }
+  }
+}
+
+/** Bottom pinned comment input. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReportCommentInput(
+    user: SimpleUser,
+    onProfile: (Id) -> Unit = {},
+    onSend: (String) -> Unit = {},
+) {
+  Box(
+      modifier =
+          Modifier.fillMaxWidth()
+              .background(colorScheme.background)
+              .padding(horizontal = 12.dp, vertical = 8.dp)
+              .testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_BAR),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClickableProfilePicture(
+          modifier = Modifier.size(44.dp),
+          profileId = user.userId,
+          profilePictureURL = user.profilePictureURL,
+          role = "comment_input",
+          onProfile = onProfile,
+      )
+
+      Spacer(modifier = Modifier.width(8.dp))
+
+      var text by remember { mutableStateOf("") }
+
+      OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          placeholder = { Text("Add a comment …") },
+          modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
+          shape = RoundedCornerShape(32.dp),
+          singleLine = true,
+          trailingIcon = {
+            IconButton(
+                onClick = {
+                  if (text.isNotBlank()) {
+                    onSend(text)
+                    text = ""
+                  }
+                },
+                modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
+            ) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Send,
+                  contentDescription = "Send comment",
+                  tint = colorScheme.primary,
+              )
+            }
+          },
+      )
+    }
+  }
+}

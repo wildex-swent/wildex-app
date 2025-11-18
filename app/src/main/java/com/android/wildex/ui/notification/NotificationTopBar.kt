@@ -23,32 +23,32 @@ import com.android.wildex.ui.profile.EditProfileScreenTestTags
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationTopBar(onGoBack: () -> Unit){
-    val cs = colorScheme
-    CenterAlignedTopAppBar(
-        title = {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = LocalContext.current.getString(R.string.notification_title),
-                    fontWeight = FontWeight.SemiBold,
-                    color = cs.onBackground,
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(
-                modifier = Modifier.testTag(EditProfileScreenTestTags.GO_BACK),
-                onClick = { onGoBack() },
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = cs.onBackground,
-                )
-            }
-        },
-        actions = {
-            // Empty box to center the title
-            Box(modifier = Modifier.size(48.dp))
-        })
+fun NotificationTopBar(onGoBack: () -> Unit) {
+  val cs = colorScheme
+  CenterAlignedTopAppBar(
+      title = {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+          Text(
+              text = LocalContext.current.getString(R.string.notification_title),
+              fontWeight = FontWeight.SemiBold,
+              color = cs.onBackground,
+          )
+        }
+      },
+      navigationIcon = {
+        IconButton(
+            modifier = Modifier.testTag(EditProfileScreenTestTags.GO_BACK),
+            onClick = { onGoBack() },
+        ) {
+          Icon(
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = "Back",
+              tint = cs.onBackground,
+          )
+        }
+      },
+      actions = {
+        // Empty box to center the title
+        Box(modifier = Modifier.size(48.dp))
+      })
 }

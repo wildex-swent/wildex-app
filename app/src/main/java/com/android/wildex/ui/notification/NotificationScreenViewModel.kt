@@ -12,34 +12,40 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-val defaultUser = User(
-    "",
-    "defaultUsername",
-    "defaultName",
-    "defaultSurname",
-    "This is a default bio.",
-    "",
-    UserType.REGULAR,
-    Timestamp.now(),
-    "DefaultCountry",
-    0,
-)
+val defaultUser =
+    User(
+        "",
+        "defaultUsername",
+        "defaultName",
+        "defaultSurname",
+        "This is a default bio.",
+        "",
+        UserType.REGULAR,
+        Timestamp.now(),
+        "DefaultCountry",
+        0,
+    )
 
-data class NotificationUIState(
-    val profilePictureUrl: URL = defaultUser.profilePictureURL,
+data class NotificationScreenUIState(
+    val notifications: List<NotificationUIState> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
 )
 
-class NotificationScreenViewModel (
+data class NotificationUIState(
+    val notificationId: String = "",
+    val profilePictureUrl: URL = defaultUser.profilePictureURL,
+    val userType: UserType = defaultUser.userType,
+)
+
+class NotificationScreenViewModel(
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
-    /** Backing property for the home screen state. */
-    private val _uiState = MutableStateFlow(NotificationUIState())
+  /** Backing property for the home screen state. */
+  private val _uiState = MutableStateFlow(NotificationScreenUIState())
 
-    /** Public immutable state exposed to the UI layer. */
-    val uiState: StateFlow<NotificationUIState> = _uiState.asStateFlow()
-
+  /** Public immutable state exposed to the UI layer. */
+  val uiState: StateFlow<NotificationScreenUIState> = _uiState.asStateFlow()
 }

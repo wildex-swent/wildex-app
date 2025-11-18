@@ -34,8 +34,7 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
     val result = repository.detectAnimal(context, mockUri)
 
@@ -53,7 +52,6 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test
   fun `detectAnimal should filter out low confidence predictions`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -62,14 +60,11 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id":"$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createMixedConfidenceResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(mixedConfidenceResponse))
 
-    // Act
     val result = repository.detectAnimal(context, mockUri)
 
-    // Assert
-    assertEquals(2, result.size) // Only 2 predictions above 0.5 threshold
+    assertEquals(2, result.size)
     assertTrue(result.all { it.confidence >= 0.5f })
     assertEquals("lion", result[0].animalType)
     assertEquals("prairie dog", result[1].animalType)
@@ -77,7 +72,6 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test
   fun `detectAnimal should handle multiple animals detected`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -86,13 +80,10 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createMultipleAnimalsResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(multipleAnimalsResponse))
 
-    // Act
     val result = repository.detectAnimal(context, mockUri)
 
-    // Assert
     assertEquals(3, result.size)
     result.forEach { detection ->
       assertNotNull(detection.animalType)
@@ -105,29 +96,24 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test(expected = IOException::class)
   fun `detectAnimal should throw IOException when image URI cannot be opened`() = runTest {
-    // Arrange
     every { contentResolver.openInputStream(mockUri) } returns null
     every { contentResolver.getType(mockUri) } returns "image/jpeg"
 
-    // Act
     repository.detectAnimal(context, mockUri)
   }
 
   @Test(expected = IOException::class)
   fun `detectAnimal should throw IOException when POST request fails`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     setupImageInputStream(imageBytes)
 
     mockWebServer.enqueue(MockResponse().setResponseCode(500).setBody("Internal Server Error"))
 
-    // Act
     repository.detectAnimal(context, mockUri)
   }
 
   @Test(expected = IOException::class)
   fun `detectAnimal should throw IOException when event_id is missing`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     setupImageInputStream(imageBytes)
 
@@ -135,13 +121,11 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
         MockResponse().setResponseCode(200).setBody("""{"status": "success"}""") // No event_id
         )
 
-    // Act
     repository.detectAnimal(context, mockUri)
   }
 
   @Test(expected = IOException::class)
   fun `detectAnimal should throw IOException when GET response fails`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -152,13 +136,11 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
     mockWebServer.enqueue(MockResponse().setResponseCode(404).setBody("Not Found"))
 
-    // Act
     repository.detectAnimal(context, mockUri)
   }
 
   @Test(expected = IOException::class)
   fun `detectAnimal should throw IOException when GET response is empty`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -171,13 +153,11 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
         MockResponse().setResponseCode(200).setBody("") // Empty response
         )
 
-    // Act
     repository.detectAnimal(context, mockUri)
   }
 
   @Test
   fun `detectAnimal should send correct authorization header`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -186,13 +166,10 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
-    // Act
     repository.detectAnimal(context, mockUri)
 
-    // Assert
     val postRequest = mockWebServer.takeRequest()
     assertTrue(postRequest.headers["Authorization"]?.startsWith("Bearer ") == true)
 
@@ -202,7 +179,6 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test
   fun `detectAnimal should send image as base64 in request body`() = runTest {
-    // Arrange
     val imageBytes = "test_image".toByteArray()
     val eventId = "test-event-123"
 
@@ -211,13 +187,10 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
-    // Act
     repository.detectAnimal(context, mockUri)
 
-    // Assert
     val request = mockWebServer.takeRequest()
     val requestBody = request.body.readUtf8()
     assertTrue(requestBody.contains("data:"))
@@ -226,7 +199,6 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test
   fun `detectAnimal should use correct mime type from content resolver`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -236,13 +208,10 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
-    // Act
     repository.detectAnimal(context, mockUri)
 
-    // Assert
     val request = mockWebServer.takeRequest()
     val requestBody = request.body.readUtf8()
     assertTrue(requestBody.contains("image/png"))
@@ -258,8 +227,7 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
     repository.detectAnimal(context, mockUri)
 
@@ -270,7 +238,6 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   @Test
   fun `detectAnimal should parse taxonomy correctly`() = runTest {
-    // Arrange
     val imageBytes = "fake_image_data".toByteArray()
     val eventId = "test-event-123"
 
@@ -279,13 +246,10 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"event_id": "$eventId"}"""))
 
-    mockWebServer.enqueue(
-        MockResponse().setResponseCode(200).setBody(createLionDetectionResponse()))
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(lionDetectionResponse))
 
-    // Act
     val result = repository.detectAnimal(context, mockUri)
 
-    // Assert
     val taxonomy = result[0].taxonomy
     assertEquals("ddf59264-185a-4d35-b647-2785792bdf54", taxonomy.id)
     assertEquals("mammalia", taxonomy.animalClass)
@@ -304,81 +268,64 @@ class AnimalInfoRepositoryHttpTest : AnimalInfoRepositoryTest() {
 
   // ==================== Test Data Helpers ====================
 
-  private fun createLionDetectionResponse(): String {
-    return """
-            event: complete
-            data: [
+  private val lionDetectionResponse: String =
+      """
+        event: complete
+        data: [
+          {
+            "predictions": [
               {
-                "predictions": [
-                  {
-                    "classifications": {
-                      "classes": [
-                        "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion"
-                      ],
-                      "scores": [0.987]
-                    }
-                  }
-                ]
-              }
-            ]
-        """
-  }
-
-  private fun createMixedConfidenceResponse(): String {
-    return """
-            event: complete
-            data: [
-              {
-                "predictions": [
-                  {
-                    "classifications": {
-                      "classes": [
-                        "id1;mammalia;carnivora;felidae;panthera;leo;lion",
-                        "id2;mammalia;rodentia;sciuridae;cynomys;ludovicianus;prairie dog",
-                        "id3;aves;;;;;bird"
-                      ],
-                      "scores": [0.95, 0.6, 0.3]
-                    }
-                  }
-                ]
-              }
-            ]
-        """
-  }
-
-  private fun createMultipleAnimalsResponse(): String {
-    return """
-            event: complete
-            data: [
-              {
-                "predictions": [
-                  {
-                    "classifications": {
-                      "classes": [
-                        "id1;mammalia;carnivora;felidae;panthera;leo;lion",
-                        "id2;mammalia;carnivora;canidae;canis;lupus;wolf",
-                        "id3;mammalia;proboscidea;elephantidae;loxodonta;africana;elephant"
-                      ],
-                      "scores": [0.85, 0.75, 0.65]
-                    }
-                  }
-                ]
-              }
-            ]
-        """
-  }
-
-  private fun createDescriptionResponse(content: String): String {
-    return """
-            {
-              "choices": [
-                {
-                  "message": {
-                    "content": "$content"
-                  }
+                "classifications": {
+                  "classes": [
+                    "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion"
+                  ],
+                  "scores": [0.987]
                 }
-              ]
-            }
-        """
-  }
+              }
+            ]
+          }
+        ]
+      """
+
+  private val mixedConfidenceResponse: String =
+      """
+        event: complete
+        data: [
+          {
+            "predictions": [
+              {
+                "classifications": {
+                  "classes": [
+                    "id1;mammalia;carnivora;felidae;panthera;leo;lion",
+                    "id2;mammalia;rodentia;sciuridae;cynomys;ludovicianus;prairie dog",
+                    "id3;aves;;;;;bird"
+                  ],
+                  "scores": [0.95, 0.6, 0.3]
+                }
+              }
+            ]
+          }
+        ]
+      """
+
+  private val multipleAnimalsResponse: String =
+      """
+        event: complete
+        data: [
+          {
+            "predictions": [
+              {
+                "classifications": {
+                  "classes": [
+                    "id1;mammalia;carnivora;felidae;panthera;leo;lion",
+                    "id2;mammalia;carnivora;canidae;canis;lupus;wolf",
+                    "id3;mammalia;proboscidea;elephantidae;loxodonta;africana;elephant"
+                  ],
+                  "scores": [0.85, 0.75, 0.65]
+                }
+              }
+            ]
+          }
+        ]
+      """
 }

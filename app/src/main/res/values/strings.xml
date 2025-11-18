@@ -61,6 +61,9 @@
     <!-- Home screen -->
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
 
+    <!-- Notification screen -->
+    <string name="notification_title">Notifications</string>
+
     <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>
     <string name="map_standard_import">basemap</string>

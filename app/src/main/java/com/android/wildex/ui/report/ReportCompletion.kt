@@ -45,7 +45,6 @@ fun ReportCompletionDialog(
     }
   }
 
-  // Lottie animation state
   val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(animationRes))
   val progress by
       animateLottieCompositionAsState(
@@ -60,7 +59,7 @@ fun ReportCompletionDialog(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-          // --- Animation ---
+          // Animation
           LottieAnimation(
               composition = composition,
               progress = { progress },
@@ -69,22 +68,21 @@ fun ReportCompletionDialog(
 
           Spacer(Modifier.height(12.dp))
 
-          // --- Title ---
+          // Title — centered
           Text(
               text = title,
               fontWeight = FontWeight.Bold,
-              modifier =
-                  Modifier.padding(horizontal = 8.dp).testTag(ReportCompletionDialogTestTags.TITLE),
+              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              modifier = Modifier.fillMaxWidth().testTag(ReportCompletionDialogTestTags.TITLE),
           )
 
           Spacer(Modifier.height(6.dp))
 
-          // --- Message ---
+          // Message — centered
           Text(
               text = message,
-              modifier =
-                  Modifier.padding(horizontal = 8.dp)
-                      .testTag(ReportCompletionDialogTestTags.MESSAGE),
+              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              modifier = Modifier.fillMaxWidth().testTag(ReportCompletionDialogTestTags.MESSAGE),
           )
         }
       },

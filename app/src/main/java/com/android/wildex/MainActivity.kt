@@ -310,6 +310,7 @@ private fun NavGraphBuilder.mapComposable(
             }
           },
           onPost = { navigationActions.navigateTo(Screen.PostDetails(it)) },
+          onReport = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
           isCurrentUser = currentUserId == userId,
           onGoBack = { navigationActions.goBack() },
       )

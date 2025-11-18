@@ -112,6 +112,8 @@ fun ReportDetailsScreen(
   var showCompletionDialog by remember { mutableStateOf(false) }
   var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
 
+  var showNavigationSheet by remember { mutableStateOf(false) }
+
   // Initial load
   LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }
 
@@ -144,6 +146,15 @@ fun ReportDetailsScreen(
           showCompletionDialog = false
           onGoBack()
         },
+    )
+  }
+
+  if (showNavigationSheet) {
+    NavigationOptionsBottomSheet(
+        latitude = uiState.location.latitude,
+        longitude = uiState.location.longitude,
+        displayLabel = uiState.location.name,
+        onDismissRequest = { showNavigationSheet = false },
     )
   }
 
@@ -184,6 +195,7 @@ fun ReportDetailsScreen(
                 onSelfAssign = { reportDetailsViewModel.selfAssignReport() },
                 onResolve = { reportDetailsViewModel.resolveReport() },
                 onUnSelfAssign = { reportDetailsViewModel.unselfAssignReport() },
+                onLocationClick = { showNavigationSheet = true },
             )
       }
     }
@@ -203,6 +215,7 @@ private fun ReportDetailsContent(
     onSelfAssign: () -> Unit = {},
     onResolve: () -> Unit = {},
     onUnSelfAssign: () -> Unit = {},
+    onLocationClick: () -> Unit = {},
 ) {
   Box(Modifier.fillMaxSize()) {
     LazyColumn(
@@ -227,22 +240,11 @@ private fun ReportDetailsContent(
             ReportInfoBar(
                 author = uiState.author,
                 date = uiState.date,
-                location = uiState.location,
+                location = uiState.location.name,
                 onProfile = onProfile,
-                onLocationClick = { /* TODO later */},
-            )
+                onLocationClick = onLocationClick)
 
             Spacer(Modifier.height(8.dp))
-
-            ReportDetailsActionRow(
-                uiState = uiState,
-                onCancel = onCancel,
-                onSelfAssign = onSelfAssign,
-                onResolve = onResolve,
-                onUnSelfAssign = onUnSelfAssign,
-            )
-
-            Spacer(Modifier.height(12.dp))
 
             if (uiState.description.isNotBlank()) {
               Card(
@@ -277,6 +279,13 @@ private fun ReportDetailsContent(
               )
               Spacer(Modifier.height(6.dp))
             }
+            ReportDetailsActionRow(
+                uiState = uiState,
+                onCancel = onCancel,
+                onSelfAssign = onSelfAssign,
+                onResolve = onResolve,
+                onUnSelfAssign = onUnSelfAssign,
+            )
 
             Column(
                 Modifier.fillMaxWidth()

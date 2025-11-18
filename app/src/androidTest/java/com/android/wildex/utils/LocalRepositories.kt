@@ -30,6 +30,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Input
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
+import kotlin.coroutines.CoroutineContext
 
 interface ClearableRepository {
   fun clear()
@@ -435,6 +436,7 @@ object LocalRepositories {
     override suspend fun detectAnimal(
         context: Context,
         imageUri: Uri,
+        coroutineContext: CoroutineContext
     ): List<AnimalDetectResponse> {
       return listOf(
           AnimalDetectResponse(
@@ -451,7 +453,10 @@ object LocalRepositories {
           ))
     }
 
-    override suspend fun getAnimalDescription(animalName: String): String? {
+    override suspend fun getAnimalDescription(
+        animalName: String,
+        coroutineContext: CoroutineContext
+    ): String? {
       return "This is a default animal"
     }
   }

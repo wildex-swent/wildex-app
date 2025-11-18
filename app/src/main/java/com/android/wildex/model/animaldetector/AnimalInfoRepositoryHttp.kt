@@ -5,9 +5,9 @@ import android.net.Uri
 import com.android.wildex.BuildConfig
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.float
@@ -28,6 +28,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
 class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository {
+  companion object {
+    private const val CONTENT_TYPE = "application/json"
+  }
 
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY
 
@@ -46,8 +49,12 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
    *   exception if failed.
    */
   @OptIn(ExperimentalEncodingApi::class)
-  override suspend fun detectAnimal(context: Context, imageUri: Uri): List<AnimalDetectResponse> =
-      withContext(Dispatchers.IO) {
+  override suspend fun detectAnimal(
+      context: Context,
+      imageUri: Uri,
+      coroutineContext: CoroutineContext,
+  ): List<AnimalDetectResponse> =
+      withContext(coroutineContext) {
         val bytes =
             context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
                 ?: throw IOException("Failed to open image URI")
@@ -66,7 +73,7 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
                 }
             """
                 .trimIndent()
-        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+        val requestBody = jsonBody.toRequestBody(CONTENT_TYPE.toMediaType())
         val eventIdRequest =
             Request.Builder()
                 .url(speciesNetUrl)
@@ -213,8 +220,11 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
    * @return A cleaned description string if the request succeeds and a valid response is received;
    * @throws IOException if the request fails or the response is invalid.
    */
-  override suspend fun getAnimalDescription(animalName: String): String =
-      withContext(Dispatchers.IO) {
+  override suspend fun getAnimalDescription(
+      animalName: String,
+      coroutineContext: CoroutineContext,
+  ): String =
+      withContext(coroutineContext) {
         val payload =
             """
             {
@@ -228,12 +238,12 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
         """
                 .trimIndent()
 
-        val requestBody = payload.toRequestBody("application/json".toMediaType())
+        val requestBody = payload.toRequestBody(CONTENT_TYPE.toMediaType())
         val request =
             Request.Builder()
                 .url(deepseekUrl)
                 .addHeader("Authorization", "Bearer $hfApikey")
-                .addHeader("Content-Type", "application/json")
+                .addHeader("Content-Type", CONTENT_TYPE)
                 .post(requestBody)
                 .build()
 

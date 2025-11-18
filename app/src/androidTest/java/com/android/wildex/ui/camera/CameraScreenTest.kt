@@ -17,6 +17,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import io.mockk.*
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -92,9 +93,10 @@ class CameraScreenTest {
           override suspend fun detectAnimal(
               context: Context,
               imageUri: Uri,
+              coroutineContext: CoroutineContext
           ): List<AnimalDetectResponse> {
             fetchSignal.await()
-            return super.detectAnimal(context, imageUri)
+            return super.detectAnimal(context, imageUri, coroutineContext)
           }
         }
     val slowDetectVm =
@@ -198,9 +200,10 @@ class CameraScreenTest {
           override suspend fun detectAnimal(
               context: Context,
               imageUri: Uri,
+              coroutineContext: CoroutineContext
           ): List<AnimalDetectResponse> {
             fetchSignal.await()
-            return super.detectAnimal(context, imageUri)
+            return super.detectAnimal(context, imageUri, coroutineContext)
           }
         }
     val slowDetectVm =

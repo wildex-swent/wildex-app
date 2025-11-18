@@ -2,7 +2,6 @@ package com.android.wildex.model.animaldetector
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.android.wildex.BuildConfig
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -57,7 +56,16 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
         val base64Image = Base64.encode(bytes)
 
         val dataUri = "data:$mimeType;base64,$base64Image"
-        val jsonBody = """{"data": ["$dataUri"]}"""
+        val jsonBody =
+            """
+                {
+                    "data": [
+                        "$dataUri",
+                        null
+                    ]
+                }
+            """
+                .trimIndent()
         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
         val eventIdRequest =
             Request.Builder()
@@ -94,48 +102,92 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
       }
 
   private fun parseAnimalDetectResponse(raw: String): List<AnimalDetectResponse> {
-    // isolate the JSON array after "data: "
+    /* Example raw:
+       event: complete
+       data: [
+               {
+                 "predictions": [
+                   {
+                     "filepath": "/tmp/tmp7mg1vv12.jpg",
+                     "classifications": {
+                       "classes": [
+                         "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
+                         "fdc27cfb-3756-4794-992d-1d512f7c5474;mammalia;rodentia;sciuridae;cynomys;ludovicianus;arizona black-tailed prairie dog",
+                         "b1352069-a39c-4a84-a949-60044271c0c1;aves;;;;;bird",
+                         "6ffe2064-cabd-4fcb-8c1b-f168bf381aab;mammalia;cetartiodactyla;bovidae;tragelaphus;oryx;common eland",
+                         "3d80f1d6-b1df-4966-9ff4-94053c7a902a;mammalia;carnivora;canidae;canis;familiaris;domestic dog"
+                       ],
+                       "scores": [
+                         0.9870538115501404,
+                         0.006546854041516781,
+                         0.003047803184017539,
+                         0.0005521145649254322,
+                         0.00034705971484072506
+                       ]
+                     },
+                     "detections": [
+                       {
+                         "category": "1",
+                         "label": "animal",
+                         "conf": 0.8112816214561462,
+                         "bbox": [
+                           0.1919642984867096,
+                           0.0,
+                           0.7633928656578064,
+                           0.9822221994400024
+                         ]
+                       }
+                     ],
+                     "prediction": "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
+                     "prediction_score": 0.9870538115501404,
+                     "prediction_source": "classifier",
+                     "model_version": "4.0.1a"
+                   }
+                 ]
+               }
+             ]
+    */
+
     val jsonArrayText = raw.substringAfter("data: ").trim()
     val dataArray = JSONArray(jsonArrayText)
 
     val dataObj = dataArray.getJSONObject(0)
     val predictions = dataObj.getJSONArray("predictions")
 
-    return (0 until predictions.length()).map { i ->
-      val predictionObject = predictions.getJSONObject(i)
-      val prediction = predictionObject.getString("prediction")
-      val score = predictionObject.getDouble("prediction_score").toFloat()
-
-      val box = predictionObject.getJSONArray("detections").getJSONObject(0).getJSONArray("bbox")
-      val boundingBox =
-          BoundingBox(
-              x = box.getDouble(0).toFloat(),
-              y = box.getDouble(1).toFloat(),
-              width = box.getDouble(2).toFloat(),
-              height = box.getDouble(3).toFloat(),
-          )
-
-      val parts = prediction.split(";")
-      val taxonomy =
-          Taxonomy(
-              id = parts.getOrNull(0) ?: "",
-              animalClass = parts.getOrNull(1) ?: "",
-              order = parts.getOrNull(2) ?: "",
-              family = parts.getOrNull(3) ?: "",
-              genus = parts.getOrNull(4) ?: "",
-              species = parts.getOrNull(5) ?: "",
-          )
-      val animalType = parts.getOrNull(6) ?: ""
-
-      AnimalDetectResponse(
-          animalType = animalType,
-          confidence = score,
-          boundingBox = boundingBox,
-          taxonomy = taxonomy,
-      ).also {
-        Log.d("AnimalInfoRepository", "Parsed response: $it")
+    val predictionsObject = predictions.getJSONObject(0)
+    val classificationsObject = predictionsObject.getJSONObject("classifications")
+    val classesArray = classificationsObject.getJSONArray("classes")
+    val scoresArray = classificationsObject.getJSONArray("scores")
+    val length = minOf(classesArray.length(), scoresArray.length())
+    return (0 until length).mapNotNull { i ->
+      val className = classesArray.getString(i)
+      val score = scoresArray.getDouble(i)
+      if (score < 0.5) null
+      else {
+        val (taxonomy, animalType) = parseClassification(className)
+        AnimalDetectResponse(
+            animalType = animalType,
+            confidence = score.toFloat(),
+            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
+            taxonomy = taxonomy,
+        )
       }
     }
+  }
+
+  private fun parseClassification(classification: String): Pair<Taxonomy, String> {
+    val parts = classification.split(";")
+    val taxonomy =
+        Taxonomy(
+            id = parts.getOrNull(0) ?: "",
+            animalClass = parts.getOrNull(1) ?: "",
+            order = parts.getOrNull(2) ?: "",
+            family = parts.getOrNull(3) ?: "",
+            genus = parts.getOrNull(4) ?: "",
+            species = parts.getOrNull(5) ?: "",
+        )
+    val animalType = parts.getOrNull(6) ?: ""
+    return Pair(taxonomy, animalType)
   }
 
   /**

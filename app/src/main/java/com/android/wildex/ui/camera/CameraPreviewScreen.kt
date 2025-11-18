@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -72,6 +73,7 @@ fun CameraPreviewScreen(
   val surfaceRequest = remember { mutableStateOf<SurfaceRequest?>(null) }
   val cameraRef = remember { mutableStateOf<Camera?>(null) }
   val cameraSelector = remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
+  val zoomRatio = remember { mutableFloatStateOf(1f) }
 
   // Initialize camera
   LaunchedEffect(Unit, cameraSelector.value) {
@@ -86,27 +88,14 @@ fun CameraPreviewScreen(
         )
     cameraRef.value = camera
     previewUseCase.setSurfaceProvider { surfaceRequest.value = it }
+    camera.cameraInfo.zoomState.observe(lifecycleOwner) { state ->
+      zoomRatio.floatValue = state.zoomRatio
+    }
   }
 
   Box(modifier = modifier.fillMaxSize()) {
     // Camera viewfinder
-    surfaceRequest.value?.let {
-      CameraXViewfinder(
-          modifier =
-              Modifier.pointerInput(Unit) {
-                    detectTransformGestures { _, _, zoom, _ ->
-                      cameraRef.value
-                          ?.cameraControl
-                          ?.setZoomRatio(
-                              cameraRef.value!!.cameraInfo.zoomState.value!!.zoomRatio * zoom
-                          )
-                    }
-                  }
-                  .fillMaxSize()
-                  .testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
-          surfaceRequest = it,
-      )
-    }
+    CameraPreview(surfaceRequest.value, cameraRef.value)
 
     // Bottom controls
     CameraControls(
@@ -120,31 +109,46 @@ fun CameraPreviewScreen(
         modifier =
             Modifier.align(Alignment.BottomCenter)
                 .padding(start = 60.dp, end = 60.dp, bottom = 40.dp),
-        zoomValue = cameraRef.value?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1.0f,
+        zoomValue = zoomRatio.floatValue,
+    )
+  }
+}
+
+@Composable
+private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
+  surfaceRequest?.let {
+    CameraXViewfinder(
+        modifier =
+            Modifier.pointerInput(Unit) {
+                  detectTransformGestures { _, _, zoom, _ ->
+                    cameraRef
+                        ?.cameraControl
+                        ?.setZoomRatio(cameraRef.cameraInfo.zoomState.value!!.zoomRatio * zoom)
+                  }
+                }
+                .fillMaxSize()
+                .testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
+        surfaceRequest = it,
     )
   }
 }
 
 @Composable
 private fun CameraControls(
-    modifier: Modifier = Modifier,
-    onSwitchClick: () -> Unit = {},
+    onSwitchClick: () -> Unit,
     onCaptureClick: () -> Unit,
     onUploadClick: () -> Unit,
     zoomValue: Float = 1.0f,
+    modifier: Modifier,
 ) {
   Column(
       modifier = modifier.fillMaxWidth(),
       horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Surface(shape = RoundedCornerShape(20.dp), color = colorScheme.surface.copy(alpha = 0.25f)) {
-      Text(
-          text = "Zoom: ${"%.2f".format(zoomValue)}",
-          modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-          style = typography.bodySmall,
-      )
-    }
+    ZoomText(zoomValue)
+
     Spacer(modifier = Modifier.height(10.dp))
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -168,6 +172,17 @@ private fun CameraControls(
           modifier = Modifier.testTag(CameraPreviewScreenTestTags.SWITCH_BUTTON),
       )
     }
+  }
+}
+
+@Composable
+private fun ZoomText(zoomValue: Float) {
+  Surface(shape = RoundedCornerShape(20.dp), color = colorScheme.surface.copy(alpha = 0.25f)) {
+    Text(
+        text = "Zoom: ${"%.2f".format(zoomValue)}",
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        style = typography.bodySmall,
+    )
   }
 }
 

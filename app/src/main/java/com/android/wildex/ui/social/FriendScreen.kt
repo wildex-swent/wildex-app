@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,9 +23,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.CancelScheduleSend
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -41,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -52,6 +56,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -342,6 +347,42 @@ fun FriendRequestSuggestionTemplate(
 }
 
 @Composable
+fun NoFriends(){
+  Column (
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.height(210.dp).fillMaxWidth()
+  ){
+    Icon(imageVector = Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(70.dp))
+    Text(
+      text = "You don't have any friends yet. Look at our suggestions and discover new people!",
+      fontWeight = FontWeight.SemiBold,
+      textAlign = TextAlign.Center,
+      fontSize = 12.sp,
+      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+    )
+  }
+}
+
+@Composable
+fun NoSuggestions(){
+  Column (
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.height(210.dp).fillMaxWidth()
+  ){
+    Icon(imageVector = Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(60.dp))
+    Text(
+      text = "We have no suggestions for you at the moment...",
+      fontWeight = FontWeight.SemiBold,
+      textAlign = TextAlign.Center,
+      fontSize = 12.sp,
+      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+    )
+  }
+}
+
+@Composable
 fun FriendsTabContent(
   user: User
 ){
@@ -361,32 +402,35 @@ fun FriendsTabContent(
       )
     }
     item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          UnfollowButton()
-        }
-      )
+      NoFriends()
     }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          UnfollowButton()
-        }
-      )
-    }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          UnfollowButton()
-        }
-      )
-    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          UnfollowButton()
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          UnfollowButton()
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          UnfollowButton()
+//        }
+//      )
+//    }
     item {
       HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
       Text(
@@ -400,42 +444,81 @@ fun FriendsTabContent(
           .padding(top = 12.dp, bottom = 4.dp)
       )
     }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = "posted 4 times near you",
-        interactableElement = {
-          FollowButton()
-        }
-      )
+    item { 
+      NoSuggestions()
     }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = "shares 3 common friend with you",
-        interactableElement = {
-          FollowButton()
-        }
-      )
-    }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = "is popular in Argentina",
-        interactableElement = {
-          FollowButton()
-        }
-      )
-    }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = "shares 1 common friend with you",
-        interactableElement = {
-          FollowButton()
-        }
-      )
-    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = "posted 4 times near you",
+//        interactableElement = {
+//          FollowButton()
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = "shares 3 common friend with you",
+//        interactableElement = {
+//          FollowButton()
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = "is popular in Argentina",
+//        interactableElement = {
+//          FollowButton()
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = "shares 1 common friend with you",
+//        interactableElement = {
+//          FollowButton()
+//        }
+//      )
+//    }
+  }
+}
+
+@Composable
+fun NoSentRequests(){
+  Column (
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.height(210.dp).fillMaxWidth()
+  ){
+    Icon(imageVector = Icons.Default.CancelScheduleSend, contentDescription = null, modifier = Modifier.size(60.dp))
+    Text(
+      text = "You haven't sent any friend request yet. Look at our suggestions to discover new people!",
+      fontWeight = FontWeight.SemiBold,
+      textAlign = TextAlign.Center,
+      fontSize = 12.sp,
+      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+    )
+  }
+}
+
+@Composable
+fun NoReceivedRequests(){
+  Column (
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.height(210.dp).fillMaxWidth()
+  ){
+    Icon(imageVector = Icons.Default.Inbox, contentDescription = null, modifier = Modifier.size(60.dp))
+    Text(
+      text = "You have received no friend requests yet. Post to make your profile more attractive!",
+      fontWeight = FontWeight.SemiBold,
+      textAlign = TextAlign.Center,
+      fontSize = 12.sp,
+      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+    )
   }
 }
 
@@ -459,32 +542,35 @@ fun RequestsTabContent(
       )
     }
     item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          ReceivedRequestInteractable {  }
-        }
-      )
+      NoReceivedRequests()
     }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          ReceivedRequestInteractable {  }
-        }
-      )
-    }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          ReceivedRequestInteractable {  }
-        }
-      )
-    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          ReceivedRequestInteractable {  }
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          ReceivedRequestInteractable {  }
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          ReceivedRequestInteractable {  }
+//        }
+//      )
+//    }
     item {
       HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
       Text(
@@ -499,32 +585,35 @@ fun RequestsTabContent(
       )
     }
     item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          SentRequestInteractable {  }
-        }
-      )
+      NoSentRequests()
     }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          SentRequestInteractable {  }
-        }
-      )
-    }
-    item {
-      FriendRequestSuggestionTemplate(
-        user = user,
-        subtext = user.username,
-        interactableElement = {
-          SentRequestInteractable {  }
-        }
-      )
-    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          SentRequestInteractable {  }
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          SentRequestInteractable {  }
+//        }
+//      )
+//    }
+//    item {
+//      FriendRequestSuggestionTemplate(
+//        user = user,
+//        subtext = user.username,
+//        interactableElement = {
+//          SentRequestInteractable {  }
+//        }
+//      )
+//    }
   }
 }
 

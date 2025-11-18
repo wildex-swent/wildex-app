@@ -85,7 +85,6 @@ class UserRecommender(
     val candidateDistances =
         computeCandidatesDistanceAndRecentPosts(
             currentUserMeanLocation, candidates.map { it.userId })
-    val minDistance = candidateDistances.values.minOfOrNull { it.first } ?: 0.0
     val maxDistance = candidateDistances.values.maxOfOrNull { it.first } ?: 0.0
     val maxRecentPosts = candidateDistances.values.maxOfOrNull { it.second } ?: 0
 
@@ -99,10 +98,7 @@ class UserRecommender(
               val popularityScore = computePopularityScore(candidateFriendsCount, maxFriends)
               val (geoActivityScore, geoActivityReason) =
                   computeGeoProxAndActivityScore(
-                      candidateDistances[it.userId] ?: Pair(1.0, 0),
-                      minDistance,
-                      maxDistance,
-                      maxRecentPosts)
+                      candidateDistances[it.userId] ?: Pair(1.0, 0), maxDistance, maxRecentPosts)
 
               val mutualFriendsContribution = 0.5 * mutualFriendsScore
               val popularityContribution = 0.2 * popularityScore
@@ -211,14 +207,11 @@ class UserRecommender(
    */
   private fun computeGeoProxAndActivityScore(
       userDistanceAndRecentPosts: Pair<Double, Int>,
-      minDistance: Double,
       maxDistance: Double,
       maxRecentPosts: Int
   ): Pair<Double, Int> {
     val (distance, recentPostsCount) = userDistanceAndRecentPosts
-    val geoProximityScore =
-        if (minDistance != maxDistance) (maxDistance - distance) / (maxDistance - minDistance)
-        else 1.0
+    val geoProximityScore = if (maxDistance != 0.0) (maxDistance - distance) / maxDistance else 1.0
     val activityScore =
         if (maxRecentPosts != 0) recentPostsCount / maxRecentPosts.toDouble() else 0.0
 

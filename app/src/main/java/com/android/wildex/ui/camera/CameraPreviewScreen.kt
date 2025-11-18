@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.camera.compose.CameraXViewfinder
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -13,24 +14,36 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -42,6 +55,7 @@ object CameraPreviewScreenTestTags {
   const val CAMERA_VIEWFINDER = "camera_viewfinder"
   const val CAPTURE_BUTTON = "capture_button"
   const val UPLOAD_BUTTON = "upload_button"
+  const val SWITCH_BUTTON = "switch_button"
 }
 
 @Composable
@@ -56,17 +70,21 @@ fun CameraPreviewScreen(
   val previewUseCase = remember { Preview.Builder().build() }
   val imageCaptureUseCase = remember { ImageCapture.Builder().build() }
   val surfaceRequest = remember { mutableStateOf<SurfaceRequest?>(null) }
+  val cameraRef = remember { mutableStateOf<Camera?>(null) }
+  val cameraSelector = remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
 
   // Initialize camera
-  LaunchedEffect(Unit) {
+  LaunchedEffect(Unit, cameraSelector.value) {
     val cameraProvider = ProcessCameraProvider.awaitInstance(context)
     cameraProvider.unbindAll()
-    cameraProvider.bindToLifecycle(
-        lifecycleOwner,
-        CameraSelector.DEFAULT_BACK_CAMERA,
-        previewUseCase,
-        imageCaptureUseCase,
-    )
+    val camera =
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            cameraSelector.value,
+            previewUseCase,
+            imageCaptureUseCase,
+        )
+    cameraRef.value = camera
     previewUseCase.setSurfaceProvider { surfaceRequest.value = it }
   }
 
@@ -74,45 +92,82 @@ fun CameraPreviewScreen(
     // Camera viewfinder
     surfaceRequest.value?.let {
       CameraXViewfinder(
-          modifier = Modifier.fillMaxSize().testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
+          modifier =
+              Modifier.pointerInput(Unit) {
+                    detectTransformGestures { _, _, zoom, _ ->
+                      cameraRef.value
+                          ?.cameraControl
+                          ?.setZoomRatio(
+                              cameraRef.value!!.cameraInfo.zoomState.value!!.zoomRatio * zoom
+                          )
+                    }
+                  }
+                  .fillMaxSize()
+                  .testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
           surfaceRequest = it,
       )
     }
 
     // Bottom controls
     CameraControls(
+        onSwitchClick = {
+          if (cameraSelector.value == CameraSelector.DEFAULT_BACK_CAMERA)
+              cameraSelector.value = CameraSelector.DEFAULT_FRONT_CAMERA
+          else cameraSelector.value = CameraSelector.DEFAULT_BACK_CAMERA
+        },
         onCaptureClick = { imageCaptureUseCase.capturePhoto(context, onPhotoTaken) },
         onUploadClick = onUploadClick,
         modifier =
             Modifier.align(Alignment.BottomCenter)
                 .padding(start = 60.dp, end = 60.dp, bottom = 40.dp),
+        zoomValue = cameraRef.value?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1.0f,
     )
   }
 }
 
 @Composable
 private fun CameraControls(
+    modifier: Modifier = Modifier,
+    onSwitchClick: () -> Unit = {},
     onCaptureClick: () -> Unit,
     onUploadClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    zoomValue: Float = 1.0f,
 ) {
-  Box(
+  Column(
       modifier = modifier.fillMaxWidth(),
+      horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    // Upload button - left side
-    UploadButton(
-        onClick = onUploadClick,
-        modifier =
-            Modifier.align(Alignment.CenterStart)
-                .testTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON),
-    )
+    Surface(shape = RoundedCornerShape(20.dp), color = colorScheme.surface.copy(alpha = 0.25f)) {
+      Text(
+          text = "Zoom: ${"%.2f".format(zoomValue)}",
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+          style = typography.bodySmall,
+      )
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+      // Upload button - left side
+      UploadButton(
+          onClick = onUploadClick,
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON),
+      )
 
-    // Capture button - main action (larger)
-    CaptureButton(
-        onClick = onCaptureClick,
-        modifier =
-            Modifier.align(Alignment.Center).testTag(CameraPreviewScreenTestTags.CAPTURE_BUTTON),
-    )
+      // Capture button - main action (larger)
+      CaptureButton(
+          onClick = onCaptureClick,
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAPTURE_BUTTON),
+      )
+
+      // Switch button - right side
+      SwitchButton(
+          onClick = onSwitchClick,
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.SWITCH_BUTTON),
+      )
+    }
   }
 }
 
@@ -154,6 +209,28 @@ private fun UploadButton(
     Icon(
         imageVector = Icons.Default.Upload,
         contentDescription = "Upload photo",
+        tint = colorScheme.onSurfaceVariant,
+        modifier = Modifier.fillMaxSize(0.5f),
+    )
+  }
+}
+
+@Composable
+private fun SwitchButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+  IconButton(
+      onClick = onClick,
+      modifier =
+          modifier
+              .size(60.dp)
+              .background(colorScheme.surfaceVariant, CircleShape)
+              .border(2.dp, colorScheme.surface, CircleShape),
+  ) {
+    Icon(
+        imageVector = Icons.Default.Cameraswitch,
+        contentDescription = "Switch camera",
         tint = colorScheme.onSurfaceVariant,
         modifier = Modifier.fillMaxSize(0.5f),
     )

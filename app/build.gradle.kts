@@ -258,6 +258,7 @@ dependencies {
   implementation(libs.camera.compose)
   implementation(libs.camera.camera2)
   implementation(libs.camera.lifecycle)
+  implementation("com.google.guava:guava:32.1.2-android")
 
   // Lottie
   implementation(libs.lottie.compose)

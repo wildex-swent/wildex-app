@@ -320,7 +320,7 @@ object LocalRepositories {
     }
   }
 
-  open class UserFriendsRepositoryImpl() : UserFriendsRepository, ClearableRepository{
+  open class UserFriendsRepositoryImpl() : UserFriendsRepository, ClearableRepository {
     val mapUserToFriends = mutableMapOf<Id, UserFriends>()
 
     init {
@@ -339,28 +339,20 @@ object LocalRepositories {
       return mapUserToFriends[userId]?.friendsCount ?: throw Exception("User not found")
     }
 
-    override suspend fun addFriendToUserFriendsOfUser(
-      friendId: Id,
-      userId: Id
-    ) {
+    override suspend fun addFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
       val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
       mapUserToFriends[userId] =
-        userFriends.copy(
-          friendsId = userFriends.friendsId + friendId,
-          friendsCount = userFriends.friendsCount + 1
-        )
+          userFriends.copy(
+              friendsId = userFriends.friendsId + friendId,
+              friendsCount = userFriends.friendsCount + 1)
     }
 
-    override suspend fun deleteFriendToUserFriendsOfUser(
-      friendId: Id,
-      userId: Id
-    ) {
+    override suspend fun deleteFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
       val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
       mapUserToFriends[userId] =
-        userFriends.copy(
-          friendsId = userFriends.friendsId.filter { it != friendId },
-          friendsCount = userFriends.friendsCount - 1
-        )
+          userFriends.copy(
+              friendsId = userFriends.friendsId.filter { it != friendId },
+              friendsCount = userFriends.friendsCount - 1)
     }
 
     override suspend fun deleteUserFriendsOfUser(userId: Id) {
@@ -370,10 +362,9 @@ object LocalRepositories {
     override fun clear() {
       mapUserToFriends.clear()
     }
-
   }
 
-  open class RelationshipRepositoryImpl(): RelationshipRepository, ClearableRepository{
+  open class RelationshipRepositoryImpl() : RelationshipRepository, ClearableRepository {
 
     val listOfRelationships = mutableListOf<Relationship>()
 
@@ -381,19 +372,20 @@ object LocalRepositories {
       clear()
     }
 
-    override suspend fun initializeRelationship(
-      senderId: Id,
-      receiverId: Id
-    ) {
+    override suspend fun initializeRelationship(senderId: Id, receiverId: Id) {
       listOfRelationships.add(Relationship(senderId, receiverId, StatusEnum.PENDING))
     }
 
     override suspend fun getAllPendingRelationshipsBySender(senderId: Id): List<Relationship> {
-      return listOfRelationships.filter { it.senderId == senderId && it.status == StatusEnum.PENDING }
+      return listOfRelationships.filter {
+        it.senderId == senderId && it.status == StatusEnum.PENDING
+      }
     }
 
     override suspend fun getAllPendingRelationshipsByReceiver(receiverId: Id): List<Relationship> {
-      return listOfRelationships.filter { it.receiverId == receiverId && it.status == StatusEnum.PENDING }
+      return listOfRelationships.filter {
+        it.receiverId == receiverId && it.status == StatusEnum.PENDING
+      }
     }
 
     override suspend fun getAllAcceptedRelationshipsByUser(userId: Id): List<Relationship> {

@@ -27,6 +27,7 @@ import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriends
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
@@ -320,36 +321,46 @@ object LocalRepositories {
   }
 
   open class UserFriendsRepositoryImpl() : UserFriendsRepository, ClearableRepository{
-    val mapUserToFriends = mutableMapOf<Id, MutableList<Id>>()
+    val mapUserToFriends = mutableMapOf<Id, UserFriends>()
 
     init {
       clear()
     }
 
     override suspend fun initializeUserFriends(userId: Id) {
-      mapUserToFriends[userId] = mutableListOf()
+      mapUserToFriends[userId] = UserFriends(userId)
     }
 
     override suspend fun getAllFriendsOfUser(userId: Id): List<Id> {
-      return mapUserToFriends[userId]?.toList() ?: throw Exception("User not found")
+      return mapUserToFriends[userId]?.friendsId ?: throw Exception("User not found")
     }
 
     override suspend fun getFriendsCountOfUser(userId: Id): Int {
-      return getAllFriendsOfUser(userId).size
+      return mapUserToFriends[userId]?.friendsCount ?: throw Exception("User not found")
     }
 
     override suspend fun addFriendToUserFriendsOfUser(
       friendId: Id,
       userId: Id
     ) {
-      mapUserToFriends[userId]?.add(friendId) ?: throw Exception("User not found")
+      val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
+      mapUserToFriends[userId] =
+        userFriends.copy(
+          friendsId = userFriends.friendsId + friendId,
+          friendsCount = userFriends.friendsCount + 1
+        )
     }
 
     override suspend fun deleteFriendToUserFriendsOfUser(
       friendId: Id,
       userId: Id
     ) {
-      mapUserToFriends[userId]?.remove(friendId) ?: throw Exception("User not found")
+      val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
+      mapUserToFriends[userId] =
+        userFriends.copy(
+          friendsId = userFriends.friendsId.filter { it != friendId },
+          friendsCount = userFriends.friendsCount - 1
+        )
     }
 
     override suspend fun deleteUserFriendsOfUser(userId: Id) {

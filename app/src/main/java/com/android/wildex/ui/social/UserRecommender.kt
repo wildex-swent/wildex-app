@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import android.util.Log
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.relationship.RelationshipRepository
 import com.android.wildex.model.social.Post
@@ -10,11 +11,10 @@ import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Timestamp
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.Date
-import kotlin.math.cos
-import kotlin.math.exp
+import kotlin.math.sqrt
 
 data class RecommendationResult(
   val user: SimpleUser,
@@ -25,7 +25,7 @@ data class RecommendationResult(
  * A class responsible for recommending users to the current user.
  * Users are recommended based on mutual friends, popularity, close activity level.
  * The recommendation algorithm avoids suggesting users who already have pending friend requests
- * with the current user.
+ * with the current user or who are already friends with the current user.
  * Mutual friends are prioritized in the recommendations. Then popular users and those active in close
  * proximity are considered.
  * Each recommendation parameter is given a score between 0 and 1 for each candidate and a weight is
@@ -51,46 +51,49 @@ class UserRecommender (
     val pendingRequestsByCurrentUser = friendRequestRepository.getAllPendingRelationshipsBySender(currentUserId).map { it.receiverId }
     val pendingRequestsToCurrentUser = friendRequestRepository.getAllPendingRelationshipsByReceiver(currentUserId).map { it.senderId }
 
-    //filter out users who are already friends or have pending requests with current user, or are irrelevant (e.g., zero friends)
+    //filter out users who are already friends or have pending requests with current user
     val candidates = users
       .filter { it.userId != currentUserId && !currentUserFriends.contains(it.userId) }
       .filter { !pendingRequestsByCurrentUser.contains(it.userId) && !pendingRequestsToCurrentUser.contains(it.userId)}
-      .filter { it.friendsCount != 0 }
 
     //compute friends of friends map for mutual friends score
     val friendsOfFriendsMap = computeFriendsOfFriendsMap()
     val maxMutualFriends = friendsOfFriendsMap.values.maxOrNull() ?: 0
 
     //compute max friends for popularity score
-    val maxFriends = candidates.maxOfOrNull { it.friendsCount } ?: 0
+    val maxFriends = candidates.maxOfOrNull { userFriendsRepository.getFriendsCountOfUser(it.userId) } ?: 0
 
     //compute mean location for current user and candidates for geo proximity score
     val currentUserMeanLocation = userMeanLocation(postRepository.getAllPostsByAuthor())
     val candidateDistances = computeCandidatesDistanceAndRecentPosts(currentUserMeanLocation, candidates.map { it.userId })
     val minDistance = candidateDistances.values.minOfOrNull { it.first } ?: 0.0
+    val maxDistance = candidateDistances.values.maxOfOrNull { it.first } ?: 0.0
     val maxRecentPosts = candidateDistances.values.maxOfOrNull { it.second } ?: 0
 
+    //compute final score and main suggestion reason for each candidate
     val candidatesScoreReason = candidates.map {
       val (mutualFriendsScore, mutualFriendsCount) = computeMutualFriendsScore(it, friendsOfFriendsMap, maxMutualFriends)
-      val (popularityScore, popularityReason) = computePopularityScore(it, maxFriends)
+      val candidateFriendsCount = userFriendsRepository.getFriendsCountOfUser(it.userId)
+      val (popularityScore, popularityReason) = computePopularityScore(candidateFriendsCount, maxFriends, it.country)
       val (geoActivityScore, geoActivityReason) =
-        computeGeoProxAndActivityScore(candidateDistances[it.userId] ?: Pair(1.0, 0), minDistance, maxRecentPosts)
+        computeGeoProxAndActivityScore(candidateDistances[it.userId] ?: Pair(1.0, 0), minDistance, maxDistance, maxRecentPosts)
 
       val mutualFriendsContribution = 0.5 * mutualFriendsScore
       val popularityContribution = 0.2 * popularityScore
       val geoActivityContribution = 0.3 * geoActivityScore
+      Log.w(null, "Candidate ${it.userId}: Mutual Friend Score = $mutualFriendsScore, Popularity Score = $popularityScore, GeoActivity Score = $geoActivityScore")
 
       val maxContribution = maxOf(mutualFriendsContribution, popularityContribution, geoActivityContribution)
       val reason = when (maxContribution) {
         mutualFriendsContribution -> "shares $mutualFriendsCount common friend${if (mutualFriendsCount > 1) "s" else ""} with you"
         popularityContribution -> "is popular in $popularityReason"
-        geoActivityContribution -> "recently posted $geoActivityReason times near you"
+        geoActivityContribution -> "recently posted $geoActivityReason time${if (geoActivityReason > 1) "s" else ""} near you"
         else -> ""
       }
 
       val finalScore = mutualFriendsContribution + popularityContribution + geoActivityContribution
       Triple(SimpleUser(it.userId, it.username, it.profilePictureURL), finalScore, reason)
-    }
+    }.filter { it.second != 0.0 }
 
     val topCandidates = candidatesScoreReason
       .sortedByDescending { it.second }
@@ -101,7 +104,7 @@ class UserRecommender (
     }
   }
 
-  suspend fun computeFriendsOfFriendsMap(): Map<Id, Int> {
+  private suspend fun computeFriendsOfFriendsMap(): Map<Id, Int> {
     val userToMutualFriendsCount = mutableMapOf<Id, Int>()
     val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
     for (friendId in currentUserFriends) {
@@ -116,7 +119,7 @@ class UserRecommender (
     return userToMutualFriendsCount
   }
 
-  fun computeMutualFriendsScore(user: User, friendsOfFriendsMap: Map<Id, Int>, maxMutualFriends: Int): Pair<Double, Int> {
+  private fun computeMutualFriendsScore(user: User, friendsOfFriendsMap: Map<Id, Int>, maxMutualFriends: Int): Pair<Double, Int> {
     val mutualFriendsCount = friendsOfFriendsMap.getOrDefault(user.userId, 0)
     val mutualFriendsScore =
       if (maxMutualFriends != 0) mutualFriendsCount / maxMutualFriends.toDouble()
@@ -126,25 +129,24 @@ class UserRecommender (
     return Pair(mutualFriendsScore, mutualFriendsCount)
   }
 
-  fun computePopularityScore(user: User, maxFriends: Int): Pair<Double, String> {
-    return Pair(user.friendsCount / maxFriends.toDouble(), user.country)
+  private fun computePopularityScore(userFriendsCount: Int, maxFriends: Int, userCountry: String): Pair<Double, String> {
+    return Pair(if (maxFriends != 0) userFriendsCount / maxFriends.toDouble() else 0.0, userCountry)
   }
 
-  fun computeGeoProxAndActivityScore(
+  private fun computeGeoProxAndActivityScore(
     userDistanceAndRecentPosts: Pair<Double, Int>,
     minDistance: Double,
+    maxDistance: Double,
     maxRecentPosts: Int
   ): Pair<Double, Int> {
     val (distance, recentPostsCount) = userDistanceAndRecentPosts
-    val geoProximityScore = if (minDistance != 0.0) exp(-( distance / minDistance - 1)) else {
-      if (distance == 0.0) 1.0 else 0.0
-    }
+    val geoProximityScore = if (minDistance != maxDistance) (maxDistance - distance) / (maxDistance - minDistance) else 1.0
     val activityScore = if (maxRecentPosts != 0) recentPostsCount / maxRecentPosts.toDouble() else 0.0
 
     return Pair(geoProximityScore * activityScore, recentPostsCount)
   }
 
-  fun userMeanLocation(userPosts: List<Post>): Pair<Double, Double> {
+  private fun userMeanLocation(userPosts: List<Post>): Pair<Double, Double> {
     val latitudes = userPosts.mapNotNull { it.location?.latitude }
     val longitudes = userPosts.mapNotNull { it.location?.longitude }
 
@@ -154,19 +156,20 @@ class UserRecommender (
     return Pair(meanLatitude, meanLongitude)
   }
 
-  suspend fun computeCandidatesDistanceAndRecentPosts(
+  private suspend fun computeCandidatesDistanceAndRecentPosts(
     currentUserMeanLocation: Pair<Double, Double>,
     candidates: List<Id>
   ) : Map<Id, Pair<Double, Int>> {
     val candidateDistances = mutableMapOf<Id, Pair<Double, Int>>()
-    val oneMonthAgo = Timestamp(Date.from(Instant.now().minus(30, ChronoUnit.DAYS)))
+    val oneMonthAgo = ZonedDateTime.now(ZoneId.systemDefault()).minusDays(30).toInstant()
+    val timestampOneMonthAgo = Timestamp(Date.from(oneMonthAgo))
     for (candidate in candidates) {
       val candidatePosts = postRepository.getAllPostsByGivenAuthor(candidate)
-      val recentPosts = candidatePosts.filter { it.date >= oneMonthAgo }.size
+      val recentPosts = candidatePosts.filter { it.date >= timestampOneMonthAgo }.size
       val candidateMeanLocation = userMeanLocation(candidatePosts)
-      val x = Math.toRadians(currentUserMeanLocation.second - candidateMeanLocation.second) * cos(Math.toRadians((currentUserMeanLocation.first + candidateMeanLocation.first) / 2))
-      val y = Math.toRadians(currentUserMeanLocation.first - candidateMeanLocation.first)
-      val distance = x * x + y * y
+      val x = currentUserMeanLocation.first - candidateMeanLocation.first
+      val y = currentUserMeanLocation.second - candidateMeanLocation.second
+      val distance = sqrt(x * x + y * y)
       candidateDistances[candidate] = Pair(distance, recentPosts)
     }
     return candidateDistances

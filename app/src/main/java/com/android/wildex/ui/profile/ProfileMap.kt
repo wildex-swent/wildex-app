@@ -24,7 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
@@ -56,6 +58,12 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
   val context = LocalContext.current
   val styleUri = context.getString(R.string.map_style)
   val styleImportId = context.getString(R.string.map_standard_import)
+  val isDark =
+      when (AppTheme.appearanceMode) {
+        AppearanceMode.DARK -> true
+        AppearanceMode.LIGHT -> false
+        AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+      }
   ElevatedCard(
       modifier =
           Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag(ProfileScreenTestTags.MAP),
@@ -74,7 +82,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
               pins = pins,
               styleUri = styleUri,
               styleImportId = styleImportId,
-              isDark = isSystemInDarkTheme(),
+              isDark = isDark,
               context = context,
           )
           Button(

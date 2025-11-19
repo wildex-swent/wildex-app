@@ -24,6 +24,7 @@ import com.android.wildex.model.utils.Id
 import com.google.gson.JsonPrimitive
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
@@ -115,7 +116,6 @@ fun PinsOverlay(
 
   val annotationById = remember { mutableStateMapOf<Id, PointAnnotation>() }
   var manager by remember(mapView, currentTab) { mutableStateOf<PointAnnotationManager?>(null) }
-  var previousSelectedId by remember { mutableStateOf<Id?>(null) }
 
   val baseCache: MutableMap<BaseKey, Bitmap> = remember { mutableMapOf() }
   val latestOnClick by rememberUpdatedState(onPinClick)
@@ -150,7 +150,7 @@ fun PinsOverlay(
   }
 
   /* ------------- apply pin diff (create/update/remove + fade-in) ------------- */
-  LaunchedEffect(manager, pins) {
+  LaunchedEffect(manager, pins, selectedId) {
     val mgr = manager ?: return@LaunchedEffect
 
     val currentIds = pins.map { it.id }.toSet()
@@ -180,6 +180,7 @@ fun PinsOverlay(
       val existing = annotationById[id]
       if (existing == null) {
         val pt = Point.fromLngLat(pin.location.longitude, pin.location.latitude)
+
         val frame0 =
             withContext(Dispatchers.Default) {
               composeOverlays(
@@ -189,20 +190,23 @@ fun PinsOverlay(
                   showExclamation = showExcl,
                   exclamationOffsetPx = 0f,
                   borderColor = borderColor,
-                  scale = scale)
+                  scale = scale,
+              )
             }
+
         val created =
             mgr.create(
                 PointAnnotationOptions()
                     .withPoint(pt)
                     .withIconImage(frame0)
-                    .withData(JsonPrimitive(id)) // stored as string
-                )
+                    .withIconAnchor(IconAnchor.BOTTOM)
+                    .withData(JsonPrimitive(id)))
+
         annotationById[id] = created
 
         var a: Float
-        repeat(FADE_STEPS) { it ->
-          a = ((it + 1f) / FADE_STEPS)
+        repeat(FADE_STEPS) { step ->
+          a = ((step + 1f) / FADE_STEPS)
           val bmp =
               withContext(Dispatchers.Default) {
                 composeOverlays(
@@ -212,13 +216,15 @@ fun PinsOverlay(
                     showExclamation = showExcl,
                     exclamationOffsetPx = 0f,
                     borderColor = borderColor,
-                    scale = scale)
+                    scale = scale,
+                )
               }
           created.iconImageBitmap = bmp
           runCatching { mgr.update(created) }.onFailure { Log.w(TAG, "fade update failed", it) }
           delay(FADE_DELAY_MS)
         }
       } else {
+        // update existing (possibly resizing if selection changed)
         val bmp =
             withContext(Dispatchers.Default) {
               composeOverlays(
@@ -228,7 +234,8 @@ fun PinsOverlay(
                   showExclamation = showExcl,
                   exclamationOffsetPx = 0f,
                   borderColor = borderColor,
-                  scale = scale)
+                  scale = scale,
+              )
             }
         existing.iconImageBitmap = bmp
         runCatching { mgr.update(existing) }.onFailure { Log.w(TAG, "update failed", it) }
@@ -290,10 +297,11 @@ fun PinsOverlay(
   }
 
   /* ------------- selection ripple: only for selected pin ------------- */
-  LaunchedEffect(selectedId, manager, pins) {
+  val selectedAnnotation = selectedId?.let { annotationById[it] }
+  LaunchedEffect(selectedId, manager, pins, selectedAnnotation) {
     val mgr = manager ?: return@LaunchedEffect
     val sel = selectedId ?: return@LaunchedEffect
-    val ann = annotationById[sel] ?: return@LaunchedEffect
+    val ann = selectedAnnotation ?: return@LaunchedEffect
     val pin = pins.firstOrNull { it.id == sel } ?: return@LaunchedEffect
     val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
     val scale = 1.25f
@@ -317,7 +325,8 @@ fun PinsOverlay(
                 showExclamation = false,
                 exclamationOffsetPx = 0f,
                 borderColor = borderColor,
-                scale = scale)
+                scale = scale,
+            )
           }
       ann.iconImageBitmap = frame
       runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "ripple update failed", it) }
@@ -325,41 +334,6 @@ fun PinsOverlay(
       if (t >= 1f) t -= 1f
       delay(RIPPLE_FRAME_MS)
     }
-  }
-
-  /* ------------- restore previously selected pin visuals ------------- */
-  LaunchedEffect(selectedId) {
-    val mgr = manager ?: return@LaunchedEffect
-    previousSelectedId?.let { oldId ->
-      val ann = annotationById[oldId] ?: return@let
-      val pin = pins.firstOrNull { it.id == oldId } ?: return@let
-      val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
-      val scale = 1.0f
-      val showExcl = pin is MapPin.ReportPin && pin.assigneeId.isNullOrBlank()
-      val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
-      val base =
-          baseCache[baseKey]
-              ?: withContext(Dispatchers.Default) {
-                    val photo = fetchBitmapViaCoil(ctx, targetUrl)
-                    renderBasePin(photo, borderColor, scale)
-                  }
-                  .also { baseCache[baseKey] = it }
-
-      val bmp =
-          withContext(Dispatchers.Default) {
-            composeOverlays(
-                base = base,
-                globalAlpha = 1f,
-                rippleProgress = null,
-                showExclamation = showExcl,
-                exclamationOffsetPx = 0f,
-                borderColor = borderColor,
-                scale = scale)
-          }
-      ann.iconImageBitmap = bmp
-      runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "restore update failed", it) }
-    }
-    previousSelectedId = selectedId
   }
 
   Box(modifier = modifier)

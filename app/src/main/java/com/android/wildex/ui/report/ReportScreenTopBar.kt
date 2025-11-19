@@ -21,6 +21,7 @@ import com.android.wildex.R
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 /**
  * A composable that displays the top bar of the ReportScreen.
@@ -67,9 +68,14 @@ fun ReportScreenTopBar(
       },
       actions = {
         ClickableProfilePicture(
+            modifier =
+                Modifier.size(40.dp)
+                    .testTag(
+                        ReportScreenTestTags.testTagForProfilePicture(
+                            profileId = userId, role = "user")),
             profileId = userId,
             profilePictureURL = userProfilePictureURL,
-            role = "user",
+            profileUserType = userType,
             onProfile = onProfileClick)
       })
 }

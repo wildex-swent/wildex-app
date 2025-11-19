@@ -23,7 +23,6 @@ object ReportCompletionDialogTestTags {
 @Composable
 fun ReportCompletionDialog(
     type: ReportCompletionType,
-    onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
 
@@ -34,13 +33,12 @@ fun ReportCompletionDialog(
   when (type) {
     ReportCompletionType.RESOLVED -> {
       title = "Resolved. Thanks for handling the situation."
-      message =
-          "With everything taken care of, you can head back to the reports screen whenever you're ready."
+      message = "With everything taken care of, we'll take you back to the reports."
       animationRes = R.raw.success_confetti
     }
     ReportCompletionType.CANCELED -> {
-      title = "Canceled. If the situation evolves, feel free to reach out again."
-      message = "In the meantime, feel free to return to the reports screen whenever you want."
+      title = "Deleted. If the situation evolves, feel free to reach out again."
+      message = "In the meantime, we'll take you back to the reports."
       animationRes = R.raw.loader_cat
     }
   }
@@ -53,7 +51,7 @@ fun ReportCompletionDialog(
       )
 
   AlertDialog(
-      onDismissRequest = onDismiss,
+      onDismissRequest = onConfirm,
       text = {
         Column(
             modifier = Modifier.fillMaxWidth(),

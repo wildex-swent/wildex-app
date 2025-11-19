@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -48,15 +46,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
@@ -82,6 +81,7 @@ object ReportDetailsScreenTestTags {
   const val ACTION_UNSELFASSIGN = "report_details_action_unselfassign"
   const val DESCRIPTION_CARD = "report_details_description_card"
   const val DESCRIPTION_TEXT = "report_details_description_text"
+  const val DESCRIPTION_TOGGLE = "report_details_description_toggle"
   const val ASSIGNEE_CARD = "report_details_assignee_card"
   const val ASSIGNEE_TEXT = "report_details_assignee_text"
   const val COMMENTS_HEADER = "report_details_comments_header"
@@ -90,7 +90,6 @@ object ReportDetailsScreenTestTags {
   const val COMMENT_AUTHOR = "report_details_comment_author"
   const val COMMENT_DATE = "report_details_comment_date"
   const val COMMENT_BODY = "report_details_comment_body"
-  const val COMMENT_EXPANDABLE = "report_details_comment_expandable"
   const val COMMENT_TOGGLE = "report_details_comment_toggle"
   const val COMMENT_INPUT_BAR = "report_details_comment_input_bar"
   const val COMMENT_INPUT_FIELD = "report_details_comment_input_field"
@@ -108,11 +107,12 @@ fun ReportDetailsScreen(
 ) {
   val uiState by reportDetailsViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val focusManager = LocalFocusManager.current
 
   var showCompletionDialog by remember { mutableStateOf(false) }
   var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
-
   var showNavigationSheet by remember { mutableStateOf(false) }
+  var pendingAction by remember { mutableStateOf<ReportActionToConfirm?>(null) }
 
   // Initial load
   LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }
@@ -141,10 +141,28 @@ fun ReportDetailsScreen(
   if (showCompletionDialog && completionType != null) {
     ReportCompletionDialog(
         type = completionType!!,
-        onDismiss = { showCompletionDialog = false },
         onConfirm = {
           showCompletionDialog = false
           onGoBack()
+        },
+    )
+  }
+
+  if (pendingAction != null) {
+    ReportActionConfirmDialog(
+        action = pendingAction!!,
+        onDismiss = { pendingAction = null },
+        onConfirm = {
+          val actionToRun = pendingAction
+          pendingAction = null
+
+          when (actionToRun) {
+            ReportActionToConfirm.CANCEL -> reportDetailsViewModel.cancelReport()
+            ReportActionToConfirm.SELF_ASSIGN -> reportDetailsViewModel.selfAssignReport()
+            ReportActionToConfirm.RESOLVE -> reportDetailsViewModel.resolveReport()
+            ReportActionToConfirm.UNSELFASSIGN -> reportDetailsViewModel.unselfAssignReport()
+            null -> Unit
+          }
         },
     )
   }
@@ -177,7 +195,8 @@ fun ReportDetailsScreen(
         modifier =
             Modifier.fillMaxSize()
                 .padding(innerPadding)
-                .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH),
+                .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
+                .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
         onRefresh = {
           if (!showCompletionDialog) {
             reportDetailsViewModel.refreshReportDetails(reportId)
@@ -191,10 +210,10 @@ fun ReportDetailsScreen(
             ReportDetailsContent(
                 uiState = uiState,
                 onProfile = onProfile,
-                onCancel = { reportDetailsViewModel.cancelReport() },
-                onSelfAssign = { reportDetailsViewModel.selfAssignReport() },
-                onResolve = { reportDetailsViewModel.resolveReport() },
-                onUnSelfAssign = { reportDetailsViewModel.unselfAssignReport() },
+                onCancel = { pendingAction = ReportActionToConfirm.CANCEL },
+                onSelfAssign = { pendingAction = ReportActionToConfirm.SELF_ASSIGN },
+                onResolve = { pendingAction = ReportActionToConfirm.RESOLVE },
+                onUnSelfAssign = { pendingAction = ReportActionToConfirm.UNSELFASSIGN },
                 onLocationClick = { showNavigationSheet = true },
             )
       }
@@ -242,7 +261,8 @@ private fun ReportDetailsContent(
                 date = uiState.date,
                 location = uiState.location.name,
                 onProfile = onProfile,
-                onLocationClick = onLocationClick)
+                onLocationClick = onLocationClick,
+            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -259,14 +279,17 @@ private fun ReportDetailsContent(
                       ),
                   elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
               ) {
-                Text(
-                    text = uiState.description,
-                    color = colorScheme.onSurfaceVariant,
-                    modifier =
-                        Modifier.padding(14.dp)
-                            .testTag(ReportDetailsScreenTestTags.DESCRIPTION_TEXT),
-                    style = typography.bodyMedium,
-                )
+                Column(modifier = Modifier.padding(14.dp)) {
+                  ExpandableTextCore(
+                      text = uiState.description,
+                      collapsedLines = 4,
+                      style = typography.bodyMedium,
+                      color = colorScheme.onSurfaceVariant,
+                      bodyModifier = Modifier.testTag(ReportDetailsScreenTestTags.DESCRIPTION_TEXT),
+                      toggleModifier =
+                          Modifier.testTag(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE),
+                  )
+                }
               }
 
               Spacer(Modifier.height(10.dp))
@@ -457,121 +480,6 @@ private fun LocationTagButton(
   }
 }
 
-/** Adaptive action row using pill buttons. */
-@Composable
-private fun ReportDetailsActionRow(
-    uiState: ReportDetailsUIState,
-    onCancel: () -> Unit = {},
-    onSelfAssign: () -> Unit = {},
-    onResolve: () -> Unit = {},
-    onUnSelfAssign: () -> Unit = {},
-) {
-  val hasAssignee = uiState.assignee != null
-
-  Row(
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(horizontal = 16.dp)
-              .testTag(ReportDetailsScreenTestTags.ACTION_ROW),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-  ) {
-    when (uiState.currentUserType) {
-      UserType.REGULAR -> {
-        if (uiState.isCreatedByCurrentUser) {
-          ReportOutlinedActionButton(
-              text = "Cancel report",
-              onClick = onCancel,
-              modifier = Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
-          )
-        }
-      }
-      UserType.PROFESSIONAL -> {
-        when {
-          !hasAssignee -> {
-            ReportFilledActionButton(
-                text = "I got this!",
-                onClick = onSelfAssign,
-                modifier =
-                    Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_SELF_ASSIGN),
-            )
-            if (uiState.isCreatedByCurrentUser) {
-              ReportOutlinedActionButton(
-                  text = "Cancel",
-                  onClick = onCancel,
-                  modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
-              )
-            }
-          }
-          uiState.isAssignedToCurrentUser -> {
-            ReportFilledActionButton(
-                text = "Resolved!",
-                onClick = onResolve,
-                modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_RESOLVE),
-            )
-            ReportOutlinedActionButton(
-                text = "Cancel",
-                onClick = onUnSelfAssign,
-                modifier =
-                    Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_UNSELFASSIGN),
-            )
-          }
-          else -> {
-            if (uiState.isCreatedByCurrentUser) {
-              ReportOutlinedActionButton(
-                  text = "Cancel report",
-                  onClick = onCancel,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
-              )
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-@Composable
-private fun ReportFilledActionButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-  Button(
-      onClick = onClick,
-      modifier = modifier.height(44.dp),
-      shape = RoundedCornerShape(999.dp),
-      colors =
-          ButtonDefaults.buttonColors(
-              containerColor = colorScheme.primary,
-              contentColor = colorScheme.onPrimary,
-          ),
-  ) {
-    Text(text = text, style = typography.labelLarge)
-  }
-}
-
-@Composable
-private fun ReportOutlinedActionButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-  OutlinedButton(
-      onClick = onClick,
-      modifier = modifier.height(44.dp),
-      shape = RoundedCornerShape(999.dp),
-      colors =
-          ButtonDefaults.outlinedButtonColors(
-              contentColor = colorScheme.tertiary,
-          ),
-      border = BorderStroke(1.dp, colorScheme.tertiary),
-  ) {
-    Text(text = text, style = typography.labelLarge)
-  }
-}
-
 /** Assignee pill displayed under the description. */
 @Composable
 private fun ReportAssigneeDetailsCard(
@@ -634,8 +542,8 @@ private fun ReportCommentRow(
     ) {
       ClickableProfilePicture(
           modifier = Modifier.size(40.dp),
-          profileId = commentUI.authorId,
-          profilePictureURL = commentUI.authorProfilePictureUrl,
+          profileId = commentUI.author.userId,
+          profilePictureURL = commentUI.author.profilePictureURL,
           role = "commenter",
           onProfile = onProfile,
       )
@@ -645,7 +553,7 @@ private fun ReportCommentRow(
       Column(modifier = Modifier.weight(1f)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
           Text(
-              text = commentUI.authorUserName,
+              text = commentUI.author.username,
               style = typography.labelLarge,
               color = colorScheme.onBackground,
               maxLines = 1,
@@ -662,45 +570,15 @@ private fun ReportCommentRow(
           )
         }
         Spacer(modifier = Modifier.height(4.dp))
-
-        ExpandableCommentText(
+        ExpandableTextCore(
             text = commentUI.text,
+            collapsedLines = 3,
+            style = typography.bodyMedium,
+            color = colorScheme.onBackground,
+            bodyModifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_BODY),
+            toggleModifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE),
         )
       }
-    }
-  }
-}
-
-@Composable
-private fun ExpandableCommentText(
-    text: String,
-    collapsedLines: Int = 3,
-) {
-  var expanded by remember { mutableStateOf(false) }
-  var hasOverflow by remember { mutableStateOf(false) }
-
-  Column(modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_EXPANDABLE)) {
-    Text(
-        text = text,
-        style = typography.bodyMedium,
-        color = colorScheme.onBackground,
-        maxLines = if (expanded) Int.MAX_VALUE else collapsedLines,
-        overflow = TextOverflow.Ellipsis,
-        onTextLayout = { result -> hasOverflow = result.hasVisualOverflow },
-        modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_BODY),
-    )
-
-    if (hasOverflow || expanded) {
-      Spacer(Modifier.height(2.dp))
-      Text(
-          text = if (expanded) "Show less" else "Read more",
-          style = typography.labelSmall,
-          color = colorScheme.tertiary,
-          modifier =
-              Modifier.align(Alignment.End)
-                  .clickable { expanded = !expanded }
-                  .testTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE),
-      )
     }
   }
 }

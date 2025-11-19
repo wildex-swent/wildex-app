@@ -28,6 +28,6 @@ fun ReportDetailsTopBar(onGoBack: () -> Unit = {}) {
           )
         }
       },
-      title = { Text("Report details") },
+      title = { Text("Back") },
   )
 }

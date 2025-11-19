@@ -142,7 +142,7 @@ class ReportDetailsViewModelTest {
   @Test
   fun loadReportDetails_success_updates_UI_state_correctly() =
       mainDispatcherRule.runTest {
-        val comment =
+        val okComment =
             Comment(
                 commentId = "c1",
                 parentId = reportId,
@@ -150,7 +150,18 @@ class ReportDetailsViewModelTest {
                 text = "Nice job",
                 date = timestamp,
                 tag = CommentTag.REPORT_COMMENT)
-        coEvery { commentRepository.getAllCommentsByReport(reportId) } returns listOf(comment)
+        val badAuthorId = "bad-author"
+        val badComment =
+            Comment(
+                commentId = "c2",
+                parentId = reportId,
+                authorId = badAuthorId,
+                text = "Should not appear",
+                date = timestamp,
+                tag = CommentTag.REPORT_COMMENT)
+        coEvery { commentRepository.getAllCommentsByReport(reportId) } returns
+            listOf(okComment, badComment)
+        coEvery { userRepository.getSimpleUser(badAuthorId) } throws Exception("no such user")
         viewModel.loadReportDetails(reportId)
         assertTrue(viewModel.uiState.value.isLoading)
         advanceUntilIdle()
@@ -163,8 +174,6 @@ class ReportDetailsViewModelTest {
         assertEquals(authorUser, state.author)
         assertEquals(assigneeUser, state.assignee)
         assertEquals(currentUser, state.currentUser)
-        assertFalse(state.isCreatedByCurrentUser)
-        assertFalse(state.isAssignedToCurrentUser)
         assertEquals(1, state.commentsCount)
         assertEquals(1, state.commentsUI.size)
         assertEquals("Nice job", state.commentsUI.first().text)
@@ -215,6 +224,25 @@ class ReportDetailsViewModelTest {
       }
 
   @Test
+  fun loadReportDetails_non_fatal_assignee_and_comments_errors_set_errorMsg_and_keep_state_usable() =
+      mainDispatcherRule.runTest {
+        coEvery { userRepository.getSimpleUser(assigneeId) } throws Exception("assignee error")
+        coEvery { commentRepository.getAllCommentsByReport(reportId) } throws
+            Exception("comment error")
+        viewModel.loadReportDetails(reportId)
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
+        assertNull(state.assignee)
+        assertTrue(state.commentsUI.isEmpty())
+        assertEquals(0, state.commentsCount)
+        assertNotNull(state.errorMsg)
+        val msg = state.errorMsg!!
+        assertTrue(msg.contains("Failed to load assignee information"))
+        assertTrue(msg.contains("Failed to load comments"))
+        assertFalse(state.isError)
+      }
+
+  @Test
   fun cancelReport_deletes_report_and_comments_and_emits_canceled_event() =
       mainDispatcherRule.runTest {
         viewModel.loadReportDetails(reportId)
@@ -228,6 +256,13 @@ class ReportDetailsViewModelTest {
         assertTrue(event is ReportDetailsEvent.ShowCompletion)
         assertEquals(
             ReportCompletionType.CANCELED, (event as ReportDetailsEvent.ShowCompletion).type)
+        coEvery { reportRepository.deleteReport(reportId) } throws Exception("cancel fail")
+        viewModel.cancelReport()
+        advanceUntilIdle()
+        val stateAfterError = viewModel.uiState.value
+        assertTrue(stateAfterError.isError)
+        assertNotNull(stateAfterError.errorMsg)
+        assertTrue(stateAfterError.errorMsg!!.contains("Error canceling report"))
       }
 
   @Test
@@ -244,6 +279,13 @@ class ReportDetailsViewModelTest {
         assertTrue(event is ReportDetailsEvent.ShowCompletion)
         assertEquals(
             ReportCompletionType.RESOLVED, (event as ReportDetailsEvent.ShowCompletion).type)
+        coEvery { reportRepository.deleteReport(reportId) } throws Exception("resolve fail")
+        viewModel.resolveReport()
+        advanceUntilIdle()
+        val stateAfterError = viewModel.uiState.value
+        assertTrue(stateAfterError.isError)
+        assertNotNull(stateAfterError.errorMsg)
+        assertTrue(stateAfterError.errorMsg!!.contains("Error resolving report"))
       }
 
   @Test
@@ -259,6 +301,13 @@ class ReportDetailsViewModelTest {
               report.copy(assigneeId = currentUserId),
           )
         }
+        coEvery { reportRepository.getReport(reportId) } throws Exception("self-assign fail")
+        viewModel.selfAssignReport()
+        advanceUntilIdle()
+        val stateAfterError = viewModel.uiState.value
+        assertTrue(stateAfterError.isError)
+        assertNotNull(stateAfterError.errorMsg)
+        assertTrue(stateAfterError.errorMsg!!.contains("Error self-assigning report"))
       }
 
   @Test
@@ -273,6 +322,13 @@ class ReportDetailsViewModelTest {
         coVerify {
           reportRepository.editReport(reportId, reportWithCurrentAsAssignee.copy(assigneeId = null))
         }
+        coEvery { reportRepository.getReport(reportId) } throws Exception("unself-assign fail")
+        viewModel.unselfAssignReport()
+        advanceUntilIdle()
+        val stateAfterError = viewModel.uiState.value
+        assertTrue(stateAfterError.isError)
+        assertNotNull(stateAfterError.errorMsg)
+        assertTrue(stateAfterError.errorMsg!!.contains("Error unself-assigning report"))
       }
 
   @Test

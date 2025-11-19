@@ -160,7 +160,7 @@ class ReportDetailsScreenViewModel(
 
       // ------ Non Fatal errors ------
 
-      // Sooo since these don't break the code, I thought maybe we could collect all errors
+      // Sooo I don't think these should break the code, I thought maybe we could collect all errors
       // and show them at once at the end
       var localErrorMsg: String? = null
       fun appendError(msg: String) {
@@ -222,7 +222,7 @@ class ReportDetailsScreenViewModel(
     }
   }
 
-  /** Cancels a report created by a regular user. */
+  /** Cancels a report */
   fun cancelReport() {
     val reportId = _uiState.value.reportId
     viewModelScope.launch {
@@ -316,7 +316,7 @@ class ReportDetailsScreenViewModel(
     }
   }
 
-  /** Optimistic comment add with rollback on failure, similar to PostDetails. */
+  /** Optimistic comment add with rollback on failure */
   fun addComment(text: String = "") {
     if (text.isBlank()) return
     viewModelScope.launch {

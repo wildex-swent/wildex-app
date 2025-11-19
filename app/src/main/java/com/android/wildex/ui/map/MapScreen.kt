@@ -32,8 +32,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.map.PinDetails
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
@@ -43,6 +45,8 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
+import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
+import com.mapbox.maps.plugin.animation.flyTo
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
@@ -105,7 +109,13 @@ fun MapScreen(
     val render by viewModel.renderState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    val isDark =
+        when (AppTheme.appearanceMode) {
+          AppearanceMode.DARK -> true
+          AppearanceMode.LIGHT -> false
+          AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+        }
+
     val styleUri = context.getString(R.string.map_style)
     val standardImportId = context.getString(R.string.map_standard_import)
 
@@ -147,6 +157,43 @@ fun MapScreen(
     var isMapReady by remember { mutableStateOf(false) }
     // I added this to avoid the old pins taking the new tab color before they disappear
     var styleTab by remember { mutableStateOf(uiState.activeTab) }
+    var didInitialCenter by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isMapReady, uiState.pins) {
+      if (!didInitialCenter && isMapReady && uiState.pins.isNotEmpty()) {
+        val loc = uiState.centerCoordinates
+        val dest =
+            CameraOptions.Builder()
+                .center(Point.fromLngLat(loc.longitude, loc.latitude))
+                .zoom(12.0)
+                .build()
+
+        mapView
+            ?.mapboxMap
+            ?.flyTo(
+                dest,
+                mapAnimationOptions { duration(1000L) },
+            )
+
+        didInitialCenter = true
+      }
+    }
+
+    LaunchedEffect(uiState.centerCoordinates, isMapReady, uiState.selected) {
+      if (!isMapReady) return@LaunchedEffect
+      if (uiState.selected == null) return@LaunchedEffect
+      val mv = mapView ?: return@LaunchedEffect
+      val loc = uiState.centerCoordinates
+      val dest =
+          CameraOptions.Builder()
+              .center(Point.fromLngLat(loc.longitude, loc.latitude))
+              .zoom(18.0)
+              .build()
+      mv.mapboxMap.flyTo(
+          dest,
+          mapAnimationOptions { duration(800L) },
+      )
+    }
 
     val indicatorListener = remember {
       OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
@@ -273,13 +320,14 @@ fun MapScreen(
           val longitude = uiState.centerCoordinates.longitude
           val latitude = uiState.centerCoordinates.latitude
           val fallback = Point.fromLngLat(longitude, latitude)
-          mapView
-              ?.mapboxMap
-              ?.setCamera(
-                  CameraOptions.Builder()
-                      .center(target ?: fallback)
-                      .zoom(if (target != null) 14.0 else 12.0)
-                      .build())
+          val center = target ?: fallback
+          val zoom = if (target != null) 14.0 else 12.0
+          mapView!!
+              .mapboxMap
+              .flyTo(
+                  CameraOptions.Builder().center(center).zoom(zoom).build(),
+                  mapAnimationOptions { duration(800L) },
+              )
           viewModel.consumeRecenter()
         }
       }

@@ -152,6 +152,16 @@ class MapScreenViewModel(
                 if (isSelf) loadAllReportsAsPins() else loadReportsInvolvingUser(userUid)
           }
 
+      val previousCenter = _uiState.value.centerCoordinates
+      val defaultCenter = MapUIState().centerCoordinates // Lausanne
+
+      val centerCoordinates: Location =
+          when {
+            previousCenter != defaultCenter -> previousCenter
+            pins.isNotEmpty() -> pins[0].location
+            else -> previousCenter
+          }
+
       _uiState.value =
           _uiState.value.copy(
               availableTabs = tabs,
@@ -159,6 +169,7 @@ class MapScreenViewModel(
               pins = pins,
               isLoading = false,
               isRefreshing = false,
+              centerCoordinates = centerCoordinates,
               isError = false,
               errorMsg = null,
           )
@@ -188,6 +199,9 @@ class MapScreenViewModel(
   fun onPinSelected(pinId: Id) {
     viewModelScope.launch {
       val pin = _uiState.value.pins.firstOrNull { it.id == pinId } ?: return@launch
+      val newCenter = pin.location
+      _uiState.value = _uiState.value.copy(centerCoordinates = newCenter)
+
       try {
         when (pin) {
           is MapPin.PostPin -> {

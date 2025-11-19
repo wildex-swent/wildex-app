@@ -6,7 +6,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
-import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -136,7 +135,6 @@ class CameraScreenViewModelTest {
             animalType = "Golden Eagle",
             taxonomy = taxonomy,
             confidence = 0.95f,
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
         )
     coEvery { animalInfoRepository.detectAnimal(context, uri) } returns listOf(response)
     viewModel.detectAnimalImage(uri, context)
@@ -156,7 +154,6 @@ class CameraScreenViewModelTest {
             animalType = "Test Animal",
             taxonomy = taxonomy,
             confidence = 0.8f,
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
         )
     coEvery { animalInfoRepository.detectAnimal(context, uri) } coAnswers
         {
@@ -177,7 +174,6 @@ class CameraScreenViewModelTest {
             animalType = "Golden Eagle",
             taxonomy = taxonomy,
             confidence = 0.95f,
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
         )
     val description = "Amazing sighting!"
     val location =
@@ -243,7 +239,6 @@ class CameraScreenViewModelTest {
             animalType = "Test Animal",
             taxonomy = taxonomy,
             confidence = 0.8f,
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
         )
     viewModel.updateImageUri(uri)
     coEvery { animalInfoRepository.detectAnimal(context, uri) } returns listOf(response)
@@ -269,7 +264,6 @@ class CameraScreenViewModelTest {
             animalType = "Golden Eagle",
             taxonomy = taxonomy,
             confidence = 0.95f,
-            boundingBox = BoundingBox(0f, 0f, 0f, 0f),
         )
     val description = "Test description"
     val location =

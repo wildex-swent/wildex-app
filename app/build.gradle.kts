@@ -21,7 +21,6 @@ android {
     localProperties.load(FileInputStream(localPropertiesFile))
   }
 
-  val adApiKey: String = localProperties.getProperty("ANIMALDETECT_API_KEY") ?: ""
   val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
   val mbApiKey: String = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
 
@@ -33,7 +32,6 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
-    buildConfigField("String", "ANIMALDETECT_API_KEY", "\"$adApiKey\"")
     buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
     buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mbApiKey\"")
   }

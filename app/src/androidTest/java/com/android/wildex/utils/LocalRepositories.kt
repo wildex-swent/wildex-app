@@ -8,7 +8,6 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
-import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -31,6 +30,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Input
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
+import kotlin.coroutines.CoroutineContext
 
 interface ClearableRepository {
   fun clear()
@@ -436,12 +436,12 @@ object LocalRepositories {
     override suspend fun detectAnimal(
         context: Context,
         imageUri: Uri,
+        coroutineContext: CoroutineContext
     ): List<AnimalDetectResponse> {
       return listOf(
           AnimalDetectResponse(
               "default animal",
               0.9f,
-              BoundingBox(0f, 0f, 0f, 0f),
               Taxonomy(
                   "animalId",
                   "animalClass",
@@ -453,7 +453,10 @@ object LocalRepositories {
           ))
     }
 
-    override suspend fun getAnimalDescription(animalName: String): String? {
+    override suspend fun getAnimalDescription(
+        animalName: String,
+        coroutineContext: CoroutineContext
+    ): String? {
       return "This is a default animal"
     }
   }

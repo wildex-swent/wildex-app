@@ -95,10 +95,10 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser("user3", "user3", ""),
+                  user = SimpleUser("user3", "user3", "", UserType.REGULAR),
                   reason = "shares 2 common friends with you"),
               RecommendationResult(
-                  user = SimpleUser("user4", "user4", ""),
+                  user = SimpleUser("user4", "user4", "", UserType.REGULAR),
                   reason = "shares 1 common friend with you"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)
@@ -135,13 +135,13 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser("user1", "user1", ""), reason = "is popular in Listembourg"),
+                  user = SimpleUser("user1", "user1", "", UserType.REGULAR), reason = "is popular in Listembourg"),
               RecommendationResult(
-                  user = SimpleUser("user2", "user2", ""), reason = "is popular in Listembourg"),
+                  user = SimpleUser("user2", "user2", "", UserType.REGULAR), reason = "is popular in Listembourg"),
               RecommendationResult(
-                  user = SimpleUser("user3", "user3", ""), reason = "is popular in Listembourg"),
+                  user = SimpleUser("user3", "user3", "", UserType.REGULAR), reason = "is popular in Listembourg"),
               RecommendationResult(
-                  user = SimpleUser("user4", "user4", ""), reason = "is popular in Listembourg"))
+                  user = SimpleUser("user4", "user4", "", UserType.REGULAR), reason = "is popular in Listembourg"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)
       Assert.assertEquals(expectedResults, recommendedUsers)
@@ -307,16 +307,16 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser("user1", "user1", ""),
+                  user = SimpleUser("user1", "user1", "", UserType.REGULAR),
                   reason = "recently posted 5 times near you"),
               RecommendationResult(
-                  user = SimpleUser("user2", "user2", ""),
+                  user = SimpleUser("user2", "user2", "", UserType.REGULAR),
                   reason = "recently posted 3 times near you"),
               RecommendationResult(
-                  user = SimpleUser("user3", "user3", ""),
+                  user = SimpleUser("user3", "user3", "", UserType.REGULAR),
                   reason = "recently posted 1 time near you"),
               RecommendationResult(
-                  user = SimpleUser("user4", "user4", ""),
+                  user = SimpleUser("user4", "user4", "", UserType.REGULAR),
                   reason = "recently posted 1 time near you"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)
@@ -382,9 +382,9 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser("user3", "user3", ""), reason = "is popular in Listembourg"),
+                  user = SimpleUser("user3", "user3", "", UserType.REGULAR), reason = "is popular in Listembourg"),
               RecommendationResult(
-                  user = SimpleUser("user4", "user4", ""), reason = "is popular in Listembourg"))
+                  user = SimpleUser("user4", "user4", "", UserType.REGULAR), reason = "is popular in Listembourg"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)
       Assert.assertEquals(expectedResults, recommendedUsers)
@@ -559,13 +559,13 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser("user1", "user1", ""),
+                  user = SimpleUser("user1", "user1", "", UserType.REGULAR),
                   reason = "shares 5 common friends with you"),
               RecommendationResult(
-                  user = SimpleUser("user3", "user3", ""),
+                  user = SimpleUser("user3", "user3", "", UserType.REGULAR),
                   reason = "recently posted 6 times near you"),
               RecommendationResult(
-                  user = SimpleUser("user2", "user2", ""), reason = "is popular in Listembourg"))
+                  user = SimpleUser("user2", "user2", "", UserType.REGULAR), reason = "is popular in Listembourg"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)
       Assert.assertEquals(expectedResults, recommendedUsers)
@@ -671,10 +671,10 @@ class UserRecommenderTest {
       val expectedResults =
           listOf(
               RecommendationResult(
-                  user = SimpleUser(userId = "user1", username = "user1", profilePictureURL = ""),
+                  user = SimpleUser(userId = "user1", username = "user1", profilePictureURL = "", UserType.REGULAR),
                   reason = "recently posted 1 time near you"),
               RecommendationResult(
-                  user = SimpleUser(userId = "user2", username = "user2", profilePictureURL = ""),
+                  user = SimpleUser(userId = "user2", username = "user2", profilePictureURL = "", UserType.REGULAR),
                   reason = "recently posted 1 time near you"))
       val recommendedUsers = userRecommender.getRecommendedUsers()
       Assert.assertEquals(expectedResults.size, recommendedUsers.size)

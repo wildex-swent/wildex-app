@@ -14,7 +14,6 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Date
 import kotlin.math.sqrt
-import kotlin.text.compareTo
 
 /**
  * Represents a candidate during the selection phase when the ranking hasn't been done yet
@@ -201,7 +200,9 @@ class UserRecommender(
               val finalScore =
                   mutualFriendsContribution + popularityContribution + geoActivityContribution
               CandidateScore(
-                  SimpleUser(it.userId, it.username, it.profilePictureURL), finalScore, reason)
+                  SimpleUser(it.userId, it.username, it.profilePictureURL, it.userType),
+                  finalScore,
+                  reason)
             }
             .filter { it.score != 0.0 }
 

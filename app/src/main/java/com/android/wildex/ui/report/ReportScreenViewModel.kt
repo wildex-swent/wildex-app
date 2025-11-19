@@ -34,7 +34,6 @@ import kotlinx.coroutines.launch
 data class ReportScreenUIState(
     val reports: List<ReportUIState> = emptyList(),
     val currentUser: SimpleUser = defaultUser,
-    val currentUserType: UserType = UserType.REGULAR,
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
@@ -50,7 +49,7 @@ data class ReportScreenUIState(
  * @property date The date of the report.
  * @property description The description of the report.
  * @property author The [SimpleUser] object representing the author of the report.
- * @property assigneeId The ID of the assignee of the report.
+ * @property assigneeUsername The ID of the assignee of the report.
  */
 data class ReportUIState(
     val reportId: Id,
@@ -64,7 +63,11 @@ data class ReportUIState(
 
 /** Default placeholder user used when no valid user is loaded. */
 private val defaultUser: SimpleUser =
-    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
+    SimpleUser(
+        userId = "defaultUserId",
+        username = "defaultUsername",
+        profilePictureURL = "",
+        userType = UserType.REGULAR)
 
 /**
  * ViewModel for the report screen. Loads the reports and user data and handles UI state updates
@@ -101,23 +104,15 @@ class ReportScreenViewModel(
     try {
       val currentUser =
           try {
-            userRepository.getUser(currentUserId)
+            userRepository.getSimpleUser(currentUserId)
           } catch (e: Exception) {
             handleException("Error loading current user data", e)
-            null
+            defaultUser
           }
-
-      val currentSimpleUser =
-          SimpleUser(
-              userId = currentUser?.userId ?: "",
-              username = currentUser?.username ?: "",
-              profilePictureURL = currentUser?.profilePictureURL ?: "",
-          )
-      val currentUserType = currentUser?.userType ?: UserType.REGULAR
 
       val reports =
           try {
-            if (currentUserType == UserType.PROFESSIONAL) reportRepository.getAllReports()
+            if (currentUser.userType == UserType.PROFESSIONAL) reportRepository.getAllReports()
             else reportRepository.getAllReportsByAuthor(currentUserId)
           } catch (e: Exception) {
             handleException("Error loading reports", e)
@@ -129,8 +124,7 @@ class ReportScreenViewModel(
       _uiState.value =
           _uiState.value.copy(
               reports = reportUIStates,
-              currentUser = currentSimpleUser,
-              currentUserType = currentUserType,
+              currentUser = currentUser,
               isLoading = false,
               isRefreshing = false,
               isError = false,

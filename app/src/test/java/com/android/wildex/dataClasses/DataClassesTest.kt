@@ -164,11 +164,13 @@ class DataClassesTest {
             userId = "user1",
             username = "TestUser",
             profilePictureURL = "https://example.com/user_pic",
+            userType = UserType.REGULAR,
         )
 
     TestCase.assertEquals("user1", simpleUser.userId)
     TestCase.assertEquals("TestUser", simpleUser.username)
     TestCase.assertEquals("https://example.com/user_pic", simpleUser.profilePictureURL)
+    TestCase.assertEquals(UserType.REGULAR, simpleUser.userType)
   }
 
   @Test

@@ -114,7 +114,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       val id = document.id
       val username = document.getString("username") ?: return null
       val profilePictureURL = document.getString("profilePictureURL") ?: ""
-      SimpleUser(userId = id, username = username, profilePictureURL = profilePictureURL)
+      val userType =
+          document.getString("userType")?.let { UserType.valueOf(it) } ?: UserType.REGULAR
+      SimpleUser(
+          userId = id,
+          username = username,
+          profilePictureURL = profilePictureURL,
+          userType = userType)
     } catch (e: Exception) {
       Log.e(TAG, "documentToSimpleUser: error converting document ${document.id}", e)
       null

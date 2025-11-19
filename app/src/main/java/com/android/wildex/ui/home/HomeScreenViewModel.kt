@@ -16,6 +16,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -43,7 +44,11 @@ data class HomeUIState(
 
 /** Default placeholder user used when no valid user is loaded. */
 private val defaultUser: SimpleUser =
-    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
+    SimpleUser(
+        userId = "defaultUserId",
+        username = "defaultUsername",
+        profilePictureURL = "",
+        userType = UserType.REGULAR)
 /**
  * Combines post data with associated metadata for display.
  *

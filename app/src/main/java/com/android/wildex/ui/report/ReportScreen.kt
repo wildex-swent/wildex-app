@@ -112,7 +112,7 @@ fun ReportScreen(
       topBar = {
         ReportScreenTopBar(
             userId = uiState.currentUser.userId,
-            userType = uiState.currentUserType,
+            userType = uiState.currentUser.userType,
             userProfilePictureURL = uiState.currentUser.profilePictureURL,
             onProfileClick = onProfileClick,
             onNotificationClick = onNotificationClick,
@@ -136,7 +136,7 @@ fun ReportScreen(
                 reports = uiState.reports,
                 userId = uiState.currentUser.userId,
                 username = uiState.currentUser.username,
-                userType = uiState.currentUserType,
+                userType = uiState.currentUser.userType,
                 onProfileClick = onProfileClick,
                 onReportClick = onReportClick,
                 cancelReport = reportScreenViewModel::cancelReport,

@@ -181,6 +181,7 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
             userId = user1.userId,
             username = user1.username,
             profilePictureURL = user1.profilePictureURL,
+            userType = user1.userType,
         )
     assertEquals(expectedSimple, simple)
   }

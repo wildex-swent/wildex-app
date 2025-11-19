@@ -180,7 +180,7 @@ object LocalRepositories {
           userId = user.userId,
           username = user.username,
           profilePictureURL = user.profilePictureURL,
-      )
+          userType = user.userType)
     }
 
     override suspend fun addUser(user: User) {

@@ -11,6 +11,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
@@ -59,7 +60,7 @@ class PostDetailsScreenViewModelTest {
           username = "tiger_lover",
           profilePictureURL =
               "https://vectorportal.com/storage/d5YN3OWWLMAJMqMZZJsITZT6bUniD0mbd2HGVNkB.jpg",
-      )
+          userType = UserType.REGULAR)
 
   private val testCommentsAuthor =
       SimpleUser(
@@ -67,7 +68,7 @@ class PostDetailsScreenViewModelTest {
           username = "joe34",
           profilePictureURL =
               "https://vectorportal.com/storage/KIygRdXXMVXBs09f42hJ4VWOYVZIX9WdhOJP7Rf4.jpg",
-      )
+          userType = UserType.REGULAR)
 
   private val testComments =
       listOf(
@@ -121,7 +122,7 @@ class PostDetailsScreenViewModelTest {
     coEvery { userRepository.getSimpleUser("poster1") } returns testPostSimpleAuthor
     coEvery { userRepository.getSimpleUser("commentAuthor1") } returns testCommentsAuthor
     coEvery { userRepository.getSimpleUser("currentUserId-1") } returns
-        SimpleUser("currentUserId-1", "me", "url")
+        SimpleUser("currentUserId-1", "me", "url", userType = UserType.REGULAR)
     coEvery { commentRepository.getAllCommentsByPost("post1") } returns testComments
     coEvery { postsRepository.editPost(any(), any()) } just Runs
     coEvery { likeRepository.getNewLikeId() } returns "like1"

@@ -22,6 +22,7 @@ android {
   }
 
   val hfApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY") ?: ""
+  val pxApiKey: String = localProperties.getProperty("PEXELS_API_KEY") ?: ""
   val mbApiKey: String = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
 
   defaultConfig {
@@ -33,6 +34,7 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
     buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$hfApiKey\"")
+    buildConfigField("String", "PEXELS_API_KEY", "\"$pxApiKey\"")
     buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mbApiKey\"")
   }
 
@@ -160,8 +162,8 @@ dependencies {
   implementation(libs.material)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(platform(libs.compose.bom))
-    implementation(libs.androidx.material3)
-    testImplementation(libs.junit)
+  implementation(libs.androidx.material3)
+  testImplementation(libs.junit)
   globalTestImplementation(libs.androidx.junit)
   globalTestImplementation(libs.androidx.espresso.core)
   implementation(libs.kotlinx.serialization.json)

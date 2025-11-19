@@ -56,6 +56,15 @@ private const val BADGE_BAR_W = 3.6f
 private const val BADGE_BAR_H = 9.5f
 private const val BADGE_DOT_R = 2.4f
 
+/* ----------------------- main implementation ----------------------- */
+
+/** Coroutine dispatchers used for PinsOverlay operations. */
+@VisibleForTesting
+internal object PinsDispatchers {
+  var computation: CoroutineDispatcher = Dispatchers.Default
+  var io: CoroutineDispatcher = Dispatchers.IO
+}
+
 /** Singleton Coil ImageLoader to be shared across multiple invocations of PinsOverlay */
 @VisibleForTesting
 internal object SharedCoil {
@@ -89,16 +98,7 @@ internal data class BaseKey(
     val scaleKey: Int,
 )
 
-/**
- * Composable overlay that displays map pins on a Mapbox MapView.
- *
- * @param modifier Modifier to be applied to the Box containing the map pins.
- * @param mapView The Mapbox MapView where the pins will be displayed.
- * @param pins List of MapPin objects representing the pins to be displayed.
- * @param currentTab The current MapTab, used to determine color scheme.
- * @param selectedId The ID of the currently selected pin, if any.
- * @param onPinClick Callback function to be invoked when a pin is clicked, with the
- */
+/** Composable overlay that displays map pins on a Mapbox MapView. */
 @Composable
 fun PinsOverlay(
     modifier: Modifier,
@@ -121,234 +121,395 @@ fun PinsOverlay(
   val latestOnClick by rememberUpdatedState(onPinClick)
   val latestSelectedId by rememberUpdatedState(selectedId)
 
-  // One global ticker for bobbing “!”
   var bobTime by remember { mutableFloatStateOf(0f) }
   var bobbingIds by remember { mutableStateOf<Set<Id>>(emptySet()) }
 
   /* ------------- lifecycle of manager + click listener ------------- */
   DisposableEffect(mapView, currentTab) {
-    if (mapView != null) {
-      manager =
-          mapView.annotations.createPointAnnotationManager().apply {
-            addClickListener { annotation ->
-              annotation.getData()?.asString?.let { latestOnClick(it) }
-              true
-            }
-          }
-    }
+    manager = createPointManager(mapView, latestOnClick)
     onDispose {
-      try {
-        manager?.deleteAll()
-      } catch (_: Throwable) {}
-      try {
-        manager?.let { mapView?.annotations?.removeAnnotationManager(it) }
-      } catch (_: Throwable) {}
+      disposePointManager(mapView, manager, annotationById, baseCache)
       manager = null
-      annotationById.clear()
-      baseCache.clear()
     }
   }
 
   /* ------------- apply pin diff (create/update/remove + fade-in) ------------- */
   LaunchedEffect(manager, pins, selectedId) {
-    val mgr = manager ?: return@LaunchedEffect
-
-    val currentIds = pins.map { it.id }.toSet()
-    val toRemove = annotationById.keys - currentIds
-    toRemove.forEach { id ->
-      annotationById.remove(id)?.let { ann ->
-        runCatching { mgr.delete(ann) }.onFailure { Log.w(TAG, "delete failed", it) }
-      }
-    }
-
-    for (pin in pins) {
-      val id = pin.id
-      val isSelected = id == selectedId
-      val showExcl = pin is MapPin.ReportPin && pin.assigneeId.isNullOrBlank() && !isSelected
-      val scale = if (isSelected) 1.25f else 1.0f
-      val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
-
-      val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
-      val base =
-          baseCache[baseKey]
-              ?: withContext(Dispatchers.Default) {
-                    val photo = fetchBitmapViaCoil(ctx, targetUrl)
-                    renderBasePin(photo, borderColor, scale)
-                  }
-                  .also { baseCache[baseKey] = it }
-
-      val existing = annotationById[id]
-      if (existing == null) {
-        val pt = Point.fromLngLat(pin.location.longitude, pin.location.latitude)
-
-        val frame0 =
-            withContext(Dispatchers.Default) {
-              composeOverlays(
-                  base = base,
-                  globalAlpha = 0f,
-                  rippleProgress = null,
-                  showExclamation = showExcl,
-                  exclamationOffsetPx = 0f,
-                  borderColor = borderColor,
-                  scale = scale,
-              )
-            }
-
-        val created =
-            mgr.create(
-                PointAnnotationOptions()
-                    .withPoint(pt)
-                    .withIconImage(frame0)
-                    .withIconAnchor(IconAnchor.BOTTOM)
-                    .withData(JsonPrimitive(id)))
-
-        annotationById[id] = created
-
-        var a: Float
-        repeat(FADE_STEPS) { step ->
-          a = ((step + 1f) / FADE_STEPS)
-          val bmp =
-              withContext(Dispatchers.Default) {
-                composeOverlays(
-                    base = base,
-                    globalAlpha = a,
-                    rippleProgress = null,
-                    showExclamation = showExcl,
-                    exclamationOffsetPx = 0f,
-                    borderColor = borderColor,
-                    scale = scale,
-                )
-              }
-          created.iconImageBitmap = bmp
-          runCatching { mgr.update(created) }.onFailure { Log.w(TAG, "fade update failed", it) }
-          delay(FADE_DELAY_MS)
-        }
-      } else {
-        // update existing (possibly resizing if selection changed)
-        val bmp =
-            withContext(Dispatchers.Default) {
-              composeOverlays(
-                  base = base,
-                  globalAlpha = 1f,
-                  rippleProgress = null,
-                  showExclamation = showExcl,
-                  exclamationOffsetPx = 0f,
-                  borderColor = borderColor,
-                  scale = scale,
-              )
-            }
-        existing.iconImageBitmap = bmp
-        runCatching { mgr.update(existing) }.onFailure { Log.w(TAG, "update failed", it) }
-      }
-    }
+    applyPinDiffAndFade(
+        ctx = ctx,
+        manager = manager,
+        pins = pins,
+        selectedId = selectedId,
+        fallbackUrl = fallbackUrl,
+        borderColor = borderColor,
+        annotationById = annotationById,
+        baseCache = baseCache,
+    )
   }
 
   /* ------------- recompute bobbing ids when pins OR selection changes ------------- */
-  LaunchedEffect(pins, selectedId) {
-    bobbingIds =
-        pins
-            .asSequence()
-            .filter {
-              it is MapPin.ReportPin && it.assigneeId.isNullOrBlank() && it.id != selectedId
-            }
-            .map { it.id }
-            .toSet()
-  }
+  LaunchedEffect(pins, selectedId) { bobbingIds = computeBobbingIds(pins, selectedId) }
 
   /* ------------- single bobbing ticker for all unassigned pins ------------- */
   LaunchedEffect(bobbingIds, manager, pins) {
-    val mgr = manager ?: return@LaunchedEffect
-    if (bobbingIds.isEmpty()) return@LaunchedEffect
-
-    while (isActive && bobbingIds.isNotEmpty()) {
-      bobTime += BOB_SPEED
-      for (id in bobbingIds) {
-        if (latestSelectedId == id) continue
-        val ann = annotationById[id] ?: continue
-        val pin = pins.firstOrNull { it.id == id } ?: continue
-        val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
-        val scale = 1.0f
-        val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
-        val base =
-            baseCache[baseKey]
-                ?: withContext(Dispatchers.Default) {
-                      val photo = fetchBitmapViaCoil(ctx, targetUrl)
-                      renderBasePin(photo, borderColor, scale)
-                    }
-                    .also { baseCache[baseKey] = it }
-
-        val bob = (sin(bobTime * 2f * PI).toFloat() * BOB_AMP_PX)
-        val bmp =
-            withContext(Dispatchers.Default) {
-              composeOverlays(
-                  base = base,
-                  globalAlpha = 1f,
-                  rippleProgress = null,
-                  showExclamation = true,
-                  exclamationOffsetPx = bob,
-                  borderColor = borderColor,
-                  scale = scale)
-            }
-        ann.iconImageBitmap = bmp
-        runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "bob update failed", it) }
-      }
-      delay(BOB_FRAME_MS)
-    }
+    runBobbingLoop(
+        ctx = ctx,
+        manager = manager,
+        pins = pins,
+        bobbingIds = bobbingIds,
+        latestSelectedId = latestSelectedId,
+        fallbackUrl = fallbackUrl,
+        borderColor = borderColor,
+        baseCache = baseCache,
+        bobTimeProvider = { bobTime },
+        bobTimeUpdater = { bobTime = it },
+        annotationById = annotationById,
+    )
   }
 
   /* ------------- selection ripple: only for selected pin ------------- */
   val selectedAnnotation = selectedId?.let { annotationById[it] }
   LaunchedEffect(selectedId, manager, pins, selectedAnnotation) {
-    val mgr = manager ?: return@LaunchedEffect
-    val sel = selectedId ?: return@LaunchedEffect
-    val ann = selectedAnnotation ?: return@LaunchedEffect
-    val pin = pins.firstOrNull { it.id == sel } ?: return@LaunchedEffect
-    val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
-    val scale = 1.25f
-    val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
-    val base =
-        baseCache[baseKey]
-            ?: withContext(Dispatchers.Default) {
-                  val photo = fetchBitmapViaCoil(ctx, targetUrl)
-                  renderBasePin(photo, borderColor, scale)
-                }
-                .also { baseCache[baseKey] = it }
-
-    var t = 0f
-    while (isActive && annotationById[sel] === ann) {
-      val frame =
-          withContext(Dispatchers.Default) {
-            composeOverlays(
-                base = base,
-                globalAlpha = 1f,
-                rippleProgress = t,
-                showExclamation = false,
-                exclamationOffsetPx = 0f,
-                borderColor = borderColor,
-                scale = scale,
-            )
-          }
-      ann.iconImageBitmap = frame
-      runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "ripple update failed", it) }
-      t += RIPPLE_SPEED
-      if (t >= 1f) t -= 1f
-      delay(RIPPLE_FRAME_MS)
-    }
+    runSelectionRipple(
+        ctx = ctx,
+        manager = manager,
+        pins = pins,
+        selectedId = selectedId,
+        selectedAnnotation = selectedAnnotation,
+        fallbackUrl = fallbackUrl,
+        borderColor = borderColor,
+        baseCache = baseCache,
+        annotationById = annotationById,
+    )
   }
 
   Box(modifier = modifier)
 }
 
+/* ----------------------- manager lifecycle helpers ----------------------- */
+
+private fun createPointManager(
+    mapView: MapView?,
+    latestOnClick: (Id) -> Unit,
+): PointAnnotationManager? {
+  if (mapView == null) return null
+  return mapView.annotations.createPointAnnotationManager().apply {
+    addClickListener { annotation ->
+      annotation.getData()?.asString?.let { latestOnClick(it) }
+      true
+    }
+  }
+}
+
+@VisibleForTesting
+internal fun disposePointManager(
+    mapView: MapView?,
+    manager: PointAnnotationManager?,
+    annotationById: MutableMap<Id, PointAnnotation>,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+) {
+  runCatching { manager?.deleteAll() }
+      .onFailure { Log.w(TAG, "Failed to delete all annotations in onDispose", it) }
+  runCatching { manager?.let { mapView?.annotations?.removeAnnotationManager(it) } }
+      .onFailure { Log.w(TAG, "Failed to remove PointAnnotationManager in onDispose", it) }
+  annotationById.clear()
+  baseCache.clear()
+}
+
+/* ----------------------- pin diff + fade helpers ----------------------- */
+
+private suspend fun applyPinDiffAndFade(
+    ctx: Context,
+    manager: PointAnnotationManager?,
+    pins: List<MapPin>,
+    selectedId: Id?,
+    fallbackUrl: String,
+    borderColor: Int,
+    annotationById: MutableMap<Id, PointAnnotation>,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+) {
+  val mgr = manager ?: return
+
+  removeStaleAnnotations(mgr, pins, annotationById)
+
+  for (pin in pins) {
+    upsertPinAnnotation(
+        ctx = ctx,
+        manager = mgr,
+        pin = pin,
+        selectedId = selectedId,
+        fallbackUrl = fallbackUrl,
+        borderColor = borderColor,
+        annotationById = annotationById,
+        baseCache = baseCache,
+    )
+  }
+}
+
+private fun removeStaleAnnotations(
+    manager: PointAnnotationManager,
+    pins: List<MapPin>,
+    annotationById: MutableMap<Id, PointAnnotation>,
+) {
+  val currentIds = pins.map { it.id }.toSet()
+  val toRemove = annotationById.keys - currentIds
+  toRemove.forEach { id ->
+    annotationById.remove(id)?.let { ann ->
+      runCatching { manager.delete(ann) }.onFailure { Log.w(TAG, "delete failed", it) }
+    }
+  }
+}
+
+private suspend fun upsertPinAnnotation(
+    ctx: Context,
+    manager: PointAnnotationManager,
+    pin: MapPin,
+    selectedId: Id?,
+    fallbackUrl: String,
+    borderColor: Int,
+    annotationById: MutableMap<Id, PointAnnotation>,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+) {
+  val id = pin.id
+  val isSelected = id == selectedId
+  val showExcl = pin is MapPin.ReportPin && pin.assigneeId.isNullOrBlank() && !isSelected
+  val scale = if (isSelected) 1.25f else 1.0f
+  val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+
+  val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
+  val base = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+
+  val existing = annotationById[id]
+  if (existing == null) {
+    createNewAnnotationWithFade(
+        manager = manager,
+        pin = pin,
+        id = id,
+        base = base,
+        borderColor = borderColor,
+        scale = scale,
+        showExcl = showExcl,
+        annotationById = annotationById,
+    )
+  } else {
+    updateExistingAnnotation(
+        manager = manager,
+        existing = existing,
+        base = base,
+        borderColor = borderColor,
+        scale = scale,
+        showExcl = showExcl,
+    )
+  }
+}
+
+private suspend fun getOrCreateBaseBitmap(
+    ctx: Context,
+    baseKey: BaseKey,
+    borderColor: Int,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+    scale: Float,
+): Bitmap {
+  baseCache[baseKey]?.let {
+    return it
+  }
+
+  val photo = fetchBitmapViaCoil(ctx, baseKey.url)
+  val built = withContext(PinsDispatchers.computation) { renderBasePin(photo, borderColor, scale) }
+  baseCache[baseKey] = built
+  return built
+}
+
+private suspend fun createNewAnnotationWithFade(
+    manager: PointAnnotationManager,
+    pin: MapPin,
+    id: Id,
+    base: Bitmap,
+    borderColor: Int,
+    scale: Float,
+    showExcl: Boolean,
+    annotationById: MutableMap<Id, PointAnnotation>,
+) {
+  val pt = Point.fromLngLat(pin.location.longitude, pin.location.latitude)
+
+  val frame0 =
+      withContext(PinsDispatchers.computation) {
+        composeOverlays(
+            base = base,
+            globalAlpha = 0f,
+            rippleProgress = null,
+            showExclamation = showExcl,
+            exclamationOffsetPx = 0f,
+            borderColor = borderColor,
+            scale = scale,
+        )
+      }
+
+  val created =
+      manager.create(
+          PointAnnotationOptions()
+              .withPoint(pt)
+              .withIconImage(frame0)
+              .withIconAnchor(IconAnchor.BOTTOM)
+              .withData(JsonPrimitive(id)),
+      )
+
+  annotationById[id] = created
+
+  var a: Float
+  repeat(FADE_STEPS) { step ->
+    a = (step + 1f) / FADE_STEPS
+    val bmp =
+        withContext(PinsDispatchers.computation) {
+          composeOverlays(
+              base = base,
+              globalAlpha = a,
+              rippleProgress = null,
+              showExclamation = showExcl,
+              exclamationOffsetPx = 0f,
+              borderColor = borderColor,
+              scale = scale,
+          )
+        }
+    created.iconImageBitmap = bmp
+    runCatching { manager.update(created) }.onFailure { Log.w(TAG, "fade update failed", it) }
+    delay(FADE_DELAY_MS)
+  }
+}
+
+private suspend fun updateExistingAnnotation(
+    manager: PointAnnotationManager,
+    existing: PointAnnotation,
+    base: Bitmap,
+    borderColor: Int,
+    scale: Float,
+    showExcl: Boolean,
+) {
+  val bmp =
+      withContext(PinsDispatchers.computation) {
+        composeOverlays(
+            base = base,
+            globalAlpha = 1f,
+            rippleProgress = null,
+            showExclamation = showExcl,
+            exclamationOffsetPx = 0f,
+            borderColor = borderColor,
+            scale = scale,
+        )
+      }
+  existing.iconImageBitmap = bmp
+  runCatching { manager.update(existing) }.onFailure { Log.w(TAG, "update failed", it) }
+}
+
+/* ----------------------- bobbing helpers ----------------------- */
+
+@VisibleForTesting
+internal fun computeBobbingIds(pins: List<MapPin>, selectedId: Id?): Set<Id> =
+    pins
+        .asSequence()
+        .filter { it is MapPin.ReportPin && it.assigneeId.isNullOrBlank() && it.id != selectedId }
+        .map { it.id }
+        .toSet()
+
+private suspend fun runBobbingLoop(
+    ctx: Context,
+    manager: PointAnnotationManager?,
+    pins: List<MapPin>,
+    bobbingIds: Set<Id>,
+    latestSelectedId: Id?,
+    fallbackUrl: String,
+    borderColor: Int,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+    bobTimeProvider: () -> Float,
+    bobTimeUpdater: (Float) -> Unit,
+    annotationById: Map<Id, PointAnnotation>,
+) {
+  val mgr = manager ?: return
+  if (bobbingIds.isEmpty()) return
+
+  while (currentCoroutineContext().isActive && bobbingIds.isNotEmpty()) {
+    val nextTime = bobTimeProvider() + BOB_SPEED
+    bobTimeUpdater(nextTime)
+
+    for (id in bobbingIds) {
+      if (latestSelectedId == id) continue
+      val ann = annotationById[id] ?: continue
+      val pin = pins.firstOrNull { it.id == id } ?: continue
+
+      val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+      val scale = 1.0f
+      val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
+      val base = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+
+      val bobOffset = (sin(nextTime * 2f * PI).toFloat() * BOB_AMP_PX)
+      val bmp =
+          withContext(PinsDispatchers.computation) {
+            composeOverlays(
+                base = base,
+                globalAlpha = 1f,
+                rippleProgress = null,
+                showExclamation = true,
+                exclamationOffsetPx = bobOffset,
+                borderColor = borderColor,
+                scale = scale,
+            )
+          }
+      ann.iconImageBitmap = bmp
+      runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "bob update failed", it) }
+    }
+
+    delay(BOB_FRAME_MS)
+  }
+}
+
+/* ----------------------- selection ripple helpers ----------------------- */
+
+private suspend fun runSelectionRipple(
+    ctx: Context,
+    manager: PointAnnotationManager?,
+    pins: List<MapPin>,
+    selectedId: Id?,
+    selectedAnnotation: PointAnnotation?,
+    fallbackUrl: String,
+    borderColor: Int,
+    baseCache: MutableMap<BaseKey, Bitmap>,
+    annotationById: Map<Id, PointAnnotation>,
+) {
+  val mgr = manager ?: return
+  val sel = selectedId ?: return
+  val ann = selectedAnnotation ?: return
+  val pin = pins.firstOrNull { it.id == sel } ?: return
+
+  val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+  val scale = 1.25f
+  val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
+  val base = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+
+  var t = 0f
+  while (currentCoroutineContext().isActive && annotationById[sel] === ann) {
+    val frame =
+        withContext(PinsDispatchers.computation) {
+          composeOverlays(
+              base = base,
+              globalAlpha = 1f,
+              rippleProgress = t,
+              showExclamation = false,
+              exclamationOffsetPx = 0f,
+              borderColor = borderColor,
+              scale = scale,
+          )
+        }
+    ann.iconImageBitmap = frame
+    runCatching { mgr.update(ann) }.onFailure { Log.w(TAG, "ripple update failed", it) }
+    t += RIPPLE_SPEED
+    if (t >= 1f) t -= 1f
+    delay(RIPPLE_FRAME_MS)
+  }
+}
+
 /* ----------------------- Rendering helpers ----------------------- */
 
-/**
- * Render the base pin bitmap with optional photo and border.
- *
- * @param src Source Bitmap photo to render inside the pin, or null for placeholder.
- * @param borderColor Color integer for the border.
- * @param scale Scale factor for the pin size.
- * @return Rendered Bitmap of the base pin.
- */
+/** Render the base pin bitmap with optional photo and border. */
 @WorkerThread
 @VisibleForTesting
 internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap {
@@ -390,7 +551,8 @@ internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap
           cx - stickWidth / 2f,
           circleBottom - overlap,
           cx + stickWidth / 2f,
-          circleBottom - overlap + BAR_H * scale)
+          circleBottom - overlap + BAR_H * scale,
+      )
   c.drawRoundRect(barRect, stickWidth / 2f, stickWidth / 2f, p)
 
   p.style = Paint.Style.STROKE
@@ -401,18 +563,7 @@ internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap
   return out
 }
 
-/**
- * Compose the overlay bitmap with optional ripple and exclamation badge.
- *
- * @param base Base Bitmap to overlay on.
- * @param globalAlpha Global alpha for the entire overlay (0f to 1f).
- * @param rippleProgress Ripple animation progress (0f to 1f), or null for no ripple.
- * @param showExclamation Whether to show the exclamation badge.
- * @param exclamationOffsetPx Vertical offset for the exclamation badge (for bobbing).
- * @param borderColor Color integer for the border and badge.
- * @param scale Scale factor for the overlay size.
- * @return Composed Bitmap with overlays.
- */
+/** Compose the overlay bitmap with optional ripple and exclamation badge. */
 @WorkerThread
 @VisibleForTesting
 internal fun composeOverlays(
@@ -422,7 +573,7 @@ internal fun composeOverlays(
     showExclamation: Boolean,
     exclamationOffsetPx: Float,
     borderColor: Int,
-    scale: Float
+    scale: Float,
 ): Bitmap {
   val circleBoxNoRipple = BASE_CIRCLE * scale
   val imgRadius = (circleBoxNoRipple / 2f) - PADDING * scale
@@ -480,7 +631,8 @@ internal fun composeOverlays(
             badgeCx - barW / 2f,
             badgeCy - barH * 0.95f,
             badgeCx + barW / 2f,
-            badgeCy - barH * 0.05f)
+            badgeCy - barH * 0.05f,
+        )
     c.drawRoundRect(barRect, barW / 2f, barW / 2f, p)
     val dotR = BADGE_DOT_R * badgeScale
     c.drawCircle(badgeCx, badgeCy + ringR * 0.45f, dotR, p)
@@ -488,18 +640,13 @@ internal fun composeOverlays(
 
   return out
 }
+
 /* ----------------------- image loading ----------------------- */
 
-/**
- * Fetch a Bitmap from a URL using Coil.
- *
- * @param ctx Context for Coil image loading.
- * @param url Image URL to fetch.
- * @return Fetched Bitmap, or null if loading failed.
- */
+/** Fetch a Bitmap from a URL using Coil. */
 @VisibleForTesting
 internal suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
-    withContext(Dispatchers.IO) {
+    withContext(PinsDispatchers.io) {
       try {
         val loader = SharedCoil.get(ctx)
         val req = ImageRequest.Builder(ctx).data(url).allowHardware(false).size(PHOTO_SIZE).build()

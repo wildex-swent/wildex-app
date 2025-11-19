@@ -456,9 +456,14 @@ object LocalRepositories {
     override suspend fun getAnimalDescription(
         animalName: String,
         coroutineContext: CoroutineContext
-    ): String? {
+    ): String {
       return "This is a default animal"
     }
+
+    override suspend fun getAnimalPicture(
+        animalName: String,
+        coroutineContext: CoroutineContext
+    ): URL = "imageUrl:$animalName"
   }
 
   val postsRepository: PostsRepository = PostsRepositoryImpl()

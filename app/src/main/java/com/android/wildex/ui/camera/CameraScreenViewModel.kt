@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -140,11 +141,10 @@ class CameraScreenViewModel(
   /* registers the animal from the animal response in the repository if not already there */
   private suspend fun registerAnimal(animalId: Id) {
     val detection = uiState.value.animalDetectResponse ?: return
-    val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType) ?: ""
+    val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType)
 
-    // val animalPicture = animalRepository.getAnimalPicture(detection.animalType)
-    val animalPictureURL =
-        "" // storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
+    val animalPicture = animalInfoRepository.getAnimalPicture(detection.animalType).toUri()
+    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
     val animal =
         Animal(
             animalId,

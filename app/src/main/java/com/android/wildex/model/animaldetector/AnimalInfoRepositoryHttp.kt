@@ -3,6 +3,7 @@ package com.android.wildex.model.animaldetector
 import android.content.Context
 import android.net.Uri
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.utils.URL
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -33,10 +34,12 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
   }
 
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY
+  private val pxApiKey = BuildConfig.PEXELS_API_KEY
 
   private val speciesNetUrl = "https://youssef-9511-speciesnetapi.hf.space/gradio_api/call/predict"
 
   private val deepseekUrl = "https://router.huggingface.co/v1/chat/completions"
+  private val pexelsUrl = "https://api.pexels.com/v1/"
 
   /**
    * Detects animals in the provided image URI. **Important:** This function performs network I/O
@@ -275,6 +278,37 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
           } catch (_: IllegalArgumentException) {
             throw IOException("Invalid JSON response")
           }
+        }
+      }
+
+  override suspend fun getAnimalPicture(
+      animalName: String,
+      coroutineContext: CoroutineContext,
+  ): URL =
+      withContext(coroutineContext) {
+        val search = "search?query=$animalName&size=small&page=1&per_page=1"
+        val request =
+            Request.Builder()
+                .url("$pexelsUrl$search")
+                .addHeader("Authorization", pxApiKey)
+                .get()
+                .build()
+
+        client.newCall(request).execute().use { response ->
+          if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+          val body = response.body?.string() ?: throw IOException("No response body")
+          val json = Json.parseToJsonElement(body)
+          json.jsonObject["photos"]
+              ?.jsonArray
+              ?.firstOrNull()
+              ?.jsonObject
+              ?.get("src")
+              ?.jsonObject
+              ?.get("medium")
+              ?.jsonPrimitive
+              ?.takeIf { it.isString }
+              ?.content ?: throw IOException("No content found")
         }
       }
 }

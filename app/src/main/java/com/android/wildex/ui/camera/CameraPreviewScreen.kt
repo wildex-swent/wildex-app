@@ -51,12 +51,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object CameraPreviewScreenTestTags {
   const val CAMERA_VIEWFINDER = "camera_viewfinder"
   const val CAPTURE_BUTTON = "capture_button"
   const val UPLOAD_BUTTON = "upload_button"
   const val SWITCH_BUTTON = "switch_button"
+  const val ZOOM_VALUE = "zoom_value"
 }
 
 @Composable
@@ -76,20 +79,20 @@ fun CameraPreviewScreen(
   val zoomRatio = remember { mutableFloatStateOf(1f) }
 
   // Initialize camera
-  LaunchedEffect(Unit, cameraSelector.value) {
+  LaunchedEffect(cameraSelector.value) {
     val cameraProvider = ProcessCameraProvider.awaitInstance(context)
-    cameraProvider.unbindAll()
-    val camera =
-        cameraProvider.bindToLifecycle(
-            lifecycleOwner,
-            cameraSelector.value,
-            previewUseCase,
-            imageCaptureUseCase,
-        )
-    cameraRef.value = camera
-    previewUseCase.setSurfaceProvider { surfaceRequest.value = it }
-    camera.cameraInfo.zoomState.observe(lifecycleOwner) { state ->
-      zoomRatio.floatValue = state.zoomRatio
+    withContext(Dispatchers.Main) {
+      cameraProvider.unbindAll()
+      val camera =
+          cameraProvider.bindToLifecycle(
+              lifecycleOwner,
+              cameraSelector.value,
+              previewUseCase,
+              imageCaptureUseCase,
+          )
+      cameraRef.value = camera
+      previewUseCase.setSurfaceProvider { surfaceRequest.value = it }
+      camera.cameraInfo.zoomState.observe(lifecycleOwner) { zoomRatio.floatValue = it.zoomRatio }
     }
   }
 
@@ -118,7 +121,7 @@ fun CameraPreviewScreen(
 
 @Composable
 private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
-  surfaceRequest?.let {
+  if (surfaceRequest != null) {
     CameraXViewfinder(
         modifier =
             Modifier.pointerInput(Unit) {
@@ -130,9 +133,10 @@ private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
                 }
                 .fillMaxSize()
                 .testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
-        surfaceRequest = it,
+        surfaceRequest = surfaceRequest,
     )
-  }
+  } else
+      Box(modifier = Modifier.fillMaxSize().testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER))
 }
 
 @Composable
@@ -179,7 +183,11 @@ private fun CameraControls(
 
 @Composable
 private fun ZoomText(zoomValue: Float) {
-  Surface(shape = RoundedCornerShape(20.dp), color = colorScheme.surface.copy(alpha = 0.25f)) {
+  Surface(
+      modifier = Modifier.testTag(CameraPreviewScreenTestTags.ZOOM_VALUE),
+      shape = RoundedCornerShape(20.dp),
+      color = colorScheme.surface.copy(alpha = 0.25f),
+  ) {
     Text(
         text = "Zoom: ${"%.2f".format(zoomValue)}",
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),

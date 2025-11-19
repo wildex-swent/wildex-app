@@ -104,7 +104,9 @@ fun CameraPreviewScreen(
               cameraSelector.value = CameraSelector.DEFAULT_FRONT_CAMERA
           else cameraSelector.value = CameraSelector.DEFAULT_BACK_CAMERA
         },
-        onCaptureClick = { imageCaptureUseCase.capturePhoto(context, onPhotoTaken) },
+        onCaptureClick = {
+          imageCaptureUseCase.capturePhoto(context, onPhotoTaken, cameraSelector.value)
+        },
         onUploadClick = onUploadClick,
         modifier =
             Modifier.align(Alignment.BottomCenter)
@@ -256,9 +258,13 @@ private fun SwitchButton(
 private fun ImageCapture.capturePhoto(
     context: Context,
     onPhotoTaken: (Uri) -> Unit,
+    cameraSelector: CameraSelector,
 ) {
   val photoFile = File(context.cacheDir, "${System.currentTimeMillis()}.jpg")
-  val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+  val metaData = ImageCapture.Metadata()
+  if (cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) metaData.isReversedHorizontal = true
+  val outputOptions =
+      ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metaData).build()
 
   takePicture(
       outputOptions,

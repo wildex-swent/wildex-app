@@ -142,7 +142,6 @@ class UserRecommender(
     // ********************************************************************************************//
     // compute mean location for current user and candidates for local activity score
     val currentUserPosts = postRepository.getAllPostsByAuthor()
-    val currentUserPosted = !currentUserPosts.isEmpty()
 
     val currentUserMeanLocation = userMeanLocation(currentUserPosts)
 

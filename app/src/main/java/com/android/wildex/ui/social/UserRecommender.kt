@@ -97,10 +97,6 @@ class UserRecommender(
   suspend fun getRecommendedUsers(limit: Int = 10): List<RecommendationResult> {
     val users = userRepository.getAllUsers()
 
-    // ********************************************************************************************//
-    // **********************************  Candidates filtering
-    // **********************************//
-    // ********************************************************************************************//
     val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
     val pendingRequestsByCurrentUser =
         friendRequestRepository.getAllPendingRelationshipsBySender(currentUserId).map {
@@ -120,26 +116,14 @@ class UserRecommender(
                   !pendingRequestsToCurrentUser.contains(it.userId)
             }
 
-    // ********************************************************************************************//
-    // **************************  Mutual Friends Score Data Preparation
-    // *************************//
-    // ********************************************************************************************//
     val friendsOfFriendsMap = computeFriendsOfFriendsMap()
     val maxMutualFriends = friendsOfFriendsMap.values.maxOrNull() ?: 0
 
-    // ********************************************************************************************//
-    // ****************************  Popularity Score Data Preparation
-    // ***************************//
-    // ********************************************************************************************//
     // compute candidates friend counts and max friends for popularity score
     val candidatesFriendsCount =
         candidates.associate { it.userId to userFriendsRepository.getFriendsCountOfUser(it.userId) }
     val maxFriends = candidatesFriendsCount.values.maxOrNull()
 
-    // ********************************************************************************************//
-    // **************************  Local Activity Score Data Preparation
-    // *************************//
-    // ********************************************************************************************//
     // compute mean location for current user and candidates for local activity score
     val currentUserPosts = postRepository.getAllPostsByAuthor()
 
@@ -159,10 +143,6 @@ class UserRecommender(
     val maxDistance = candidatesDistance.values.maxOrNull()
     val maxRecentPosts = candidatesRecentPosts.values.maxOrNull()
 
-    // ********************************************************************************************//
-    // ****************************  Candidates Final Score Computation
-    // **************************//
-    // ********************************************************************************************//
     // compute final score and main suggestion reason for each candidate
     val candidatesScoreReason =
         candidates

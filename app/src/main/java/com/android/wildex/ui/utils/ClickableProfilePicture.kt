@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.utils.badges.ProfessionalBadge
 
@@ -29,7 +30,7 @@ fun ClickableProfilePicture(
     profileId: String = "",
     profilePictureURL: URL = "",
     profileUserType: UserType = UserType.REGULAR,
-    onProfile: (String) -> Unit = {},
+    onProfile: (Id) -> Unit = {},
 ) {
   Box(modifier = modifier.clickable { onProfile(profileId) }, contentAlignment = Alignment.Center) {
     val context = LocalContext.current

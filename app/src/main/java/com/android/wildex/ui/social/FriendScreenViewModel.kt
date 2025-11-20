@@ -33,7 +33,8 @@ data class FriendsScreenUIState(
 data class FriendState(
   val friend: SimpleUser,
   val isFriend: Boolean,
-  val isPending: Boolean
+  val isPending: Boolean,
+  val isCurrentUser: Boolean
 )
 
 class FriendScreenViewModel(
@@ -41,7 +42,10 @@ class FriendScreenViewModel(
   private val userRepository: UserRepository = RepositoryProvider.userRepository,
   private val userFriendsRepository: UserFriendsRepository,
   private val friendRequestRepository: RelationshipRepository = RepositoryProvider.relationshipRepository,
-  private val userRecommender: UserRecommender
+  private val userRecommender: UserRecommender = UserRecommender(
+    currentUserId = currentUserId,
+    userFriendsRepository = userFriendsRepository
+  )
 ) : ViewModel() {
   /** Backing property for the friends screen state. */
   private val _uiState = MutableStateFlow(FriendsScreenUIState())
@@ -61,16 +65,15 @@ class FriendScreenViewModel(
         FriendState(
           friend = userRepository.getSimpleUser(it),
           isFriend = currentUserFriends.contains(it),
-          isPending = currentUserSentRequests.any { request -> request.receiverId == it }
+          isPending = currentUserSentRequests.any { request -> request.receiverId == it },
+          isCurrentUser = it == currentUserId
         )
       }
       suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests = if (isCurrentUser){
         friendRequestRepository.getAllPendingRelationshipsByReceiver(currentUserId)
       } else emptyList()
-      val sentRequests = if (isCurrentUser){
-        friendRequestRepository.getAllPendingRelationshipsBySender(currentUserId)
-      } else emptyList()
+      val sentRequests = if (isCurrentUser) currentUserSentRequests else emptyList()
       _uiState.value =
         _uiState.value.copy(
           friends = friendsStates,
@@ -148,8 +151,8 @@ class FriendScreenViewModel(
           suggestions.value = userRecommender.getRecommendedUsers()
         }
       } catch (e: Exception){
-        setErrorMsg("Failed to send request to user $userId : ${e.message}")
         _uiState.value = state
+        setErrorMsg("Failed to send request to user $userId : ${e.message}")
         //if the request was done in the suggestions, we need to retrieve the suggestion
         if (state.isCurrentUser) suggestions.value = state.suggestions
       }
@@ -174,8 +177,8 @@ class FriendScreenViewModel(
         userFriendsRepository.deleteFriendToUserFriendsOfUser(userId, currentUserId)
         userFriendsRepository.deleteFriendToUserFriendsOfUser(currentUserId, userId)
       } catch (e: Exception) {
-        setErrorMsg("Failed to unfollow user $userId : ${e.message}")
         _uiState.value = state
+        setErrorMsg("Failed to unfollow user $userId : ${e.message}")
       }
     }
   }
@@ -191,12 +194,13 @@ class FriendScreenViewModel(
 
       val friends = state.friends
       val newFriends = friends + listOf(
-        FriendState(
-          friend = userRepository.getSimpleUser(userId),
-          isFriend = true,
-          isPending = false
+          FriendState(
+            friend = userRepository.getSimpleUser(userId),
+            isFriend = true,
+            isPending = false,
+            isCurrentUser = false
+          )
         )
-      )
 
       _uiState.value = state.copy(
         friends = newFriends,
@@ -208,8 +212,8 @@ class FriendScreenViewModel(
         userFriendsRepository.addFriendToUserFriendsOfUser(userId, currentUserId)
         userFriendsRepository.addFriendToUserFriendsOfUser(currentUserId, userId)
       } catch (e: Exception){
-        setErrorMsg("Failed to accept request from user $userId : ${e.message}")
         _uiState.value = state
+        setErrorMsg("Failed to accept request from user $userId : ${e.message}")
       }
     }
   }
@@ -230,8 +234,8 @@ class FriendScreenViewModel(
       try {
         friendRequestRepository.deleteRelationship(Relationship(userId, currentUserId))
       } catch (e: Exception){
-        setErrorMsg("Failed to decline request from user $userId : ${e.message}")
         _uiState.value = state
+        setErrorMsg("Failed to decline request from user $userId : ${e.message}")
       }
     }
   }
@@ -264,6 +268,13 @@ class FriendScreenViewModel(
         friends = newFriends,
         sentRequests = newSentRequests
       )
+
+      try {
+        friendRequestRepository.deleteRelationship(Relationship(senderId = currentUserId, receiverId = userId))
+      } catch (e: Exception){
+        _uiState.value = state
+        setErrorMsg("Failed to cancel request to user $userId : ${e.message}")
+      }
     }
   }
 

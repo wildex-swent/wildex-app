@@ -51,7 +51,7 @@ fun ClickableProfilePicture(
         modifier =
             Modifier.align(Alignment.BottomEnd).fillMaxSize(0.45f).offset(x = 3.dp, y = 3.dp)) {
           when (profileUserType) {
-            UserType.REGULAR -> {}
+            UserType.REGULAR -> Unit
             UserType.PROFESSIONAL -> ProfessionalBadge()
           }
         }

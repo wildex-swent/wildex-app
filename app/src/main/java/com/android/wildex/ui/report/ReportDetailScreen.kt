@@ -3,7 +3,6 @@ package com.android.wildex.ui.report
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -47,7 +45,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -65,6 +62,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 
 object ReportDetailsScreenTestTags {
@@ -394,10 +392,10 @@ private fun ReportInfoBar(
         modifier = Modifier.weight(1f),
     ) {
       ClickableProfilePicture(
-          modifier = Modifier.size(48.dp),
+          modifier = Modifier.size(48.dp).testTag(ReportDetailsScreenTestTags.INFO_AUTHOR_PICTURE),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
-          role = "author",
+          profileUserType = author.userType,
           onProfile = onProfile,
       )
 
@@ -498,6 +496,7 @@ private fun ReportAssigneeDetailsCard(
       ClickableProfilePicture(
           profileId = assignee.userId,
           profilePictureURL = assignee.profilePictureURL,
+          profileUserType = assignee.userType,
           onProfile = onProfile,
       )
       Text(
@@ -509,27 +508,6 @@ private fun ReportAssigneeDetailsCard(
           modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ASSIGNEE_TEXT),
       )
     }
-  }
-}
-
-/** Clickable profile picture. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ClickableProfilePicture(
-    profileId: String = "",
-    profilePictureURL: URL = "",
-    onProfile: (Id) -> Unit = {},
-) {
-  IconButton(
-      onClick = { onProfile(profileId) },
-      modifier = Modifier.size(40.dp).testTag(ReportDetailsScreenTestTags.INFO_AUTHOR_PICTURE),
-  ) {
-    AsyncImage(
-        model = profilePictureURL,
-        contentDescription = "Profile picture",
-        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
-        contentScale = ContentScale.Crop,
-    )
   }
 }
 
@@ -557,7 +535,7 @@ private fun ReportCommentRow(
           modifier = Modifier.size(40.dp),
           profileId = commentUI.author.userId,
           profilePictureURL = commentUI.author.profilePictureURL,
-          role = "commenter",
+          profileUserType = commentUI.author.userType,
           onProfile = onProfile,
       )
 
@@ -617,7 +595,7 @@ private fun ReportCommentInput(
           modifier = Modifier.size(44.dp),
           profileId = user.userId,
           profilePictureURL = user.profilePictureURL,
-          role = "comment_input",
+          profileUserType = user.userType,
           onProfile = onProfile,
       )
 

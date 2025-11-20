@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -125,7 +126,7 @@ fun ReportDetailsScreen(
     }
   }
 
-  // One-shot completion events -> popup
+  // events -> popup
   LaunchedEffect(Unit) {
     reportDetailsViewModel.events.collect { event ->
       when (event) {
@@ -241,10 +242,7 @@ private fun ReportDetailsContent(
         modifier = Modifier.fillMaxSize().testTag(ReportDetailsScreenTestTags.CONTENT_LIST),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-      // HERO IMAGE
       item { ReportPicture(uiState.imageURL) }
-
-      // SHEET with info, buttons, description, assignee pill, comments header
       item {
         Surface(
             color = colorScheme.background,
@@ -395,7 +393,7 @@ private fun ReportInfoBar(
           Modifier.fillMaxWidth()
               .padding(horizontal = 16.dp, vertical = 10.dp)
               .testTag(ReportDetailsScreenTestTags.INFO_BAR),
-      horizontalArrangement = Arrangement.SpaceBetween,
+      horizontalArrangement = Arrangement.Start,
       verticalAlignment = Alignment.CenterVertically,
   ) {
     Row(
@@ -455,7 +453,8 @@ private fun LocationTagButton(
       color = colorScheme.background,
       border = BorderStroke(1.dp, colorScheme.primary),
       tonalElevation = 0.dp,
-      modifier = Modifier.testTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL),
+      modifier =
+          Modifier.testTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL).widthIn(max = 140.dp),
   ) {
     Row(
         modifier =

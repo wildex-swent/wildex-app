@@ -320,11 +320,11 @@ class ReportDetailsScreenViewModel(
   fun addComment(text: String = "") {
     if (text.isBlank()) return
     viewModelScope.launch {
-      val state = _uiState.value
-      val reportId = state.reportId
+      val before = _uiState.value
+      val reportId = before.reportId
       val now = Timestamp.now()
       val formattedNow = formatDate(now)
-      val current = state.currentUser
+      val current = before.currentUser
 
       val optimistic =
           ReportCommentWithAuthorUI(
@@ -334,7 +334,6 @@ class ReportDetailsScreenViewModel(
           )
 
       // 1) Optimistically prepend comment + increase count
-      val before = _uiState.value
       _uiState.value =
           before.copy(
               commentsUI = listOf(optimistic) + before.commentsUI,
@@ -356,12 +355,7 @@ class ReportDetailsScreenViewModel(
         )
       } catch (e: Exception) {
         setErrorMsg("Failed to add comment: ${e.message}")
-        val currentState = _uiState.value
-        _uiState.value =
-            currentState.copy(
-                commentsUI = currentState.commentsUI.drop(1),
-                commentsCount = (currentState.commentsCount - 1).coerceAtLeast(0),
-            )
+        _uiState.value = before
       }
     }
   }

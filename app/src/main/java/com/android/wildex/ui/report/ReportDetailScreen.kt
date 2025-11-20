@@ -3,6 +3,7 @@ package com.android.wildex.ui.report
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,25 +65,19 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.utils.expand.ExpandableTextCore
 
 object ReportDetailsScreenTestTags {
   const val SCREEN = "report_details_screen"
   const val PULL_TO_REFRESH = "report_details_pull_to_refresh"
   const val CONTENT_LIST = "report_details_content_list"
   const val BACK_BUTTON = "report_details_back_button"
-  const val HERO_IMAGE_BOX = "report_details_hero_image_box"
   const val HERO_IMAGE = "report_details_hero_image"
-  const val HERO_TOP_GRADIENT = "report_details_hero_top_gradient"
-  const val HERO_BOTTOM_GRADIENT = "report_details_hero_bottom_gradient"
   const val INFO_BAR = "report_details_info_bar"
   const val INFO_AUTHOR_NAME = "report_details_author_name"
+  const val INFO_AUTHOR_PICTURE = "report_details_author_picture"
   const val INFO_DATE = "report_details_date"
   const val INFO_LOCATION_PILL = "report_details_location_pill"
-  const val ACTION_ROW = "report_details_action_row"
-  const val ACTION_CANCEL = "report_details_action_cancel"
-  const val ACTION_SELF_ASSIGN = "report_details_action_self_assign"
-  const val ACTION_RESOLVE = "report_details_action_resolve"
-  const val ACTION_UNSELFASSIGN = "report_details_action_unselfassign"
   const val DESCRIPTION_CARD = "report_details_description_card"
   const val DESCRIPTION_TEXT = "report_details_description_text"
   const val DESCRIPTION_TOGGLE = "report_details_description_toggle"
@@ -157,7 +154,6 @@ fun ReportDetailsScreen(
         onConfirm = {
           val actionToRun = pendingAction
           pendingAction = null
-
           when (actionToRun) {
             ReportActionToConfirm.CANCEL -> reportDetailsViewModel.cancelReport()
             ReportActionToConfirm.SELF_ASSIGN -> reportDetailsViewModel.selfAssignReport()
@@ -284,9 +280,8 @@ private fun ReportDetailsContent(
                       collapsedLines = 4,
                       style = typography.bodyMedium,
                       color = colorScheme.onSurfaceVariant,
-                      bodyModifier = Modifier.testTag(ReportDetailsScreenTestTags.DESCRIPTION_TEXT),
-                      toggleModifier =
-                          Modifier.testTag(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE),
+                      bodyTag = ReportDetailsScreenTestTags.DESCRIPTION_TEXT,
+                      toggleTag = ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE,
                   )
                 }
               }
@@ -302,7 +297,10 @@ private fun ReportDetailsContent(
               Spacer(Modifier.height(6.dp))
             }
             ReportDetailsActionRow(
-                uiState = uiState,
+                hasAssignee = uiState.assignee != null,
+                currentUser = uiState.currentUser,
+                isCreatedByCurrentUser = uiState.isCreatedByCurrentUser,
+                isAssignedToCurrentUser = uiState.isAssignedToCurrentUser,
                 onCancel = onCancel,
                 onSelfAssign = onSelfAssign,
                 onResolve = onResolve,
@@ -331,7 +329,7 @@ private fun ReportDetailsContent(
         ReportCommentRow(commentUI = commentUI, onProfile = onProfile)
       }
 
-      item { Spacer(Modifier.height(96.dp)) } // leave space above bottom input
+      item { Spacer(Modifier.height(96.dp)) }
     }
   }
 }
@@ -340,7 +338,7 @@ private fun ReportDetailsContent(
 @Composable
 private fun ReportPicture(imageURL: URL) {
   Box(
-      Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.HERO_IMAGE_BOX),
+      Modifier.fillMaxWidth(),
   ) {
     AsyncImage(
         model = imageURL,
@@ -348,7 +346,6 @@ private fun ReportPicture(imageURL: URL) {
         contentScale = ContentScale.FillWidth,
         modifier = Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.HERO_IMAGE),
     )
-    // top gradient
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -359,10 +356,7 @@ private fun ReportPicture(imageURL: URL) {
                         0f to Color.Black.copy(alpha = 0.7f),
                         1f to Color.Transparent,
                     ),
-                )
-                .testTag(ReportDetailsScreenTestTags.HERO_TOP_GRADIENT),
-    )
-    // bottom gradient
+                ))
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -373,9 +367,7 @@ private fun ReportPicture(imageURL: URL) {
                         0f to Color.Transparent,
                         1f to colorScheme.background,
                     ),
-                )
-                .testTag(ReportDetailsScreenTestTags.HERO_BOTTOM_GRADIENT),
-    )
+                ))
   }
 }
 
@@ -504,10 +496,8 @@ private fun ReportAssigneeDetailsCard(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       ClickableProfilePicture(
-          modifier = Modifier.size(40.dp),
           profileId = assignee.userId,
           profilePictureURL = assignee.profilePictureURL,
-          role = "assignee",
           onProfile = onProfile,
       )
       Text(
@@ -519,6 +509,27 @@ private fun ReportAssigneeDetailsCard(
           modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ASSIGNEE_TEXT),
       )
     }
+  }
+}
+
+/** Clickable profile picture. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClickableProfilePicture(
+    profileId: String = "",
+    profilePictureURL: URL = "",
+    onProfile: (Id) -> Unit = {},
+) {
+  IconButton(
+      onClick = { onProfile(profileId) },
+      modifier = Modifier.size(40.dp).testTag(ReportDetailsScreenTestTags.INFO_AUTHOR_PICTURE),
+  ) {
+    AsyncImage(
+        model = profilePictureURL,
+        contentDescription = "Profile picture",
+        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
+        contentScale = ContentScale.Crop,
+    )
   }
 }
 
@@ -575,6 +586,8 @@ private fun ReportCommentRow(
         ExpandableTextCore(
             text = commentUI.text,
             collapsedLines = 3,
+            bodyTag = ReportDetailsScreenTestTags.COMMENT_BODY,
+            toggleTag = ReportDetailsScreenTestTags.COMMENT_TOGGLE,
         )
       }
     }

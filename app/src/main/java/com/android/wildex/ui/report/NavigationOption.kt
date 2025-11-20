@@ -58,7 +58,7 @@ fun NavigationOptionsBottomSheet(
   val label = displayLabel ?: "%.5f, %.5f".format(latitude, longitude)
 
   val onBackground = MaterialTheme.colorScheme.onBackground
-  val secondaryText = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+  val secondaryText = onBackground.copy(alpha = 0.7f)
   val outline = MaterialTheme.colorScheme.outline
   val primary = MaterialTheme.colorScheme.primary
 

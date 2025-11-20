@@ -119,6 +119,23 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   }
 
   @Test
+  fun getAllUsersReturnsAllAddedUsers() = runTest {
+    repository.addUser(user1)
+    repository.addUser(user2)
+    repository.addUser(user3)
+
+    val allUsers = repository.getAllUsers()
+    assertEquals(3, allUsers.size)
+    assertTrue(allUsers.containsAll(listOf(user1, user2, user3)))
+  }
+
+  @Test
+  fun getAllUsersWhenNoUsersReturnsEmptyList() = runTest {
+    val allUsers = repository.getAllUsers()
+    assertTrue(allUsers.isEmpty())
+  }
+
+  @Test
   fun canEditAUserByID() = runTest {
     repository.addUser(user1)
     assertEquals(1, getUsersCount())

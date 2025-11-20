@@ -20,6 +20,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         ?: throw Exception("UserRepositoryFirestore: User $userId not found")
   }
 
+  override suspend fun getAllUsers(): List<User> {
+    val collection = db.collection(USERS_COLLECTION_PATH).get().await()
+    val users = mutableListOf<User>()
+    for (document in collection.documents) {
+      val user = documentToUser(document)
+      if (user != null) {
+        users.add(user)
+      } else {
+        Log.e(TAG, "UserRepositoryFirestore: error converting document ${document.id} to User")
+      }
+    }
+    return users
+  }
+
   override suspend fun getSimpleUser(userId: Id): SimpleUser {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
     if (!document.exists()) {

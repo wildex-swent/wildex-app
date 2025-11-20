@@ -66,7 +66,7 @@ fun ReportCompletionDialog(
 
           Spacer(Modifier.height(12.dp))
 
-          // Title — centered
+          // Title
           Text(
               text = title,
               fontWeight = FontWeight.Bold,
@@ -76,7 +76,7 @@ fun ReportCompletionDialog(
 
           Spacer(Modifier.height(6.dp))
 
-          // Message — centered
+          // Message
           Text(
               text = message,
               textAlign = androidx.compose.ui.text.style.TextAlign.Center,

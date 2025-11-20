@@ -108,7 +108,7 @@ fun NavigationOptionsBottomSheet(
           Icon(
               imageVector = Icons.Filled.Map,
               contentDescription = null,
-              tint = primary, // tiny touch of color, still classy
+              tint = primary,
           )
           Text("Open in Google Maps")
         }
@@ -173,12 +173,9 @@ fun NavigationOptionsBottomSheet(
   }
 }
 
-/* --- HELPERS --- */
-
 private fun openInGoogleMapsApp(context: Context, latitude: Double, longitude: Double) {
   val uri = "google.navigation:q=$latitude,$longitude&mode=d".toUri()
   val intent = Intent(Intent.ACTION_VIEW, uri).apply { setPackage("com.google.android.apps.maps") }
-
   try {
     if (intent.resolveActivity(context.packageManager) != null) {
       context.startActivity(intent)
@@ -199,7 +196,6 @@ private fun copyLocationToClipboard(
   val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
   val clip = ClipData.newPlainText("Wildex report location", "$label\n($latitude, $longitude)")
   clipboard.setPrimaryClip(clip)
-
   Toast.makeText(context, "Location copied.", Toast.LENGTH_SHORT).show()
 }
 

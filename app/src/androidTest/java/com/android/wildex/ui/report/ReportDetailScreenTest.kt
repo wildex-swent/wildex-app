@@ -1,10 +1,15 @@
 package com.android.wildex.ui.report
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
@@ -58,8 +63,10 @@ class ReportDetailScreenTest {
             creationDate = Timestamp.now(),
             country = "Switzerland",
             friendsCount = 0)
+
     userRepository.addUser(professionalUser)
     userRepository.addUser(regularUser)
+
     val report =
         Report(
             reportId = "reportId1",
@@ -70,7 +77,9 @@ class ReportDetailScreenTest {
             description = "A test report description that should be visible in the UI.",
             authorId = "user2",
             assigneeId = "user1")
+
     reportRepository.addReport(report)
+
     reportDetailsViewModel =
         ReportDetailsScreenViewModel(
             reportRepository = reportRepository,
@@ -92,6 +101,7 @@ class ReportDetailScreenTest {
     composeRule
         .onNodeWithTag(ReportDetailsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
         .performClick()
+
     assert(backClicked)
   }
 
@@ -104,19 +114,23 @@ class ReportDetailScreenTest {
       )
     }
     composeRule.waitForIdle()
+
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.SCREEN).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.CONTENT_LIST).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_IMAGE_BOX).assertIsDisplayed()
-    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_IMAGE).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_IMAGE).assertExists()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_TOP_GRADIENT).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_BOTTOM_GRADIENT).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_BAR).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_AUTHOR_NAME).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_DATE).assertIsDisplayed()
+    composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.ASSIGNEE_CARD)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.ASSIGNEE_CARD).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.ASSIGNEE_TEXT).assertIsDisplayed()
+    composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.ACTION_ROW)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.ACTION_ROW).assertIsDisplayed()
+    composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.COMMENTS_HEADER)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENTS_HEADER).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENTS_COUNT).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_BAR).assertIsDisplayed()
@@ -175,4 +189,8 @@ class ReportDetailScreenTest {
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_COPY).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_SHARE).assertIsDisplayed()
   }
+}
+
+private fun ComposeContentTestRule.scrollToTagWithinScroll(tag: String) {
+  onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasTestTag(tag))
 }

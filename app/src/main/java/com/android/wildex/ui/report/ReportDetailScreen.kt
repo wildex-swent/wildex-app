@@ -326,7 +326,6 @@ private fun ReportDetailsContent(
         }
       }
 
-      // COMMENTS LIST
       items(uiState.commentsUI) { commentUI ->
         ReportCommentRow(commentUI = commentUI, onProfile = onProfile)
       }

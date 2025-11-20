@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
@@ -19,13 +20,13 @@ fun ProfessionalBadge(modifier: Modifier = Modifier) {
   Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     Icon(
         imageVector = Icons.Filled.Pets,
-        contentDescription = "Professional Badge",
+        contentDescription = "Professional badge",
         tint = colorScheme.tertiary,
         modifier = Modifier.fillMaxSize())
     Icon(
         imageVector = Icons.Rounded.Add,
         contentDescription = null,
         tint = Color.White,
-        modifier = Modifier.align(Alignment.BottomCenter).fillMaxSize(0.5f))
+        modifier = Modifier.align(BiasAlignment(0f, 0.7f)).fillMaxSize(0.5f))
   }
 }

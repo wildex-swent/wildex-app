@@ -47,7 +47,7 @@ fun ClickableProfilePicture(
     // User badge
     Box(
         modifier =
-            Modifier.align(Alignment.BottomEnd).fillMaxSize(0.35f).offset(x = 2.dp, y = 2.dp)) {
+            Modifier.align(Alignment.BottomEnd).fillMaxSize(0.45f).offset(x = 3.dp, y = 3.dp)) {
           when (profileUserType) {
             UserType.REGULAR -> {}
             UserType.PROFESSIONAL -> ProfessionalBadge()

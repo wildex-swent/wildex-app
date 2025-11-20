@@ -74,14 +74,14 @@ class ReportScreenViewModelTest {
           userId = "user1",
           username = "user1name",
           profilePictureURL = "user1URL",
-      )
+          userType = UserType.REGULAR)
 
   private val simpleUser2 =
       SimpleUser(
           userId = "user2",
           username = "user2name",
           profilePictureURL = "user2URL",
-      )
+          userType = UserType.REGULAR)
 
   private val user2 =
       User(
@@ -101,7 +101,7 @@ class ReportScreenViewModelTest {
           userId = "user3",
           username = "user3name",
           profilePictureURL = "user3URL",
-      )
+          userType = UserType.PROFESSIONAL)
 
   private val user3 =
       User(
@@ -121,7 +121,7 @@ class ReportScreenViewModelTest {
           userId = "defaultUserId",
           username = "defaultUsername",
           profilePictureURL = "",
-      )
+          userType = UserType.REGULAR)
 
   @Before
   fun setUp() {
@@ -150,7 +150,6 @@ class ReportScreenViewModelTest {
     val initialState = viewModel.uiState.value
     assertTrue(initialState.reports.isEmpty())
     assertEquals(defaultUser, initialState.currentUser)
-    assertEquals(UserType.REGULAR, initialState.currentUserType)
     assertNull(initialState.errorMsg)
     assertFalse(initialState.isLoading)
     assertFalse(initialState.isRefreshing)
@@ -198,7 +197,6 @@ class ReportScreenViewModelTest {
       assertEquals(expectedReportAssignees, actualReportAssignees)
 
       assertEquals(simpleUser2, state.currentUser)
-      assertEquals(UserType.REGULAR, state.currentUserType)
       assertNull(state.errorMsg)
       assertFalse(state.isLoading)
       assertFalse(state.isRefreshing)
@@ -218,7 +216,6 @@ class ReportScreenViewModelTest {
       // user 3 is a professional user so he sees all reports
       assertEquals(expectedReportIds, actualReportIds)
       assertEquals(simpleUser3, state.currentUser)
-      assertEquals(UserType.PROFESSIONAL, state.currentUserType)
       assertNull(state.errorMsg)
       assertFalse(state.isLoading)
       assertFalse(state.isRefreshing)
@@ -283,7 +280,7 @@ class ReportScreenViewModelTest {
   @Test
   fun loadUIState_sets_error_when_User_fails() {
     mainDispatcherRule.runTest {
-      coEvery { userRepository.getUser("user3") } throws Exception("Error getting user")
+      coEvery { userRepository.getSimpleUser("user3") } throws Exception("Error getting user")
       coEvery { reportRepository.getAllReportsByAuthor("user3") } returns emptyList()
 
       viewModel.loadUIState()

@@ -2,7 +2,6 @@ package com.android.wildex.dataClasses
 
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
-import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.relationship.Relationship
 import com.android.wildex.model.relationship.StatusEnum
@@ -52,7 +51,6 @@ class DataClassesTest {
 
   @Test
   fun testAnimalDetectResponse() {
-    val boundingBox = BoundingBox(0.1f, 0.1f, 0.5f, 0.5f)
     val taxonomy =
         Taxonomy(
             id = "1",
@@ -66,13 +64,11 @@ class DataClassesTest {
         AnimalDetectResponse(
             animalType = "Lion",
             confidence = 0.98f,
-            boundingBox = boundingBox,
             taxonomy = taxonomy,
         )
 
     TestCase.assertEquals("Lion", response.animalType)
     TestCase.assertEquals(0.98f, response.confidence)
-    TestCase.assertEquals(boundingBox, response.boundingBox)
     TestCase.assertEquals(taxonomy, response.taxonomy)
   }
 
@@ -164,11 +160,13 @@ class DataClassesTest {
             userId = "user1",
             username = "TestUser",
             profilePictureURL = "https://example.com/user_pic",
+            userType = UserType.REGULAR,
         )
 
     TestCase.assertEquals("user1", simpleUser.userId)
     TestCase.assertEquals("TestUser", simpleUser.username)
     TestCase.assertEquals("https://example.com/user_pic", simpleUser.profilePictureURL)
+    TestCase.assertEquals(UserType.REGULAR, simpleUser.userType)
   }
 
   @Test

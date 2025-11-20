@@ -9,6 +9,7 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
@@ -35,7 +36,11 @@ class HomeScreenViewModelTest {
   private lateinit var viewModel: HomeScreenViewModel
 
   private val defaultUser: SimpleUser =
-      SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
+      SimpleUser(
+          userId = "defaultUserId",
+          username = "defaultUsername",
+          profilePictureURL = "",
+          userType = UserType.REGULAR)
 
   private val p1 =
       Post(
@@ -63,10 +68,15 @@ class HomeScreenViewModelTest {
           commentsCount = 1,
       )
 
-  private val u1 = SimpleUser(userId = "uid-1", username = "user_one", profilePictureURL = "u")
+  private val u1 =
+      SimpleUser(
+          userId = "uid-1",
+          username = "user_one",
+          profilePictureURL = "u",
+          userType = UserType.REGULAR)
 
-  private val author1 = SimpleUser("author1", "author_one", "url1")
-  private val author2 = SimpleUser("author2", "author_two", "url2")
+  private val author1 = SimpleUser("author1", "author_one", "url1", userType = UserType.REGULAR)
+  private val author2 = SimpleUser("author2", "author_two", "url2", userType = UserType.REGULAR)
 
   private val like1 = Like(likeId = "like1", postId = "p1", userId = "author-2")
 

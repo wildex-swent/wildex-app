@@ -5,15 +5,13 @@ package com.android.wildex.model.animaldetector
  *
  * @property animalType The predicted animal label (e.g., "Canis").
  * @property confidence The model's confidence in the prediction (0.0 - 1.0).
+ * @property taxonomy Additional taxonomy information if available.
  */
 data class AnimalDetectResponse(
     val animalType: String,
     val confidence: Float,
-    val boundingBox: BoundingBox,
     val taxonomy: Taxonomy,
 )
-
-data class BoundingBox(val x: Float, val y: Float, val width: Float, val height: Float)
 
 data class Taxonomy(
     val id: String,

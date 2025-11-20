@@ -239,8 +239,8 @@ class MapScreenTest {
 
   @Test
   fun selectionBottomCard_report_assigned_row_and_open_click_and_all_tags_displayed() {
-    val assignee = SimpleUser(user1.userId, user1.username, user1.profilePictureURL)
-    val author = SimpleUser(user2.userId, user2.username, user2.profilePictureURL)
+    val assignee = SimpleUser(user1.userId, user1.username, user1.profilePictureURL, user1.userType)
+    val author = SimpleUser(user2.userId, user2.username, user2.profilePictureURL, user1.userType)
     setSelectionCard(
         selection = PinDetails.ReportDetails(report1, author = author, assignee = assignee),
         tab = MapTab.Reports,
@@ -375,7 +375,8 @@ class MapScreenTest {
     val details =
         PinDetails.PostDetails(
             post = post1.copy(location = Location(46.5, 6.6, "")),
-            author = SimpleUser(user1.userId, user1.username, user1.profilePictureURL),
+            author =
+                SimpleUser(user1.userId, user1.username, user1.profilePictureURL, user1.userType),
             likedByMe = true,
             animalName = "owl",
         )

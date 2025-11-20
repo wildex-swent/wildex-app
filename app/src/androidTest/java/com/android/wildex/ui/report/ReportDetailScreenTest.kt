@@ -135,7 +135,7 @@ class ReportDetailScreenTest {
   @Test
   fun reportDetailsScreen_longDescription_showsDescriptionToggle_andToggles() {
     runBlocking {
-      val longDescription = "Very long description ".repeat(50)
+      val longDescription = "Very long description ".repeat(500)
       val longDescReport =
           Report(
               reportId = "longDescReport",

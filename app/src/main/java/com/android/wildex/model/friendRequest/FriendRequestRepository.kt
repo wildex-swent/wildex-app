@@ -1,4 +1,4 @@
-package com.android.wildex.model.relationship
+package com.android.wildex.model.friendRequest
 
 import com.android.wildex.model.utils.Id
 
@@ -9,14 +9,14 @@ interface FriendRequestRepository {
   suspend fun initializeFriendRequest(senderId: Id, receiverId: Id)
 
   /** Retrieves all Friend Requests associated with a specific user as a sender. */
-  suspend fun getAllFriendRequestsBySender(senderId: Id): List<Relationship>
+  suspend fun getAllFriendRequestsBySender(senderId: Id): List<FriendRequest>
 
   /** Retrieves all Friend Requests associated with a specific user as a receiver. */
-  suspend fun getAllFriendRequestsByReceiver(receiverId: Id): List<Relationship>
-
-  /** Adds a new Friend Request to the repository. */
-  suspend fun acceptFriendRequest(relationship: Relationship)
+  suspend fun getAllFriendRequestsByReceiver(receiverId: Id): List<FriendRequest>
 
   /** Deletes a Friend Request from the repository. */
-  suspend fun deleteFriendRequest(relationship: Relationship)
+  suspend fun deleteFriendRequest(friendRequest: FriendRequest)
+
+  /** Deletes all Friend Requests of a user, no matter if he's a sender or a receiver. */
+  suspend fun deleteAllFriendRequestsOfUser(userId: Id)
 }

@@ -2,8 +2,7 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.StatusEnum
+import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -220,13 +219,7 @@ open class FirestoreTest(val collectionPath: String) {
           authorId = "authorId2",
           assigneeId = "assigneeId2")
 
-  open val relationship1pending = Relationship(senderId = user1.userId, receiverId = user2.userId)
+  open val friendRequest1 = FriendRequest(senderId = user1.userId, receiverId = user2.userId)
 
-  open val relationship1accepted =
-      Relationship(senderId = user1.userId, receiverId = user2.userId, status = StatusEnum.ACCEPTED)
-
-  open val relationship2pending = Relationship(senderId = user3.userId, receiverId = user1.userId)
-
-  open val relationship2accepted =
-      Relationship(senderId = user3.userId, receiverId = user1.userId, status = StatusEnum.ACCEPTED)
+  open val friendRequest2 = FriendRequest(senderId = user3.userId, receiverId = user1.userId)
 }

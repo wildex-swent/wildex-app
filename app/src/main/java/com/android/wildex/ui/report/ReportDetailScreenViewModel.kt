@@ -86,7 +86,8 @@ private val defaultSimpleUser =
         userId = "defaultUserId",
         username = "defaultUsername",
         profilePictureURL = "",
-        userType = UserType.REGULAR)
+        userType = UserType.REGULAR,
+    )
 
 /**
  * ViewModel for the report detail screen.
@@ -354,8 +355,8 @@ class ReportDetailsScreenViewModel(
             ),
         )
       } catch (e: Exception) {
-        setErrorMsg("Failed to add comment: ${e.message}")
         _uiState.value = before
+        setErrorMsg("Failed to add comment: ${e.message}")
       }
     }
   }

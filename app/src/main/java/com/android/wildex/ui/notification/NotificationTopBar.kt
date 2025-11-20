@@ -23,7 +23,7 @@ import com.android.wildex.ui.profile.EditProfileScreenTestTags
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationTopBar(onGoBack: () -> Unit) {
+fun NotificationTopBar(onGoBack: () -> Unit, goBackTag: String) {
   val cs = colorScheme
   CenterAlignedTopAppBar(
       title = {
@@ -37,7 +37,7 @@ fun NotificationTopBar(onGoBack: () -> Unit) {
       },
       navigationIcon = {
         IconButton(
-            modifier = Modifier.testTag(EditProfileScreenTestTags.GO_BACK),
+            modifier = Modifier.testTag(goBackTag),
             onClick = { onGoBack() },
         ) {
           Icon(

@@ -1,5 +1,6 @@
 package com.android.wildex.ui.notification
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,9 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,13 +20,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,23 +38,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
+import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.report.NoReportsView
+import com.android.wildex.ui.report.ReportScreenTestTags
 
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
+    const val NO_NOTIFICATION_TEXT = "no_notification_text"
 
-  fun testTagForNotification(notificationId: Id, element: String): String =
-      "NotificationScreen_notification_${notificationId}_$element"
+  fun testTagForNotification(notificationId: Id): String =
+      "NotificationScreen_notification_$notificationId"
 
-  fun testTagForProfilePicture(profileId: String, role: String = ""): String {
-    return if (role.isEmpty()) "ProfilePicture_$profileId" else "ProfilePicture_${role}_$profileId"
+  fun testTagForProfilePicture(profileId: String): String {
+    return "ProfilePicture_$profileId"
   }
 }
 
@@ -61,11 +74,34 @@ fun NotificationScreen(
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
   LaunchedEffect(Unit) { notificationScreenViewModel.loadUIState() }
+    LaunchedEffect(uiState.errorMsg) {
+        uiState.errorMsg?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            notificationScreenViewModel.clearErrorMsg()
+        }
+    }
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = { NotificationTopBar(onGoBack = onGoBack) },
+      topBar = { NotificationTopBar(onGoBack = onGoBack, goBackTag = NotificationScreenTestTags.GO_BACK) },
   ) { pd ->
-    NotificationView(notifications = uiState.notifications, pd = pd)
+      val pullState = rememberPullToRefreshState()
+      Box(modifier = Modifier.fillMaxSize()/*.padding(pd)*/) {
+          PullToRefreshBox(
+              state = pullState,
+              isRefreshing = uiState.isRefreshing,
+              onRefresh = { notificationScreenViewModel.refreshUIState() },
+          ) {
+              when {
+                  uiState.isError -> LoadingFail()
+                  //uiState.isLoading -> LoadingScreen()
+                  uiState.notifications.isEmpty() -> NoNotificationView()
+                  else -> {
+                      NotificationView(notifications = uiState.notifications, pd = pd)
+                  }
+              }
+              }
+          }
+
   }
 }
 
@@ -116,7 +152,8 @@ fun NotificationItem(
                       .aspectRatio(1f)
                       .clip(CircleShape)
                       .border(1.dp, cs.outline, CircleShape)
-                      .clickable(onClick = { onProfileClick(authorId) }),
+                      .clickable(onClick = { onProfileClick(authorId) })
+                      .testTag(NotificationScreenTestTags.testTagForProfilePicture(authorId)),
               contentScale = ContentScale.Crop,
           )
           Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
@@ -137,7 +174,7 @@ fun NotificationItem(
           }
           IconButton(
               onClick = { onNotificationClick(notificationContentId, notificationType) },
-              modifier = Modifier.size(48.dp)) {
+              modifier = Modifier.size(48.dp).testTag(NotificationScreenTestTags.testTagForNotification(notificationContentId))) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Open notification",
@@ -146,4 +183,29 @@ fun NotificationItem(
               }
         }
   }
+}
+@Composable
+fun NoNotificationView() {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp).testTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.nothing_found),
+            contentDescription = "Nothing Found",
+            tint = colorScheme.primary,
+            modifier = Modifier.size(96.dp),
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = LocalContext.current.getString(R.string.no_notifications),
+            color = colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            lineHeight = 24.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }

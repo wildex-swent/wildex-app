@@ -32,6 +32,7 @@ import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
 import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 /**
  * Composable that renders the top app bar in the Wildex home screen.
@@ -70,20 +71,14 @@ fun HomeTopBar(
         }
       },
       actions = {
-        IconButton(
-            onClick = { onProfilePictureClick(user.userId) },
-            modifier = Modifier.testTag(PROFILE_PICTURE),
-        ) {
-          AsyncImage(
-              model = user.profilePictureURL,
-              contentDescription = "Profile picture",
-              modifier =
-                  Modifier.size(40.dp)
-                      .clip(CircleShape)
-                      .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-              contentScale = ContentScale.Crop,
-          )
-        }
+        ClickableProfilePicture(
+            modifier = Modifier.size(40.dp)
+                .testTag(PROFILE_PICTURE),
+            profileId = user.userId,
+            profilePictureURL = user.profilePictureURL,
+            profileUserType = user.userType,
+            onProfile = onProfilePictureClick,
+        )
       },
       colors =
           TopAppBarDefaults.topAppBarColors(

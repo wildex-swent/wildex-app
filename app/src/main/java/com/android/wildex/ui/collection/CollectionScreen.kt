@@ -175,13 +175,15 @@ fun CollectionTopBar(
       },
       actions = {
         if (isUserOwner) {
-          ClickableProfilePicture(
-              modifier = Modifier.size(40.dp).testTag(CollectionScreenTestTags.PROFILE_BUTTON),
-              profileId = user.userId,
-              profilePictureURL = user.profilePictureURL,
-              profileUserType = user.userType,
-              onProfile = onProfileClick,
-          )
+          Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            ClickableProfilePicture(
+                modifier = Modifier.size(40.dp).testTag(CollectionScreenTestTags.PROFILE_BUTTON),
+                profileId = user.userId,
+                profilePictureURL = user.profilePictureURL,
+                profileUserType = user.userType,
+                onProfile = onProfileClick,
+            )
+          }
         }
       })
 }

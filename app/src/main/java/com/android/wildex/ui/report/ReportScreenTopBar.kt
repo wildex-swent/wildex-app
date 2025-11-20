@@ -1,5 +1,6 @@
 package com.android.wildex.ui.report
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -67,15 +69,18 @@ fun ReportScreenTopBar(
             }
       },
       actions = {
-        ClickableProfilePicture(
-            modifier =
-                Modifier.size(40.dp)
-                    .testTag(
-                        ReportScreenTestTags.testTagForProfilePicture(
-                            profileId = userId, role = "user")),
-            profileId = userId,
-            profilePictureURL = userProfilePictureURL,
-            profileUserType = userType,
-            onProfile = onProfileClick)
+        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+          ClickableProfilePicture(
+              modifier =
+                  Modifier.size(40.dp)
+                      .testTag(
+                          ReportScreenTestTags.testTagForProfilePicture(
+                              profileId = userId, role = "user")),
+              profileId = userId,
+              profilePictureURL = userProfilePictureURL,
+              profileUserType = userType,
+              onProfile = onProfileClick,
+          )
+        }
       })
 }

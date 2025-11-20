@@ -66,13 +66,15 @@ fun HomeTopBar(
         }
       },
       actions = {
-        ClickableProfilePicture(
-            modifier = Modifier.size(40.dp).testTag(PROFILE_PICTURE),
-            profileId = user.userId,
-            profilePictureURL = user.profilePictureURL,
-            profileUserType = user.userType,
-            onProfile = onProfilePictureClick,
-        )
+        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+          ClickableProfilePicture(
+              modifier = Modifier.size(40.dp).testTag(PROFILE_PICTURE),
+              profileId = user.userId,
+              profilePictureURL = user.profilePictureURL,
+              profileUserType = user.userType,
+              onProfile = onProfilePictureClick,
+          )
+        }
       },
       colors =
           TopAppBarDefaults.topAppBarColors(

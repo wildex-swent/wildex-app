@@ -235,7 +235,7 @@ private fun NavGraphBuilder.collectionComposable(
       CollectionScreen(
           userUid = userId,
           onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
-          onProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId ?: "")) },
+          onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
           onGoBack = { navigationActions.goBack() },
           bottomBar = {
             if (userId == currentUserId)

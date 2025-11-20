@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
@@ -206,7 +205,8 @@ fun PostsView(
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {
     items(postStates.size) { index ->
-      PostItem(postState = postStates[index],
+      PostItem(
+          postState = postStates[index],
           onProfilePictureClick = onProfilePictureClick,
           onPostLike = onPostLike,
           onPostClick = onPostClick,
@@ -257,8 +257,7 @@ fun PostItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
       ClickableProfilePicture(
-          modifier = Modifier.size(40.dp)
-              .testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
+          modifier = Modifier.size(40.dp).testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
           profileUserType = author.userType,

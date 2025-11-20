@@ -1,5 +1,6 @@
 package com.android.wildex.ui.utils
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,13 +37,13 @@ fun ClickableProfilePicture(
     // User profile picture
     ElevatedCard(
         shape = CircleShape,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         modifier = Modifier.matchParentSize()) {
           AsyncImage(
               model = ImageRequest.Builder(context).data(profilePictureURL).crossfade(true).build(),
               contentDescription = "Profile picture",
               contentScale = ContentScale.Crop,
-              modifier = Modifier.fillMaxSize())
+              modifier = Modifier.fillMaxSize().border(1.dp, colorScheme.primary, CircleShape))
         }
 
     // User badge

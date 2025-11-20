@@ -3,7 +3,6 @@ package com.android.wildex.ui.collection
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,10 +48,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.ClickableProfilePicture
 import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -90,7 +90,7 @@ fun CollectionScreen(
     collectionScreenViewModel: CollectionScreenViewModel = viewModel(),
     userUid: String = "",
     onAnimalClick: (Id) -> Unit = {},
-    onProfileClick: () -> Unit = {},
+    onProfileClick: (Id) -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onGoBack: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {}
@@ -112,11 +112,7 @@ fun CollectionScreen(
       topBar = {
         if (!uiState.isLoading) {
           CollectionTopBar(
-              uiState.isUserOwner,
-              uiState.user.profilePictureURL,
-              onGoBack,
-              onProfileClick,
-              onNotificationClick)
+              uiState.isUserOwner, uiState.user, onGoBack, onProfileClick, onNotificationClick)
         }
       }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
@@ -144,9 +140,9 @@ fun CollectionScreen(
 @Composable
 fun CollectionTopBar(
     isUserOwner: Boolean,
-    userProfilePictureURL: String = "",
+    user: SimpleUser,
     onGoBack: () -> Unit,
-    onProfileClick: () -> Unit,
+    onProfileClick: (Id) -> Unit,
     onNotificationClick: () -> Unit
 ) {
   TopAppBar(
@@ -179,20 +175,13 @@ fun CollectionTopBar(
       },
       actions = {
         if (isUserOwner) {
-          IconButton(
-              onClick = { onProfileClick() },
-              modifier = Modifier.testTag(CollectionScreenTestTags.PROFILE_BUTTON),
-          ) {
-            AsyncImage(
-                model = userProfilePictureURL,
-                contentDescription = "Profile picture",
-                modifier =
-                    Modifier.size(40.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, colorScheme.primary, CircleShape),
-                contentScale = ContentScale.Crop,
-            )
-          }
+          ClickableProfilePicture(
+              modifier = Modifier.size(40.dp).testTag(CollectionScreenTestTags.PROFILE_BUTTON),
+              profileId = user.userId,
+              profilePictureURL = user.profilePictureURL,
+              profileUserType = user.userType,
+              onProfile = onProfileClick,
+          )
         }
       })
 }

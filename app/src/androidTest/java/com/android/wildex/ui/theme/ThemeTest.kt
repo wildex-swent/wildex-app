@@ -14,7 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-class WildexThemeComposeTest {
+class ThemeTest {
 
   @get:Rule val composeRule = createComposeRule()
 

@@ -45,7 +45,6 @@ class EditProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
-          friendsCount = 10,
       )
 
   @Before

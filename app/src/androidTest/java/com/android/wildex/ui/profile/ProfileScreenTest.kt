@@ -67,7 +67,6 @@ class ProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
-          friendsCount = 42,
       )
 
   /** Shared test achievements repo + use case + VM for tests that don't need custom repos. */

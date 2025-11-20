@@ -109,8 +109,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           profilePictureURL = profilePictureURL,
           userType = userType,
           creationDate = creationDate,
-          country = country,
-          friendsCount = friendsCount)
+          country = country)
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null

@@ -23,7 +23,6 @@ val defaultUser =
         UserType.REGULAR,
         Timestamp.now(),
         "DefaultCountry",
-        0,
     )
 
 data class NotificationScreenUIState(

@@ -127,7 +127,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
-          friendsCount = 2,
       )
 
   open val user2 =
@@ -141,7 +140,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
-          friendsCount = 3,
       )
 
   open val user3 =
@@ -155,7 +153,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
-          friendsCount = 0,
       )
 
   open val like1 = Like("like1", postId = post1.postId, userId = user1.userId)

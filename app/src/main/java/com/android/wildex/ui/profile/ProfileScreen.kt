@@ -221,7 +221,6 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-              friendCount = user.friendsCount,
           )
         }
 

@@ -199,7 +199,6 @@ class NavigationTest : NavigationTestUtils() {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "country2",
-              friendsCount = 2,
           )
       RepositoryProvider.userRepository.addUser(user)
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)

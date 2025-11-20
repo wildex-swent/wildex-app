@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-private val emptyUser = User("", "", "", "", "", "", UserType.REGULAR, Timestamp(0, 0), "", 0)
+private val emptyUser = User("", "", "", "", "", "", UserType.REGULAR, Timestamp(0, 0), "")
 
 data class ProfileUIState(
     val user: User = emptyUser,

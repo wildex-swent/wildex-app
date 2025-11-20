@@ -16,7 +16,6 @@ import com.google.firebase.Timestamp
  * @property userType The type of user, defined by the UserType enum.
  * @property creationDate The date the user's account was created.
  * @property country The country the user is from.
- * @property friendsCount The number of friends the user has.
  */
 data class User(
     val userId: Id,
@@ -28,7 +27,6 @@ data class User(
     val userType: UserType,
     val creationDate: Timestamp,
     val country: String,
-    val friendsCount: Int,
 )
 
 /**

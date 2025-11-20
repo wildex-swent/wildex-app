@@ -4,8 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -82,6 +89,36 @@ class CameraScreenTestWithNoPermission {
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
     composeTestRule.waitForIdle()
     assertPermissionScreenIsDisplayed()
+  }
+
+  @Test
+  fun permissionScreen_canUploadImage() {
+    val vm = spyk(viewModel)
+    val fakeUri = Uri.parse("content://fake/image.jpg")
+    val testRegistry =
+        object : ActivityResultRegistry() {
+          override fun <I, O> onLaunch(
+              requestCode: Int,
+              contract: ActivityResultContract<I, O>,
+              input: I,
+              options: ActivityOptionsCompat?,
+          ) {
+            dispatchResult(requestCode, fakeUri)
+          }
+        }
+    composeTestRule.setContent {
+      WithActivityResultRegistry(testRegistry) { CameraScreen(cameraScreenViewModel = vm) }
+    }
+    composeTestRule.waitForIdle()
+    assertPermissionScreenIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
+        .performClick()
+    composeTestRule.waitForIdle()
+
+    verify { vm.updateImageUri(fakeUri) }
+    verify { vm.detectAnimalImage(fakeUri, composeTestRule.activity) }
   }
 
   // ========== DETECTING SCREEN TESTS ==========
@@ -378,5 +415,20 @@ class CameraScreenTestWithNoPermission {
     composeTestRule
         .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
         .assertIsDisplayed()
+  }
+
+  @Composable
+  private fun WithActivityResultRegistry(
+      activityResultRegistry: ActivityResultRegistry,
+      content: @Composable () -> Unit,
+  ) {
+    val activityResultRegistryOwner =
+        object : ActivityResultRegistryOwner {
+          override val activityResultRegistry = activityResultRegistry
+        }
+    CompositionLocalProvider(
+        LocalActivityResultRegistryOwner provides activityResultRegistryOwner) {
+          content()
+        }
   }
 }

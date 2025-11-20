@@ -2,7 +2,6 @@ package com.android.wildex.ui.camera
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -51,22 +50,24 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.File
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object CameraPreviewScreenTestTags {
-  const val CAMERA_VIEWFINDER = "camera_viewfinder"
-  const val CAPTURE_BUTTON = "capture_button"
-  const val UPLOAD_BUTTON = "upload_button"
-  const val SWITCH_BUTTON = "switch_button"
-  const val ZOOM_VALUE = "zoom_value"
+  const val CAMERA_PREVIEW_CAMERA_VIEWFINDER = "camera_preview_camera_viewfinder"
+  const val CAMERA_PREVIEW_CAPTURE_BUTTON = "camera_preview_capture_button"
+  const val CAMERA_PREVIEW_UPLOAD_BUTTON = "camera_preview_upload_button"
+  const val CAMERA_PREVIEW_SWITCH_BUTTON = "camera_preview_switch_button"
+  const val CAMERA_PREVIEW_ZOOM_VALUE = "camera_preview_zoom_value"
 }
 
 @Composable
 fun CameraPreviewScreen(
     onPhotoTaken: (Uri) -> Unit,
     onUploadClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) {
   val context = LocalContext.current
   val lifecycleOwner = LocalLifecycleOwner.current
@@ -81,7 +82,7 @@ fun CameraPreviewScreen(
   // Initialize camera
   LaunchedEffect(cameraSelector.value) {
     val cameraProvider = ProcessCameraProvider.awaitInstance(context)
-    withContext(Dispatchers.Main) {
+    withContext(mainDispatcher) {
       cameraProvider.unbindAll()
       val camera =
           cameraProvider.bindToLifecycle(
@@ -121,22 +122,24 @@ fun CameraPreviewScreen(
 
 @Composable
 private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
-  if (surfaceRequest != null) {
-    CameraXViewfinder(
-        modifier =
-            Modifier.pointerInput(Unit) {
-                  detectTransformGestures { _, _, zoom, _ ->
-                    cameraRef
-                        ?.cameraControl
-                        ?.setZoomRatio(cameraRef.cameraInfo.zoomState.value!!.zoomRatio * zoom)
-                  }
-                }
-                .fillMaxSize()
-                .testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER),
-        surfaceRequest = surfaceRequest,
-    )
-  } else
-      Box(modifier = Modifier.fillMaxSize().testTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER))
+  Box(
+      modifier =
+          Modifier.fillMaxSize()
+              .testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAMERA_VIEWFINDER)) {
+        surfaceRequest?.let {
+          CameraXViewfinder(
+              modifier =
+                  Modifier.fillMaxSize().pointerInput(Unit) {
+                    detectTransformGestures { _, _, zoom, _ ->
+                      cameraRef
+                          ?.cameraControl
+                          ?.setZoomRatio(cameraRef.cameraInfo.zoomState.value!!.zoomRatio * zoom)
+                    }
+                  },
+              surfaceRequest = surfaceRequest,
+          )
+        }
+      }
 }
 
 @Composable
@@ -151,7 +154,10 @@ private fun CameraControls(
       modifier = modifier.fillMaxWidth(),
       horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    ZoomText(zoomValue)
+    ZoomText(
+        zoomValue = zoomValue,
+        modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_ZOOM_VALUE),
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
@@ -163,28 +169,28 @@ private fun CameraControls(
       // Upload button - left side
       UploadButton(
           onClick = onUploadClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON),
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON),
       )
 
       // Capture button - main action (larger)
       CaptureButton(
           onClick = onCaptureClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAPTURE_BUTTON),
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON),
       )
 
       // Switch button - right side
       SwitchButton(
           onClick = onSwitchClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.SWITCH_BUTTON),
+          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON),
       )
     }
   }
 }
 
 @Composable
-private fun ZoomText(zoomValue: Float) {
+private fun ZoomText(zoomValue: Float, modifier: Modifier) {
   Surface(
-      modifier = Modifier.testTag(CameraPreviewScreenTestTags.ZOOM_VALUE),
+      modifier = modifier,
       shape = RoundedCornerShape(20.dp),
       color = colorScheme.surface.copy(alpha = 0.25f),
   ) {
@@ -199,7 +205,7 @@ private fun ZoomText(zoomValue: Float) {
 @Composable
 private fun CaptureButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
 ) {
   IconButton(
       onClick = onClick,
@@ -221,7 +227,7 @@ private fun CaptureButton(
 @Composable
 private fun UploadButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
 ) {
   IconButton(
       onClick = onClick,
@@ -243,7 +249,7 @@ private fun UploadButton(
 @Composable
 private fun SwitchButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
 ) {
   IconButton(
       onClick = onClick,
@@ -280,11 +286,10 @@ private fun ImageCapture.capturePhoto(
       object : ImageCapture.OnImageSavedCallback {
         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
           output.savedUri?.let { onPhotoTaken(it) }
-          Log.d("CameraPreview", "Image captured: ${output.savedUri}")
         }
 
         override fun onError(exception: ImageCaptureException) {
-          Log.e("CameraPreview", "Capture failed", exception)
+          // Error
         }
       },
   )

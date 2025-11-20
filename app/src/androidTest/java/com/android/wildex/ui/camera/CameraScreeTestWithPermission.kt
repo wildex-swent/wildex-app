@@ -4,8 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -84,6 +91,56 @@ class CameraScreenTestWithPermission {
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
     composeTestRule.waitForIdle()
     assertPreviewScreenIsDisplayed()
+  }
+
+  @Test
+  fun previewScreen_canUploadImage() {
+    val vm = spyk(viewModel)
+    val fakeUri = Uri.parse("content://fake/image.jpg")
+    val testRegistry =
+        object : ActivityResultRegistry() {
+          override fun <I, O> onLaunch(
+              requestCode: Int,
+              contract: ActivityResultContract<I, O>,
+              input: I,
+              options: ActivityOptionsCompat?,
+          ) {
+            dispatchResult(requestCode, fakeUri)
+          }
+        }
+    composeTestRule.setContent {
+      WithActivityResultRegistry(testRegistry) { CameraScreen(cameraScreenViewModel = vm) }
+    }
+    composeTestRule.waitForIdle()
+    assertPreviewScreenIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON)
+        .performClick()
+    composeTestRule.waitForIdle()
+
+    verify { vm.updateImageUri(fakeUri) }
+    verify { vm.detectAnimalImage(fakeUri, composeTestRule.activity) }
+  }
+
+  @Test
+  fun previewScreen_canSwitchAndCapture() {
+    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+        .performClick()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+        .performClick()
+    // Can capture while switched
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+        .performClick()
+    // Can switch back
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+        .performClick()
   }
 
   // ========== DETECTING SCREEN TESTS ==========
@@ -368,10 +425,35 @@ class CameraScreenTestWithPermission {
 
   private fun assertPreviewScreenIsDisplayed() {
     composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_VIEWFINDER).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.UPLOAD_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.SWITCH_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.CAPTURE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraPreviewScreenTestTags.ZOOM_VALUE).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAMERA_VIEWFINDER)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_ZOOM_VALUE)
+        .assertIsDisplayed()
+  }
+
+  @Composable
+  private fun WithActivityResultRegistry(
+      activityResultRegistry: ActivityResultRegistry,
+      content: @Composable () -> Unit,
+  ) {
+    val activityResultRegistryOwner =
+        object : ActivityResultRegistryOwner {
+          override val activityResultRegistry = activityResultRegistry
+        }
+    CompositionLocalProvider(
+        LocalActivityResultRegistryOwner provides activityResultRegistryOwner) {
+          content()
+        }
   }
 }

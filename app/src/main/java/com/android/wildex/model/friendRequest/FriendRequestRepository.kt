@@ -14,8 +14,11 @@ interface FriendRequestRepository {
   /** Retrieves all Friend Requests associated with a specific user as a receiver. */
   suspend fun getAllFriendRequestsByReceiver(receiverId: Id): List<FriendRequest>
 
-  /** Deletes a Friend Request from the repository. */
-  suspend fun deleteFriendRequest(friendRequest: FriendRequest)
+  /** Accepts a Friend Request of the repository. */
+  suspend fun acceptFriendRequest(friendRequest: FriendRequest)
+
+  /** Refuses a Friend Request of the repository. */
+  suspend fun refuseFriendRequest(friendRequest: FriendRequest)
 
   /** Deletes all Friend Requests of a user, no matter if he's a sender or a receiver. */
   suspend fun deleteAllFriendRequestsOfUser(userId: Id)

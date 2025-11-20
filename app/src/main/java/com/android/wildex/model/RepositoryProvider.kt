@@ -23,6 +23,8 @@ import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.storage.StorageRepositoryFirebase
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserAnimalsRepositoryFirestore
+import com.android.wildex.model.user.UserFriendsRepository
+import com.android.wildex.model.user.UserFriendsRepositoryFirestore
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserSettingsRepository
@@ -60,5 +62,8 @@ object RepositoryProvider {
   }
   val friendRequestRepository: FriendRequestRepository by lazy {
     FriendRequestRepositoryFirestore(Firebase.firestore)
+  }
+  val userFriendsRepository: UserFriendsRepository by lazy {
+    UserFriendsRepositoryFirestore(Firebase.firestore)
   }
 }

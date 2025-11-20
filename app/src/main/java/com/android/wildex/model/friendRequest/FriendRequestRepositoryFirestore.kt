@@ -1,5 +1,6 @@
 package com.android.wildex.model.friendRequest
 
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -50,12 +51,27 @@ class FriendRequestRepositoryFirestore(private val db: FirebaseFirestore) :
   }
 
   /**
-   * Deletes a Friend Request from the repository.
+   * Accepts a Friend Request of the repository.
    *
-   * @param friendRequest The friend request who will be deleted
+   * @param friendRequest the friend request that was accepted
    */
-  override suspend fun deleteFriendRequest(friendRequest: FriendRequest) {
-    getFriendRequestDocRef(friendRequest.senderId, friendRequest.receiverId).delete().await()
+  override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
+    deleteFriendRequest(friendRequest)
+
+    RepositoryProvider.userFriendsRepository.addFriendToUserFriendsOfUser(
+        friendId = friendRequest.senderId, userId = friendRequest.receiverId)
+
+    RepositoryProvider.userFriendsRepository.addFriendToUserFriendsOfUser(
+        friendId = friendRequest.receiverId, userId = friendRequest.senderId)
+  }
+
+  /**
+   * Refuses a Friend Request of the repository.
+   *
+   * @param friendRequest the friend request that was refuses
+   */
+  override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {
+    deleteFriendRequest(friendRequest)
   }
 
   /**
@@ -66,6 +82,15 @@ class FriendRequestRepositoryFirestore(private val db: FirebaseFirestore) :
   override suspend fun deleteAllFriendRequestsOfUser(userId: Id) {
     getAllFriendRequestsBySender(userId).forEach { deleteFriendRequest(it) }
     getAllFriendRequestsByReceiver(userId).forEach { deleteFriendRequest(it) }
+  }
+
+  /**
+   * Deletes a Friend Request from the repository.
+   *
+   * @param friendRequest The friend request who will be deleted
+   */
+  private suspend fun deleteFriendRequest(friendRequest: FriendRequest) {
+    getFriendRequestDocRef(friendRequest.senderId, friendRequest.receiverId).delete().await()
   }
 
   /**

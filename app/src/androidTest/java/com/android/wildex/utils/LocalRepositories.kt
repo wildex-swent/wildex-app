@@ -383,13 +383,17 @@ object LocalRepositories {
       return listOfFriendRequest.filter { it.receiverId == receiverId }
     }
 
-    override suspend fun deleteFriendRequest(friendRequest: FriendRequest) {
+    override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
+      listOfFriendRequest.remove(friendRequest)
+    }
+
+    override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {
       listOfFriendRequest.remove(friendRequest)
     }
 
     override suspend fun deleteAllFriendRequestsOfUser(userId: Id) {
-      getAllFriendRequestsBySender(userId).forEach { deleteFriendRequest(it) }
-      getAllFriendRequestsByReceiver(userId).forEach { deleteFriendRequest(it) }
+      getAllFriendRequestsBySender(userId).forEach { refuseFriendRequest(it) }
+      getAllFriendRequestsByReceiver(userId).forEach { refuseFriendRequest(it) }
     }
 
     override fun clear() {

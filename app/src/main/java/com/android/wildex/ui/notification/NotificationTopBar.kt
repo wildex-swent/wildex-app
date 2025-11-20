@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
-import com.android.wildex.ui.profile.EditProfileScreenTestTags
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -50,13 +50,10 @@ import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
-import com.android.wildex.ui.LoadingScreen
-import com.android.wildex.ui.report.NoReportsView
-import com.android.wildex.ui.report.ReportScreenTestTags
 
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
-    const val NO_NOTIFICATION_TEXT = "no_notification_text"
+  const val NO_NOTIFICATION_TEXT = "no_notification_text"
 
   fun testTagForNotification(notificationId: Id): String =
       "NotificationScreen_notification_$notificationId"
@@ -74,34 +71,35 @@ fun NotificationScreen(
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
   LaunchedEffect(Unit) { notificationScreenViewModel.loadUIState() }
-    LaunchedEffect(uiState.errorMsg) {
-        uiState.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            notificationScreenViewModel.clearErrorMsg()
-        }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      notificationScreenViewModel.clearErrorMsg()
     }
+  }
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = { NotificationTopBar(onGoBack = onGoBack, goBackTag = NotificationScreenTestTags.GO_BACK) },
+      topBar = {
+        NotificationTopBar(onGoBack = onGoBack, goBackTag = NotificationScreenTestTags.GO_BACK)
+      },
   ) { pd ->
-      val pullState = rememberPullToRefreshState()
-      Box(modifier = Modifier.fillMaxSize()/*.padding(pd)*/) {
-          PullToRefreshBox(
-              state = pullState,
-              isRefreshing = uiState.isRefreshing,
-              onRefresh = { notificationScreenViewModel.refreshUIState() },
-          ) {
-              when {
-                  uiState.isError -> LoadingFail()
-                  //uiState.isLoading -> LoadingScreen()
-                  uiState.notifications.isEmpty() -> NoNotificationView()
-                  else -> {
-                      NotificationView(notifications = uiState.notifications, pd = pd)
-                  }
-              }
-              }
+    val pullState = rememberPullToRefreshState()
+    Box(modifier = Modifier.fillMaxSize() /*.padding(pd)*/) {
+      PullToRefreshBox(
+          state = pullState,
+          isRefreshing = uiState.isRefreshing,
+          onRefresh = { notificationScreenViewModel.refreshUIState() },
+      ) {
+        when {
+          uiState.isError -> LoadingFail()
+          // uiState.isLoading -> LoadingScreen()
+          uiState.notifications.isEmpty() -> NoNotificationView()
+          else -> {
+            NotificationView(notifications = uiState.notifications, pd = pd)
           }
-
+        }
+      }
+    }
   }
 }
 
@@ -174,7 +172,11 @@ fun NotificationItem(
           }
           IconButton(
               onClick = { onNotificationClick(notificationContentId, notificationType) },
-              modifier = Modifier.size(48.dp).testTag(NotificationScreenTestTags.testTagForNotification(notificationContentId))) {
+              modifier =
+                  Modifier.size(48.dp)
+                      .testTag(
+                          NotificationScreenTestTags.testTagForNotification(
+                              notificationContentId))) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Open notification",
@@ -184,28 +186,32 @@ fun NotificationItem(
         }
   }
 }
+
 @Composable
 fun NoNotificationView() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp).testTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.nothing_found),
-            contentDescription = "Nothing Found",
-            tint = colorScheme.primary,
-            modifier = Modifier.size(96.dp),
-        )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_notifications),
-            color = colorScheme.primary,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            lineHeight = 24.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
+  Column(
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(24.dp)
+              .testTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Icon(
+        painter = painterResource(R.drawable.nothing_found),
+        contentDescription = "Nothing Found",
+        tint = colorScheme.primary,
+        modifier = Modifier.size(96.dp),
+    )
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = LocalContext.current.getString(R.string.no_notifications),
+        color = colorScheme.primary,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+  }
 }

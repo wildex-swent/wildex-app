@@ -103,10 +103,11 @@ class NotificationScreenViewModel(
     }
   }
 
-    fun refreshUIState() {
-        _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-        viewModelScope.launch { updateUIState() }
-    }
+  fun refreshUIState() {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState() }
+  }
+
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }

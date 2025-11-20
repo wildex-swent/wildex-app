@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -49,7 +50,8 @@ class ReportDetailScreenTest {
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-            friendsCount = 0)
+            friendsCount = 0,
+        )
 
     val regularUser =
         User(
@@ -62,7 +64,8 @@ class ReportDetailScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-            friendsCount = 0)
+            friendsCount = 0,
+        )
 
     userRepository.addUser(professionalUser)
     userRepository.addUser(regularUser)
@@ -72,11 +75,12 @@ class ReportDetailScreenTest {
             reportId = "reportId1",
             imageURL =
                 "https://leesbird.com/wp-content/uploads/2012/01/ring-billed-gull-imm-injured-wing-1c.jpg",
-            location = Location(0.3, 0.3),
+            location = Location(0.3, 0.3, name = "Test Location"),
             date = Timestamp.now(),
             description = "A test report description that should be visible in the UI.",
             authorId = "user2",
-            assigneeId = "user1")
+            assigneeId = "user1",
+        )
 
     reportRepository.addReport(report)
 
@@ -101,7 +105,6 @@ class ReportDetailScreenTest {
     composeRule
         .onNodeWithTag(ReportDetailsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
         .performClick()
-
     assert(backClicked)
   }
 
@@ -114,7 +117,6 @@ class ReportDetailScreenTest {
       )
     }
     composeRule.waitForIdle()
-
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.SCREEN).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.CONTENT_LIST).assertIsDisplayed()
@@ -125,6 +127,7 @@ class ReportDetailScreenTest {
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_BAR).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_AUTHOR_NAME).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_DATE).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL).assertIsDisplayed()
     composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.ASSIGNEE_CARD)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.ASSIGNEE_CARD).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.ASSIGNEE_TEXT).assertIsDisplayed()
@@ -156,6 +159,24 @@ class ReportDetailScreenTest {
   }
 
   @Test
+  fun reportCompletionDialog_canceled_showsTitleMessageAndConfirm() {
+    var confirmed = false
+
+    composeRule.setContent {
+      ReportCompletionDialog(
+          type = ReportCompletionType.CANCELED,
+          onConfirm = { confirmed = true },
+      )
+    }
+    composeRule.onNodeWithTag(ReportCompletionDialogTestTags.ANIMATION).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportCompletionDialogTestTags.TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportCompletionDialogTestTags.MESSAGE).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).performClick()
+    assert(confirmed)
+  }
+
+  @Test
   fun reportActionConfirmDialog_cancel_showsCorrectTexts() {
     composeRule.setContent {
       ReportActionConfirmDialog(
@@ -164,6 +185,7 @@ class ReportDetailScreenTest {
           onConfirm = {},
       )
     }
+
     composeRule.onNodeWithText("Delete this report?").assertIsDisplayed()
     composeRule
         .onNodeWithText("This action is irreversible and will permanently delete the report.")
@@ -173,21 +195,179 @@ class ReportDetailScreenTest {
   }
 
   @Test
-  fun navigationOptionsBottomSheet_displaysButtonsAndLabel() {
+  fun reportActionConfirmDialog_selfAssign_showsCorrectTexts() {
     composeRule.setContent {
-      NavigationOptionsBottomSheet(
-          latitude = 46.5197,
-          longitude = 6.6323,
-          displayLabel = "Lausanne, Switzerland",
-          onDismissRequest = {},
+      ReportActionConfirmDialog(
+          action = ReportActionToConfirm.SELF_ASSIGN,
+          onDismiss = {},
+          onConfirm = {},
       )
     }
+
+    composeRule.onNodeWithText("Assign this report to you?").assertIsDisplayed()
+    composeRule
+        .onNodeWithText("You will be marked as the person handling this situation.")
+        .assertIsDisplayed()
+    composeRule.onNodeWithText("Assign to me").assertIsDisplayed()
+    composeRule.onNodeWithText("No, keep it").assertIsDisplayed()
+  }
+
+  @Test
+  fun reportActionConfirmDialog_resolve_showsCorrectTexts() {
+    composeRule.setContent {
+      ReportActionConfirmDialog(
+          action = ReportActionToConfirm.RESOLVE,
+          onDismiss = {},
+          onConfirm = {},
+      )
+    }
+
+    composeRule.onNodeWithText("Mark this report as resolved?").assertIsDisplayed()
+    composeRule
+        .onNodeWithText("This action is irreversible and will permanently delete the report.")
+        .assertIsDisplayed()
+    composeRule.onNodeWithText("Resolve").assertIsDisplayed()
+    composeRule.onNodeWithText("No, keep it").assertIsDisplayed()
+  }
+
+  @Test
+  fun reportActionConfirmDialog_unselfAssign_showsCorrectTexts() {
+    composeRule.setContent {
+      ReportActionConfirmDialog(
+          action = ReportActionToConfirm.UNSELFASSIGN,
+          onDismiss = {},
+          onConfirm = {},
+      )
+    }
+
+    composeRule.onNodeWithText("Stop handling this report?").assertIsDisplayed()
+    composeRule.onNodeWithText("You will no longer be assigned to this report.").assertIsDisplayed()
+    composeRule.onNodeWithText("Unassign").assertIsDisplayed()
+    composeRule.onNodeWithText("No, keep it").assertIsDisplayed()
+  }
+
+  @Test
+  fun navigationOptionsBottomSheet_buttonsTriggerActionsAndDismissRequest() {
+    composeRule.setContent {
+      ReportDetailsScreen(
+          reportId = "reportId1",
+          reportDetailsViewModel = reportDetailsViewModel,
+      )
+    }
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL)
+        .assertIsDisplayed()
+        .performClick()
     composeRule.onNodeWithTag(NavigationSheetTestTags.SHEET).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.LOCATION).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_GOOGLE_MAPS).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_COPY).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_SHARE).assertIsDisplayed()
+  }
+
+  @Test
+  fun reportDetailsActionRow_professional_assignedToOther_createdByCurrentUser_showsDeleteOnly() {
+    val proUser =
+        SimpleUser(
+            userId = "pro",
+            username = "Pro",
+            profilePictureURL = "url",
+            userType = UserType.PROFESSIONAL,
+        )
+    val otherAssignee =
+        SimpleUser(
+            userId = "other",
+            username = "Other",
+            profilePictureURL = "url2",
+            userType = UserType.PROFESSIONAL,
+        )
+    var deleteClicked = false
+    val uiState =
+        ReportDetailsUIState(
+            currentUser = proUser,
+            assignee = otherAssignee,
+            isCreatedByCurrentUser = true,
+            isAssignedToCurrentUser = false,
+        )
+    composeRule.setContent {
+      ReportDetailsActionRow(
+          uiState = uiState,
+          onCancel = { deleteClicked = true },
+          onSelfAssign = {},
+          onResolve = {},
+          onUnSelfAssign = {},
+      )
+    }
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_CANCEL, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_CANCEL, useUnmergedTree = true)
+        .performClick()
+    assert(deleteClicked)
+  }
+
+  @Test
+  fun reportDetailsActionRow_professional_noAssignee_createdByCurrentUser_showsAssignAndDelete() {
+    val proUser =
+        SimpleUser(
+            userId = "pro",
+            username = "Pro",
+            profilePictureURL = "url",
+            userType = UserType.PROFESSIONAL,
+        )
+    var assignClicked = false
+    var deleteClicked = false
+    val uiState =
+        ReportDetailsUIState(
+            currentUser = proUser,
+            assignee = null,
+            isCreatedByCurrentUser = true,
+            isAssignedToCurrentUser = false,
+        )
+    composeRule.setContent {
+      ReportDetailsActionRow(
+          uiState = uiState,
+          onCancel = { deleteClicked = true },
+          onSelfAssign = { assignClicked = true },
+          onResolve = {},
+          onUnSelfAssign = {},
+      )
+    }
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_SELF_ASSIGN, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_SELF_ASSIGN, useUnmergedTree = true)
+        .performClick()
+    assert(assignClicked)
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_CANCEL, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.ACTION_CANCEL, useUnmergedTree = true)
+        .performClick()
+    assert(deleteClicked)
+  }
+
+  @Test
+  fun expandableTextCore_showsToggleAndToggles() {
+    val longText = "Very long text ".repeat(50)
+    composeRule.setContent {
+      ExpandableTextCore(
+          text = longText,
+          collapsedLines = 1,
+      )
+    }
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE).assertExists()
+    composeRule.onNodeWithText("Read more").assertExists()
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE).performClick()
+    composeRule.onNodeWithText("Show less").assertExists()
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE).performClick()
+    composeRule.onNodeWithText("Read more").assertExists()
   }
 }
 

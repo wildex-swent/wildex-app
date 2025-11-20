@@ -7,6 +7,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,16 +30,17 @@ fun ReportCompletionDialog(
   val title: String
   val message: String
   val animationRes: Int
+  val context = LocalContext.current
 
   when (type) {
     ReportCompletionType.RESOLVED -> {
-      title = "Resolved. Thanks for handling the situation."
-      message = "With everything taken care of, we'll take you back to the reports."
+      title = context.getString(R.string.report_details_resolved_title)
+      message = context.getString(R.string.report_details_resolved_message)
       animationRes = R.raw.success_confetti
     }
     ReportCompletionType.CANCELED -> {
-      title = "Deleted. If the situation evolves, feel free to reach out again."
-      message = "In the meantime, we'll take you back to the reports."
+      title = context.getString(R.string.report_details_canceled_title)
+      message = context.getString(R.string.report_details_canceled_message)
       animationRes = R.raw.loader_cat
     }
   }
@@ -57,26 +59,19 @@ fun ReportCompletionDialog(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-          // Animation
           LottieAnimation(
               composition = composition,
               progress = { progress },
               modifier = Modifier.size(160.dp).testTag(ReportCompletionDialogTestTags.ANIMATION),
           )
-
           Spacer(Modifier.height(12.dp))
-
-          // Title
           Text(
               text = title,
               fontWeight = FontWeight.Bold,
               textAlign = androidx.compose.ui.text.style.TextAlign.Center,
               modifier = Modifier.fillMaxWidth().testTag(ReportCompletionDialogTestTags.TITLE),
           )
-
           Spacer(Modifier.height(6.dp))
-
-          // Message
           Text(
               text = message,
               textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -89,7 +84,7 @@ fun ReportCompletionDialog(
             onClick = onConfirm,
             modifier = Modifier.testTag(ReportCompletionDialogTestTags.CONFIRM),
         ) {
-          Text("Back to reports")
+          Text(context.getString(R.string.report_details_back_reports))
         }
       },
   )

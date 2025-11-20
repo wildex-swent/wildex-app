@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.android.wildex.R
 
 object NavigationSheetTestTags {
   const val SHEET = "navigation_sheet"
@@ -71,7 +72,7 @@ fun NavigationOptionsBottomSheet(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       Text(
-          text = "Navigate to report",
+          text = context.getString(R.string.report_details_navigate),
           fontWeight = FontWeight.SemiBold,
           color = onBackground,
           style = MaterialTheme.typography.titleMedium,
@@ -110,7 +111,7 @@ fun NavigationOptionsBottomSheet(
               contentDescription = null,
               tint = primary,
           )
-          Text("Open in Google Maps")
+          Text(context.getString(R.string.report_details_google_maps))
         }
       }
 
@@ -137,7 +138,7 @@ fun NavigationOptionsBottomSheet(
               contentDescription = null,
               tint = onBackground,
           )
-          Text("Copy location")
+          Text(context.getString(R.string.report_details_copy))
         }
       }
 
@@ -164,7 +165,7 @@ fun NavigationOptionsBottomSheet(
               contentDescription = null,
               tint = onBackground,
           )
-          Text("Share location")
+          Text(context.getString(R.string.report_details_share))
         }
       }
 

@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
@@ -410,7 +411,10 @@ private fun ReportInfoBar(
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-            text = author.username.ifBlank { "Unknown reporter" },
+            text =
+                author.username.ifBlank {
+                  LocalContext.current.getString(R.string.report_details_bar_title)
+                },
             style = typography.titleMedium,
             color = colorScheme.onBackground,
             maxLines = 1,
@@ -571,10 +575,6 @@ private fun ReportCommentRow(
         ExpandableTextCore(
             text = commentUI.text,
             collapsedLines = 3,
-            style = typography.bodyMedium,
-            color = colorScheme.onBackground,
-            bodyModifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_BODY),
-            toggleModifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE),
         )
       }
     }

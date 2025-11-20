@@ -24,23 +24,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.android.wildex.R
 import com.android.wildex.model.user.UserType
 
 @Composable
 fun ExpandableTextCore(
     text: String,
     collapsedLines: Int,
-    style: TextStyle,
-    color: Color,
-    bodyModifier: Modifier = Modifier,
-    toggleModifier: Modifier = Modifier,
+    style: TextStyle = typography.bodyMedium,
+    color: Color = colorScheme.onBackground,
+    bodyModifier: Modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_BODY),
+    toggleModifier: Modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_TOGGLE),
 ) {
   var expanded by remember { mutableStateOf(false) }
   var hasOverflow by remember { mutableStateOf(false) }
+  val context = LocalContext.current
 
   Column {
     Text(
@@ -56,7 +59,9 @@ fun ExpandableTextCore(
     if (hasOverflow || expanded) {
       Spacer(Modifier.height(2.dp))
       Text(
-          text = if (expanded) "Show less" else "Read more",
+          text =
+              if (expanded) context.getString(R.string.report_details_show_less)
+              else context.getString(R.string.report_details_read_more),
           style = typography.labelSmall,
           color = colorScheme.tertiary,
           modifier = toggleModifier.align(Alignment.End).clickable { expanded = !expanded },
@@ -94,6 +99,7 @@ fun ReportDetailsActionRow(
     onUnSelfAssign: () -> Unit = {},
 ) {
   val hasAssignee = uiState.assignee != null
+  val context = LocalContext.current
 
   Row(
       modifier =
@@ -107,7 +113,7 @@ fun ReportDetailsActionRow(
       UserType.REGULAR -> {
         if (uiState.isCreatedByCurrentUser) {
           ReportActionButton(
-              text = "Delete report",
+              text = context.getString(R.string.report_details_cancel_third),
               onClick = onCancel,
               modifier = Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
               colors =
@@ -122,7 +128,7 @@ fun ReportDetailsActionRow(
         when {
           !hasAssignee -> {
             ReportActionButton(
-                text = "Assign to me",
+                text = context.getString(R.string.report_details_self_assign_third),
                 onClick = onSelfAssign,
                 modifier =
                     Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_SELF_ASSIGN),
@@ -134,7 +140,7 @@ fun ReportDetailsActionRow(
             )
             if (uiState.isCreatedByCurrentUser) {
               ReportActionButton(
-                  text = "Delete",
+                  text = context.getString(R.string.report_details_button_delete),
                   onClick = onCancel,
                   modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),
                   colors =
@@ -147,7 +153,7 @@ fun ReportDetailsActionRow(
           }
           uiState.isAssignedToCurrentUser -> {
             ReportActionButton(
-                text = "Resolve",
+                text = context.getString(R.string.report_details_resolve_third),
                 onClick = onResolve,
                 modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_RESOLVE),
                 colors =
@@ -157,7 +163,7 @@ fun ReportDetailsActionRow(
                     ),
             )
             ReportActionButton(
-                text = "Cancel",
+                text = context.getString(R.string.report_details_button_cancel),
                 onClick = onUnSelfAssign,
                 modifier =
                     Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.ACTION_UNSELFASSIGN),
@@ -171,7 +177,7 @@ fun ReportDetailsActionRow(
           else -> {
             if (uiState.isCreatedByCurrentUser) {
               ReportActionButton(
-                  text = "Delete",
+                  text = context.getString(R.string.report_details_button_delete),
                   onClick = onCancel,
                   modifier =
                       Modifier.fillMaxWidth().testTag(ReportDetailsScreenTestTags.ACTION_CANCEL),

@@ -2,7 +2,6 @@ package com.android.wildex.ui.report
 
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -26,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
@@ -53,10 +50,10 @@ import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
@@ -64,7 +61,6 @@ object ReportScreenTestTags {
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
   const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
-
   const val SUBMIT_REPORT = "report_screen_submit_report"
 
   fun testTagForReport(reportId: Id, element: String): String =
@@ -265,9 +261,14 @@ fun ReportItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
       ClickableProfilePicture(
+          modifier =
+              Modifier.size(40.dp)
+                  .testTag(
+                      ReportScreenTestTags.testTagForProfilePicture(
+                          profileId = author.userId, role = "author")),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
-          role = "author",
+          profileUserType = author.userType,
           onProfile = onProfileClick,
       )
       Spacer(modifier = Modifier.width(10.dp))
@@ -569,36 +570,6 @@ fun NoReportsView() {
         lineHeight = 24.sp,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
-    )
-  }
-}
-
-/**
- * A composable that displays a clickable profile picture.
- *
- * @param modifier The modifier to be applied to the composable.
- * @param profileId The ID of the profile.
- * @param profilePictureURL The URL of the profile picture.
- * @param onProfile The function to be called when the profile picture is clicked.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ClickableProfilePicture(
-    modifier: Modifier = Modifier,
-    profileId: String = "",
-    profilePictureURL: URL = "",
-    role: String = "",
-    onProfile: (Id) -> Unit = {},
-) {
-  IconButton(
-      onClick = { onProfile(profileId) },
-      modifier = modifier.testTag(ReportScreenTestTags.testTagForProfilePicture(profileId, role)),
-  ) {
-    AsyncImage(
-        model = profilePictureURL,
-        contentDescription = "Profile picture",
-        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
-        contentScale = ContentScale.Crop,
     )
   }
 }

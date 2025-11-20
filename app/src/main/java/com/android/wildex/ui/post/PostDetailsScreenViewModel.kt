@@ -12,6 +12,7 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
@@ -41,6 +42,7 @@ data class PostDetailsUIState(
     val currentUserId: Id = "",
     val currentUserProfilePictureURL: URL = "",
     val currentUserUsername: String = "",
+    val currentUserUserType: UserType = UserType.REGULAR,
     val likedByCurrentUser: Boolean = false,
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
@@ -52,6 +54,7 @@ data class CommentWithAuthorUI(
     val authorId: Id = "",
     val authorProfilePictureUrl: String = "",
     val authorUserName: String = "",
+    val authorUserType: UserType = UserType.REGULAR,
     val text: String = "",
     val date: String = "",
 )
@@ -134,6 +137,7 @@ class PostDetailsScreenViewModel(
               currentUserId = currentUserId,
               currentUserProfilePictureURL = currentUser.profilePictureURL,
               currentUserUsername = currentUser.username,
+              currentUserUserType = currentUser.userType,
               likedByCurrentUser = likedByCurrentUser,
               errorMsg = localErrorMsg,
               isLoading = false,
@@ -248,12 +252,14 @@ class PostDetailsScreenViewModel(
       // Build optimistic UI comment
       val currentPfp = _uiState.value.currentUserProfilePictureURL
       val username = _uiState.value.currentUserUsername
+      val userType = _uiState.value.currentUserUserType
 
       val optimistic =
           CommentWithAuthorUI(
               authorId = currentUserId,
               authorProfilePictureUrl = currentPfp,
               authorUserName = username,
+              authorUserType = userType,
               text = text,
               date = formattedNow,
           )
@@ -327,6 +333,7 @@ class PostDetailsScreenViewModel(
           authorId = author.userId,
           authorProfilePictureUrl = author.profilePictureURL,
           authorUserName = author.username,
+          authorUserType = author.userType,
           text = comment.text,
           date = formatDate(comment.date),
       )

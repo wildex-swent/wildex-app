@@ -445,11 +445,14 @@ class ProfileScreenTest {
   @Test
   fun profileImageAndName_shows_professional_badge_when_professional() {
     composeRule.setContent {
-      ProfileImageAndName(
-          name = "Jane",
-          surname = "Doe",
-          username = "jane_doe",
-          isProfessional = true,
+      ProfileContent(
+          user = sampleUser.copy(userType = UserType.PROFESSIONAL),
+          ownerProfile = false,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
       )
     }
     composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()

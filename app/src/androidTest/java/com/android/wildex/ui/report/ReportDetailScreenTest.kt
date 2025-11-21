@@ -191,7 +191,7 @@ class ReportDetailScreenTest {
   }
 
   @Test
-  fun navigationOptionsBottomSheet_shownFromLocationPill() {
+  fun navigationOptionsBottomSheet_shownFromLocationPill_andButtonsDoNotCrash() {
     composeRule.setContent {
       ReportDetailsScreen(
           reportId = "reportId1",
@@ -199,16 +199,24 @@ class ReportDetailScreenTest {
       )
     }
     composeRule.waitForIdle()
-    composeRule
-        .onNodeWithTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL)
-        .assertIsDisplayed()
-        .performClick()
-    composeRule.onNodeWithTag(NavigationSheetTestTags.SHEET).assertIsDisplayed()
+    fun openSheet() {
+      composeRule
+          .onNodeWithTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL)
+          .assertIsDisplayed()
+          .performClick()
+      composeRule.onNodeWithTag(NavigationSheetTestTags.SHEET).assertIsDisplayed()
+    }
+    openSheet()
     composeRule.onNodeWithTag(NavigationSheetTestTags.TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.LOCATION).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_GOOGLE_MAPS).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_COPY).assertIsDisplayed()
     composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_SHARE).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_COPY).performClick()
+    composeRule.waitForIdle()
+    openSheet()
+    composeRule.onNodeWithTag(NavigationSheetTestTags.BTN_SHARE).performClick()
+    composeRule.waitForIdle()
   }
 
   @Test
@@ -372,6 +380,19 @@ class ReportDetailScreenTest {
     composeRule
         .onNodeWithTag(ReportActionsTestTags.ACTION_SELF_ASSIGN, useUnmergedTree = true)
         .assertDoesNotExist()
+    composeRule
+        .onNodeWithTag(ReportActionsTestTags.ACTION_UNSELFASSIGN, useUnmergedTree = true)
+        .performClick()
+
+    composeRule.onAllNodesWithText("Stop handling this report?").onFirst().assertIsDisplayed()
+    composeRule
+        .onAllNodesWithText("You will no longer be assigned to this report.")
+        .onFirst()
+        .assertIsDisplayed()
+    composeRule.onAllNodesWithText("Unassign").onFirst().assertIsDisplayed()
+
+    // Optionally dismiss so we can continue the test
+    composeRule.onAllNodesWithText("No, keep it").onFirst().performClick()
     composeRule
         .onNodeWithTag(ReportActionsTestTags.ACTION_RESOLVE, useUnmergedTree = true)
         .performClick()

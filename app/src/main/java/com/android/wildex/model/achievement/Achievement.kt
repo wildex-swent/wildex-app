@@ -20,11 +20,3 @@ data class Achievement(
     val name: String,
     val condition: suspend (Id) -> Boolean = { false },
 )
-
-/** Indicates the type of input key used to evaluate achievement conditions. */
-enum class InputKey {
-  TEST_IDS,
-  POST_IDS,
-  LIKE_IDS,
-  COMMENT_IDS,
-}

@@ -50,6 +50,34 @@ class FriendRequestRepositoryFirestoreTest : FirestoreTest(FRIEND_REQUESTS_COLLE
   }
 
   @Test
+  fun acceptFriendRequestWorks() =
+      runTest {
+        // Remove the following Code as a comment once the UserFriendRepository is implemented
+        /*
+        var userFriendRepository = userFriendRepositoryFirestore(FirebaseEmulator.firestore)
+
+        userFriendRepository.initializeUserFriends(user1.userId)
+        userFriendRepository.initializeUserFriends(user2.userId)
+
+        repository.initializeFriendRequest(user1.userId, user2.userId)
+
+        repository.acceptFriendRequest(friendRequest1)
+
+        TestCase.assertTrue(friendRequests.isEmpty())
+
+        var friendRequests = repository.getAllFriendRequestsBySender(user1.userId)
+
+        TestCase.assertTrue(friendRequests.isEmpty())
+
+        TestCase.assertTrue(userFriendRepository.getAllFriendsOfUser(user1.userId).contains(user2.userId))
+        TestCase.assertTrue(userFriendRepository.getAllFriendsOfUser(user2.userId).contains(user1.userId))
+
+        TestCase.assertEquals(1, userFriendRepository.getFriendsCountOfUser(user1.userId))
+        TestCase.assertEquals(1, userFriendRepository.getFriendsCountOfUser(user2.userId))
+        */
+      }
+
+  @Test
   fun refuseFriendRequestWorks() = runTest {
     repository.initializeFriendRequest(user1.userId, user2.userId)
     repository.initializeFriendRequest(user3.userId, user1.userId)

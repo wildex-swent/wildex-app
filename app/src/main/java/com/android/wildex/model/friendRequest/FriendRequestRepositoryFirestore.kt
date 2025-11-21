@@ -1,6 +1,5 @@
 package com.android.wildex.model.friendRequest
 
-import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -58,11 +57,14 @@ class FriendRequestRepositoryFirestore(private val db: FirebaseFirestore) :
   override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
     deleteFriendRequest(friendRequest)
 
+    TODO("Remove this as a comment once the UserFriendRepository is implemented")
+    /*
     RepositoryProvider.userFriendsRepository.addFriendToUserFriendsOfUser(
         friendId = friendRequest.senderId, userId = friendRequest.receiverId)
 
     RepositoryProvider.userFriendsRepository.addFriendToUserFriendsOfUser(
         friendId = friendRequest.receiverId, userId = friendRequest.senderId)
+        */
   }
 
   /**

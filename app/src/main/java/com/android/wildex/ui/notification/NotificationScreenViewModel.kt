@@ -98,7 +98,9 @@ class NotificationScreenViewModel(
   }
 
   private suspend fun updateUIState() {
-    try {} catch (e: Exception) {
+    try {
+      /* To be implemented in the viewModel PR */
+    } catch (e: Exception) {
       handleException("Error loading notifications", e)
     }
   }

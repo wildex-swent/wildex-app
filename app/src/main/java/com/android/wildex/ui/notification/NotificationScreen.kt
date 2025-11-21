@@ -67,6 +67,8 @@ object NotificationScreenTestTags {
 fun NotificationScreen(
     onGoBack: () -> Unit = {},
     notificationScreenViewModel: NotificationScreenViewModel = viewModel(),
+    onProfileClick: (Id) -> Unit = {},
+    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
 ) {
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -84,19 +86,22 @@ fun NotificationScreen(
       },
   ) { pd ->
     val pullState = rememberPullToRefreshState()
-    Box(modifier = Modifier.fillMaxSize() /*.padding(pd)*/) {
-      PullToRefreshBox(
-          state = pullState,
-          isRefreshing = uiState.isRefreshing,
-          onRefresh = { notificationScreenViewModel.refreshUIState() },
-      ) {
-        when {
-          uiState.isError -> LoadingFail()
-          // uiState.isLoading -> LoadingScreen()
-          uiState.notifications.isEmpty() -> NoNotificationView()
-          else -> {
-            NotificationView(notifications = uiState.notifications, pd = pd)
-          }
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = { notificationScreenViewModel.refreshUIState() },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        // uiState.isLoading -> LoadingScreen()
+        uiState.notifications.isEmpty() -> NoNotificationView()
+        else -> {
+          NotificationView(
+              notifications = uiState.notifications,
+              pd = pd,
+              onNotificationClick = onNotificationClick,
+              onProfileClick = onProfileClick,
+          )
         }
       }
     }
@@ -104,8 +109,13 @@ fun NotificationScreen(
 }
 
 @Composable
-fun NotificationView(notifications: List<NotificationUIState> = emptyList(), pd: PaddingValues) {
-  val cs = MaterialTheme.colorScheme
+fun NotificationView(
+    notifications: List<NotificationUIState> = emptyList(),
+    pd: PaddingValues,
+    onProfileClick: (Id) -> Unit = {},
+    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+) {
+  val cs = colorScheme
   LazyColumn(
       modifier = Modifier.fillMaxWidth().padding(pd).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -114,10 +124,14 @@ fun NotificationView(notifications: List<NotificationUIState> = emptyList(), pd:
     items(notifications.size) { index ->
       val notification = notifications[index]
       NotificationItem(
+          authorId = notification.authorId,
+          notificationContentId = notification.notificationId,
           profilePictureUrl = notification.profilePictureUrl,
           notificationType = notification.notificationType,
           notificationTitle = notification.notificationTitle,
           notificationDescription = notification.notificationDescription,
+          onNotificationClick = onNotificationClick,
+          onProfileClick = onProfileClick,
           cs = cs,
       )
     }

@@ -71,7 +71,6 @@ object AchievementsScreenTestTags {
   const val ACHIEVEMENT_IMAGE = "achievement_image"
   const val ACHIEVEMENT_NAME = "achievement_name"
   const val BACK_BUTTON = "achievements_back_button"
-  const val PROFILE_BUTTON = "achievements_profile_button"
   const val DETAILS_DIALOG = "achievement_details_dialog"
   const val DETAILS_CLOSE_BUTTON = "achievement_details_close_button"
 }
@@ -90,7 +89,6 @@ var SemanticsPropertyReceiver.achievementId by AchievementIdKey
  *
  * @param viewModel The ViewModel managing the screen's state.
  * @param userId The ID of the user whose achievements are being displayed.
- * @param onProfileClick Callback invoked when the profile picture is clicked.
  * @param onGoBack Callback invoked when the back button is pressed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,7 +192,6 @@ fun AchievementsScreen(
  * @param isUserOwner Whether the current user is viewing their own achievements.
  * @param userProfilePictureURL URL of the user's profile picture.
  * @param onGoBack Callback invoked when the back button is pressed.
- * @param onProfileClick Callback invoked when the profile picture is clicked.
  * @param context The [Context] used to access string resources.
  */
 @OptIn(ExperimentalMaterial3Api::class)

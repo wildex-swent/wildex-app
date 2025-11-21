@@ -330,7 +330,8 @@ class AchievementsScreenTest {
         AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
       }
       composeTestRule
-          .onAllNodesWithTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)[0]
+          .onAllNodesWithTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)[
+              0]
           .performClick()
       composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_DIALOG).assertIsDisplayed()
     }

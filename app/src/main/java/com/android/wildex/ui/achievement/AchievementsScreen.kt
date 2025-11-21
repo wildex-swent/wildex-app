@@ -69,7 +69,6 @@ object AchievementsScreenTestTags {
   const val ACHIEVEMENT_ITEM = "achievementItem"
   const val UNLOCKED_SECTION = "unlockedSection"
   const val LOCKED_SECTION = "lockedSection"
-  const val LOADING = "achievements_loading"
   const val TOP_APP_BAR = "achievements_top_app_bar"
   const val ACHIEVEMENT_IMAGE = "achievement_image"
   const val ACHIEVEMENT_NAME = "achievement_name"

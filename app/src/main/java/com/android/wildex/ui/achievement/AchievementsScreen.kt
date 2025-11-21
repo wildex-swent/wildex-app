@@ -116,7 +116,6 @@ fun AchievementsScreen(
         if (!uiState.isLoading) {
           AchievementsTopBar(
               isUserOwner = uiState.isUserOwner,
-              userProfilePictureURL = uiState.user.profilePictureURL,
               onGoBack = onGoBack,
               context = context,
           )
@@ -190,7 +189,6 @@ fun AchievementsScreen(
  * viewing their own profile, and the user's profile picture if they are the owner.
  *
  * @param isUserOwner Whether the current user is viewing their own achievements.
- * @param userProfilePictureURL URL of the user's profile picture.
  * @param onGoBack Callback invoked when the back button is pressed.
  * @param context The [Context] used to access string resources.
  */
@@ -198,7 +196,6 @@ fun AchievementsScreen(
 @Composable
 fun AchievementsTopBar(
     isUserOwner: Boolean,
-    userProfilePictureURL: String,
     onGoBack: () -> Unit,
     context: Context,
 ) {

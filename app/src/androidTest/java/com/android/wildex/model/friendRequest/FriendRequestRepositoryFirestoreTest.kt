@@ -49,23 +49,6 @@ class FriendRequestRepositoryFirestoreTest : FirestoreTest(FRIEND_REQUESTS_COLLE
     TestCase.assertTrue(friendRequests.contains(friendRequest1))
   }
 
-  /*@Test
-  fun acceptFriendRequestWorks() = runTest {
-    repository.initializeFriendRequest(user1.userId, user2.userId)
-    repository.initializeFriendRequest(user3.userId, user1.userId)
-
-    repository.acceptFriendRequest(friendRequest1)
-
-    var friendRequests = repository.getAllFriendRequestsBySender(user1.userId)
-
-    TestCase.assertTrue(friendRequests.isEmpty())
-
-    friendRequests = repository.getAllFriendRequestsByReceiver(user1.userId)
-
-    TestCase.assertEquals(1, friendRequests.size)
-    TestCase.assertTrue(friendRequests.contains(friendRequest2))
-  }*/
-
   @Test
   fun refuseFriendRequestWorks() = runTest {
     repository.initializeFriendRequest(user1.userId, user2.userId)

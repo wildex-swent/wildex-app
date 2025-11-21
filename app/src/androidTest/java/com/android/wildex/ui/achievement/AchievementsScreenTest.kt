@@ -14,9 +14,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
+import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -29,7 +31,9 @@ import org.junit.runner.RunWith
 class AchievementsScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
-  private lateinit var fakeRepo: FakeUserAchievementsRepository
+  private lateinit var userAchievementsRepository: FakeUserAchievementsRepository
+  private lateinit var userRepository: UserRepository
+  private lateinit var currentUserId: String
   private lateinit var viewModel: AchievementsScreenViewModel
 
   private val postMaster =
@@ -112,8 +116,14 @@ class AchievementsScreenTest {
 
   @Before
   fun setup() {
-    fakeRepo = FakeUserAchievementsRepository()
-    viewModel = AchievementsScreenViewModel(fakeRepo)
+    userAchievementsRepository = FakeUserAchievementsRepository()
+    userRepository = LocalRepositories.userRepository
+    currentUserId = "currentUserId"
+    viewModel = AchievementsScreenViewModel(
+        userAchievementsRepository = userAchievementsRepository,
+        userRepository = userRepository,
+        currentUserId = currentUserId
+    )
   }
 
   @After
@@ -128,11 +138,11 @@ class AchievementsScreenTest {
   fun loadingScreen_shownWhileFetchingAchievements() {
     runBlocking {
       val fetchSignal = CompletableDeferred<Unit>()
-      fakeRepo.fetchSignal = fetchSignal
-      fakeRepo.unlocked = unlockedAchievement
-      fakeRepo.all = achievements
+      userAchievementsRepository.fetchSignal = fetchSignal
+      userAchievementsRepository.unlocked = unlockedAchievement
+      userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState("")
+      viewModel.loadUIState(currentUserId)
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
 
@@ -173,14 +183,14 @@ class AchievementsScreenTest {
   @Test
   fun errorScreen_shownWhenRepositoryThrows() {
     runBlocking {
-      fakeRepo.fetchSignal = CompletableDeferred()
-      fakeRepo.shouldThrowOnFetch = true
+      userAchievementsRepository.fetchSignal = CompletableDeferred<Unit>()
+      userAchievementsRepository.shouldThrowOnFetch = true
 
-      viewModel.loadUIState("")
+      viewModel.loadUIState(currentUserId)
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
 
-      fakeRepo.fetchSignal?.complete(Unit)
+      userAchievementsRepository.fetchSignal?.complete(Unit)
       composeTestRule.waitForIdle()
 
       composeTestRule
@@ -192,10 +202,10 @@ class AchievementsScreenTest {
   @Test
   fun unlockedAndLocked_sectionsDisplayAchievements() {
     runBlocking {
-      fakeRepo.unlocked = unlockedAchievement
-      fakeRepo.all = achievements
+      userAchievementsRepository.unlocked = unlockedAchievement
+      userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState("")
+      viewModel.loadUIState(currentUserId)
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
@@ -227,8 +237,8 @@ class AchievementsScreenTest {
   fun backButton_invokesCallback() {
     runBlocking {
       var backClicked = false
-      fakeRepo.unlocked = emptyList()
-      fakeRepo.all = emptyList()
+      userAchievementsRepository.unlocked = emptyList()
+      userAchievementsRepository.all = emptyList()
 
       composeTestRule.setContent {
         AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true })
@@ -245,10 +255,10 @@ class AchievementsScreenTest {
   @Test
   fun achievementOpacity_matchesLockedState() {
     runBlocking {
-      fakeRepo.unlocked = unlockedAchievement
-      fakeRepo.all = achievements
+      userAchievementsRepository.unlocked = unlockedAchievement
+      userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState("")
+      viewModel.loadUIState(currentUserId)
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
 
@@ -290,8 +300,8 @@ class AchievementsScreenTest {
   @Test
   fun topAppBar_and_labeledDivider_showCorrectText() {
     runBlocking {
-      fakeRepo.unlocked = emptyList()
-      fakeRepo.all = emptyList()
+      userAchievementsRepository.unlocked = emptyList()
+      userAchievementsRepository.all = emptyList()
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()

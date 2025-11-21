@@ -97,8 +97,9 @@ class FriendScreenViewModel(
                       currentUserFriends.contains(it) -> FriendStatus.FRIEND
                       currentUserSentRequests.any { request -> request.receiverId == it.userId } ->
                           FriendStatus.PENDING_SENT
-                      currentUserReceivedRequests.any { request -> request.senderId == it.userId } ->
-                          FriendStatus.PENDING_RECEIVED
+                      currentUserReceivedRequests.any { request ->
+                        request.senderId == it.userId
+                      } -> FriendStatus.PENDING_RECEIVED
                       else -> FriendStatus.NOT_FRIEND
                     })
           }

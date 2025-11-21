@@ -53,7 +53,7 @@ class AchievementsScreenViewModel(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id = Firebase.auth.currentUser?.uid ?: "",
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AchievementsUIState(isLoading = true))
   val uiState: StateFlow<AchievementsUIState> = _uiState.asStateFlow()

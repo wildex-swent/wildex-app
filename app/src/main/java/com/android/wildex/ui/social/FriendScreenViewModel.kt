@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** Represents the UI state of the Friend Screen */
 data class FriendsScreenUIState(
     val friends: List<FriendState> = emptyList(),
     val suggestions: List<RecommendationResult> = emptyList(),
@@ -29,6 +30,16 @@ data class FriendsScreenUIState(
     val errorMsg: String? = null,
 )
 
+/**
+ * Represents the state of a friend list element
+ *
+ * @property friend friend of the screen's subject (current user or any other user)
+ * @property isFriend true if this friend is friend with the current user, false otherwise
+ * @property isPending true if the current user has sent a friend request to this friend, false
+ *   otherwise
+ * @property isCurrentUser true if the friend is the current user, in which case no interactable
+ *   element should be displayed
+ */
 data class FriendState(
     val friend: SimpleUser,
     val isFriend: Boolean,
@@ -36,6 +47,15 @@ data class FriendState(
     val isCurrentUser: Boolean
 )
 
+/**
+ * ViewModel for the Friend Screen
+ *
+ * @param currentUserId the user id of the currently logged in user
+ * @param userRepository Repository used to get Simple users from
+ * @param userFriendsRepository Repository to get users' friends lists from
+ * @param friendRequestRepository Repository to get ongoing friend requests from
+ * @param userRecommender Recommendation algorithm to get suggested users from
+ */
 class FriendScreenViewModel(
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
@@ -54,6 +74,11 @@ class FriendScreenViewModel(
 
   private val suggestions = MutableStateFlow(listOf<RecommendationResult>())
 
+  /**
+   * Updates the UI state of the Friend Screen by fetching all needed data from the repositories.
+   *
+   * @param userId the user whose friend list we want to fetch
+   */
   private suspend fun updateUIState(userId: Id) {
     try {
       val isCurrentUser = userId == currentUserId
@@ -93,16 +118,37 @@ class FriendScreenViewModel(
     }
   }
 
+  /**
+   * Loads the UI state corresponding to the given user
+   *
+   * @param userId the user whose state we want to load
+   */
   fun loadUIState(userId: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(userId) }
   }
 
+  /**
+   * Refreshes the UI state corresponding to the given user
+   *
+   * @param userId the user whose friendship state is loaded
+   */
   fun refreshUIState(userId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(userId) }
   }
 
+  /**
+   * Sends a friend request to the given user. If the screen is the current user's friend screen,
+   * sending a friend request means that a new request appears in the sent requests section, and the
+   * user is removed from the friend list in case the follow was initiated there (possible if the
+   * current user unfollows one of his friends but then resends a friend request). If the screen is
+   * another user's friend screen, sending a friend request means updating the friend states to
+   * notify that a friend request to the given user was initiated and allowing to cancel the friend
+   * request.
+   *
+   * @param userId the user who the current user sends a friend request to
+   */
   fun sendRequestToUser(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
@@ -161,6 +207,15 @@ class FriendScreenViewModel(
     }
   }
 
+  /**
+   * Unfollows the given user. Unfollowing is always possible whether we are viewing the current
+   * user's friend screen or that of another user and it results in the same effect in both views.
+   * Unfollowing a user means updating the friends states to reflect the change in the screen, i.e.
+   * notify that the given user was unfollowed and allowing the current user to send a new friend
+   * request if the action was accidental.
+   *
+   * @param userId the user who the current user wishes to unfollow
+   */
   fun unfollowUser(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
@@ -183,6 +238,14 @@ class FriendScreenViewModel(
     }
   }
 
+  /**
+   * Accepts a request received by the current user. This operation is only possible when the screen
+   * is the current user's friend screen. Thus, accepting a received friend request always results
+   * in the friend request disappearing from the received requests section and a new friend
+   * appearing in the current user's friend list
+   *
+   * @param userId the user whose friend request is accepted
+   */
   fun acceptReceivedRequest(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
@@ -213,6 +276,13 @@ class FriendScreenViewModel(
     }
   }
 
+  /**
+   * Declines a friend request received by the current user. This is only possible when the screen
+   * is the current user's friend screen, thus declining the request always results in the request
+   * simply disappearing from view.
+   *
+   * @param userId the user whose request is declined
+   */
   fun declineReceivedRequest(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
@@ -231,6 +301,15 @@ class FriendScreenViewModel(
     }
   }
 
+  /**
+   * Cancels a friend request sent by the current user. If the screen is the current user's friend
+   * screen, cancelling a sent friend request simply means removing it from the sent request. If the
+   * screen is another user's friend screen, cancelling a sent friend request means updating the
+   * friend state of the receiver so that the screen can display the fact that there are no pending
+   * request anymore and can allow the current user to send a new friend request.
+   *
+   * @param userId the user the friend request to cancel is destined to
+   */
   fun cancelSentRequest(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
@@ -273,7 +352,11 @@ class FriendScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
-  /** Sets a new error message in the UI state. */
+  /**
+   * Sets a new error message in the UI state.
+   *
+   * @param msg the error message
+   */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }

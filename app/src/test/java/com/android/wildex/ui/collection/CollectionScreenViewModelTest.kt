@@ -42,8 +42,7 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France",
-          friendsCount = 3)
+          country = "France")
 
   private val u2 =
       User(
@@ -56,8 +55,7 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France",
-          friendsCount = 3)
+          country = "France")
 
   private val su1 =
       SimpleUser(

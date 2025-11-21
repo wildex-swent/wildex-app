@@ -62,7 +62,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            friendsCount = 0,
         )
     val author =
         User(
@@ -76,7 +75,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "India",
-            friendsCount = 0,
         )
     val commenter1 =
         User(
@@ -90,7 +88,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            friendsCount = 0,
         )
     val commenter2 =
         User(
@@ -103,7 +100,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "UK",
-            friendsCount = 0,
         )
     val liker1 =
         User(
@@ -116,7 +112,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Canada",
-            friendsCount = 0,
         )
     val liker2 =
         User(
@@ -129,7 +124,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Australia",
-            friendsCount = 0,
         )
     userRepository.addUser(currentUser)
     userRepository.addUser(author)

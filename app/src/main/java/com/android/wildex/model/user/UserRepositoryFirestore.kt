@@ -98,7 +98,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
       val creationDate = document.getTimestamp("creationDate") ?: return null
       val country = document.getString("country") ?: ""
-      val friendsCount = (document.getLong("friendsCount") ?: 0).toInt()
 
       User(
           userId = userId,
@@ -109,8 +108,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           profilePictureURL = profilePictureURL,
           userType = userType,
           creationDate = creationDate,
-          country = country,
-          friendsCount = friendsCount)
+          country = country)
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null

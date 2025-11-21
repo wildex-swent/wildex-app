@@ -148,7 +148,6 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
             bio = "Modified bio",
             profilePictureURL = "modifiedUrl",
             country = "ModifiedCountry",
-            friendsCount = 42,
         )
 
     repository.editUser(user1.userId, modified)

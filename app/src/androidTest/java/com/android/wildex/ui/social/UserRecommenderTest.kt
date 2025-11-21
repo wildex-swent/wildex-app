@@ -28,8 +28,7 @@ class UserRecommenderTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "",
-          friendsCount = 0)
+          country = "")
 
   private val post =
       Post(
@@ -46,7 +45,7 @@ class UserRecommenderTest {
   private val userRepository = LocalRepositories.userRepository
   private val userFriendsRepository = LocalRepositories.userFriendsRepository
   private val postsRepository = LocalRepositories.postsRepository
-  private val friendRequestRepository = LocalRepositories.relationshipRepository
+  private val friendRequestRepository = LocalRepositories.friendRequestRepository
   private val userRecommender =
       UserRecommender(
           currentUserId = "user0",
@@ -423,7 +422,7 @@ class UserRecommenderTest {
       userFriendsRepository.addFriendToUserFriendsOfUser("user1", "user3")
       userFriendsRepository.addFriendToUserFriendsOfUser("user2", "user3")
 
-      friendRequestRepository.initializeRelationship(
+      friendRequestRepository.initializeFriendRequest(
           senderId = "user0",
           receiverId = "user3",
       )
@@ -461,7 +460,7 @@ class UserRecommenderTest {
       userFriendsRepository.addFriendToUserFriendsOfUser("user1", "user3")
       userFriendsRepository.addFriendToUserFriendsOfUser("user2", "user3")
 
-      friendRequestRepository.initializeRelationship(
+      friendRequestRepository.initializeFriendRequest(
           senderId = "user3",
           receiverId = "user0",
       )

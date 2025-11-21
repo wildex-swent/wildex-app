@@ -112,7 +112,6 @@ class EditProfileViewModel(
                 userType = user.userType,
                 creationDate = user.creationDate,
                 country = _uiState.value.country,
-                friendsCount = user.friendsCount,
             )
         userRepository.editUser(userId = currentUserId, newUser = newUser)
         // Reset the pending Uri after successful upload

@@ -1,7 +1,7 @@
 package com.android.wildex.ui.social
 
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.relationship.RelationshipRepository
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
@@ -82,8 +82,8 @@ class UserRecommender(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userFriendsRepository: UserFriendsRepository,
-    private val friendRequestRepository: RelationshipRepository =
-        RepositoryProvider.relationshipRepository,
+    private val friendRequestRepository: FriendRequestRepository =
+        RepositoryProvider.friendRequestRepository,
 ) {
 
   /**
@@ -99,13 +99,9 @@ class UserRecommender(
 
     val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
     val pendingRequestsByCurrentUser =
-        friendRequestRepository.getAllPendingRelationshipsBySender(currentUserId).map {
-          it.receiverId
-        }
+        friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map { it.receiverId }
     val pendingRequestsToCurrentUser =
-        friendRequestRepository.getAllPendingRelationshipsByReceiver(currentUserId).map {
-          it.senderId
-        }
+        friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map { it.senderId }
 
     // filter out users who are already friends or have pending requests with current user
     val candidates =

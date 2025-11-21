@@ -53,7 +53,6 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          friendsCount = 0,
       )
   private val user2 =
       User(
@@ -66,7 +65,6 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          friendsCount = 0,
       )
   private val post1 =
       Post(

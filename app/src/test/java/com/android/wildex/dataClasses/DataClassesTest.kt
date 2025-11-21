@@ -3,8 +3,7 @@ package com.android.wildex.dataClasses
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.Taxonomy
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.StatusEnum
+import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -25,7 +24,7 @@ import org.junit.Test
  *
  * This class contains unit tests to verify the correct instantiation and property assignments of
  * various data classes used in the application, including Achievement, Animal,
- * AnimalDetectResponse, Relationship, Report, Comment, Like, Post, SimpleUser, User,
+ * AnimalDetectResponse, FriendRequest, Report, Comment, Like, Post, SimpleUser, User,
  * UserAchievements, UserAnimals, and Location. And to increase code coverage while waiting to
  * implement them in the codebase.
  */
@@ -73,13 +72,11 @@ class DataClassesTest {
   }
 
   @Test
-  fun testRelationship() {
-    val relationship =
-        Relationship(senderId = "user1", receiverId = "user2", status = StatusEnum.PENDING)
+  fun testFriendRequest() {
+    val friendRequest = FriendRequest(senderId = "user1", receiverId = "user2")
 
-    TestCase.assertEquals("user1", relationship.senderId)
-    TestCase.assertEquals("user2", relationship.receiverId)
-    TestCase.assertEquals(StatusEnum.PENDING, relationship.status)
+    TestCase.assertEquals("user1", friendRequest.senderId)
+    TestCase.assertEquals("user2", friendRequest.receiverId)
   }
 
   @Test
@@ -182,7 +179,6 @@ class DataClassesTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.Companion.now(),
             country = "Switzerland",
-            friendsCount = 100,
         )
 
     TestCase.assertEquals("user1", user.userId)
@@ -193,7 +189,6 @@ class DataClassesTest {
     TestCase.assertEquals("https://example.com/user_pic", user.profilePictureURL)
     TestCase.assertEquals(UserType.REGULAR, user.userType)
     TestCase.assertEquals("Switzerland", user.country)
-    TestCase.assertEquals(100, user.friendsCount)
   }
 
   @Test

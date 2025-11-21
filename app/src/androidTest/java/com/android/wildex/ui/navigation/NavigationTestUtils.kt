@@ -117,7 +117,6 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Italy",
-          friendsCount = 0,
       )
 
   open val user1 =
@@ -131,7 +130,6 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "England",
-          friendsCount = 0,
       )
 
   open val post0 =

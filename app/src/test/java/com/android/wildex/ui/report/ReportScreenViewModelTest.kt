@@ -93,8 +93,7 @@ class ReportScreenViewModelTest {
           profilePictureURL = "user2URL",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France",
-          friendsCount = 3)
+          country = "France")
 
   private val simpleUser3 =
       SimpleUser(
@@ -113,8 +112,7 @@ class ReportScreenViewModelTest {
           profilePictureURL = "user3URL",
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
-          country = "Germany",
-          friendsCount = 6)
+          country = "Germany")
 
   private val defaultUser: SimpleUser =
       SimpleUser(

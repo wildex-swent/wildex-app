@@ -76,7 +76,6 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            friendsCount = 0,
         ))
     userRepository.addUser(
         User(
@@ -90,7 +89,6 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            friendsCount = 0,
         ))
     animalRepository.addAnimal(
         Animal(

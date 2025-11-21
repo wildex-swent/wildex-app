@@ -54,7 +54,6 @@ class SettingsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "France",
-            friendsCount = 3,
         ))
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")

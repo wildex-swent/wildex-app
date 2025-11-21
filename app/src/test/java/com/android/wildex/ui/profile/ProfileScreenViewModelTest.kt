@@ -42,10 +42,9 @@ class ProfileScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          friendsCount = 1,
       )
 
-  private val u2 = u1.copy(username = "user_one_2", friendsCount = 42)
+  private val u2 = u1.copy(username = "user_one_2")
 
   private val a1: Achievement = mockk()
   private val a2: Achievement = mockk()

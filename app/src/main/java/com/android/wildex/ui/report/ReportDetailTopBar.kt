@@ -14,6 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.android.wildex.R
 
+/**
+ * Top bar for the report details screen with a back button and title.
+ *
+ * @param onGoBack Callback when the back button is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportDetailsTopBar(onGoBack: () -> Unit = {}) {

@@ -357,7 +357,11 @@ class ReportDetailsScreenViewModel(
     }
   }
 
-  /** Optimistic comment add with rollback on failure */
+  /**
+   * Optimistic comment add with rollback on failure
+   *
+   * @param text Text of the comment to be added.
+   */
   fun addComment(text: String = "") {
     if (text.isBlank()) return
     viewModelScope.launch {

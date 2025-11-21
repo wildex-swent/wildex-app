@@ -93,7 +93,14 @@ object ReportDetailsScreenTestTags {
   const val COMMENT_INPUT_SEND = "report_details_comment_input_send"
 }
 
-/** Full-screen report details view. */
+/**
+ * Full-screen report details view.
+ *
+ * @param reportId The ID of the report to display.
+ * @param reportDetailsViewModel The ViewModel managing the report details state.
+ * @param onGoBack Callback when the user wants to go back.
+ * @param onProfile Callback when the user wants to view a profile.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportDetailsScreen(
@@ -210,7 +217,13 @@ fun ReportDetailsScreen(
   }
 }
 
-/** Handle events from the ViewModel that require showing dialogs. */
+/**
+ * Handle events from the ViewModel that require showing dialogs.
+ *
+ * @param event The event to handle.
+ * @param setCompletionType Callback to set the type of completion dialog to show.
+ * @param setShowCompletionDialog Callback to show or hide the completion dialog.
+ */
 private fun handleReportDetailsEvent(
     event: ReportDetailsEvent,
     setCompletionType: (ReportCompletionType) -> Unit,
@@ -224,7 +237,12 @@ private fun handleReportDetailsEvent(
   }
 }
 
-/** Run the action that was pending confirmation. */
+/**
+ * Run the action that was pending confirmation.
+ *
+ * @param action The action to run.
+ * @param viewModel The ViewModel managing the report details state.
+ */
 private fun runPendingReportAction(
     action: ReportActionToConfirm?,
     viewModel: ReportDetailsScreenViewModel,
@@ -239,9 +257,15 @@ private fun runPendingReportAction(
 }
 
 /**
- * Main content when the report is loaded.
+ * Main content when the report is loaded. Hero image + sheet + description + assignee + comments.
  *
- * Hero image + sheet + description + assignee + comments.
+ * @param uiState The UI state of the report details screen.
+ * @param onProfile Callback when the user wants to view a profile.
+ * @param onCancel Callback when the user wants to cancel the report.
+ * @param onSelfAssign Callback when the user wants to self-assign the report.
+ * @param onResolve Callback when the user wants to resolve the report.
+ * @param onUnSelfAssign Callback when the user wants to un-self-assign the report
+ * @param onLocationClick Callback when the user clicks on the location pill.
  */
 @Composable
 private fun ReportDetailsContent(
@@ -354,7 +378,11 @@ private fun ReportDetailsContent(
   }
 }
 
-/** Big header picture at the top, with subtle gradient similar to PostDetails. */
+/**
+ * Big header picture at the top, with subtle gradient similar to PostDetails.
+ *
+ * @param imageURL The URL of the image to display.
+ */
 @Composable
 private fun ReportPicture(imageURL: URL) {
   Box(
@@ -391,7 +419,15 @@ private fun ReportPicture(imageURL: URL) {
   }
 }
 
-/** Header row: avatar + author + date + location tag. */
+/**
+ * Header row: avatar + author + date + location tag.
+ *
+ * @param author The author of the report.
+ * @param date The date the report was created.
+ * @param location The location string of the report.
+ * @param onProfile Callback when the user clicks on the author's profile.
+ * @param onLocationClick Callback when the user clicks on the location pill.
+ */
 @Composable
 private fun ReportInfoBar(
     author: SimpleUser,
@@ -457,7 +493,12 @@ private fun ReportInfoBar(
   }
 }
 
-/** Clickable location “pill” in the header row. */
+/**
+ * Clickable location “pill” in the header row.
+ *
+ * @param location The location string to display.
+ * @param onClick Callback when the pill is clicked.
+ */
 @Composable
 private fun LocationTagButton(
     location: String,
@@ -494,7 +535,12 @@ private fun LocationTagButton(
   }
 }
 
-/** Assignee pill displayed under the description. */
+/**
+ * Assignee pill displayed under the description.
+ *
+ * @param assignee The user assigned to the report.
+ * @param onProfile Callback when the user clicks on the assignee's profile.
+ */
 @Composable
 private fun ReportAssigneeDetailsCard(
     assignee: SimpleUser,
@@ -534,7 +580,12 @@ private fun ReportAssigneeDetailsCard(
   }
 }
 
-/** One comment row for report details. */
+/**
+ * One comment row for report details.
+ *
+ * @param commentUI The comment UI data to display.
+ * @param onProfile Callback when the user clicks on the comment author's profile.
+ */
 @Composable
 private fun ReportCommentRow(
     commentUI: ReportCommentWithAuthorUI,
@@ -595,7 +646,13 @@ private fun ReportCommentRow(
   }
 }
 
-/** Bottom pinned comment input. */
+/**
+ * Bottom pinned comment input.
+ *
+ * @param user The current user adding the comment.
+ * @param onProfile Callback when the user clicks on their profile picture.
+ * @param onSend Callback when the user sends a comment.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReportCommentInput(

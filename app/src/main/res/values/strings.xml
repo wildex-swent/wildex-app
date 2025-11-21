@@ -143,4 +143,22 @@
     <string name="report_details_google_maps">Open in Google Maps</string>
     <string name="report_details_copy">Copy location</string>
     <string name="report_details_share">Share location</string>
+    <string name="report_details_maps_not_installed">Google Maps is not installed.</string>
+    <string name="report_details_maps_not_available">Google Maps is not available.</string>
+    <string name="report_details_maps_package">com.google.android.apps.maps</string>
+    <string name="report_details_location_report">Wildex report location</string>
+    <string name="report_details_location_copied">Location copied.</string>
+    <string name="report_details_share_location">Share location</string>
+    <string name="report_details_no_apps">No apps available.</string>
+    <string name="report_details_share_body">
+    ⚠️ Wildex report: possible endangered or injured animal\n
+    \n
+    A report was created near:\n
+    %1$s\n
+    Coordinates: %2$s, %3$s\n
+    \n
+    Map link: %4$s\n
+    \n
+    Shared from Wildex – a community for watching over wildlife.
+</string>
 </resources>

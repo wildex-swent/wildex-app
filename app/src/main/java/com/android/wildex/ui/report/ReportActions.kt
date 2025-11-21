@@ -31,6 +31,17 @@ object ReportActionsTestTags {
   const val ACTION_UNSELFASSIGN = "report_actions_action_unselfassign"
 }
 
+/**
+ * A pill-shaped action button used in report details.
+ *
+ * @param text The button text.
+ * @param onClick Callback when the button is clicked.
+ * @param modifier Modifier to be applied to the button.
+ * @param colors The colors to be used for the button.
+ * @param border Optional border for the button.
+ * @param isActionInProgress Whether an action is currently in progress, disabling the button if
+ *   true.
+ */
 @Composable
 fun ReportActionButton(
     text: String,
@@ -51,7 +62,19 @@ fun ReportActionButton(
       }
 }
 
-/** Adaptive action row using pill buttons. */
+/**
+ * Adaptive action row using pill buttons.
+ *
+ * @param hasAssignee Whether the report has an assignee.
+ * @param currentUser The current user.
+ * @param isCreatedByCurrentUser Whether the report was created by the current user.
+ * @param isAssignedToCurrentUser Whether the report is assigned to the current user.
+ * @param isActionInProgress Whether an action is currently in progress, disabling buttons if true
+ * @param onCancel Callback when the cancel action is triggered.
+ * @param onSelfAssign Callback when the self-assign action is triggered.
+ * @param onResolve Callback when the resolve action is triggered.
+ * @param onUnSelfAssign Callback when the un-self-assign action is triggered.
+ */
 @Composable
 fun ReportDetailsActionRow(
     hasAssignee: Boolean,

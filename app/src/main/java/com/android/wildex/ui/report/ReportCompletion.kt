@@ -24,6 +24,12 @@ object ReportCompletionDialogTestTags {
   const val ANIMATION = "completion_dialog_animation"
 }
 
+/**
+ * Enum representing the types of report completion.
+ *
+ * @param type The type of report completion.
+ * @param onConfirm Callback when the dialog is confirmed.
+ */
 @Composable
 fun ReportCompletionDialog(
     type: ReportCompletionType,

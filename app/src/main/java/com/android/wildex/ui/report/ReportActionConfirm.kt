@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.android.wildex.R
 
+/** Enum representing the report actions that require confirmation. */
 enum class ReportActionToConfirm {
   CANCEL,
   SELF_ASSIGN,
@@ -16,6 +17,13 @@ enum class ReportActionToConfirm {
   UNSELFASSIGN,
 }
 
+/**
+ * A dialog that prompts the user to confirm a report action.
+ *
+ * @param action The action to confirm.
+ * @param onDismiss Callback when the dialog is dismissed.
+ * @param onConfirm Callback when the action is confirmed.
+ */
 @Composable
 fun ReportActionConfirmDialog(
     action: ReportActionToConfirm,

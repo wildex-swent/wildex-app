@@ -25,6 +25,12 @@ sealed class Screen(
     }
   }
 
+  data class Social(val userUid: Id) : Screen(route = "social/${userUid}", name = "Social") {
+    companion object {
+      const val PATH = "social/{userUid}"
+    }
+  }
+
   data class EditProfile(val isNewUser: Boolean) :
       Screen(route = "edit_profile/${isNewUser}", name = "Edit Profile") {
     companion object {

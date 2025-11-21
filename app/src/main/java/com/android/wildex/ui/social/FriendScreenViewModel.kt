@@ -33,18 +33,18 @@ data class FriendsScreenUIState(
  * Represents the state of a friend list element
  *
  * @property friend friend of the screen's subject (current user or any other user)
- * @property isFriend true if this friend is friend with the current user, false otherwise
- * @property isPending true if the current user has sent a friend request to this friend, false
- *   otherwise
- * @property isCurrentUser true if the friend is the current user, in which case no interactable
- *   element should be displayed
+ * @property status the state of the friend relative to the current user in order to display the
+ *   right interactable
  */
-data class FriendState(
-    val friend: SimpleUser,
-    val isFriend: Boolean,
-    val isPending: Boolean,
-    val isCurrentUser: Boolean
-)
+data class FriendState(val friend: SimpleUser, val status: FriendStatus)
+
+enum class FriendStatus {
+  FRIEND,
+  NOT_FRIEND,
+  PENDING_RECEIVED,
+  PENDING_SENT,
+  IS_CURRENT_USER
+}
 
 /**
  * ViewModel for the Friend Screen
@@ -85,18 +85,27 @@ class FriendScreenViewModel(
       val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
       val currentUserSentRequests =
           friendRequestRepository.getAllFriendRequestsBySender(currentUserId)
+      val currentUserReceivedRequests =
+          friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId)
       val friendsStates =
           userFriends.map {
             FriendState(
                 friend = userRepository.getSimpleUser(it),
-                isFriend = currentUserFriends.contains(it),
-                isPending = currentUserSentRequests.any { request -> request.receiverId == it },
-                isCurrentUser = it == currentUserId)
+                status =
+                    when {
+                      it == currentUserId -> FriendStatus.IS_CURRENT_USER
+                      currentUserFriends.contains(it) -> FriendStatus.FRIEND
+                      currentUserSentRequests.any { request -> request.receiverId == it } ->
+                          FriendStatus.PENDING_SENT
+                      currentUserReceivedRequests.any { request -> request.senderId == it } ->
+                          FriendStatus.PENDING_RECEIVED
+                      else -> FriendStatus.NOT_FRIEND
+                    })
           }
       suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests =
           if (isCurrentUser) {
-            friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId)
+            currentUserReceivedRequests
           } else emptyList()
       val sentRequests = if (isCurrentUser) currentUserSentRequests else emptyList()
       _uiState.value =
@@ -166,7 +175,7 @@ class FriendScreenViewModel(
         newFriends =
             friends.map {
               if (it.friend.userId == userId) {
-                it.copy(isPending = true)
+                it.copy(status = FriendStatus.PENDING_SENT)
               } else it
             }
       }
@@ -209,7 +218,7 @@ class FriendScreenViewModel(
       val friends = state.friends
       val newFriends =
           friends.map {
-            if (it.friend.userId == userId) it.copy(isFriend = false, isPending = false) else it
+            if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
           }
 
       _uiState.value = state.copy(friends = newFriends)
@@ -225,10 +234,11 @@ class FriendScreenViewModel(
   }
 
   /**
-   * Accepts a request received by the current user. This operation is only possible when the screen
-   * is the current user's friend screen. Thus, accepting a received friend request always results
-   * in the friend request disappearing from the received requests section and a new friend
-   * appearing in the current user's friend list
+   * Accepts a request received by the current user. If the screen is the current user's screen,
+   * accepting a received friend request results in the friend request disappearing from the
+   * received requests section and a new friend appearing in the current user's friend list.
+   * Otherwise, it results in the friend appearing as not friend relative to the current user and
+   * allowing the current user to send a friend request.
    *
    * @param userId the user whose friend request is accepted
    */
@@ -241,13 +251,17 @@ class FriendScreenViewModel(
 
       val friends = state.friends
       val newFriends =
-          friends +
-              listOf(
-                  FriendState(
-                      friend = userRepository.getSimpleUser(userId),
-                      isFriend = true,
-                      isPending = false,
-                      isCurrentUser = false))
+          if (state.isCurrentUser) {
+            friends +
+                listOf(
+                    FriendState(
+                        friend = userRepository.getSimpleUser(userId),
+                        status = FriendStatus.FRIEND))
+          } else {
+            friends.map {
+              if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
+            }
+          }
 
       _uiState.value = state.copy(friends = newFriends, receivedRequests = newReceivedRequests)
 
@@ -263,9 +277,10 @@ class FriendScreenViewModel(
   }
 
   /**
-   * Declines a friend request received by the current user. This is only possible when the screen
-   * is the current user's friend screen, thus declining the request always results in the request
-   * simply disappearing from view.
+   * Declines a friend request received by the current user. If the screen is the current user's
+   * screen, declining the request always results in the request simply disappearing from view.
+   * Otherwise, it results in the friend appearing as not friend and allowing the current user to
+   * send a friend request
    *
    * @param userId the user whose request is declined
    */
@@ -276,7 +291,15 @@ class FriendScreenViewModel(
       val receivedRequests = state.receivedRequests
       val newReceivedRequests = receivedRequests.filter { it.senderId != userId }
 
-      _uiState.value = state.copy(receivedRequests = newReceivedRequests)
+      val friends = state.friends
+      val newFriendStates =
+          if (!state.isCurrentUser) {
+            friends.map {
+              if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
+            }
+          } else friends
+
+      _uiState.value = state.copy(receivedRequests = newReceivedRequests, friends = newFriendStates)
 
       try {
         friendRequestRepository.refuseFriendRequest(FriendRequest(userId, currentUserId))
@@ -317,7 +340,7 @@ class FriendScreenViewModel(
       val newFriends =
           if (!state.isCurrentUser) {
             friends.map {
-              if (it.friend.userId == userId) it.copy(isFriend = false, isPending = false) else it
+              if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
             }
           } else friends
 

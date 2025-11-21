@@ -20,13 +20,18 @@ import kotlinx.coroutines.launch
 data class FriendsScreenUIState(
     val friends: List<FriendState> = emptyList(),
     val suggestions: List<RecommendationResult> = emptyList(),
-    val receivedRequests: List<FriendRequest> = emptyList(),
-    val sentRequests: List<FriendRequest> = emptyList(),
+    val receivedRequests: List<RequestState> = emptyList(),
+    val sentRequests: List<RequestState> = emptyList(),
     val isCurrentUser: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMsg: String? = null,
+)
+
+data class RequestState(
+  val user: SimpleUser,
+  val request: FriendRequest
 )
 
 /**
@@ -56,12 +61,12 @@ enum class FriendStatus {
  * @param userRecommender Recommendation algorithm to get suggested users from
  */
 class FriendScreenViewModel(
-    private val currentUserId: Id = Firebase.auth.uid ?: "",
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val userFriendsRepository: UserFriendsRepository,
-    private val friendRequestRepository: FriendRequestRepository =
+  private val currentUserId: Id = Firebase.auth.uid ?: "",
+  private val userRepository: UserRepository = RepositoryProvider.userRepository,
+  private val userFriendsRepository: UserFriendsRepository,
+  private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
-    private val userRecommender: UserRecommender =
+  private val userRecommender: UserRecommender =
         UserRecommender(
             currentUserId = currentUserId, userFriendsRepository = userFriendsRepository)
 ) : ViewModel() {
@@ -105,9 +110,11 @@ class FriendScreenViewModel(
       suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests =
           if (isCurrentUser) {
-            currentUserReceivedRequests
+            currentUserReceivedRequests.map { RequestState(userRepository.getSimpleUser(it.senderId), it) }
           } else emptyList()
-      val sentRequests = if (isCurrentUser) currentUserSentRequests else emptyList()
+      val sentRequests = if (isCurrentUser) {
+        currentUserSentRequests.map { RequestState(userRepository.getSimpleUser(it.receiverId), it) }
+      } else emptyList()
       _uiState.value =
           _uiState.value.copy(
               friends = friendsStates,
@@ -161,13 +168,14 @@ class FriendScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       val request = FriendRequest(senderId = currentUserId, receiverId = userId)
+      val requestState = RequestState(userRepository.getSimpleUser(request.receiverId), request)
       val sentRequests = state.sentRequests
       val friends = state.friends
-      var newSentRequests: List<FriendRequest>
+      var newSentRequests: List<RequestState>
       var newFriends: List<FriendState>
 
       if (state.isCurrentUser) {
-        newSentRequests = sentRequests + listOf(request)
+        newSentRequests = sentRequests + listOf(requestState)
         newFriends = friends.filter { it.friend.userId != userId }
         suggestions.value = suggestions.value.filter { it.user.userId != userId }
       } else {
@@ -247,7 +255,7 @@ class FriendScreenViewModel(
       val state = _uiState.value
 
       val receivedRequests = state.receivedRequests
-      val newReceivedRequests = receivedRequests.filter { it.senderId != userId }
+      val newReceivedRequests = receivedRequests.filter { it.request.senderId != userId }
 
       val friends = state.friends
       val newFriends =
@@ -289,7 +297,7 @@ class FriendScreenViewModel(
       val state = _uiState.value
 
       val receivedRequests = state.receivedRequests
-      val newReceivedRequests = receivedRequests.filter { it.senderId != userId }
+      val newReceivedRequests = receivedRequests.filter { it.request.senderId != userId }
 
       val friends = state.friends
       val newFriendStates =
@@ -329,7 +337,7 @@ class FriendScreenViewModel(
       // screens
       val newSentRequests =
           if (state.isCurrentUser) {
-            sentRequests.filter { it.receiverId != userId }
+            sentRequests.filter { it.request.receiverId != userId }
           } else sentRequests
 
       val friends = state.friends

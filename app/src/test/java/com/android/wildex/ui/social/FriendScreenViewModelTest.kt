@@ -47,7 +47,6 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val su1 = SimpleUser(u1.userId, u1.username, u1.profilePictureURL, u1.userType)
@@ -64,7 +63,6 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val su2 = SimpleUser(u2.userId, u2.username, u2.profilePictureURL, u2.userType)
@@ -81,7 +79,6 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val su3 = SimpleUser(u3.userId, u3.username, u3.profilePictureURL, u3.userType)
@@ -98,7 +95,6 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val su4 = SimpleUser(u4.userId, u4.username, u4.profilePictureURL, u4.userType)
@@ -156,8 +152,8 @@ class FriendScreenViewModelTest {
 
     Assert.assertEquals(emptyList<FriendState>(), state.friends)
     Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-    Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
-    Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
+    Assert.assertEquals(emptyList<RequestState>(), state.receivedRequests)
+    Assert.assertEquals(emptyList<RequestState>(), state.sentRequests)
     Assert.assertFalse(state.isCurrentUser)
     Assert.assertFalse(state.isRefreshing)
     Assert.assertFalse(state.isLoading)
@@ -182,8 +178,8 @@ class FriendScreenViewModelTest {
       val expectedFriendStates = listOf(FriendState(friend = su2, status = FriendStatus.FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
-      Assert.assertEquals(listOf(request2), state.receivedRequests)
-      Assert.assertEquals(listOf(request1), state.sentRequests)
+      Assert.assertEquals(listOf(RequestState(su4, request2)), state.receivedRequests)
+      Assert.assertEquals(listOf(RequestState(su3, request1)), state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -202,8 +198,8 @@ class FriendScreenViewModelTest {
       val state = viewModel.uiState.value
       Assert.assertEquals(emptyList<FriendState>(), state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -229,8 +225,8 @@ class FriendScreenViewModelTest {
               FriendState(su3, FriendStatus.PENDING_SENT))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -248,8 +244,8 @@ class FriendScreenViewModelTest {
       val state = viewModel.uiState.value
       Assert.assertEquals(emptyList<FriendState>(), state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -275,8 +271,8 @@ class FriendScreenViewModelTest {
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
-      Assert.assertEquals(listOf(request2), state.receivedRequests)
-      Assert.assertEquals(listOf(request1), state.sentRequests)
+      Assert.assertEquals(listOf(RequestState(su4, request2)), state.receivedRequests)
+      Assert.assertEquals(listOf(RequestState(su3, request1)), state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -297,7 +293,8 @@ class FriendScreenViewModelTest {
       viewModel.sendRequestToUser(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequests = listOf(request1) + listOf(FriendRequest(u1.userId, u4.userId))
+      val sentRequest = FriendRequest(u1.userId, u4.userId)
+      val expectedSentRequests = listOf(RequestState(su3, request1)) + listOf(RequestState(su4, sentRequest))
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))
       val expectedSuggestions =
           listOf(
@@ -305,7 +302,7 @@ class FriendScreenViewModelTest {
           )
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(expectedSuggestions, state.suggestions)
-      Assert.assertEquals(listOf(request2), state.receivedRequests)
+      Assert.assertEquals(listOf(RequestState(su4, request2)), state.receivedRequests)
       Assert.assertEquals(expectedSentRequests, state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
@@ -362,8 +359,8 @@ class FriendScreenViewModelTest {
               FriendState(su3, FriendStatus.PENDING_SENT))
       Assert.assertEquals(expectedFriendStates, newState.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), newState.suggestions)
-      Assert.assertEquals(emptyList<FriendRequest>(), newState.receivedRequests)
-      Assert.assertEquals(emptyList<FriendRequest>(), newState.sentRequests)
+      Assert.assertEquals(emptyList<RequestState>(), newState.receivedRequests)
+      Assert.assertEquals(emptyList<RequestState>(), newState.sentRequests)
       Assert.assertFalse(newState.isCurrentUser)
       Assert.assertFalse(newState.isRefreshing)
       Assert.assertFalse(newState.isLoading)
@@ -387,8 +384,8 @@ class FriendScreenViewModelTest {
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.NOT_FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
-      Assert.assertEquals(listOf(request2), state.receivedRequests)
-      Assert.assertEquals(listOf(request1), state.sentRequests)
+      Assert.assertEquals(listOf(RequestState(su4, request2)), state.receivedRequests)
+      Assert.assertEquals(listOf(RequestState(su3, request1)), state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -436,12 +433,12 @@ class FriendScreenViewModelTest {
       viewModel.acceptReceivedRequest(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedReceivedRequests = emptyList<FriendRequest>()
+      val expectedReceivedRequests = emptyList<RequestState>()
       val expectedFriendStates = friendStates + listOf(FriendState(su4, FriendStatus.FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
       Assert.assertEquals(expectedReceivedRequests, state.receivedRequests)
-      Assert.assertEquals(listOf(request1), state.sentRequests)
+      Assert.assertEquals(listOf(RequestState(su3, request1)), state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -486,12 +483,12 @@ class FriendScreenViewModelTest {
       viewModel.declineReceivedRequest(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedReceivedRequests = emptyList<FriendRequest>()
+      val expectedReceivedRequests = emptyList<RequestState>()
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
       Assert.assertEquals(expectedReceivedRequests, state.receivedRequests)
-      Assert.assertEquals(listOf(request1), state.sentRequests)
+      Assert.assertEquals(listOf(RequestState(su3, request1)), state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -537,11 +534,11 @@ class FriendScreenViewModelTest {
       viewModel.cancelSentRequest(u3.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequest = emptyList<FriendRequest>()
+      val expectedSentRequest = emptyList<RequestState>()
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(suggestions, state.suggestions)
-      Assert.assertEquals(listOf(request2), state.receivedRequests)
+      Assert.assertEquals(listOf(RequestState(su4, request2)), state.receivedRequests)
       Assert.assertEquals(expectedSentRequest, state.sentRequests)
       Assert.assertTrue(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
@@ -563,14 +560,14 @@ class FriendScreenViewModelTest {
       viewModel.cancelSentRequest(u3.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequests = emptyList<FriendRequest>()
+      val expectedSentRequests = emptyList<RequestState>()
       val expectedFriendStates =
           listOf(
               FriendState(su1, FriendStatus.IS_CURRENT_USER),
               FriendState(su3, FriendStatus.NOT_FRIEND))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<RequestState>(), state.receivedRequests)
       Assert.assertEquals(expectedSentRequests, state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)

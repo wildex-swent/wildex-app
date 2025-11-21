@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,6 +42,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,29 +71,29 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
+import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.google.firebase.Timestamp
 import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 
 @Composable
 fun FriendScreen (
+  friendScreenViewModel: FriendScreenViewModel,
   userId: Id = "",
   onProfileClick: (Id) -> Unit = {},
   onGoBack: () -> Unit = {}
 ){
+  val uiState by friendScreenViewModel.uiState.collectAsState()
+  val context = LocalContext.current
   val (selectedTab, setSelectedTab) = remember { mutableStateOf("Friends") }
-  val user = User(
-    userId = "userId",
-    username = "johndoe",
-    name = "John",
-    surname = "Doe",
-    bio = "",
-    profilePictureURL = "https://example.com/profile.jpg",
-    userType = UserType.REGULAR,
-    creationDate = Timestamp.now(),
-    country = "",
-    friendsCount = 0,
-  )
+
+  LaunchedEffect(Unit) { friendScreenViewModel.loadUIState(userId) }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      friendScreenViewModel.clearErrorMsg()
+    }
+  }
 
   Scaffold(
     modifier = Modifier.fillMaxSize(),
@@ -100,16 +104,30 @@ fun FriendScreen (
         .fillMaxSize()
         .padding(paddingValues)
     ){
-      CurrentUserSelectionTab(
-        selectedTab = selectedTab,
-        onTabSelected = setSelectedTab
-      )
-      if (selectedTab == "Friends"){
-        FriendsTabContent(
-          user = user
+      if (uiState.isCurrentUser){
+        CurrentUserSelectionTab(
+          selectedTab = selectedTab,
+          onTabSelected = setSelectedTab
         )
+        if (selectedTab == "Friends"){
+          FriendsTabContent(
+            friendScreenViewModel,
+            uiState,
+            onProfileClick
+          )
+        } else {
+          RequestsTabContent(
+            friendScreenViewModel,
+            uiState,
+            onProfileClick
+          )
+        }
       } else {
-        RequestsTabContent(user = user)
+        OtherUserFriendScreenContent(
+          friendScreenViewModel,
+          uiState,
+          onProfileClick
+        )
       }
     }
   }
@@ -155,11 +173,13 @@ fun CurrentUserSelectionTab(
       ) {
         Box(
           contentAlignment = Alignment.Center,
-          modifier = Modifier.fillMaxSize().clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = { onTabSelected(tab) }
-          )
+          modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+              interactionSource = remember { MutableInteractionSource() },
+              indication = null,
+              onClick = { onTabSelected(tab) }
+            )
         ) {
           Text(
             text = tab,
@@ -189,7 +209,8 @@ fun FollowButton(
         interactionSource = remember { MutableInteractionSource() },
         indication = null,
         onClick = onFollow
-      ).background(
+      )
+      .background(
         brush = Brush.linearGradient(
           colors = listOf(
             Color(red = 0xF5, green = 0, blue = 0x21, alpha = 255),
@@ -200,7 +221,7 @@ fun FollowButton(
       )
   ){
     Text(
-      text = "Follow",
+      text = "Add friend",
       fontWeight = FontWeight.SemiBold,
       color = colorScheme.background,
       modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
@@ -218,13 +239,14 @@ fun UnfollowButton(
         interactionSource = remember { MutableInteractionSource() },
         indication = null,
         onClick = onUnfollow
-      ).background(
+      )
+      .background(
         color = colorScheme.surfaceVariant,
         shape = RoundedCornerShape(5.dp)
       )
   ){
     Text(
-      text = "Unfollow",
+      text = "Delete",
       fontWeight = FontWeight.SemiBold,
       color = colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
@@ -238,7 +260,9 @@ fun ReceivedRequestInteractable(
   onDecline: () -> Unit = {}
 ){
   Row(
-    modifier = Modifier.width(80.dp).height(30.dp)
+    modifier = Modifier
+      .width(80.dp)
+      .height(30.dp)
   ){
     RequestButton(
       onClick = onAccept,
@@ -260,7 +284,7 @@ fun ReceivedRequestInteractable(
 }
 
 @Composable
-fun SentRequestInteractable(
+fun CurrentUserSentRequestInteractable(
   onCancel: () -> Unit = {}
 ){
   RequestButton(
@@ -269,8 +293,35 @@ fun SentRequestInteractable(
     contentDescription = "Cancel Friend Request",
     backgroundColor = Color(red = 0xD8, green = 0xD3, blue = 0xD3),
     iconColor = colorScheme.onBackground,
-    modifier = Modifier.height(30.dp).width(40.dp)
+    modifier = Modifier
+      .height(30.dp)
+      .width(40.dp)
   )
+}
+
+@Composable
+fun OtherUserSentRequestInteractable(
+  onCancel: () -> Unit = {}
+){
+  Box(
+    modifier = Modifier
+      .clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = onCancel
+      )
+      .background(
+        color = colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(5.dp)
+      )
+  ){
+    Text(
+      text = "Pending...",
+      fontWeight = FontWeight.SemiBold,
+      color = colorScheme.onSurfaceVariant,
+      modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
+    )
+  }
 }
 
 @Composable
@@ -300,35 +351,37 @@ fun RequestButton(
 
 @Composable
 fun FriendRequestSuggestionTemplate(
-  user: User,
+  viewModel: FriendScreenViewModel,
+  state: FriendsScreenUIState,
+  user: SimpleUser,
   subtext: String,
   onProfileClick: (Id) -> Unit = {},
-  interactableElement: @Composable () -> Unit = {}
+  friendStatus: FriendStatus
 ){
   Row (
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 25.dp).height(70.dp),
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(horizontal = 25.dp)
+      .height(70.dp),
     verticalAlignment = Alignment.CenterVertically
   ){
-    IconButton(
-      onClick = { onProfileClick(user.userId) },
-      modifier = Modifier.size(45.dp)
-    ) {
-      AsyncImage(
-        model = user.profilePictureURL,
-        contentDescription = "Profile picture",
-        modifier =
-          Modifier.clip(CircleShape),
-        contentScale = ContentScale.Crop,
-      )
-    }
+    ClickableProfilePicture(
+      modifier = Modifier.size(45.dp),
+      profileId = user.userId,
+      profilePictureURL = user.profilePictureURL,
+      profileUserType = user.userType,
+      onProfile = onProfileClick
+    )
     Spacer(modifier = Modifier.width(10.dp))
     Column (
-      modifier = Modifier.weight(1f).fillMaxHeight(),
+      modifier = Modifier
+        .weight(1f)
+        .fillMaxHeight(),
       verticalArrangement = Arrangement.Center
     ){
       Spacer(modifier = Modifier.weight(1f))
       Text(
-        text = user.name + " " + user.surname,
+        text = user.username,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         modifier = Modifier
@@ -342,24 +395,41 @@ fun FriendRequestSuggestionTemplate(
       )
       Spacer(modifier = Modifier.weight(1f))
     }
-    interactableElement()
+    when (friendStatus) {
+      FriendStatus.FRIEND -> UnfollowButton(onUnfollow = {viewModel.unfollowUser(user.userId)})
+      FriendStatus.NOT_FRIEND -> FollowButton(onFollow = {viewModel.sendRequestToUser(user.userId)})
+      FriendStatus.PENDING_RECEIVED -> ReceivedRequestInteractable(
+        onAccept = {viewModel.acceptReceivedRequest(user.userId)},
+        onDecline = {viewModel.declineReceivedRequest(user.userId)}
+      )
+      FriendStatus.PENDING_SENT -> if (state.isCurrentUser){
+        CurrentUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
+      } else OtherUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
+      FriendStatus.IS_CURRENT_USER -> {}
+    }
   }
 }
 
 @Composable
-fun NoFriends(){
+fun NoFriends(
+  text: String
+){
   Column (
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
-    modifier = Modifier.height(210.dp).fillMaxWidth()
+    modifier = Modifier
+      .height(210.dp)
+      .fillMaxWidth()
   ){
     Icon(imageVector = Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(70.dp))
     Text(
-      text = "You don't have any friends yet. Look at our suggestions and discover new people!",
+      text = text,
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
-      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+      modifier = Modifier
+        .fillMaxWidth(0.6f)
+        .padding(top = 10.dp)
     )
   }
 }
@@ -369,7 +439,9 @@ fun NoSuggestions(){
   Column (
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
-    modifier = Modifier.height(210.dp).fillMaxWidth()
+    modifier = Modifier
+      .height(210.dp)
+      .fillMaxWidth()
   ){
     Icon(imageVector = Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
@@ -377,15 +449,21 @@ fun NoSuggestions(){
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
-      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+      modifier = Modifier
+        .fillMaxWidth(0.6f)
+        .padding(top = 10.dp)
     )
   }
 }
 
 @Composable
 fun FriendsTabContent(
-  user: User
+  viewModel: FriendScreenViewModel,
+  state: FriendsScreenUIState,
+  onProfileClick: (Id) -> Unit
 ){
+  val friends = state.friends
+  val suggestions = state.suggestions
   LazyColumn (
     modifier = Modifier.fillMaxSize()
   ){
@@ -401,38 +479,27 @@ fun FriendsTabContent(
           .padding(top = 12.dp, bottom = 4.dp)
       )
     }
-    item {
-      NoFriends()
+    if (friends.isEmpty()){
+      item {
+        NoFriends("You don't have any friends yet. Look at our suggestions and discover new people!")
+      }
+    } else {
+      items(friends.size) {index ->
+        val friendState = friends[index]
+        FriendRequestSuggestionTemplate(
+          viewModel,
+          state,
+          friendState.friend,
+          "",
+          onProfileClick,
+          friendState.status
+        )
+      }
     }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          UnfollowButton()
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          UnfollowButton()
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          UnfollowButton()
-//        }
-//      )
-//    }
     item {
-      HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
+      HorizontalDivider(modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 4.dp), thickness = 1.dp)
       Text(
         text = "Suggestions",
         fontWeight = FontWeight.SemiBold,
@@ -444,45 +511,23 @@ fun FriendsTabContent(
           .padding(top = 12.dp, bottom = 4.dp)
       )
     }
-    item { 
-      NoSuggestions()
+    if (suggestions.isEmpty()){
+      item {
+        NoSuggestions()
+      }
+    } else {
+      items(suggestions.size){ index ->
+        val suggestion = suggestions[index]
+        FriendRequestSuggestionTemplate(
+          viewModel,
+          state,
+          suggestion.user,
+          suggestion.reason,
+          onProfileClick,
+          FriendStatus.NOT_FRIEND
+        )
+      }
     }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = "posted 4 times near you",
-//        interactableElement = {
-//          FollowButton()
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = "shares 3 common friend with you",
-//        interactableElement = {
-//          FollowButton()
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = "is popular in Argentina",
-//        interactableElement = {
-//          FollowButton()
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = "shares 1 common friend with you",
-//        interactableElement = {
-//          FollowButton()
-//        }
-//      )
-//    }
   }
 }
 
@@ -491,7 +536,9 @@ fun NoSentRequests(){
   Column (
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
-    modifier = Modifier.height(210.dp).fillMaxWidth()
+    modifier = Modifier
+      .height(210.dp)
+      .fillMaxWidth()
   ){
     Icon(imageVector = Icons.Default.CancelScheduleSend, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
@@ -499,7 +546,9 @@ fun NoSentRequests(){
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
-      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+      modifier = Modifier
+        .fillMaxWidth(0.6f)
+        .padding(top = 10.dp)
     )
   }
 }
@@ -509,7 +558,9 @@ fun NoReceivedRequests(){
   Column (
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
-    modifier = Modifier.height(210.dp).fillMaxWidth()
+    modifier = Modifier
+      .height(210.dp)
+      .fillMaxWidth()
   ){
     Icon(imageVector = Icons.Default.Inbox, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
@@ -517,15 +568,21 @@ fun NoReceivedRequests(){
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
-      modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp)
+      modifier = Modifier
+        .fillMaxWidth(0.6f)
+        .padding(top = 10.dp)
     )
   }
 }
 
 @Composable
 fun RequestsTabContent(
-  user: User
+  viewModel: FriendScreenViewModel,
+  state: FriendsScreenUIState,
+  onProfileClick: (Id) -> Unit
 ){
+  val receivedRequests = state.receivedRequests
+  val sentRequests = state.sentRequests
   LazyColumn (
     modifier = Modifier.fillMaxSize()
   ){
@@ -541,38 +598,27 @@ fun RequestsTabContent(
           .padding(top = 12.dp, bottom = 4.dp)
       )
     }
-    item {
-      NoReceivedRequests()
+    if (receivedRequests.isEmpty()){
+      item {
+        NoReceivedRequests()
+      }
+    } else {
+      items(receivedRequests.size){ index ->
+        val receivedRequest = receivedRequests[index]
+        FriendRequestSuggestionTemplate(
+          viewModel = viewModel,
+          state = state,
+          user = receivedRequest.user,
+          subtext = "",
+          onProfileClick = onProfileClick,
+          friendStatus = FriendStatus.PENDING_RECEIVED
+        )
+      }
     }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          ReceivedRequestInteractable {  }
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          ReceivedRequestInteractable {  }
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          ReceivedRequestInteractable {  }
-//        }
-//      )
-//    }
     item {
-      HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
+      HorizontalDivider(modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 4.dp), thickness = 1.dp)
       Text(
         text = "Sent",
         fontWeight = FontWeight.SemiBold,
@@ -584,41 +630,70 @@ fun RequestsTabContent(
           .padding(top = 12.dp, bottom = 4.dp)
       )
     }
-    item {
-      NoSentRequests()
+    if (sentRequests.isEmpty()){
+      item {
+        NoSentRequests()
+      }
+    } else {
+      items(sentRequests.size){ index ->
+        val sentRequest = sentRequests[index]
+        FriendRequestSuggestionTemplate(
+          viewModel = viewModel,
+          state = state,
+          user = sentRequest.user,
+          subtext = "",
+          onProfileClick = onProfileClick,
+          friendStatus = FriendStatus.PENDING_SENT
+        )
+      }
     }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          SentRequestInteractable {  }
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          SentRequestInteractable {  }
-//        }
-//      )
-//    }
-//    item {
-//      FriendRequestSuggestionTemplate(
-//        user = user,
-//        subtext = user.username,
-//        interactableElement = {
-//          SentRequestInteractable {  }
-//        }
-//      )
-//    }
+  }
+}
+
+@Composable
+fun OtherUserFriendScreenContent(
+  viewModel: FriendScreenViewModel,
+  state: FriendsScreenUIState,
+  onProfileClick: (Id) -> Unit
+){
+  val friends = state.friends
+  LazyColumn(
+    modifier = Modifier.fillMaxSize()
+  ) {
+    item {
+      Text(
+        text = "Friends",
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 12.sp,
+        color = colorScheme.onBackground,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 20.dp)
+          .padding(top = 12.dp, bottom = 4.dp)
+      )
+    }
+    if (friends.isEmpty()){
+      item {
+        NoFriends("This user has no friends... Ask them to become your friend!")
+      }
+    } else {
+      items(friends.size) {index ->
+        val friendState = friends[index]
+        FriendRequestSuggestionTemplate(
+          viewModel,
+          state,
+          friendState.friend,
+          "",
+          onProfileClick,
+          friendState.status
+        )
+      }
+    }
   }
 }
 
 @Preview
 @Composable
 fun FriendScreenPreview() {
-  FriendScreen()
+  //FriendScreen()
 }

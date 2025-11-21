@@ -3,9 +3,6 @@ package com.android.wildex.usecase.achievement
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.utils.Id
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Use case: Refresh a user's achievements.
@@ -20,18 +17,16 @@ import kotlinx.coroutines.withContext
  */
 class UpdateUserAchievementsUseCase(
     private val userAchievementsRepository: UserAchievementsRepository =
-        RepositoryProvider.userAchievementsRepository,
-    private val io: CoroutineDispatcher = Dispatchers.IO
+        RepositoryProvider.userAchievementsRepository
 ) {
 
   /**
    * Recomputes and updates achievements for [userId]. Safe to call repeatedly; underlying repo
    * writes only if set changes.
    */
-  suspend operator fun invoke(userId: Id) =
-      withContext(io) {
-        // Just in case the achievements repo was never initialized for this user.
-        userAchievementsRepository.initializeUserAchievements(userId)
-        userAchievementsRepository.updateUserAchievements(userId)
-      }
+  suspend operator fun invoke(userId: Id) {
+    // Just in case the achievements repo was never initialized for this user.
+    userAchievementsRepository.initializeUserAchievements(userId)
+    userAchievementsRepository.updateUserAchievements(userId)
+  }
 }

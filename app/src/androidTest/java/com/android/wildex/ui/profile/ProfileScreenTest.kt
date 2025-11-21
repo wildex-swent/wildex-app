@@ -34,7 +34,6 @@ import com.mapbox.geojson.Point
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -97,10 +96,7 @@ class ProfileScreenTest {
   private fun createTestUpdateAchievementsUseCase(
       achRepo: UserAchievementsRepository,
   ): UpdateUserAchievementsUseCase =
-      UpdateUserAchievementsUseCase(
-          userAchievementsRepository = achRepo,
-          io = Dispatchers.Unconfined,
-      )
+      UpdateUserAchievementsUseCase(userAchievementsRepository = achRepo)
 
   /** Helper to create a list of fake achievements. */
   private fun fakeAchievements(count: Int = 5): List<Achievement> =

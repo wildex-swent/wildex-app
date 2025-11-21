@@ -100,6 +100,7 @@ fun MapScreen(
     onPost: (Id) -> Unit = {},
     onReport: (Id) -> Unit = {},
     onGoBack: () -> Unit = {},
+    onProfile: (Id) -> Unit = {},
     isCurrentUser: Boolean = true,
 ) {
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
@@ -157,37 +158,21 @@ fun MapScreen(
     var isMapReady by remember { mutableStateOf(false) }
     // I added this to avoid the old pins taking the new tab color before they disappear
     var styleTab by remember { mutableStateOf(uiState.activeTab) }
-    var didInitialCenter by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isMapReady, uiState.pins) {
-      if (!didInitialCenter && isMapReady && uiState.pins.isNotEmpty()) {
-        val loc = uiState.centerCoordinates
-        val dest =
-            CameraOptions.Builder()
-                .center(Point.fromLngLat(loc.longitude, loc.latitude))
-                .zoom(12.0)
-                .build()
-
-        mapView
-            ?.mapboxMap
-            ?.flyTo(
-                dest,
-                mapAnimationOptions { duration(1000L) },
-            )
-
-        didInitialCenter = true
-      }
-    }
-
-    LaunchedEffect(uiState.centerCoordinates, isMapReady, uiState.selected) {
+    LaunchedEffect(uiState.centerCoordinates, isMapReady, uiState.selected, uiState.activeTab) {
       if (!isMapReady) return@LaunchedEffect
-      if (uiState.selected == null) return@LaunchedEffect
       val mv = mapView ?: return@LaunchedEffect
       val loc = uiState.centerCoordinates
+      val zoom =
+          if (uiState.selected != null) {
+            18.0
+          } else {
+            12.0
+          }
       val dest =
           CameraOptions.Builder()
               .center(Point.fromLngLat(loc.longitude, loc.latitude))
-              .zoom(18.0)
+              .zoom(zoom)
               .build()
       mv.mapboxMap.flyTo(
           dest,
@@ -274,6 +259,7 @@ fun MapScreen(
           onReport = onReport,
           onDismiss = { viewModel.clearSelection() },
           onToggleLike = viewModel::toggleLike,
+          onProfile = onProfile,
           isCurrentUser = isCurrentUser,
       )
 

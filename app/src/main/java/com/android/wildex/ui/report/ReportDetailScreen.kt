@@ -125,12 +125,11 @@ fun ReportDetailsScreen(
   // events -> popup
   LaunchedEffect(Unit) {
     reportDetailsViewModel.events.collect { event ->
-      when (event) {
-        is ReportDetailsEvent.ShowCompletion -> {
-          completionType = event.type
-          showCompletionDialog = true
-        }
-      }
+      handleReportDetailsEvent(
+          event = event,
+          setCompletionType = { completionType = it },
+          setShowCompletionDialog = { showCompletionDialog = it },
+      )
     }
   }
 
@@ -152,13 +151,7 @@ fun ReportDetailsScreen(
         onConfirm = {
           val actionToRun = pendingAction
           pendingAction = null
-          when (actionToRun) {
-            ReportActionToConfirm.CANCEL -> reportDetailsViewModel.cancelReport()
-            ReportActionToConfirm.SELF_ASSIGN -> reportDetailsViewModel.selfAssignReport()
-            ReportActionToConfirm.RESOLVE -> reportDetailsViewModel.resolveReport()
-            ReportActionToConfirm.UNSELFASSIGN -> reportDetailsViewModel.unselfAssignReport()
-            null -> Unit
-          }
+          runPendingReportAction(actionToRun, reportDetailsViewModel)
         },
     )
   }
@@ -214,6 +207,34 @@ fun ReportDetailsScreen(
             )
       }
     }
+  }
+}
+
+/** Handle events from the ViewModel that require showing dialogs. */
+private fun handleReportDetailsEvent(
+    event: ReportDetailsEvent,
+    setCompletionType: (ReportCompletionType) -> Unit,
+    setShowCompletionDialog: (Boolean) -> Unit,
+) {
+  when (event) {
+    is ReportDetailsEvent.ShowCompletion -> {
+      setCompletionType(event.type)
+      setShowCompletionDialog(true)
+    }
+  }
+}
+
+/** Run the action that was pending confirmation. */
+private fun runPendingReportAction(
+    action: ReportActionToConfirm?,
+    viewModel: ReportDetailsScreenViewModel,
+) {
+  when (action) {
+    ReportActionToConfirm.CANCEL -> viewModel.cancelReport()
+    ReportActionToConfirm.SELF_ASSIGN -> viewModel.selfAssignReport()
+    ReportActionToConfirm.RESOLVE -> viewModel.resolveReport()
+    ReportActionToConfirm.UNSELFASSIGN -> viewModel.unselfAssignReport()
+    null -> Unit
   }
 }
 

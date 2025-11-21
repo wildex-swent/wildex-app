@@ -88,6 +88,28 @@ fun ReportDetailsActionRow(
       }
       UserType.PROFESSIONAL -> {
         when {
+          !hasAssignee && isCreatedByCurrentUser -> {
+            ReportActionButton(
+                text = context.getString(R.string.report_details_self_assign_third),
+                onClick = onSelfAssign,
+                modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_SELF_ASSIGN),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary,
+                    ),
+            )
+            ReportActionButton(
+                text = context.getString(R.string.report_details_button_delete),
+                onClick = onCancel,
+                modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_CANCEL),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        contentColor = colorScheme.tertiary,
+                    ),
+                border = BorderStroke(1.dp, colorScheme.tertiary),
+            )
+          }
           !hasAssignee -> {
             ReportActionButton(
                 text = context.getString(R.string.report_details_self_assign_third),
@@ -99,18 +121,6 @@ fun ReportDetailsActionRow(
                         contentColor = colorScheme.onPrimary,
                     ),
             )
-            if (isCreatedByCurrentUser) {
-              ReportActionButton(
-                  text = context.getString(R.string.report_details_button_delete),
-                  onClick = onCancel,
-                  modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_CANCEL),
-                  colors =
-                      ButtonDefaults.outlinedButtonColors(
-                          contentColor = colorScheme.tertiary,
-                      ),
-                  border = BorderStroke(1.dp, colorScheme.tertiary),
-              )
-            }
           }
           isAssignedToCurrentUser -> {
             ReportActionButton(
@@ -134,19 +144,17 @@ fun ReportDetailsActionRow(
                 border = BorderStroke(1.dp, colorScheme.tertiary),
             )
           }
-          else -> {
-            if (isCreatedByCurrentUser) {
-              ReportActionButton(
-                  text = context.getString(R.string.report_details_button_delete),
-                  onClick = onCancel,
-                  modifier = Modifier.fillMaxWidth().testTag(ReportActionsTestTags.ACTION_CANCEL),
-                  colors =
-                      ButtonDefaults.outlinedButtonColors(
-                          contentColor = colorScheme.tertiary,
-                      ),
-                  border = BorderStroke(1.dp, colorScheme.tertiary),
-              )
-            }
+          isCreatedByCurrentUser -> {
+            ReportActionButton(
+                text = context.getString(R.string.report_details_button_delete),
+                onClick = onCancel,
+                modifier = Modifier.fillMaxWidth().testTag(ReportActionsTestTags.ACTION_CANCEL),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        contentColor = colorScheme.tertiary,
+                    ),
+                border = BorderStroke(1.dp, colorScheme.tertiary),
+            )
           }
         }
       }

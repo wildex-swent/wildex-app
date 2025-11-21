@@ -98,7 +98,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
       val creationDate = document.getTimestamp("creationDate") ?: return null
       val country = document.getString("country") ?: ""
-      val friendsCount = (document.getLong("friendsCount") ?: 0).toInt()
 
       User(
           userId = userId,

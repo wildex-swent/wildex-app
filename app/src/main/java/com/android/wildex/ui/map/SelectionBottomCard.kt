@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.model.map.PinDetails
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 /**
  * Composable that displays a bottom card with details about the selected pin.
@@ -47,7 +49,8 @@ fun SelectionBottomCard(
     onReport: (Id) -> Unit,
     onDismiss: () -> Unit,
     onToggleLike: (Id) -> Unit,
-    isCurrentUser: Boolean
+    onProfile: (Id) -> Unit = {},
+    isCurrentUser: Boolean,
 ) {
   if (selection == null) return
   val cs = MaterialTheme.colorScheme
@@ -69,10 +72,17 @@ fun SelectionBottomCard(
               onPost = onPost,
               onToggleLike = onToggleLike,
               activeTab = activeTab,
-              isCurrentUser = isCurrentUser)
+              isCurrentUser = isCurrentUser,
+              onProfile = onProfile,
+          )
         }
         is PinDetails.ReportDetails -> {
-          ReportSelectionCard(details = selection, ui = ui, onReport = onReport)
+          ReportSelectionCard(
+              details = selection,
+              ui = ui,
+              onReport = onReport,
+              onProfile = onProfile,
+          )
         }
       }
       IconButton(
@@ -102,24 +112,6 @@ private fun PreviewImage(data: Any?, tag: String, desc: String) {
       contentDescription = desc,
       contentScale = ContentScale.Crop,
       modifier = Modifier.size(135.dp).clip(RoundedCornerShape(18.dp)).testTag(tag),
-  )
-}
-
-/**
- * Composable that displays an author's avatar image with rounded corners.
- *
- * @param data The image data to be loaded.
- */
-@Composable
-private fun AuthorAvatar(data: Any?) {
-  AsyncImage(
-      model = ImageRequest.Builder(LocalContext.current).data(data).build(),
-      contentDescription = "Author",
-      contentScale = ContentScale.Crop,
-      modifier =
-          Modifier.size(48.dp)
-              .clip(RoundedCornerShape(28.dp))
-              .testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
   )
 }
 
@@ -216,14 +208,21 @@ private fun PostSelectionCard(
     onPost: (Id) -> Unit,
     onToggleLike: (Id) -> Unit,
     activeTab: MapTab = MapTab.Posts,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onProfile: (Id) -> Unit = {},
 ) {
   SelectionRow(
       left = {
         PreviewImage(details.post.pictureURL, MapContentTestTags.SELECTION_POST_IMAGE, "Post image")
       },
   ) {
-    AuthorAvatar(details.author?.profilePictureURL)
+    ClickableProfilePicture(
+        modifier = Modifier.size(48.dp).testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
+        profileId = details.author?.userId ?: "",
+        profilePictureURL = details.author?.profilePictureURL ?: "",
+        profileUserType = details.author?.userType ?: UserType.REGULAR,
+        onProfile = onProfile,
+    )
 
     Text(
         text =
@@ -303,6 +302,7 @@ private fun ReportSelectionCard(
     details: PinDetails.ReportDetails,
     ui: MapUiColors,
     onReport: (Id) -> Unit,
+    onProfile: (Id) -> Unit = {},
 ) {
   SelectionRow(
       left = {
@@ -313,7 +313,13 @@ private fun ReportSelectionCard(
         )
       },
   ) {
-    AuthorAvatar(details.author?.profilePictureURL)
+    ClickableProfilePicture(
+        modifier = Modifier.size(48.dp).testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
+        profileId = details.author?.userId ?: "",
+        profilePictureURL = details.author?.profilePictureURL ?: "",
+        profileUserType = details.author?.userType ?: UserType.REGULAR,
+        onProfile = onProfile,
+    )
 
     // Centered description text
     Text(

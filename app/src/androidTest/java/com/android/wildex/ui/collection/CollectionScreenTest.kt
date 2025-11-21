@@ -47,8 +47,7 @@ class CollectionScreenTest {
                 "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "France",
-            friendsCount = 3))
+            country = "France"))
     userRepository.addUser(
         User(
             userId = "otherUserId",
@@ -60,8 +59,7 @@ class CollectionScreenTest {
                 "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "France",
-            friendsCount = 3))
+            country = "France"))
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAnimalsRepository.initializeUserAnimals("otherUserId")
 

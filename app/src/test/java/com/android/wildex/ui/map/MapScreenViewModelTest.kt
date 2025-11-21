@@ -68,7 +68,6 @@ class MapScreenViewModelTest {
           UserType.REGULAR,
           now,
           "CH",
-          1,
       )
   private val proUser = regularUser.copy(userType = UserType.PROFESSIONAL)
 

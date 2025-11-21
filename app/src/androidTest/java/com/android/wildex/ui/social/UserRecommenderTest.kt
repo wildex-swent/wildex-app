@@ -28,8 +28,7 @@ class UserRecommenderTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "",
-          friendsCount = 0)
+          country = "")
 
   private val post =
       Post(

@@ -152,7 +152,6 @@ class SignInViewModelTest {
                 UserType.REGULAR,
                 Timestamp.now(),
                 "",
-                0,
             )
 
         userRepository.addUser(user)

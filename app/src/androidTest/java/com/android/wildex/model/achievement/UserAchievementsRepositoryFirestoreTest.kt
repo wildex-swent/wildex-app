@@ -39,7 +39,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              friendsCount = 0,
           ))
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(testUserId)
       RepositoryProvider.userSettingsRepository.initializeUserSettings(testUserId)

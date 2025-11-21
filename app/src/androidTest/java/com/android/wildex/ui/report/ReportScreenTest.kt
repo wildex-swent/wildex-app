@@ -68,8 +68,7 @@ class ReportScreenTest {
             profilePictureURL = "urlBob1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "USA",
-            friendsCount = 0)
+            country = "USA")
 
     val user2 =
         User(
@@ -81,8 +80,7 @@ class ReportScreenTest {
             profilePictureURL = "urlAlice1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "England",
-            friendsCount = 0)
+            country = "England")
 
     val user3 =
         User(
@@ -94,8 +92,7 @@ class ReportScreenTest {
             profilePictureURL = "urlCharlie3",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "Germany",
-            friendsCount = 0)
+            country = "Germany")
 
     userRepository.addUser(user1)
     userRepository.addUser(user2)

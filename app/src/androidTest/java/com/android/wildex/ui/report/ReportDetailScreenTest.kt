@@ -50,7 +50,6 @@ class ReportDetailScreenTest {
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-            friendsCount = 0,
         )
     val regularUser =
         User(
@@ -63,7 +62,6 @@ class ReportDetailScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-            friendsCount = 0,
         )
     userRepository.addUser(professionalUser)
     userRepository.addUser(regularUser)
@@ -227,7 +225,6 @@ class ReportDetailScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "CH",
-              friendsCount = 0,
           )
       userRepository.addUser(regular)
       val report =
@@ -296,7 +293,6 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-              friendsCount = 0,
           )
       userRepository.addUser(pro)
       val report =
@@ -403,7 +399,6 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-              friendsCount = 0,
           )
       val otherAssignee =
           User(
@@ -416,7 +411,6 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-              friendsCount = 0,
           )
       userRepository.addUser(pro)
       userRepository.addUser(otherAssignee)

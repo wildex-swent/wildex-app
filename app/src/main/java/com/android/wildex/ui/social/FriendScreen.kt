@@ -48,13 +48,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
+
+object FriendScreenTestTags {
+  const val GO_BACK_BUTTON = "friend_screen_go_back_button"
+  const val FRIENDS_TAB_BUTTON = "friends_tab_button"
+  const val REQUESTS_TAB_BUTTON = "requests_tab_button"
+  const val SCREEN_TITLE = "screen_title"
+  const val NO_FRIENDS = "no_friends"
+  const val NO_FRIENDS_TEXT = "no_friends_text"
+  const val NO_SUGGESTIONS = "no_suggestions"
+  const val NO_SENT_REQUESTS = "no_sent_requests"
+  const val NO_RECEIVED_REQUESTS = "no_received_requests"
+  fun testTagForTemplate(userId: Id) = "template_$userId"
+  fun testTagForProfilePicture(userId: Id) = "profile_picture_${userId}"
+  fun testTagForFollowButton(userId: Id) = "follow_button_$userId"
+  fun testTagForUnfollowButton(userId: Id) = "unfollow_button_$userId"
+  fun testTagForCancelSentRequestButton(userId: Id) = "cancel_sent_request_${userId}_button"
+  fun testTagForAcceptReceivedRequestButton(userId: Id) = "accept_request_${userId}_button"
+  fun testTagForDeclineReceivedRequestButton(userId: Id) = "decline_request_${userId}_button"
+}
 
 /**
  * Entry point Composable for the Friend Screen
@@ -133,10 +154,15 @@ fun FriendScreenTopBar(
   onGoBack: () -> Unit = {}
 ){
   CenterAlignedTopAppBar(
-    title = { Text(text = "Social", fontWeight = FontWeight.SemiBold) },
+    title = { Text(
+      text = "Social",
+      fontWeight = FontWeight.SemiBold,
+      modifier = Modifier.testTag(FriendScreenTestTags.SCREEN_TITLE)
+    ) },
     navigationIcon = {
       IconButton(
         onClick = { onGoBack() },
+        modifier = Modifier.testTag(FriendScreenTestTags.GO_BACK_BUTTON)
       ) {
         Icon(
           imageVector = Icons.Filled.ChevronLeft,
@@ -176,6 +202,7 @@ fun CurrentUserSelectionTab(
         Box(
           contentAlignment = Alignment.Center,
           modifier = Modifier
+            .testTag(if (tab == "Friends") FriendScreenTestTags.FRIENDS_TAB_BUTTON else FriendScreenTestTags.REQUESTS_TAB_BUTTON)
             .fillMaxSize()
             .clickable(
               interactionSource = remember { MutableInteractionSource() },
@@ -210,9 +237,11 @@ fun CurrentUserSelectionTab(
 @Composable
 fun FollowButton(
   onFollow: () -> Unit = {},
+  testTag: String
 ){
   Box(
     modifier = Modifier
+      .testTag(testTag)
       .clickable(
         interactionSource = remember { MutableInteractionSource() },
         indication = null,
@@ -246,9 +275,11 @@ fun FollowButton(
 @Composable
 fun UnfollowButton(
   onUnfollow: () -> Unit = {},
+  testTag: String
 ){
   Box(
     modifier = Modifier
+      .testTag(testTag)
       .clickable(
         interactionSource = remember { MutableInteractionSource() },
         indication = null,
@@ -278,7 +309,9 @@ fun UnfollowButton(
 @Composable
 fun ReceivedRequestInteractable(
   onAccept: () -> Unit = {},
-  onDecline: () -> Unit = {}
+  onDecline: () -> Unit = {},
+  testTagAccept: String,
+  testTagDecline: String
 ){
   Row(
     modifier = Modifier
@@ -291,7 +324,7 @@ fun ReceivedRequestInteractable(
       contentDescription = "Accept Friend Request",
       backgroundColor = Color(red = 36, green = 88, blue = 246),
       iconColor = colorScheme.background,
-      modifier = Modifier.weight(1f)
+      modifier = Modifier.weight(1f).testTag(testTagAccept)
     )
     RequestButton(
       onClick = onDecline,
@@ -299,7 +332,7 @@ fun ReceivedRequestInteractable(
       contentDescription = "Decline Friend Request",
       backgroundColor = Color(red = 202, green = 69, blue = 62),
       iconColor = colorScheme.background,
-      modifier = Modifier.weight(1f)
+      modifier = Modifier.weight(1f).testTag(testTagDecline)
     )
   }
 }
@@ -312,7 +345,8 @@ fun ReceivedRequestInteractable(
  */
 @Composable
 fun CurrentUserSentRequestInteractable(
-  onCancel: () -> Unit = {}
+  onCancel: () -> Unit = {},
+  testTag: String
 ){
   RequestButton(
     onClick = onCancel,
@@ -323,6 +357,7 @@ fun CurrentUserSentRequestInteractable(
     modifier = Modifier
       .height(30.dp)
       .width(40.dp)
+      .testTag(testTag)
   )
 }
 
@@ -335,10 +370,12 @@ fun CurrentUserSentRequestInteractable(
  */
 @Composable
 fun OtherUserSentRequestInteractable(
-  onCancel: () -> Unit = {}
+  onCancel: () -> Unit = {},
+  testTag: String
 ){
   Box(
     modifier = Modifier
+      .testTag(testTag)
       .clickable(
         interactionSource = remember { MutableInteractionSource() },
         indication = null,
@@ -427,11 +464,12 @@ fun FriendRequestSuggestionTemplate(
     modifier = Modifier
       .fillMaxWidth()
       .padding(horizontal = 25.dp)
-      .height(70.dp),
+      .height(70.dp)
+      .testTag(FriendScreenTestTags.testTagForTemplate(user.userId)),
     verticalAlignment = Alignment.CenterVertically
   ){
     ClickableProfilePicture(
-      modifier = Modifier.size(45.dp),
+      modifier = Modifier.size(45.dp).testTag(FriendScreenTestTags.testTagForProfilePicture(user.userId)),
       profileId = user.userId,
       profilePictureURL = user.profilePictureURL,
       profileUserType = user.userType,
@@ -461,15 +499,29 @@ fun FriendRequestSuggestionTemplate(
       Spacer(modifier = Modifier.weight(1f))
     }
     when (friendStatus) {
-      FriendStatus.FRIEND -> UnfollowButton(onUnfollow = {viewModel.unfollowUser(user.userId)})
-      FriendStatus.NOT_FRIEND -> FollowButton(onFollow = {viewModel.sendRequestToUser(user.userId)})
+      FriendStatus.FRIEND -> UnfollowButton(
+        onUnfollow = {viewModel.unfollowUser(user.userId)},
+        testTag = FriendScreenTestTags.testTagForUnfollowButton(user.userId)
+      )
+      FriendStatus.NOT_FRIEND -> FollowButton(
+        onFollow = {viewModel.sendRequestToUser(user.userId)},
+        testTag = FriendScreenTestTags.testTagForFollowButton(user.userId)
+      )
       FriendStatus.PENDING_RECEIVED -> ReceivedRequestInteractable(
         onAccept = {viewModel.acceptReceivedRequest(user.userId)},
-        onDecline = {viewModel.declineReceivedRequest(user.userId)}
+        onDecline = {viewModel.declineReceivedRequest(user.userId)},
+        testTagAccept = FriendScreenTestTags.testTagForAcceptReceivedRequestButton(user.userId),
+        testTagDecline = FriendScreenTestTags.testTagForDeclineReceivedRequestButton(user.userId)
       )
       FriendStatus.PENDING_SENT -> if (isCurrentUser){
-        CurrentUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
-      } else OtherUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
+        CurrentUserSentRequestInteractable(
+          onCancel = {viewModel.cancelSentRequest(user.userId)},
+          testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId)
+        )
+      } else OtherUserSentRequestInteractable(
+        onCancel = {viewModel.cancelSentRequest(user.userId)},
+        testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId)
+      )
       FriendStatus.IS_CURRENT_USER -> {}
     }
   }
@@ -491,6 +543,7 @@ fun NoFriends(
     modifier = Modifier
       .height(210.dp)
       .fillMaxWidth()
+      .testTag(FriendScreenTestTags.NO_FRIENDS)
   ){
     Icon(imageVector = Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(70.dp))
     Text(
@@ -501,6 +554,7 @@ fun NoFriends(
       modifier = Modifier
         .fillMaxWidth(0.6f)
         .padding(top = 10.dp)
+        .testTag(FriendScreenTestTags.NO_FRIENDS_TEXT)
     )
   }
 }
@@ -516,6 +570,7 @@ fun NoSuggestions(){
     modifier = Modifier
       .height(210.dp)
       .fillMaxWidth()
+      .testTag(FriendScreenTestTags.NO_SUGGESTIONS)
   ){
     Icon(imageVector = Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
@@ -624,6 +679,7 @@ fun NoSentRequests(){
     modifier = Modifier
       .height(210.dp)
       .fillMaxWidth()
+      .testTag(FriendScreenTestTags.NO_SENT_REQUESTS)
   ){
     Icon(imageVector = Icons.Default.CancelScheduleSend, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
@@ -650,6 +706,7 @@ fun NoReceivedRequests(){
     modifier = Modifier
       .height(210.dp)
       .fillMaxWidth()
+      .testTag(FriendScreenTestTags.NO_RECEIVED_REQUESTS)
   ){
     Icon(imageVector = Icons.Default.Inbox, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(

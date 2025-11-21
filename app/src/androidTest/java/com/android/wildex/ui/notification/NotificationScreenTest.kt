@@ -1,7 +1,9 @@
 package com.android.wildex.ui.notification
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,36 +19,63 @@ class NotificationScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
 
+  private val sampleNotifications =
+      listOf(
+          NotificationUIState(
+              notificationId = "1",
+              notificationType = NotificationType.LIKE,
+              notificationTitle = "Jean has liked your post",
+              notificationDescription = "3min ago",
+          ),
+          NotificationUIState(
+              notificationId = "2",
+              notificationType = NotificationType.POST,
+              notificationTitle = "Bob spotted a tiger",
+              notificationDescription = "15min ago",
+          ),
+          NotificationUIState(
+              notificationId = "3",
+              notificationType = NotificationType.COMMENT,
+              notificationTitle = "Alice commented on your post",
+              notificationDescription = "Alice said: Wow, amazing!",
+          ),
+      )
+
   @Test
-  fun initialState_displaysAllNotifications() {
-    val vm = NotificationScreenViewModel()
-    composeRule.setContent { NotificationScreen(onGoBack = {}, notificationScreenViewModel = vm) }
+  fun sampleNotifications_areDisplayed() {
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) {
+        NotificationView(
+            notifications = sampleNotifications,
+            pd = PaddingValues(0.dp),
+            onNotificationClick = { _, _ -> },
+            onProfileClick = {},
+        )
+      }
+    }
     composeRule.waitForIdle()
 
-    val notifications = vm.uiState.value.notifications
-    Assert.assertTrue(notifications.isNotEmpty())
-    notifications.forEach {
+    sampleNotifications.forEach {
       composeRule.onNodeWithText(it.notificationTitle).assertIsDisplayed()
       composeRule.onNodeWithText(it.notificationDescription).assertIsDisplayed()
     }
   }
 
   @Test
-  fun goBack_makes_callback() {
+  fun goBack_triggersCallback() {
     var back = 0
     composeRule.setContent { NotificationScreen(onGoBack = { back++ }) }
     composeRule.waitForIdle()
-
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
     Assert.assertEquals(1, back)
   }
 
   @Test
-  fun notificationItem_fixedSize_image_and_arrow_and_texts_displayed() {
+  fun notificationItem_fixedSizes_and_textsDisplayed() {
     val longTitle = "Really really long title that should be truncated to stay on one line"
     val longDesc =
         "Really really long description that should also be truncated to stay on one line"
-    val authorId = "author1"
+    val authorId = "authorX"
     val contentId = "content42"
 
     composeRule.setContent {
@@ -79,22 +108,34 @@ class NotificationScreenTest {
     composeRule.onNodeWithText(longDesc).assertIsDisplayed()
   }
 
+  @Composable
+  private fun TestScreenWithSamples(
+      vm: NotificationScreenViewModel,
+      samples: List<NotificationUIState>
+  ) {
+    NotificationView(notifications = samples, pd = PaddingValues(0.dp))
+  }
+
   @Test
-  fun refresh_keep_display_notifications() {
+  fun refresh_keepsSampleNotificationsDisplayed() {
     val vm = NotificationScreenViewModel()
-    composeRule.setContent { NotificationScreen(onGoBack = {}, notificationScreenViewModel = vm) }
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) {
+        TestScreenWithSamples(vm, sampleNotifications)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.runOnIdle { vm.refreshUIState() }
     composeRule.waitForIdle()
 
-    vm.uiState.value.notifications.forEach {
+    sampleNotifications.forEach {
       composeRule.onNodeWithText(it.notificationTitle).assertIsDisplayed()
     }
   }
 
   @Test
-  fun noNotificationView_display_message_empty() {
+  fun noNotificationView_showsEmptyMessage() {
     composeRule.setContent { NoNotificationView() }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()

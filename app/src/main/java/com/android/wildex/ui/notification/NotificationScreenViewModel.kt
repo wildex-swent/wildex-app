@@ -65,7 +65,7 @@ enum class NotificationType {
 }
 
 data class NotificationScreenUIState(
-    val notifications: List<NotificationUIState> = sampleNotifications,
+    val notifications: List<NotificationUIState> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,

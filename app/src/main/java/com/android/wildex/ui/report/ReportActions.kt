@@ -38,6 +38,7 @@ fun ReportActionButton(
     modifier: Modifier = Modifier,
     colors: ButtonColors,
     border: BorderStroke? = null,
+    isActionInProgress: Boolean = false,
 ) {
   OutlinedButton(
       onClick = onClick,
@@ -45,9 +46,9 @@ fun ReportActionButton(
       shape = RoundedCornerShape(999.dp),
       colors = colors,
       border = border,
-  ) {
-    Text(text = text, style = typography.labelLarge)
-  }
+      enabled = !isActionInProgress) {
+        Text(text = text, style = typography.labelLarge)
+      }
 }
 
 /** Adaptive action row using pill buttons. */
@@ -57,6 +58,7 @@ fun ReportDetailsActionRow(
     currentUser: SimpleUser,
     isCreatedByCurrentUser: Boolean,
     isAssignedToCurrentUser: Boolean,
+    isActionInProgress: Boolean = false,
     onCancel: () -> Unit = {},
     onSelfAssign: () -> Unit = {},
     onResolve: () -> Unit = {},
@@ -78,6 +80,7 @@ fun ReportDetailsActionRow(
               text = context.getString(R.string.report_details_cancel_third),
               onClick = onCancel,
               modifier = Modifier.fillMaxWidth().testTag(ReportActionsTestTags.ACTION_CANCEL),
+              isActionInProgress = isActionInProgress,
               colors =
                   ButtonDefaults.outlinedButtonColors(
                       contentColor = colorScheme.tertiary,
@@ -92,6 +95,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_self_assign_third),
                 onClick = onSelfAssign,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_SELF_ASSIGN),
                 colors =
                     ButtonDefaults.buttonColors(
@@ -102,6 +106,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_button_delete),
                 onClick = onCancel,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_CANCEL),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
@@ -114,6 +119,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_self_assign_third),
                 onClick = onSelfAssign,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_SELF_ASSIGN),
                 colors =
                     ButtonDefaults.buttonColors(
@@ -126,6 +132,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_resolve_third),
                 onClick = onResolve,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_RESOLVE),
                 colors =
                     ButtonDefaults.buttonColors(
@@ -136,6 +143,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_button_cancel),
                 onClick = onUnSelfAssign,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_UNSELFASSIGN),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
@@ -148,6 +156,7 @@ fun ReportDetailsActionRow(
             ReportActionButton(
                 text = context.getString(R.string.report_details_button_delete),
                 onClick = onCancel,
+                isActionInProgress = isActionInProgress,
                 modifier = Modifier.fillMaxWidth().testTag(ReportActionsTestTags.ACTION_CANCEL),
                 colors =
                     ButtonDefaults.outlinedButtonColors(

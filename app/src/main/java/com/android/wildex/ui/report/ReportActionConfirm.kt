@@ -1,6 +1,7 @@
 package com.android.wildex.ui.report
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,6 +55,9 @@ fun ReportActionConfirmDialog(
       onDismissRequest = onDismiss,
       title = { Text(title, fontWeight = FontWeight.Bold) },
       text = { Text(message) },
+      containerColor = colorScheme.background,
+      textContentColor = colorScheme.onBackground,
+      titleContentColor = colorScheme.primary,
       confirmButton = { TextButton(onClick = onConfirm) { Text(confirmLabel) } },
       dismissButton = {
         TextButton(onClick = onDismiss) {

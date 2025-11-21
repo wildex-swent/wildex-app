@@ -78,6 +78,7 @@ data class ReportDetailsUIState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
+    val isActionInProgress: Boolean = false,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -217,6 +218,7 @@ class ReportDetailsScreenViewModel(
               isLoading = false,
               isRefreshing = false,
               isError = false,
+              isActionInProgress = false,
           )
     } catch (e: Exception) {
       handleException("Error loading report details for report $reportId", e)
@@ -226,6 +228,11 @@ class ReportDetailsScreenViewModel(
   /** Cancels a report */
   fun cancelReport() {
     val reportId = _uiState.value.reportId
+    _uiState.value =
+        _uiState.value.copy(
+            isActionInProgress = true,
+            errorMsg = null,
+        )
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
@@ -234,6 +241,10 @@ class ReportDetailsScreenViewModel(
             ReportDetailsEvent.ShowCompletion(ReportCompletionType.CANCELED),
         )
       } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                isActionInProgress = false,
+            )
         handleException("Error canceling report $reportId", e)
       }
     }
@@ -241,13 +252,23 @@ class ReportDetailsScreenViewModel(
 
   /** Self-assigns a report to the current user (for professionals). */
   fun selfAssignReport() {
-    val reportId = _uiState.value.reportId
+    val before = _uiState.value
+    val reportId = before.reportId
+    val optimistic =
+        before.copy(
+            assignee = before.currentUser,
+            isAssignedToCurrentUser = true,
+            isActionInProgress = true,
+            errorMsg = null,
+        )
+    _uiState.value = optimistic
     viewModelScope.launch {
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = currentUserId))
         updateReportDetails(reportId)
       } catch (e: Exception) {
+        _uiState.value = before
         handleException("Error self-assigning report $reportId", e)
       }
     }
@@ -255,13 +276,23 @@ class ReportDetailsScreenViewModel(
 
   /** Unself-assigns a report currently assigned to the current user. */
   fun unselfAssignReport() {
-    val reportId = _uiState.value.reportId
+    val before = _uiState.value
+    val reportId = before.reportId
+    val optimistic =
+        before.copy(
+            assignee = null,
+            isAssignedToCurrentUser = false,
+            isActionInProgress = true,
+            errorMsg = null,
+        )
+    _uiState.value = optimistic
     viewModelScope.launch {
       try {
         val report = reportRepository.getReport(reportId)
         reportRepository.editReport(reportId, report.copy(assigneeId = null))
         updateReportDetails(reportId)
       } catch (e: Exception) {
+        _uiState.value = before
         handleException("Error unself-assigning report $reportId", e)
       }
     }
@@ -270,6 +301,11 @@ class ReportDetailsScreenViewModel(
   /** Resolves a report by deleting it. */
   fun resolveReport() {
     val reportId = _uiState.value.reportId
+    _uiState.value =
+        _uiState.value.copy(
+            isActionInProgress = true,
+            errorMsg = null,
+        )
     viewModelScope.launch {
       try {
         reportRepository.deleteReport(reportId)
@@ -278,6 +314,10 @@ class ReportDetailsScreenViewModel(
             ReportDetailsEvent.ShowCompletion(ReportCompletionType.RESOLVED),
         )
       } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                isActionInProgress = false,
+            )
         handleException("Error resolving report $reportId", e)
       }
     }

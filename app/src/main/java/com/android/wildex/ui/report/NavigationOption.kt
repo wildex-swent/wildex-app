@@ -66,112 +66,112 @@ fun NavigationOptionsBottomSheet(
       onDismissRequest = onDismissRequest,
       dragHandle = { BottomSheetDefaults.DragHandle() },
       modifier = Modifier.testTag(NavigationSheetTestTags.SHEET),
-  ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      Text(
-          text = context.getString(R.string.report_details_navigate),
-          fontWeight = FontWeight.SemiBold,
-          color = onBackground,
-          style = MaterialTheme.typography.titleMedium,
-          modifier = Modifier.testTag(NavigationSheetTestTags.TITLE),
-      )
-
-      Text(
-          text = label,
-          style = MaterialTheme.typography.bodyMedium,
-          color = secondaryText,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-          modifier = Modifier.testTag(NavigationSheetTestTags.LOCATION),
-      )
-
-      // Google Maps
-      OutlinedButton(
-          onClick = {
-            openInGoogleMapsApp(context, latitude, longitude)
-            onDismissRequest()
-          },
-          modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_GOOGLE_MAPS),
-          shape = RoundedCornerShape(28.dp),
-          border = BorderStroke(1.dp, outline),
-          colors =
-              ButtonDefaults.outlinedButtonColors(
-                  contentColor = onBackground,
-              ),
-      ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+      contentColor = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-          Icon(
-              imageVector = Icons.Filled.Map,
-              contentDescription = null,
-              tint = primary,
+          Text(
+              text = context.getString(R.string.report_details_navigate),
+              fontWeight = FontWeight.SemiBold,
+              color = onBackground,
+              style = MaterialTheme.typography.titleMedium,
+              modifier = Modifier.testTag(NavigationSheetTestTags.TITLE),
           )
-          Text(context.getString(R.string.report_details_google_maps))
+
+          Text(
+              text = label,
+              style = MaterialTheme.typography.bodyMedium,
+              color = secondaryText,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.testTag(NavigationSheetTestTags.LOCATION),
+          )
+
+          // Google Maps
+          OutlinedButton(
+              onClick = {
+                openInGoogleMapsApp(context, latitude, longitude)
+                onDismissRequest()
+              },
+              modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_GOOGLE_MAPS),
+              shape = RoundedCornerShape(28.dp),
+              border = BorderStroke(1.dp, outline),
+              colors =
+                  ButtonDefaults.outlinedButtonColors(
+                      contentColor = onBackground,
+                  ),
+          ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+              Icon(
+                  imageVector = Icons.Filled.Map,
+                  contentDescription = null,
+                  tint = primary,
+              )
+              Text(context.getString(R.string.report_details_google_maps))
+            }
+          }
+
+          // Copy
+          OutlinedButton(
+              onClick = {
+                copyLocationToClipboard(context, latitude, longitude, label)
+                onDismissRequest()
+              },
+              modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_COPY),
+              shape = RoundedCornerShape(28.dp),
+              border = BorderStroke(1.dp, outline),
+              colors =
+                  ButtonDefaults.outlinedButtonColors(
+                      contentColor = onBackground,
+                  ),
+          ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+              Icon(
+                  imageVector = Icons.Filled.ContentCopy,
+                  contentDescription = null,
+                  tint = onBackground,
+              )
+              Text(context.getString(R.string.report_details_copy))
+            }
+          }
+
+          // Share
+          OutlinedButton(
+              onClick = {
+                shareLocation(context, latitude, longitude, label)
+                onDismissRequest()
+              },
+              modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_SHARE),
+              shape = RoundedCornerShape(28.dp),
+              border = BorderStroke(1.dp, outline),
+              colors =
+                  ButtonDefaults.outlinedButtonColors(
+                      contentColor = onBackground,
+                  ),
+          ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+              Icon(
+                  imageVector = Icons.Filled.Share,
+                  contentDescription = null,
+                  tint = onBackground,
+              )
+              Text(context.getString(R.string.report_details_share))
+            }
+          }
+
+          Spacer(Modifier.height(12.dp))
         }
       }
-
-      // Copy
-      OutlinedButton(
-          onClick = {
-            copyLocationToClipboard(context, latitude, longitude, label)
-            onDismissRequest()
-          },
-          modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_COPY),
-          shape = RoundedCornerShape(28.dp),
-          border = BorderStroke(1.dp, outline),
-          colors =
-              ButtonDefaults.outlinedButtonColors(
-                  contentColor = onBackground,
-              ),
-      ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-          Icon(
-              imageVector = Icons.Filled.ContentCopy,
-              contentDescription = null,
-              tint = onBackground,
-          )
-          Text(context.getString(R.string.report_details_copy))
-        }
-      }
-
-      // Share
-      OutlinedButton(
-          onClick = {
-            shareLocation(context, latitude, longitude, label)
-            onDismissRequest()
-          },
-          modifier = Modifier.fillMaxWidth().testTag(NavigationSheetTestTags.BTN_SHARE),
-          shape = RoundedCornerShape(28.dp),
-          border = BorderStroke(1.dp, outline),
-          colors =
-              ButtonDefaults.outlinedButtonColors(
-                  contentColor = onBackground,
-              ),
-      ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-          Icon(
-              imageVector = Icons.Filled.Share,
-              contentDescription = null,
-              tint = onBackground,
-          )
-          Text(context.getString(R.string.report_details_share))
-        }
-      }
-
-      Spacer(Modifier.height(12.dp))
-    }
-  }
 }
 
 private fun openInGoogleMapsApp(context: Context, latitude: Double, longitude: Double) {

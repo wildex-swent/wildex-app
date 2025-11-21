@@ -2,6 +2,8 @@ package com.android.wildex.ui.report
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -10,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.*
 import com.android.wildex.R
@@ -54,7 +57,10 @@ fun ReportCompletionDialog(
 
   AlertDialog(
       onDismissRequest = onConfirm,
-      text = {
+      containerColor = colorScheme.background,
+      textContentColor = colorScheme.onBackground,
+      titleContentColor = colorScheme.primary,
+      title = {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,17 +70,23 @@ fun ReportCompletionDialog(
               progress = { progress },
               modifier = Modifier.size(160.dp).testTag(ReportCompletionDialogTestTags.ANIMATION),
           )
-          Spacer(Modifier.height(12.dp))
           Text(
               text = title,
               fontWeight = FontWeight.Bold,
-              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              style = typography.titleMedium,
+              textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth().testTag(ReportCompletionDialogTestTags.TITLE),
           )
-          Spacer(Modifier.height(6.dp))
+        }
+      },
+      text = {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
           Text(
               text = message,
-              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth().testTag(ReportCompletionDialogTestTags.MESSAGE),
           )
         }

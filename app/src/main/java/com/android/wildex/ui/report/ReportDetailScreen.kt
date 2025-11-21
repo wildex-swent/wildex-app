@@ -320,6 +320,7 @@ private fun ReportDetailsContent(
                 currentUser = uiState.currentUser,
                 isCreatedByCurrentUser = uiState.isCreatedByCurrentUser,
                 isAssignedToCurrentUser = uiState.isAssignedToCurrentUser,
+                isActionInProgress = uiState.isActionInProgress,
                 onCancel = onCancel,
                 onSelfAssign = onSelfAssign,
                 onResolve = onResolve,
@@ -515,6 +516,7 @@ private fun ReportAssigneeDetailsCard(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       ClickableProfilePicture(
+          modifier = Modifier.size(32.dp),
           profileId = assignee.userId,
           profilePictureURL = assignee.profilePictureURL,
           profileUserType = assignee.userType,

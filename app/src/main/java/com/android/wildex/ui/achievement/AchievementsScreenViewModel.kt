@@ -59,41 +59,34 @@ class AchievementsScreenViewModel(
   val uiState: StateFlow<AchievementsUIState> = _uiState.asStateFlow()
 
   /**
-   * Updates the UI state by loading the user's achievements.
-   *
-   * @param userId The ID of the user whose achievements are to be loaded.
-   */
-  private suspend fun updateUIState(userId: String) {
-    try {
-      val user = userRepository.getSimpleUser(userId)
-      val unlockedAchievements = userAchievementsRepository.getAllAchievementsByUser(userId)
-      val lockedAchievements =
-          userAchievementsRepository.getAllAchievements().filter { it !in unlockedAchievements }
-
-      _uiState.value =
-          _uiState.value.copy(
-              unlocked = unlockedAchievements,
-              locked = lockedAchievements,
-              isLoading = false,
-              isError = false,
-              errorMsg = null,
-              user = user,
-              isUserOwner = userId == currentUserId,
-          )
-    } catch (e: Exception) {
-      setErrorMsg(e.localizedMessage ?: "Failed to load achievements.")
-      _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
-    }
-  }
-
-  /**
    * Loads the UI state for the specified user.
    *
-   * @param userUid The UID of the user whose achievements are to be loaded.
+   * @param userId The UID of the user whose achievements are to be loaded.
    */
-  fun loadUIState(userUid: String) {
+  fun loadUIState(userId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState(userUid) }
+    viewModelScope.launch {
+      try {
+        val user = userRepository.getSimpleUser(userId)
+        val unlockedAchievements = userAchievementsRepository.getAllAchievementsByUser(userId)
+        val lockedAchievements =
+            userAchievementsRepository.getAllAchievements().filter { it !in unlockedAchievements }
+
+        _uiState.value =
+            _uiState.value.copy(
+                unlocked = unlockedAchievements,
+                locked = lockedAchievements,
+                isLoading = false,
+                isError = false,
+                errorMsg = null,
+                user = user,
+                isUserOwner = userId == currentUserId,
+            )
+      } catch (e: Exception) {
+        setErrorMsg(e.localizedMessage ?: "Failed to load achievements.")
+        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
+      }
+    }
   }
 
   /** Clears any existing error message in the UI state. */

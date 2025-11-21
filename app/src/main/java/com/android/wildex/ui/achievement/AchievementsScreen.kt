@@ -2,7 +2,6 @@ package com.android.wildex.ui.achievement
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,7 +32,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,7 +71,6 @@ object AchievementsScreenTestTags {
   const val ACHIEVEMENT_IMAGE = "achievement_image"
   const val ACHIEVEMENT_NAME = "achievement_name"
   const val BACK_BUTTON = "achievements_back_button"
-  const val NOTIFICATION_BUTTON = "achievements_notification_button"
   const val PROFILE_BUTTON = "achievements_profile_button"
   const val DETAILS_DIALOG = "achievement_details_dialog"
   const val DETAILS_CLOSE_BUTTON = "achievement_details_close_button"
@@ -94,7 +91,6 @@ var SemanticsPropertyReceiver.achievementId by AchievementIdKey
  * @param viewModel The ViewModel managing the screen's state.
  * @param userId The ID of the user whose achievements are being displayed.
  * @param onProfileClick Callback invoked when the profile picture is clicked.
- * @param onNotificationsClick Callback invoked when the notifications button is pressed.
  * @param onGoBack Callback invoked when the back button is pressed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,8 +98,6 @@ var SemanticsPropertyReceiver.achievementId by AchievementIdKey
 fun AchievementsScreen(
     viewModel: AchievementsScreenViewModel = viewModel(),
     userId: String = "",
-    onProfileClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {},
     onGoBack: () -> Unit = {},
 ) {
   val uiState by viewModel.uiState.collectAsState()
@@ -126,8 +120,6 @@ fun AchievementsScreen(
               isUserOwner = uiState.isUserOwner,
               userProfilePictureURL = uiState.user.profilePictureURL,
               onGoBack = onGoBack,
-              onProfileClick = onProfileClick,
-              onNotificationsClick = onNotificationsClick,
               context = context,
           )
         }
@@ -203,7 +195,6 @@ fun AchievementsScreen(
  * @param userProfilePictureURL URL of the user's profile picture.
  * @param onGoBack Callback invoked when the back button is pressed.
  * @param onProfileClick Callback invoked when the profile picture is clicked.
- * @param onNotificationsClick Callback invoked when the notifications button is pressed.
  * @param context The [Context] used to access string resources.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -212,11 +203,9 @@ fun AchievementsTopBar(
     isUserOwner: Boolean,
     userProfilePictureURL: String,
     onGoBack: () -> Unit,
-    onProfileClick: () -> Unit,
-    onNotificationsClick: () -> Unit,
     context: Context,
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
         Text(
             modifier = Modifier.fillMaxWidth().testTag(AchievementsScreenTestTags.TOP_APP_BAR),
@@ -228,39 +217,14 @@ fun AchievementsTopBar(
       },
       navigationIcon = {
         IconButton(
-            modifier =
-                Modifier.testTag(
-                    if (isUserOwner) AchievementsScreenTestTags.NOTIFICATION_BUTTON
-                    else AchievementsScreenTestTags.BACK_BUTTON),
-            onClick = { if (isUserOwner) onNotificationsClick() else onGoBack() },
+            modifier = Modifier.testTag(AchievementsScreenTestTags.BACK_BUTTON),
+            onClick = { onGoBack() },
         ) {
           Icon(
-              imageVector =
-                  if (isUserOwner) Icons.Default.Notifications
-                  else Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription =
-                  if (isUserOwner) context.getString(R.string.notifications)
-                  else context.getString(R.string.back),
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = context.getString(R.string.back),
               tint = colorScheme.onBackground,
           )
-        }
-      },
-      actions = {
-        if (isUserOwner) {
-          IconButton(
-              onClick = { onProfileClick() },
-              modifier = Modifier.testTag(AchievementsScreenTestTags.PROFILE_BUTTON),
-          ) {
-            AsyncImage(
-                model = userProfilePictureURL,
-                contentDescription = context.getString(R.string.profile_picture),
-                modifier =
-                    Modifier.size(40.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, colorScheme.primary, CircleShape),
-                contentScale = ContentScale.Crop,
-            )
-          }
         }
       },
   )

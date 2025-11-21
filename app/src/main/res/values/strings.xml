@@ -75,7 +75,6 @@
     <string name="unlocked_achievements">Unlocked</string>
     <string name="to_discover">To discover</string>
     <string name="back">Back</string>
-    <string name="profile_picture">Profile picture</string>
 
     <!-- Camera screen -->
     <string name="camera_permission_msg_1">We promise not to take selfies. Just animals.</string>

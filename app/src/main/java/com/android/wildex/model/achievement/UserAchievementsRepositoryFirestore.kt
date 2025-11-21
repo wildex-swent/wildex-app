@@ -2,7 +2,6 @@ package com.android.wildex.model.achievement
 
 import com.android.wildex.model.user.UserAchievements
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
@@ -46,20 +45,15 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     return Achievements.ALL
   }
 
-  override suspend fun updateUserAchievements(userId: Id, inputs: Input) {
+  override suspend fun updateUserAchievements(userId: Id) {
     val docRef = db.collection(USER_ACHIEVEMENTS_COLLECTION_PATH).document(userId)
     val doc = docRef.get().await()
     require(doc.exists())
 
     val ua = doc.toObject(UserAchievements::class.java) ?: throw IllegalArgumentException()
 
-    if (inputs.isEmpty() || inputs.values.all { it.isEmpty() }) return
-
     val updated =
-        Achievements.ALL.filter {
-              it.expects.all { key -> inputs.containsKey(key) } && it.condition(inputs)
-            }
-            .map { it.achievementId }
+        Achievements.ALL.mapNotNull { if (it.condition(userId)) it.achievementId else null }
 
     if (updated.toSet() != ua.achievementsId.toSet()) {
       docRef.set(ua.copy(achievementsId = updated, achievementsCount = updated.size)).await()

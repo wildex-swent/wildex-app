@@ -258,6 +258,7 @@ dependencies {
   implementation(libs.camera.compose)
   implementation(libs.camera.camera2)
   implementation(libs.camera.lifecycle)
+  implementation(libs.guava)
 
   // Lottie
   implementation(libs.lottie.compose)

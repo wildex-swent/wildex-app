@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -49,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -62,12 +59,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags.testTagForProfilePicture
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 object PostDetailsScreenTestTags {
   fun testTagForProfilePicture(profileId: String, role: String = ""): String {
@@ -105,6 +104,7 @@ fun PostDetailsScreen(
         CommentInput(
             userId = uiState.currentUserId,
             userProfilePictureURL = uiState.currentUserProfilePictureURL,
+            userUserType = uiState.currentUserUserType,
             onProfile = onProfile,
             postDetailsScreenViewModel = postDetailsScreenViewModel,
         )
@@ -156,6 +156,7 @@ fun PostDetailsScreen(
                         authorId = uiState.authorId,
                         authorProfilePictureURL = uiState.authorProfilePictureURL,
                         authorUserName = uiState.authorUsername,
+                        authorUserType = uiState.currentUserUserType,
                         animalName = uiState.animalName,
                         date = uiState.date,
                         onProfile = onProfile,
@@ -248,6 +249,7 @@ fun PostInfoBar(
     authorId: Id = "",
     authorProfilePictureURL: URL = "",
     authorUserName: String = "",
+    authorUserType: UserType = UserType.REGULAR,
     animalName: Id = "",
     date: String = "",
     onProfile: (Id) -> Unit = {},
@@ -258,10 +260,12 @@ fun PostInfoBar(
       verticalAlignment = Alignment.CenterVertically,
   ) {
     ClickableProfilePicture(
-        modifier = Modifier.size(48.dp),
+        modifier =
+            Modifier.size(48.dp)
+                .testTag(testTagForProfilePicture(profileId = authorId, role = "author")),
         profileId = authorId,
         profilePictureURL = authorProfilePictureURL,
-        role = "author",
+        profileUserType = authorUserType,
         onProfile = onProfile,
     )
 
@@ -384,10 +388,13 @@ fun Comment(
   ) {
     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.Top) {
       ClickableProfilePicture(
-          modifier = Modifier.fillMaxHeight(),
+          modifier =
+              Modifier.size(44.dp)
+                  .testTag(
+                      testTagForProfilePicture(profileId = commentUI.authorId, role = "commenter")),
           profileId = commentUI.authorId,
           profilePictureURL = commentUI.authorProfilePictureUrl,
-          role = "commenter",
+          profileUserType = commentUI.authorUserType,
           onProfile = onProfile,
       )
 
@@ -424,6 +431,7 @@ fun Comment(
 fun CommentInput(
     userId: Id = "",
     userProfilePictureURL: URL = "",
+    userUserType: UserType = UserType.REGULAR,
     onProfile: (Id) -> Unit = {},
     postDetailsScreenViewModel: PostDetailsScreenViewModel,
 ) {
@@ -442,10 +450,13 @@ fun CommentInput(
             verticalAlignment = Alignment.CenterVertically,
         ) {
           ClickableProfilePicture(
-              modifier = Modifier.size(44.dp),
+              modifier =
+                  Modifier.size(44.dp)
+                      .testTag(
+                          testTagForProfilePicture(profileId = userId, role = "comment_input")),
               profileId = userId,
               profilePictureURL = userProfilePictureURL,
-              role = "comment_input",
+              profileUserType = userUserType,
               onProfile = onProfile,
           )
 
@@ -478,28 +489,6 @@ fun CommentInput(
           )
         }
       }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ClickableProfilePicture(
-    modifier: Modifier = Modifier,
-    profileId: String = "",
-    profilePictureURL: URL = "",
-    role: String = "",
-    onProfile: (Id) -> Unit = {},
-) {
-  IconButton(
-      onClick = { onProfile(profileId) },
-      modifier = modifier.testTag(testTagForProfilePicture(profileId, role)),
-  ) {
-    AsyncImage(
-        model = profilePictureURL,
-        contentDescription = "Profile picture",
-        modifier = Modifier.clip(CircleShape).border(1.dp, colorScheme.primary, CircleShape),
-        contentScale = ContentScale.Crop,
-    )
-  }
 }
 
 private fun String.startsWithVowel(): Boolean {

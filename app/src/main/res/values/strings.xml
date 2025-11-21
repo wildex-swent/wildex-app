@@ -63,6 +63,7 @@
 
     <!-- Notification screen -->
     <string name="notification_title">Notifications</string>
+    <string name="no_notifications">No notifications yet.</string>
 
     <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>

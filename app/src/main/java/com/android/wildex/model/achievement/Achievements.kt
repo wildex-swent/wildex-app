@@ -1,11 +1,17 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
+import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.utils.Id
 
 object Achievements {
   private val likeRepository: LikeRepository = RepositoryProvider.likeRepository
+  private val postRepository: PostsRepository = RepositoryProvider.postRepository
+  private val commentRepository: CommentRepository = RepositoryProvider.commentRepository
+
+  // ---------- Achievements ----------
 
   // ─────────────────────────────────────────────────────────────────────────────
   // INPUT CONVENTIONS
@@ -23,11 +29,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.size >= 10
-          },
+          condition = { userId -> postRepository.getAllPostsByGivenAuthor(userId).size >= 10 },
       )
 
   /**
@@ -40,11 +42,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "Like 50 posts",
           name = "Social Butterfly",
-          expects = setOf(InputKey.LIKE_IDS),
-          condition = { inputs ->
-            val likedPostIds = inputs[InputKey.LIKE_IDS].orEmpty()
-            countDistinctLikedPostsVerified(likedPostIds) >= 50
-          },
+          condition = { userId -> likeRepository.getAllLikesByUser(userId).size >= 50 },
       )
 
   /** Community Builder — awarded for writing at least 20 comments. */
@@ -54,11 +52,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 20
-          },
+          condition = { userId -> commentRepository.getCommentsByUser(userId).size >= 20 },
       )
 
   /** Influencer — awarded for receiving a total of 1000 likes across all posts. */
@@ -68,10 +62,8 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            sumLikesAcrossPosts(postIds) >= 1000
+          condition = { userId ->
+            postRepository.getAllPostsByGivenAuthor(userId).sumOf { it.likesCount } >= 1000
           },
       )
 
@@ -82,11 +74,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.isNotEmpty()
-          },
+          condition = { userId -> postRepository.getAllPostsByGivenAuthor(userId).isNotEmpty() },
       )
 
   /** Rising Star — awarded for a post that reaches at least 100 likes. */
@@ -96,10 +84,8 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616490.png",
           description = "Get 100 likes on a single post",
           name = "Rising Star",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            hasPostWithAtLeastLikes(postIds, 100)
+          condition = { userId ->
+            postRepository.getAllPostsByGivenAuthor(userId).any { it.likesCount >= 100 }
           },
       )
 
@@ -110,11 +96,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 50
-          },
+          condition = { userId -> commentRepository.getCommentsByUser(userId).size >= 50 },
       )
 
   /**
@@ -129,45 +111,11 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4144/4144723.png",
           description = "Be active across Wildex: post, like, and comment regularly",
           name = "Engaged Creator",
-          expects = setOf(InputKey.POST_IDS, InputKey.LIKE_IDS, InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            val likedPostIds = inputs[InputKey.LIKE_IDS].orEmpty()
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-
-            val postsOk = postIds.size >= 5
-            val likesOk = countDistinctLikedPostsVerified(likedPostIds) >= 10
-            val commentsOk = commentIds.size >= 10
-
+          condition = { userId ->
+            val postsOk = postRepository.getAllPostsByGivenAuthor(userId).size >= 5
+            val likesOk = likeRepository.getAllLikesByUser(userId).size >= 10
+            val commentsOk = commentRepository.getCommentsByUser(userId).size >= 10
             postsOk && likesOk && commentsOk
-          },
-      )
-
-  /** Mock Achievement 1 — used for repository testing. */
-  val mockAchievement1 =
-      Achievement(
-          achievementId = "mockPostId",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f41b.svg",
-          description = "This is a mock achievement for testing purposes",
-          name = "Mock Achievement",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 1 && testIds[0] == "mockPostId"
-          },
-      )
-
-  /** Mock Achievement 2 — used for repository testing. */
-  val mockAchievement2 =
-      Achievement(
-          achievementId = "mockPostId2",
-          pictureURL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1fab2.svg",
-          description = "This is another mock achievement for testing purposes",
-          name = "Mock Achievement 2",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 2
           },
       )
 
@@ -175,8 +123,6 @@ object Achievements {
 
   val ALL =
       listOf(
-          mockAchievement1,
-          mockAchievement2,
           postMaster,
           socialButterfly,
           communityBuilder,
@@ -188,40 +134,4 @@ object Achievements {
       )
 
   val achievementById: Map<Id, Achievement> = ALL.associateBy { it.achievementId }
-
-  // ---------- Focused helpers ----------
-
-  /** Sums likes received across all posts. */
-  private suspend fun sumLikesAcrossPosts(postIds: List<Id>): Int {
-    var total = 0
-    for (pid in postIds) {
-      total += likeRepository.getLikesForPost(pid).size
-      if (total >= 1000) return total
-    }
-    return total
-  }
-
-  /** Returns true if any post has at least [threshold] likes. */
-  private suspend fun hasPostWithAtLeastLikes(postIds: List<Id>, threshold: Int): Boolean {
-    for (pid in postIds) {
-      if (likeRepository.getLikesForPost(pid).size >= threshold) return true
-    }
-    return false
-  }
-
-  /**
-   * Verifies that each post ID provided in LIKE_IDS was actually liked by the current user, based
-   * on LikeRepository.getLikeForPost(postId). Counts distinct verified post IDs.
-   */
-  private suspend fun countDistinctLikedPostsVerified(
-      likedPostIds: List<Id>,
-  ): Int {
-    val verified = HashSet<Id>()
-    for (pid in likedPostIds) {
-      val like = likeRepository.getLikeForPost(pid)
-      if (like != null) verified += pid
-      if (verified.size >= 50) return verified.size
-    }
-    return verified.size
-  }
 }

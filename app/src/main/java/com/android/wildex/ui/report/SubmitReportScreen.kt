@@ -128,6 +128,7 @@ fun SubmitReportScreen(
                 showCamera = false
                 imagePickerLauncher.launch("image/*")
               },
+              modifier = Modifier,
           )
         }
         showCamera && !hasCameraPermission -> {

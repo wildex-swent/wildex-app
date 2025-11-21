@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class ColorPaletteTest {
+class ColorTest {
 
   @Test
   fun testLightThemeColors() {

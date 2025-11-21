@@ -138,7 +138,6 @@
     <string name="report_details_unself_assign_third">Unassign</string>
     <string name="report_details_actions_dismiss">No, keep it</string>
     <string name="report_details_button_delete">Delete</string>
-    <string name="report_details_button_cancel">Cancel</string>
     <string name="report_details_navigate">Navigate to report</string>
     <string name="report_details_google_maps">Open in Google Maps</string>
     <string name="report_details_copy">Copy location</string>

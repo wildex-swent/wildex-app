@@ -164,7 +164,7 @@ fun ReportDetailsActionRow(
                     ),
             )
             ReportActionButton(
-                text = context.getString(R.string.report_details_button_cancel),
+                text = context.getString(R.string.cancel_self_assigned_report),
                 onClick = onUnSelfAssign,
                 isActionInProgress = isActionInProgress,
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_UNSELFASSIGN),

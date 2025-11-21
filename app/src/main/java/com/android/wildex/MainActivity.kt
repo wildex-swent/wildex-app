@@ -157,7 +157,7 @@ private fun NavGraphBuilder.achievementsComposable(navigationActions: Navigation
   composable(Screen.Achievements.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
-      AchievementsScreen(onGoBack = { navigationActions.goBack() })
+      AchievementsScreen(onGoBack = { navigationActions.goBack() }, userId = userId)
     }
   }
 }

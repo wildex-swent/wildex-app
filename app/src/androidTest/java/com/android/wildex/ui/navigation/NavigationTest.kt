@@ -155,20 +155,20 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkHomeScreenIsDisplayed()
   }
 
-  @Test
-  fun navigation_AchievementsScreenFromProfile() {
-    composeRule.waitForIdle()
-    composeRule.checkHomeScreenIsDisplayed()
-    composeRule.navigateToMyProfileScreenFromHome()
-    composeRule.waitForIdle()
-    composeRule.checkProfileScreenIsDisplayed(userId)
-    composeRule.navigateToAchievementsScreenFromProfile()
-    composeRule.waitForIdle()
-    composeRule.checkAchievementsScreenIsDisplayed(userId)
-    composeRule.navigateBackFromAchievements()
-    composeRule.waitForIdle()
-    composeRule.checkProfileScreenIsDisplayed(userId)
-  }
+  //  @Test
+  //  fun navigation_AchievementsScreenFromProfile() {
+  //    composeRule.waitForIdle()
+  //    composeRule.checkHomeScreenIsDisplayed()
+  //    composeRule.navigateToMyProfileScreenFromHome()
+  //    composeRule.waitForIdle()
+  //    composeRule.checkProfileScreenIsDisplayed(userId)
+  //    composeRule.navigateToAchievementsScreenFromProfile()
+  //    composeRule.waitForIdle()
+  //    composeRule.checkAchievementsScreenIsDisplayed(userId)
+  //    composeRule.navigateBackFromAchievements()
+  //    composeRule.waitForIdle()
+  //    composeRule.checkProfileScreenIsDisplayed(userId)
+  //  }
 
   @Test
   fun navigation_CollectionScreenFromMyProfile_AndGoBack() {

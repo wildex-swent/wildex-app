@@ -9,9 +9,8 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.Taxonomy
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.RelationshipRepository
-import com.android.wildex.model.relationship.StatusEnum
+import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -363,52 +362,41 @@ object LocalRepositories {
     }
   }
 
-  open class RelationshipRepositoryImpl() : RelationshipRepository, ClearableRepository {
+  open class FriendRequestRepositoryImpl() : FriendRequestRepository, ClearableRepository {
 
-    val listOfRelationships = mutableListOf<Relationship>()
+    val listOfFriendRequest = mutableListOf<FriendRequest>()
 
     init {
       clear()
     }
 
-    override suspend fun initializeRelationship(senderId: Id, receiverId: Id) {
-      listOfRelationships.add(Relationship(senderId, receiverId, StatusEnum.PENDING))
+    override suspend fun initializeFriendRequest(senderId: Id, receiverId: Id) {
+      listOfFriendRequest.add(FriendRequest(senderId, receiverId))
     }
 
-    override suspend fun getAllPendingRelationshipsBySender(senderId: Id): List<Relationship> {
-      return listOfRelationships.filter {
-        it.senderId == senderId && it.status == StatusEnum.PENDING
-      }
+    override suspend fun getAllFriendRequestsBySender(senderId: Id): List<FriendRequest> {
+      return listOfFriendRequest.filter { it.senderId == senderId }
     }
 
-    override suspend fun getAllPendingRelationshipsByReceiver(receiverId: Id): List<Relationship> {
-      return listOfRelationships.filter {
-        it.receiverId == receiverId && it.status == StatusEnum.PENDING
-      }
+    override suspend fun getAllFriendRequestsByReceiver(receiverId: Id): List<FriendRequest> {
+      return listOfFriendRequest.filter { it.receiverId == receiverId }
     }
 
-    override suspend fun getAllAcceptedRelationshipsByUser(userId: Id): List<Relationship> {
-      return listOfRelationships.filter {
-        (it.receiverId == userId || it.senderId == userId) && it.status == StatusEnum.ACCEPTED
-      }
+    override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
+      listOfFriendRequest.remove(friendRequest)
     }
 
-    override suspend fun acceptRelationship(relationship: Relationship) {
-      val pendingRelationship = listOfRelationships.find { it == relationship }
-      if (pendingRelationship != null) {
-        listOfRelationships.remove(pendingRelationship)
-        listOfRelationships.add(relationship.copy(status = StatusEnum.ACCEPTED))
-      } else {
-        throw Exception("Relationship not found")
-      }
+    override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {
+      listOfFriendRequest.remove(friendRequest)
     }
 
-    override suspend fun deleteRelationship(relationship: Relationship) {
-      listOfRelationships.remove(relationship)
+    override suspend fun deleteAllFriendRequestsOfUser(userId: Id) {
+      getAllFriendRequestsBySender(userId).forEach { refuseFriendRequest(it) }
+      getAllFriendRequestsByReceiver(userId).forEach { refuseFriendRequest(it) }
     }
 
     override fun clear() {
-      listOfRelationships.clear()
+      listOfFriendRequest.clear()
     }
   }
 
@@ -580,7 +568,7 @@ object LocalRepositories {
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val userFriendsRepository: UserFriendsRepository = UserFriendsRepositoryImpl()
-  val relationshipRepository: RelationshipRepository = RelationshipRepositoryImpl()
+  val friendRequestRepository: FriendRequestRepository = FriendRequestRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -594,7 +582,7 @@ object LocalRepositories {
     (reportRepository as ClearableRepository).clear()
     (storageRepository as ClearableRepository).clear()
     (userFriendsRepository as ClearableRepository).clear()
-    (relationshipRepository as ClearableRepository).clear()
+    (friendRequestRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

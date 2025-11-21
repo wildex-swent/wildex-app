@@ -20,13 +20,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.LocalRepositories
@@ -100,9 +98,6 @@ class ProfileScreenTest {
       achRepo: UserAchievementsRepository,
   ): UpdateUserAchievementsUseCase =
       UpdateUserAchievementsUseCase(
-          postsRepository = LocalRepositories.postsRepository,
-          likeRepository = LocalRepositories.likeRepository,
-          commentRepository = LocalRepositories.commentRepository,
           userAchievementsRepository = achRepo,
           io = Dispatchers.Unconfined,
       )
@@ -115,7 +110,6 @@ class ProfileScreenTest {
             name = "A$i",
             pictureURL = "url$i",
             description = "",
-            expects = setOf(InputKey.POST_IDS),
             condition = { true },
         )
       }
@@ -129,7 +123,7 @@ class ProfileScreenTest {
 
     override suspend fun getAllAchievements(): List<Achievement> = achievements
 
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
+    override suspend fun updateUserAchievements(userId: String) {}
 
     override suspend fun initializeUserAchievements(userId: String) {}
 

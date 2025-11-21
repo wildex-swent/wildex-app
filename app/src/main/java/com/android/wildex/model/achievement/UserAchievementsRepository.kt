@@ -1,7 +1,6 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 
 /** Represents a repository that manages Achievement items. */
 interface UserAchievementsRepository {
@@ -42,10 +41,8 @@ interface UserAchievementsRepository {
    * comments), this function will update their achievements to reflect that.
    *
    * @param userId The unique identifier of the user whose achievements are to be updated.
-   * @param inputs A map where keys are input types and values are lists of IDs associated with
-   *   those input types.
    */
-  suspend fun updateUserAchievements(userId: String, inputs: Input)
+  suspend fun updateUserAchievements(userId: String)
 
   /**
    * get achievement count of the user

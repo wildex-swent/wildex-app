@@ -32,7 +32,6 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
 import kotlin.coroutines.CoroutineContext
@@ -433,7 +432,7 @@ object LocalRepositories {
       return mapUserToAchievements.values.flatten().distinct()
     }
 
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {
+    override suspend fun updateUserAchievements(userId: String) {
       // Not needed for tests
     }
 

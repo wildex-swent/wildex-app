@@ -1,6 +1,5 @@
 package com.android.wildex.model.achievement
 
-import com.android.wildex.model.utils.Condition
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 
@@ -19,8 +18,7 @@ data class Achievement(
     val pictureURL: URL,
     val description: String,
     val name: String,
-    val expects: Set<InputKey>,
-    val condition: Condition = { false },
+    val condition: suspend (Id) -> Boolean = { false },
 )
 
 /** Indicates the type of input key used to evaluate achievement conditions. */

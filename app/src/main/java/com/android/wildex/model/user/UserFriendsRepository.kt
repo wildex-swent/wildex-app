@@ -9,7 +9,7 @@ interface UserFriendsRepository {
   suspend fun initializeUserFriends(userId: Id)
 
   /** Retrieves UserFriends associated with a specific User. */
-  suspend fun getAllFriendsOfUser(userId: Id): List<Id>
+  suspend fun getAllFriendsOfUser(userId: Id): List<User>
 
   /** Get UserFriends count of a specific User. */
   suspend fun getFriendsCountOfUser(userId: Id): Int

@@ -330,8 +330,9 @@ object LocalRepositories {
       mapUserToFriends[userId] = UserFriends(userId)
     }
 
-    override suspend fun getAllFriendsOfUser(userId: Id): List<Id> {
-      return mapUserToFriends[userId]?.friendsId ?: throw Exception("User not found")
+    override suspend fun getAllFriendsOfUser(userId: Id): List<User> {
+      return mapUserToFriends[userId]?.friendsId?.map { userRepository.getUser(it) }
+          ?: throw Exception("User not found")
     }
 
     override suspend fun getFriendsCountOfUser(userId: Id): Int {

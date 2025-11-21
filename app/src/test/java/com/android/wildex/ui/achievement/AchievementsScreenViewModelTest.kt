@@ -94,7 +94,6 @@ class AchievementsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val u2 =
@@ -109,7 +108,6 @@ class AchievementsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val su1 =

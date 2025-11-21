@@ -98,7 +98,6 @@ class AchievementsScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val unlockedAchievement = listOf(postMaster, communityBuilder, firstPost)

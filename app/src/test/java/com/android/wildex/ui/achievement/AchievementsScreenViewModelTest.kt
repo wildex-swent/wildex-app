@@ -1,7 +1,6 @@
 package com.android.wildex.ui.achievement
 
 import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -33,11 +32,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.size >= 10
-          },
       )
 
   private val communityBuilder =
@@ -46,11 +40,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 20
-          },
       )
 
   private val firstPost =
@@ -59,11 +48,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.isNotEmpty()
-          },
       )
 
   private val conversationalist =
@@ -72,11 +56,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 50
-          },
       )
 
   private val mockAchievement1 =
@@ -85,11 +64,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "This is a mock achievement for testing purposes",
           name = "Mock Achievement",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 1 && testIds[0] == "mockPostId"
-          },
       )
 
   private val mockAchievement2 =
@@ -98,11 +72,6 @@ class AchievementsScreenViewModelTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 2
-          },
       )
 
   private val dummyUnlocked = listOf(postMaster, communityBuilder, firstPost)

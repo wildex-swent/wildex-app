@@ -8,8 +8,9 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
-import com.android.wildex.model.animaldetector.BoundingBox
 import com.android.wildex.model.animaldetector.Taxonomy
+import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -24,13 +25,15 @@ import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriends
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
+import kotlin.coroutines.CoroutineContext
 
 interface ClearableRepository {
   fun clear()
@@ -174,13 +177,17 @@ object LocalRepositories {
 
     override suspend fun getUser(userId: Id): User = listOfUsers.find { it.userId == userId }!!
 
+    override suspend fun getAllUsers(): List<User> {
+      return listOfUsers
+    }
+
     override suspend fun getSimpleUser(userId: Id): SimpleUser {
       val user = listOfUsers.find { it.userId == userId }!!
       return SimpleUser(
           userId = user.userId,
           username = user.username,
           profilePictureURL = user.profilePictureURL,
-      )
+          userType = user.userType)
     }
 
     override suspend fun addUser(user: User) {
@@ -311,6 +318,88 @@ object LocalRepositories {
     }
   }
 
+  open class UserFriendsRepositoryImpl() : UserFriendsRepository, ClearableRepository {
+    val mapUserToFriends = mutableMapOf<Id, UserFriends>()
+
+    init {
+      clear()
+    }
+
+    override suspend fun initializeUserFriends(userId: Id) {
+      mapUserToFriends[userId] = UserFriends(userId)
+    }
+
+    override suspend fun getAllFriendsOfUser(userId: Id): List<Id> {
+      return mapUserToFriends[userId]?.friendsId ?: throw Exception("User not found")
+    }
+
+    override suspend fun getFriendsCountOfUser(userId: Id): Int {
+      return mapUserToFriends[userId]?.friendsCount ?: throw Exception("User not found")
+    }
+
+    override suspend fun addFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
+      val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
+      mapUserToFriends[userId] =
+          userFriends.copy(
+              friendsId = userFriends.friendsId + friendId,
+              friendsCount = userFriends.friendsCount + 1)
+    }
+
+    override suspend fun deleteFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
+      val userFriends = mapUserToFriends[userId] ?: throw Exception("User not found")
+      mapUserToFriends[userId] =
+          userFriends.copy(
+              friendsId = userFriends.friendsId.filter { it != friendId },
+              friendsCount = userFriends.friendsCount - 1)
+    }
+
+    override suspend fun deleteUserFriendsOfUser(userId: Id) {
+      mapUserToFriends.remove(userId)
+    }
+
+    override fun clear() {
+      mapUserToFriends.clear()
+    }
+  }
+
+  open class FriendRequestRepositoryImpl() : FriendRequestRepository, ClearableRepository {
+
+    val listOfFriendRequest = mutableListOf<FriendRequest>()
+
+    init {
+      clear()
+    }
+
+    override suspend fun initializeFriendRequest(senderId: Id, receiverId: Id) {
+      listOfFriendRequest.add(FriendRequest(senderId, receiverId))
+    }
+
+    override suspend fun getAllFriendRequestsBySender(senderId: Id): List<FriendRequest> {
+      return listOfFriendRequest.filter { it.senderId == senderId }
+    }
+
+    override suspend fun getAllFriendRequestsByReceiver(receiverId: Id): List<FriendRequest> {
+      return listOfFriendRequest.filter { it.receiverId == receiverId }
+    }
+
+    override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
+      listOfFriendRequest.remove(friendRequest)
+    }
+
+    override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {
+      listOfFriendRequest.remove(friendRequest)
+    }
+
+    override suspend fun deleteAllFriendRequestsOfUser(userId: Id) {
+      getAllFriendRequestsBySender(userId).forEach { refuseFriendRequest(it) }
+      getAllFriendRequestsByReceiver(userId).forEach { refuseFriendRequest(it) }
+    }
+
+    override fun clear() {
+      listOfFriendRequest.clear()
+    }
+  }
+
   open class UserAchievementsRepositoryImpl() : UserAchievementsRepository, ClearableRepository {
     val mapUserToAchievements = mutableMapOf<Id, List<Achievement>>()
 
@@ -331,7 +420,7 @@ object LocalRepositories {
       return mapUserToAchievements.values.flatten().distinct()
     }
 
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {
+    override suspend fun updateUserAchievements(userId: String) {
       // Not needed for tests
     }
 
@@ -436,12 +525,12 @@ object LocalRepositories {
     override suspend fun detectAnimal(
         context: Context,
         imageUri: Uri,
+        coroutineContext: CoroutineContext
     ): List<AnimalDetectResponse> {
       return listOf(
           AnimalDetectResponse(
               "default animal",
               0.9f,
-              BoundingBox(0f, 0f, 0f, 0f),
               Taxonomy(
                   "animalId",
                   "animalClass",
@@ -453,9 +542,17 @@ object LocalRepositories {
           ))
     }
 
-    override suspend fun getAnimalDescription(animalName: String): String? {
+    override suspend fun getAnimalDescription(
+        animalName: String,
+        coroutineContext: CoroutineContext
+    ): String {
       return "This is a default animal"
     }
+
+    override suspend fun getAnimalPicture(
+        animalName: String,
+        coroutineContext: CoroutineContext
+    ): URL = "imageUrl:$animalName"
   }
 
   val postsRepository: PostsRepository = PostsRepositoryImpl()
@@ -470,6 +567,8 @@ object LocalRepositories {
   val storageRepository: StorageRepository = StorageRepositoryImpl()
   val animalInfoRepository: AnimalInfoRepository = AnimalInfoRepositoryImpl()
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
+  val userFriendsRepository: UserFriendsRepository = UserFriendsRepositoryImpl()
+  val friendRequestRepository: FriendRequestRepository = FriendRequestRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -482,7 +581,8 @@ object LocalRepositories {
     (userAchievementsRepository as ClearableRepository).clear()
     (reportRepository as ClearableRepository).clear()
     (storageRepository as ClearableRepository).clear()
-    (userAchievementsRepository as ClearableRepository).clear()
+    (userFriendsRepository as ClearableRepository).clear()
+    (friendRequestRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

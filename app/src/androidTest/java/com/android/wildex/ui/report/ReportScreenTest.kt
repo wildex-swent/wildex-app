@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -69,8 +68,7 @@ class ReportScreenTest {
             profilePictureURL = "urlBob1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "USA",
-            friendsCount = 0)
+            country = "USA")
 
     val user2 =
         User(
@@ -82,8 +80,7 @@ class ReportScreenTest {
             profilePictureURL = "urlAlice1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "England",
-            friendsCount = 0)
+            country = "England")
 
     val user3 =
         User(
@@ -95,20 +92,11 @@ class ReportScreenTest {
             profilePictureURL = "urlCharlie3",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "Germany",
-            friendsCount = 0)
+            country = "Germany")
 
     userRepository.addUser(user1)
     userRepository.addUser(user2)
     userRepository.addUser(user3)
-
-    val simpleUser1 = SimpleUser(userId = "user1", username = "Bob1", profilePictureURL = "urlBob1")
-
-    val simpleUser2 =
-        SimpleUser(userId = "user2", username = "Alice2", profilePictureURL = "urlAlice2")
-
-    val simpleUser3 =
-        SimpleUser(userId = "user3", username = "Charlie3", profilePictureURL = "urlCharlie3")
 
     reportScreenViewModel =
         ReportScreenViewModel(

@@ -4,8 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -17,6 +24,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import io.mockk.*
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -24,7 +32,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class CameraScreenTest {
+class CameraScreenTestWithPermission {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @get:Rule
@@ -32,6 +40,7 @@ class CameraScreenTest {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_COARSE_LOCATION,
           Manifest.permission.ACCESS_FINE_LOCATION,
+          Manifest.permission.CAMERA,
       )
 
   private val postsRepository: PostsRepository = LocalRepositories.postsRepository
@@ -64,21 +73,74 @@ class CameraScreenTest {
   // ========== INITIAL SCREEN DISPLAY TESTS ==========
 
   @Test
-  fun cameraScreen_initialDisplay_onCameraPermission() {
+  fun cameraScreen_initialDisplay_onCameraPreview() {
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
-
-    composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN).assertIsNotDisplayed()
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN)
+        .assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN).assertIsDisplayed()
     composeTestRule.onNodeWithTag(CameraScreenTestTags.DETECTING_SCREEN).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(CameraScreenTestTags.POST_CREATION_SCREEN).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).assertIsNotDisplayed()
   }
 
-  // ========== PERMISSION SCREEN TESTS =========
+  // ========== PREVIEW SCREEN TESTS =========
   @Test
-  fun permissionScreen_canBeShown() {
+  fun previewScreen_canBeShown() {
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
-    assertPermissionScreenIsDisplayed()
+    composeTestRule.waitForIdle()
+    assertPreviewScreenIsDisplayed()
+  }
+
+  @Test
+  fun previewScreen_canUploadImage() {
+    val vm = spyk(viewModel)
+    val fakeUri = Uri.parse("content://fake/image.jpg")
+    val testRegistry =
+        object : ActivityResultRegistry() {
+          override fun <I, O> onLaunch(
+              requestCode: Int,
+              contract: ActivityResultContract<I, O>,
+              input: I,
+              options: ActivityOptionsCompat?,
+          ) {
+            dispatchResult(requestCode, fakeUri)
+          }
+        }
+    composeTestRule.setContent {
+      WithActivityResultRegistry(testRegistry) { CameraScreen(cameraScreenViewModel = vm) }
+    }
+    composeTestRule.waitForIdle()
+    assertPreviewScreenIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON)
+        .performClick()
+    composeTestRule.waitForIdle()
+
+    verify { vm.updateImageUri(fakeUri) }
+    verify { vm.detectAnimalImage(fakeUri, composeTestRule.activity) }
+  }
+
+  @Test
+  fun previewScreen_canSwitchAndCapture() {
+    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+        .performClick()
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+        .performClick()
+    // Can capture while switched
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+        .performClick()
+    // Can switch back
+    composeTestRule
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+        .performClick()
   }
 
   // ========== DETECTING SCREEN TESTS ==========
@@ -92,9 +154,10 @@ class CameraScreenTest {
           override suspend fun detectAnimal(
               context: Context,
               imageUri: Uri,
+              coroutineContext: CoroutineContext,
           ): List<AnimalDetectResponse> {
             fetchSignal.await()
-            return super.detectAnimal(context, imageUri)
+            return super.detectAnimal(context, imageUri, coroutineContext)
           }
         }
     val slowDetectVm =
@@ -108,6 +171,7 @@ class CameraScreenTest {
         )
     // Make detection slow so we can see the detecting screen
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowDetectVm) }
+    composeTestRule.waitForIdle()
     slowDetectVm.detectAnimalImage(mockUri, composeTestRule.activity)
     composeTestRule.waitForIdle()
     assertDetectingScreenIsDisplayed()
@@ -120,6 +184,7 @@ class CameraScreenTest {
   fun postCreationScreen_canBeShown() {
     val mockUri = mockk<Uri>()
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
@@ -129,6 +194,7 @@ class CameraScreenTest {
   fun postCreationScreen_inputsDescription() {
     val mockUri = mockk<Uri>()
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
@@ -143,6 +209,7 @@ class CameraScreenTest {
   fun postCreationScreen_inputsLocation() {
     val mockUri = mockk<Uri>()
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
@@ -180,6 +247,7 @@ class CameraScreenTest {
         )
     val mockUri = Uri.EMPTY
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowPostVm) }
+    composeTestRule.waitForIdle()
     slowPostVm.detectAnimalImage(mockUri, composeTestRule.activity)
     assertPostCreationScreenIsDisplayed()
     slowPostVm.createPost(composeTestRule.activity) {}
@@ -198,9 +266,10 @@ class CameraScreenTest {
           override suspend fun detectAnimal(
               context: Context,
               imageUri: Uri,
+              coroutineContext: CoroutineContext,
           ): List<AnimalDetectResponse> {
             fetchSignal.await()
-            return super.detectAnimal(context, imageUri)
+            return super.detectAnimal(context, imageUri, coroutineContext)
           }
         }
     val slowDetectVm =
@@ -214,7 +283,8 @@ class CameraScreenTest {
         )
     // Make detection slow so we can see the detecting screen
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowDetectVm) }
-    assertPermissionScreenIsDisplayed()
+    composeTestRule.waitForIdle()
+    assertPreviewScreenIsDisplayed()
     slowDetectVm.detectAnimalImage(mockUri, composeTestRule.activity)
     composeTestRule.waitForIdle()
     assertDetectingScreenIsDisplayed()
@@ -224,10 +294,11 @@ class CameraScreenTest {
   }
 
   @Test
-  fun cameraScreen_transition_fromPostCreationBackToCamera() {
+  fun cameraScreen_transition_fromPostCreationBackToCameraPreview() {
     val mockUri = mockk<Uri>()
-    runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.waitForIdle()
+    runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
     composeTestRule
@@ -235,7 +306,7 @@ class CameraScreenTest {
         .performScrollTo()
         .performClick()
     composeTestRule.waitForIdle()
-    assertPermissionScreenIsDisplayed()
+    assertPreviewScreenIsDisplayed()
   }
 
   // ========== ON POST CALLBACK TESTS ==========
@@ -247,6 +318,7 @@ class CameraScreenTest {
     composeTestRule.setContent {
       CameraScreen(cameraScreenViewModel = viewModel) { onPostCalled = true }
     }
+    composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
@@ -280,6 +352,7 @@ class CameraScreenTest {
     composeTestRule.setContent {
       CameraScreen(cameraScreenViewModel = slowPostVm, onPost = { onPostCalled = true })
     }
+    composeTestRule.waitForIdle()
     runBlocking { slowPostVm.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
@@ -350,21 +423,37 @@ class CameraScreenTest {
         .assertIsDisplayed()
   }
 
-  private fun assertPermissionScreenIsDisplayed() {
+  private fun assertPreviewScreenIsDisplayed() {
+    composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON)
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAMERA_VIEWFINDER)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1)
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2)
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_BUTTON)
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON)
+        .onNodeWithTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_ZOOM_VALUE)
         .assertIsDisplayed()
+  }
+
+  @Composable
+  private fun WithActivityResultRegistry(
+      activityResultRegistry: ActivityResultRegistry,
+      content: @Composable () -> Unit,
+  ) {
+    val activityResultRegistryOwner =
+        object : ActivityResultRegistryOwner {
+          override val activityResultRegistry = activityResultRegistry
+        }
+    CompositionLocalProvider(
+        LocalActivityResultRegistryOwner provides activityResultRegistryOwner) {
+          content()
+        }
   }
 }

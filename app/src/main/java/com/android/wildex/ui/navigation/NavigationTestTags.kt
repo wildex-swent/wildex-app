@@ -7,6 +7,19 @@ object NavigationTestTags {
   const val CAMERA_TAB = "CameraTab"
   const val COLLECTION_TAB = "CollectionTab"
   const val REPORT_TAB = "ReportTab"
+  const val SIGN_IN_SCREEN = "AuthScreen"
+  const val HOME_SCREEN = "HomeScreen"
+  const val MAP_SCREEN = "MapScreen"
+  const val CAMERA_SCREEN = "CameraScreen"
+  const val COLLECTION_SCREEN = "CollectionScreen"
+  const val REPORT_SCREEN = "ReportScreen"
+  const val ACHIEVEMENTS_SCREEN = "AchievementScreen"
+  const val ANIMAL_INFORMATION_SCREEN = "AnimalInformationScreen"
+  const val POST_DETAILS_SCREEN = "PostDetailScreen"
+  const val SETTINGS_SCREEN = "SettingsScreen"
+  const val PROFILE_SCREEN = "ProfileScreen"
+  const val EDIT_PROFILE_SCREEN = "EditProfileScreen"
+  const val SUBMIT_REPORT_SCREEN = "SubmitReportScreen"
 
   fun getTabTestTag(tab: Tab): String =
       when (tab) {

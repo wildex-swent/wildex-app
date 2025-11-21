@@ -14,6 +14,9 @@ interface UserRepository {
    */
   suspend fun getUser(userId: Id): User
 
+  /** Retrieves all users identifiers in the repository. */
+  suspend fun getAllUsers(): List<User>
+
   /**
    * Retrieves a simplified version of a user by their unique identifier.
    *

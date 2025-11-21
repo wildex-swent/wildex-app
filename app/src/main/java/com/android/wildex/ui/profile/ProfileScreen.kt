@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -58,7 +57,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,6 +72,8 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.badges.ProfessionalBadge
 import com.mapbox.geojson.Point
 
 object ProfileScreenTestTags {
@@ -128,7 +128,7 @@ fun ProfileScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.PROFILE_SCREEN),
       topBar = {
         ProfileTopBar(
             ownerProfile = uiState.isUserOwner,
@@ -201,7 +201,7 @@ fun ProfileContent(
             username = user.username,
             profilePicture = user.profilePictureURL,
             country = user.country,
-            isProfessional = user.userType == UserType.PROFESSIONAL,
+            userType = user.userType,
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -220,7 +220,6 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-              friendCount = user.friendsCount,
           )
         }
 
@@ -253,7 +252,7 @@ fun ProfileImageAndName(
     username: String = "Username",
     profilePicture: String = "",
     country: String = "Country",
-    isProfessional: Boolean = false,
+    userType: UserType = UserType.REGULAR,
 ) {
   val cs = colorScheme
   Row(
@@ -281,34 +280,14 @@ fun ProfileImageAndName(
         )
       }
 
-      if (isProfessional) {
-        val badgeSize = 34.dp
-
-        Box(
-            modifier =
-                Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp).size(badgeSize),
-            contentAlignment = Alignment.Center,
-        ) {
-          Icon(
-              imageVector = Icons.Filled.Pets,
-              contentDescription = "Professional badge",
-              tint = cs.tertiary,
-              modifier = Modifier.fillMaxSize(),
-          )
-
-          val density = LocalDensity.current
-
-          Icon(
-              imageVector = Icons.Rounded.Add,
-              contentDescription = null,
-              tint = Color.White,
-              modifier =
-                  Modifier.size(14.dp).align(Alignment.Center).graphicsLayer {
-                    translationY = with(density) { 6.dp.toPx() }
-                  },
-          )
-        }
-      }
+      Box(
+          modifier =
+              Modifier.align(Alignment.BottomEnd).fillMaxSize(0.45f).offset(x = 3.dp, y = 3.dp)) {
+            when (userType) {
+              UserType.REGULAR -> Unit
+              UserType.PROFESSIONAL -> ProfessionalBadge()
+            }
+          }
     }
 
     Spacer(modifier = Modifier.width(14.dp))

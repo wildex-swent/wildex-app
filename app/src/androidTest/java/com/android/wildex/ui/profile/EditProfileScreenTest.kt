@@ -9,22 +9,30 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class EditProfileScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
+
+  private lateinit var userRepository: UserRepository
 
   private fun sampleUser() =
       User(
@@ -37,14 +45,23 @@ class EditProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
-          friendsCount = 10,
       )
+
+  @Before
+  fun setup() {
+    userRepository = LocalRepositories.userRepository
+  }
+
+  @After
+  fun teardown() {
+    LocalRepositories.clearAll()
+  }
 
   @Test
   fun initialState_showsFields_andProfilePreview() {
-    val userRepo = LocalRepositories.UserRepositoryImpl()
-    runBlocking { userRepo.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+
+    runBlocking { userRepository.addUser(sampleUser()) }
+    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -63,9 +80,9 @@ class EditProfileScreenTest {
 
   @Test
   fun countryDropdown_opens_and_selects_country() {
-    val userRepo = LocalRepositories.UserRepositoryImpl()
-    runBlocking { userRepo.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+
+    runBlocking { userRepository.addUser(sampleUser()) }
+    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -77,7 +94,8 @@ class EditProfileScreenTest {
         .onNode(
             hasClickAction()
                 .and(hasAnyAncestor(hasTestTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY))),
-            useUnmergedTree = true)
+            useUnmergedTree = true,
+        )
         .performClick()
 
     val countryItemMatcher =
@@ -101,9 +119,9 @@ class EditProfileScreenTest {
 
   @Test
   fun changeProfileImage_updatesPreview() {
-    val userRepo = LocalRepositories.UserRepositoryImpl()
-    runBlocking { userRepo.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+
+    runBlocking { userRepository.addUser(sampleUser()) }
+    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm) }
     composeRule.waitForIdle()
@@ -116,9 +134,9 @@ class EditProfileScreenTest {
 
   @Test
   fun goBack_invokes_callback() {
-    val userRepo = LocalRepositories.UserRepositoryImpl()
-    runBlocking { userRepo.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+
+    runBlocking { userRepository.addUser(sampleUser()) }
+    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
 
     var back = 0
     composeRule.setContent {
@@ -130,11 +148,11 @@ class EditProfileScreenTest {
     Assert.assertEquals(1, back)
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun save_click_invokes_onSave_when_isNewUser_true() {
-    val userRepo = LocalRepositories.UserRepositoryImpl()
-    runBlocking { userRepo.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepo, currentUserId = "uid-1")
+    runBlocking { userRepository.addUser(sampleUser()) }
+    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
 
     vm.setName("Jane")
     vm.setSurname("Doe")
@@ -148,6 +166,9 @@ class EditProfileScreenTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE).performScrollTo().performClick()
+    composeRule.waitUntil {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     Assert.assertEquals(1, saved)
   }
 }

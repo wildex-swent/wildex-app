@@ -62,7 +62,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            friendsCount = 0,
         )
     val author =
         User(
@@ -76,7 +75,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "India",
-            friendsCount = 0,
         )
     val commenter1 =
         User(
@@ -90,7 +88,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            friendsCount = 0,
         )
     val commenter2 =
         User(
@@ -103,7 +100,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "UK",
-            friendsCount = 0,
         )
     val liker1 =
         User(
@@ -116,7 +112,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Canada",
-            friendsCount = 0,
         )
     val liker2 =
         User(
@@ -129,7 +124,6 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Australia",
-            friendsCount = 0,
         )
     userRepository.addUser(currentUser)
     userRepository.addUser(author)
@@ -296,14 +290,20 @@ class PostDetailsScreenTest {
     }
     composeRule.waitForIdle()
     // Click posters profile picture
-    composeRule.onNodeWithTag(testTagForProfilePicture("poster1", "author")).performClick()
+    composeRule
+        .onNodeWithTag(PostDetailsScreenTestTags.testTagForProfilePicture("poster1", "author"))
+        .performClick()
     Assert.assertEquals("poster1", profileClicked)
     // Click comment authors profile picture
-    composeRule.onNodeWithTag(testTagForProfilePicture("commenter1", "commenter")).performClick()
+    composeRule
+        .onNodeWithTag(
+            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
+        .performClick()
     Assert.assertEquals("commenter1", profileClicked)
     // Click current users profile picture in the comment input
     composeRule
-        .onNodeWithTag(testTagForProfilePicture("currentUserId-1", "comment_input"))
+        .onNodeWithTag(
+            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input"))
         .performClick()
     Assert.assertEquals("currentUserId-1", profileClicked)
   }

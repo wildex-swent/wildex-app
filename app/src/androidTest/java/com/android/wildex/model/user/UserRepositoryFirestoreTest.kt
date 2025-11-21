@@ -119,6 +119,23 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   }
 
   @Test
+  fun getAllUsersReturnsAllAddedUsers() = runTest {
+    repository.addUser(user1)
+    repository.addUser(user2)
+    repository.addUser(user3)
+
+    val allUsers = repository.getAllUsers()
+    assertEquals(3, allUsers.size)
+    assertTrue(allUsers.containsAll(listOf(user1, user2, user3)))
+  }
+
+  @Test
+  fun getAllUsersWhenNoUsersReturnsEmptyList() = runTest {
+    val allUsers = repository.getAllUsers()
+    assertTrue(allUsers.isEmpty())
+  }
+
+  @Test
   fun canEditAUserByID() = runTest {
     repository.addUser(user1)
     assertEquals(1, getUsersCount())
@@ -131,7 +148,6 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
             bio = "Modified bio",
             profilePictureURL = "modifiedUrl",
             country = "ModifiedCountry",
-            friendsCount = 42,
         )
 
     repository.editUser(user1.userId, modified)
@@ -181,6 +197,7 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
             userId = user1.userId,
             username = user1.username,
             profilePictureURL = user1.profilePictureURL,
+            userType = user1.userType,
         )
     assertEquals(expectedSimple, simple)
   }

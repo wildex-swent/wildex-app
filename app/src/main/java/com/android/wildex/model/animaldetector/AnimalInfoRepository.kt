@@ -2,9 +2,24 @@ package com.android.wildex.model.animaldetector
 
 import android.content.Context
 import android.net.Uri
+import com.android.wildex.model.utils.URL
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
 
 interface AnimalInfoRepository {
-  suspend fun detectAnimal(context: Context, imageUri: Uri): List<AnimalDetectResponse>
+  suspend fun detectAnimal(
+      context: Context,
+      imageUri: Uri,
+      coroutineContext: CoroutineContext = Dispatchers.IO,
+  ): List<AnimalDetectResponse>
 
-  suspend fun getAnimalDescription(animalName: String): String?
+  suspend fun getAnimalDescription(
+      animalName: String,
+      coroutineContext: CoroutineContext = Dispatchers.IO,
+  ): String
+
+  suspend fun getAnimalPicture(
+      animalName: String,
+      coroutineContext: CoroutineContext = Dispatchers.IO,
+  ): URL
 }

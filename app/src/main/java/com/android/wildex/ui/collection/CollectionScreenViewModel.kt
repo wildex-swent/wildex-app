@@ -7,6 +7,7 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
@@ -18,7 +19,11 @@ import kotlinx.coroutines.launch
 
 /** Default placeholder user used when no valid user is loaded. */
 private val defaultUser: SimpleUser =
-    SimpleUser(userId = "defaultUserId", username = "defaultUsername", profilePictureURL = "")
+    SimpleUser(
+        userId = "defaultUserId",
+        username = "defaultUsername",
+        profilePictureURL = "",
+        userType = UserType.REGULAR)
 
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,

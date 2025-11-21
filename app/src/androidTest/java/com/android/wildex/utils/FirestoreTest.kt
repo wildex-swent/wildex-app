@@ -2,8 +2,7 @@ package com.android.wildex.utils
 
 import android.util.Log
 import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.StatusEnum
+import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -127,7 +126,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
-          friendsCount = 2,
       )
 
   open val user2 =
@@ -141,7 +139,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
-          friendsCount = 3,
       )
 
   open val user3 =
@@ -155,7 +152,6 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
-          friendsCount = 0,
       )
 
   open val like1 = Like("like1", postId = post1.postId, userId = user1.userId)
@@ -220,13 +216,7 @@ open class FirestoreTest(val collectionPath: String) {
           authorId = "authorId2",
           assigneeId = "assigneeId2")
 
-  open val relationship1pending = Relationship(senderId = user1.userId, receiverId = user2.userId)
+  open val friendRequest1 = FriendRequest(senderId = user1.userId, receiverId = user2.userId)
 
-  open val relationship1accepted =
-      Relationship(senderId = user1.userId, receiverId = user2.userId, status = StatusEnum.ACCEPTED)
-
-  open val relationship2pending = Relationship(senderId = user3.userId, receiverId = user1.userId)
-
-  open val relationship2accepted =
-      Relationship(senderId = user3.userId, receiverId = user1.userId, status = StatusEnum.ACCEPTED)
+  open val friendRequest2 = FriendRequest(senderId = user3.userId, receiverId = user1.userId)
 }

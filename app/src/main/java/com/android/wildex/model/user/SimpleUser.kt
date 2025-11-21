@@ -9,5 +9,11 @@ import com.android.wildex.model.utils.URL
  * @property userId The unique identifier for the user.
  * @property username The username of the user.
  * @property profilePictureURL The URL of the user's profile picture.
+ * @property userType The type of the user.
  */
-data class SimpleUser(val userId: Id, val username: String, val profilePictureURL: URL)
+data class SimpleUser(
+    val userId: Id,
+    val username: String,
+    val profilePictureURL: URL,
+    val userType: UserType,
+)

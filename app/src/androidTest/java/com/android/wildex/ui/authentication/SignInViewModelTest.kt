@@ -40,7 +40,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -124,12 +123,10 @@ class SignInViewModelTest {
           response
       coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
 
-      viewModel.signIn(context, credentialManager)
+      viewModel.signIn(context, credentialManager) {}
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertEquals("", state.username)
-      assertTrue(state.isNewUser)
       assertFalse(state.isLoading)
       assertNull(state.errorMsg)
 
@@ -155,7 +152,6 @@ class SignInViewModelTest {
                 UserType.REGULAR,
                 Timestamp.now(),
                 "",
-                0,
             )
 
         userRepository.addUser(user)
@@ -178,12 +174,10 @@ class SignInViewModelTest {
           response
       coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
 
-      viewModel.signIn(context, credentialManager)
+      viewModel.signIn(context, credentialManager) {}
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertEquals("fake-username", state.username)
-      assertFalse(state.isNewUser)
       assertFalse(state.isLoading)
       assertNull(state.errorMsg)
 
@@ -196,11 +190,10 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialCancellationException("user canceled")
 
-    viewModel.signIn(context, credentialManager)
+    viewModel.signIn(context, credentialManager) {}
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertNull(state.username)
     assertFalse(state.isLoading)
     assertTrue(state.errorMsg?.contains("cancel", ignoreCase = true) == true)
   }
@@ -210,11 +203,10 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialUnknownException("bad credential")
 
-    viewModel.signIn(context, credentialManager)
+    viewModel.signIn(context, credentialManager) {}
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertNull(state.username)
     assertFalse(state.isLoading)
     assertTrue(state.errorMsg?.contains("Failed to get credentials") == true)
   }
@@ -230,11 +222,10 @@ class SignInViewModelTest {
     val fakeError = RuntimeException("auth failed")
     coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.failure(fakeError)
 
-    viewModel.signIn(context, credentialManager)
+    viewModel.signIn(context, credentialManager) {}
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertNull(state.username)
     assertFalse(state.isLoading)
     assertTrue(state.errorMsg?.contains("auth failed") == true)
   }
@@ -244,7 +235,7 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialUnknownException("test error")
 
-    viewModel.signIn(context, credentialManager)
+    viewModel.signIn(context, credentialManager) {}
     advanceUntilIdle()
 
     viewModel.clearErrorMsg()
@@ -258,11 +249,10 @@ class SignInViewModelTest {
       coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
           RuntimeException("unexpected crash")
 
-      viewModel.signIn(context, credentialManager)
+      viewModel.signIn(context, credentialManager) {}
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertNull(state.username)
       assertFalse(state.isLoading)
       assertTrue(state.errorMsg?.contains("Unexpected error") == true)
     }

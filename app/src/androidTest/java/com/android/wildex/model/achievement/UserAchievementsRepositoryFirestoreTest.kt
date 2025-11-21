@@ -1,140 +1,149 @@
 package com.android.wildex.model.achievement
 
+import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_COLLECTION_PATH) {
 
   private var repository = UserAchievementsRepositoryFirestore(FirebaseEmulator.firestore)
+  private val testUserId = "testUserId"
+
+  private suspend fun getUsersCount(): Int = super.getCount()
 
   @Before
   override fun setUp() {
     super.setUp()
+    runBlocking {
+      RepositoryProvider.userRepository.addUser(
+          User(
+              userId = testUserId,
+              username = "",
+              name = "",
+              surname = "",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = "",
+          ))
+      RepositoryProvider.userAnimalsRepository.initializeUserAnimals(testUserId)
+      RepositoryProvider.userSettingsRepository.initializeUserSettings(testUserId)
+    }
   }
-
-  @After
-  override fun tearDown() {
-    super.tearDown()
-  }
-
-  private suspend fun getUsersCount(): Int = super.getCount()
 
   @Test
   fun canInitializeUserAchievements() = runTest {
-    val userId = "testUserId"
-    repository.initializeUserAchievements(userId)
+    repository.initializeUserAchievements(testUserId)
     val count = getUsersCount()
     assertEquals(1, count)
   }
 
   @Test
   fun canInitializeUserAchievementsWhenUserExists() = runTest {
-    val userId = "testUserId"
-    repository.initializeUserAchievements(userId)
-    repository.initializeUserAchievements(userId)
+    repository.initializeUserAchievements(testUserId)
+    repository.initializeUserAchievements(testUserId)
     val count = getUsersCount()
     assertEquals(1, count)
   }
 
   @Test
   fun canRetrieveUserAchievements() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
+    repository.initializeUserAchievements(testUserId)
+    RepositoryProvider.postRepository.addPost(
+        Post(
+            postId = "post1",
+            authorId = testUserId,
+            pictureURL = "",
+            location = null,
+            description = "",
+            date = Timestamp.now(),
+            animalId = "",
+            likesCount = 0,
+            commentsCount = 0,
+        )) // For the firstPost achievement
+    repository.updateUserAchievements(testUserId)
 
-    val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
-
-    val achievements = repository.getAllAchievementsByUser(userId)
+    val achievements = repository.getAllAchievementsByUser(testUserId)
     assertTrue(achievements.isNotEmpty())
-    assertEquals(Achievements.ALL.find { it.achievementId == "mockPostId" }, achievements[0])
+    assertEquals(Achievements.ALL.find { it.achievementId == "achievement_5" }, achievements[0])
   }
 
   @Test
   fun canRetrieveAchievementsCount() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
+    repository.initializeUserAchievements(testUserId)
 
-    val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
+    RepositoryProvider.postRepository.addPost(
+        Post(
+            postId = "post1",
+            authorId = testUserId,
+            pictureURL = "",
+            location = null,
+            description = "",
+            date = Timestamp.now(),
+            animalId = "",
+            likesCount = 0,
+            commentsCount = 0,
+        )) // For the firstPost achievement
+    repository.updateUserAchievements(testUserId)
 
-    val count = repository.getAchievementsCountOfUser(userId)
+    val count = repository.getAchievementsCountOfUser(testUserId)
     assertEquals(1, count)
   }
 
   @Test
   fun updateUserAchievementsWhenNoChangesDoesNotUpdate() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
 
-    val initialAchievements = repository.getAllAchievementsByUser(userId)
+    // Setup
+    repository.initializeUserAchievements(testUserId)
+    RepositoryProvider.postRepository.addPost(
+        Post(
+            postId = "post1",
+            authorId = testUserId,
+            pictureURL = "",
+            location = null,
+            description = "",
+            date = Timestamp.now(),
+            animalId = "",
+            likesCount = 0,
+            commentsCount = 0,
+        )) // For the firstPost achievement
+    repository.updateUserAchievements(testUserId)
 
-    repository.updateUserAchievements(
-        userId, mapOf(InputKey.TEST_IDS to listOf("RandomIdThatDoesNotExist")))
+    val initialAchievements = repository.getAllAchievementsByUser(testUserId)
+    repository.updateUserAchievements(testUserId)
 
-    val updatedAchievements = repository.getAllAchievementsByUser(userId)
+    val updatedAchievements = repository.getAllAchievementsByUser(testUserId)
     assertEquals(initialAchievements, updatedAchievements)
   }
 
   @Test
   fun getAllAchievementsByUserWhenEmptyAchievementsReturnsEmptyList() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
-    val achievements = repository.getAllAchievementsByUser(userId)
+    repository.initializeUserAchievements(testUserId)
+    val achievements = repository.getAllAchievementsByUser(testUserId)
     assertTrue(achievements.isEmpty())
   }
 
   @Test
   fun updateUserAchievementsWhenUserNotFoundThrowsException() = runTest {
     val userId = "nonExistentUser"
-    val listIds = listOf("mockPostId")
 
-    val exception =
-        runCatching {
-              repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to listIds))
-            }
-            .exceptionOrNull()
+    val exception = runCatching { repository.updateUserAchievements(userId) }.exceptionOrNull()
 
     assertTrue(exception is IllegalArgumentException)
-  }
-
-  @Test
-  fun updateUserAchievementsWhenAchievementsConditionsMetUpdatesAchievements() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
-
-    val listIds = listOf("mockPostId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to listIds))
-
-    val achievements = repository.getAllAchievementsByUser(userId)
-    assertTrue(achievements.isNotEmpty())
-    assertEquals(Achievements.ALL.find { it.achievementId == "mockPostId" }, achievements[0])
-
-    val newListIds = listOf("mockPostId", "RandomId")
-    repository.updateUserAchievements(userId, mapOf(InputKey.TEST_IDS to newListIds))
-
-    val updatedAchievements = repository.getAllAchievementsByUser(userId)
-    assertEquals(1, updatedAchievements.size)
-    assertFalse(updatedAchievements.any { it.achievementId == "mockPostId" })
-    assertTrue(updatedAchievements.any { it.achievementId == "mockPostId2" })
-  }
-
-  @Test
-  fun updateUserAchievementsWhenEmptyListPassesWithoutError() = runTest {
-    val userId = "testUser"
-    repository.initializeUserAchievements(userId)
-    repository.updateUserAchievements(userId, mapOf(InputKey.POST_IDS to emptyList()))
-    val achievements = repository.getAllAchievementsByUser(userId)
-    assertTrue(achievements.isEmpty())
   }
 
   @Test
@@ -169,12 +178,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Test
   fun updateUserAchievementsWhenUserNotFoundThrowsIllegalArgumentException() = runTest {
     val userId = "nonExistentUser"
-    val exception =
-        runCatching {
-              repository.updateUserAchievements(
-                  userId, mapOf(InputKey.POST_IDS to listOf("mockPostId")))
-            }
-            .exceptionOrNull()
+    val exception = runCatching { repository.updateUserAchievements(userId) }.exceptionOrNull()
     assertTrue(exception is IllegalArgumentException)
   }
 
@@ -194,27 +198,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
 
     assertTrue(achievements.isEmpty())
     assertEquals(0, repository.getAchievementsCountOfUser(userId))
-  }
-
-  @Test
-  fun updateUserAchievements_returnsWhenInputsEmptyOrAllValuesEmpty() = runTest {
-    val userId1 = "testEmptyInputs"
-    val userId2 = "testAllValuesEmpty"
-
-    repository.initializeUserAchievements(userId1)
-    repository.initializeUserAchievements(userId2)
-
-    // --- Case 1: inputs.isEmpty() ---
-    repository.updateUserAchievements(userId1, emptyMap())
-
-    val achievements1 = repository.getAllAchievementsByUser(userId1)
-    assertTrue(achievements1.isEmpty())
-
-    // --- Case 2: inputs.values.all { it.isEmpty() } ---
-    repository.updateUserAchievements(userId2, mapOf(InputKey.POST_IDS to emptyList()))
-
-    val achievements2 = repository.getAllAchievementsByUser(userId2)
-    assertTrue(achievements2.isEmpty())
   }
 
   @Test

@@ -1,6 +1,7 @@
 package com.android.wildex.model.animaldetector
 
 import com.android.wildex.BuildConfig
+import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
@@ -10,17 +11,29 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
+class AnimalDescriptionTest : AnimalInfoRepositoryTest() {
 
-  override val urlPropName: String = "hfBaseurl"
+  override val urlPropName: String = "deepseekUrl"
 
   @Test
   fun `getAnimalDescription forms correct request`() = runTest {
-    mockWebServer.enqueue(MockResponse().setResponseCode(200))
+    val modelResponse =
+        """
+        {
+          "choices": [
+            {
+              "message": {
+                "content": "The lion is a large carnivorous feline, known as the king of the jungle."
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(modelResponse))
 
     repository.getAnimalDescription("animalName")
 
@@ -53,15 +66,15 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
   fun `getAnimalDescription returns expected content`() = runTest {
     val modelResponse =
         """
+        {
+          "choices": [
             {
-              "choices": [
-                {
-                  "message": {
-                    "content": "The lion is a large carnivorous feline, known as the king of the jungle."
-                  }
-                }
-              ]
+              "message": {
+                "content": "The lion is a large carnivorous feline, known as the king of the jungle."
+              }
             }
+          ]
+        }
         """
             .trimIndent()
 
@@ -78,83 +91,81 @@ class AnimalDescriptionTest : AnimalDetectRepositoryTest() {
     )
   }
 
-  @Test
-  fun `getAnimalDescription returns null on HTTP error`() = runTest {
+  @Test(expected = IOException::class)
+  fun `getAnimalDescription throws IOException on HTTP error`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(500))
 
-    val description = repository.getAnimalDescription("elephant")
-
-    assertNull(description)
+    repository.getAnimalDescription("elephant")
   }
 
-  @Test
-  fun `returns null if response body is null`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if response body is null`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if choices field missing`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if choices field missing`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if choices not an array`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if choices not an array`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":{}}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if choices array empty`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if choices array empty`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if first choice not object`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if first choice not object`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[123]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if message field missing`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if message field missing`() = runTest {
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("""{"choices":[{}]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if message not an object`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if message not an object`() = runTest {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"choices":[{"message":123}]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if content field missing`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if content field missing`() = runTest {
     mockWebServer.enqueue(
         MockResponse().setResponseCode(200).setBody("""{"choices":[{"message":{}}]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
-  @Test
-  fun `returns null if content is not a string`() = runTest {
+  @Test(expected = IOException::class)
+  fun `throws IOException if content is not a string`() = runTest {
     mockWebServer.enqueue(
         MockResponse()
             .setResponseCode(200)
             .setBody("""{"choices":[{"message":{"content":123}}]}"""))
-    assertNull(repository.getAnimalDescription("lion"))
+    repository.getAnimalDescription("lion")
   }
 
   @Test
   fun `returns cleaned content on valid response with think tags`() = runTest {
     val body =
         """
-            {
-              "choices":[
-                {"message":{"content":"<think>ignore</think>The lion is majestic."}}
-              ]
-            }
+        {
+          "choices":[
+            {"message":{"content":"<think>ignore</think>The lion is majestic."}}
+          ]
+        }
         """
             .trimIndent()
     mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(body))

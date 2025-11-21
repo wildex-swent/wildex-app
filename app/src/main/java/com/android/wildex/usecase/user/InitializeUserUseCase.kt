@@ -32,7 +32,7 @@ class InitializeUserUseCase(
    * @param userId user whose account we want to create
    */
   suspend operator fun invoke(userId: Id) {
-    val user = User(userId, "", "", "", "", "", UserType.REGULAR, Timestamp.now(), "", 0)
+    val user = User(userId, "", "", "", "", "", UserType.REGULAR, Timestamp.now(), "")
     userRepository.addUser(user)
     userSettingsRepository.initializeUserSettings(userId)
     userAnimalsRepository.initializeUserAnimals(userId)

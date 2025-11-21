@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
@@ -72,6 +71,8 @@ import com.android.wildex.R
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.ClickableProfilePicture
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -132,28 +133,29 @@ fun HomeScreen(
   Scaffold(
       topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
       bottomBar = { bottomBar() },
-  ) { pd ->
-    val pullState = rememberPullToRefreshState()
+      modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN)) { pd ->
+        val pullState = rememberPullToRefreshState()
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { homeScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        postStates.isEmpty() -> NoPostsView()
-        else ->
-            PostsView(
-                postStates = postStates,
-                onPostLike = homeScreenViewModel::toggleLike,
-                onPostClick = onPostClick,
-            )
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = uiState.isRefreshing,
+            modifier = Modifier.padding(pd),
+            onRefresh = { homeScreenViewModel.refreshUIState() },
+        ) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            postStates.isEmpty() -> NoPostsView()
+            else ->
+                PostsView(
+                    postStates = postStates,
+                    onProfilePictureClick = onProfilePictureClick,
+                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostClick = onPostClick,
+                )
+          }
+        }
       }
-    }
-  }
 }
 
 /** Displays a placeholder view when there are no posts available. */
@@ -193,6 +195,7 @@ fun NoPostsView() {
 @Composable
 fun PostsView(
     postStates: List<PostState>,
+    onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
 ) {
@@ -202,7 +205,12 @@ fun PostsView(
       contentPadding = PaddingValues(vertical = 12.dp),
   ) {
     items(postStates.size) { index ->
-      PostItem(postState = postStates[index], onPostLike = onPostLike, onPostClick = onPostClick)
+      PostItem(
+          postState = postStates[index],
+          onProfilePictureClick = onProfilePictureClick,
+          onPostLike = onPostLike,
+          onPostClick = onPostClick,
+      )
     }
   }
 }
@@ -215,7 +223,12 @@ fun PostsView(
  * @param onPostClick Callback invoked when the post is selected.
  */
 @Composable
-fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -> Unit) {
+fun PostItem(
+    postState: PostState,
+    onProfilePictureClick: (userId: Id) -> Unit = {},
+    onPostLike: (Id) -> Unit,
+    onPostClick: (Id) -> Unit
+) {
   val colorScheme = MaterialTheme.colorScheme
   val post = postState.post
   val author = postState.author
@@ -243,14 +256,12 @@ fun PostItem(postState: PostState, onPostLike: (Id) -> Unit, onPostClick: (Id) -
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      AsyncImage(
-          model = author.profilePictureURL,
-          contentDescription = "Author profile picture",
-          modifier =
-              Modifier.size(40.dp)
-                  .clip(CircleShape)
-                  .testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
-          contentScale = ContentScale.Crop,
+      ClickableProfilePicture(
+          modifier = Modifier.size(40.dp).testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
+          profileId = author.userId,
+          profilePictureURL = author.profilePictureURL,
+          profileUserType = author.userType,
+          onProfile = onProfilePictureClick,
       )
       Spacer(Modifier.width(10.dp))
       Column(Modifier.weight(1f)) {

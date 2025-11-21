@@ -68,7 +68,6 @@ class MapScreenViewModelTest {
           UserType.REGULAR,
           now,
           "CH",
-          1,
       )
   private val proUser = regularUser.copy(userType = UserType.PROFESSIONAL)
 
@@ -97,7 +96,8 @@ class MapScreenViewModelTest {
         coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
         coEvery { postsRepository.getAllPostsByGivenAuthor(any()) } returns listOf(post2)
         coEvery { reportRepository.getAllReports() } returns emptyList()
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("a", "b", "c")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("a", "b", "c", userType = UserType.REGULAR)
 
         viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
@@ -119,7 +119,8 @@ class MapScreenViewModelTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
         coEvery { postsRepository.getAllPostsByGivenAuthor(any()) } returns listOf(post2)
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("a", "b", "c")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("a", "b", "c", userType = UserType.REGULAR)
 
         viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
@@ -138,7 +139,8 @@ class MapScreenViewModelTest {
   fun pinSelection_loadsCorrectDetails_forPostAndReport() =
       mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns proUser
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("x", "y", "url")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("x", "y", "url", userType = UserType.REGULAR)
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getPost("p1") } returns post1
         coEvery { likeRepository.getLikeForPost(any()) } returns null
@@ -164,7 +166,8 @@ class MapScreenViewModelTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getPost("p1") } returns post1
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("x", "y", "url")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("x", "y", "url", userType = UserType.REGULAR)
         coEvery { likeRepository.getLikeForPost("p1") } returns null
         coEvery { likeRepository.getNewLikeId() } returns "like-1"
 
@@ -217,7 +220,8 @@ class MapScreenViewModelTest {
         val r1Dup = r1.copy()
         val r2Assigned = report2
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("u", "n", "pic")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("u", "n", "pic", userType = UserType.REGULAR)
         coEvery { postsRepository.getAllPostsByGivenAuthor(otherUserId) } returns emptyList()
         coEvery { reportRepository.getAllReportsByAuthor(otherUserId) } returns listOf(r1, r1Dup)
         coEvery { reportRepository.getAllReportsByAssignee(otherUserId) } returns listOf(r2Assigned)
@@ -241,7 +245,8 @@ class MapScreenViewModelTest {
   fun errorBranches_cover_blankUid_AnimalFallback_pinFail_and_toggleFailureRollback() =
       mainDispatcherRule.runTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("s", "u", "p")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("s", "u", "p", userType = UserType.REGULAR)
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { reportRepository.getAllReports() } returns emptyList()
 
@@ -295,7 +300,8 @@ class MapScreenViewModelTest {
         coEvery { userRepository.getUser(loggedInUserId) } returns regularUser
         coEvery { postsRepository.getAllPosts() } returns listOf(post1, post2)
         coEvery { postsRepository.getPost("p1") } returns post1
-        coEvery { userRepository.getSimpleUser(any()) } returns SimpleUser("x", "y", "url")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("x", "y", "url", userType = UserType.REGULAR)
         coEvery { likeRepository.getLikeForPost("p1") } returns Like("lk1", "p1", loggedInUserId)
         coEvery { likeRepository.deleteLike("lk1") } returns Unit
 

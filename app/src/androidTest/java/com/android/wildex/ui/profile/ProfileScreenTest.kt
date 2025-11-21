@@ -20,13 +20,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Input
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.LocalRepositories
@@ -36,7 +34,6 @@ import com.mapbox.geojson.Point
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -67,7 +64,6 @@ class ProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
-          friendsCount = 42,
       )
 
   /** Shared test achievements repo + use case + VM for tests that don't need custom repos. */
@@ -99,13 +95,7 @@ class ProfileScreenTest {
   private fun createTestUpdateAchievementsUseCase(
       achRepo: UserAchievementsRepository,
   ): UpdateUserAchievementsUseCase =
-      UpdateUserAchievementsUseCase(
-          postsRepository = LocalRepositories.postsRepository,
-          likeRepository = LocalRepositories.likeRepository,
-          commentRepository = LocalRepositories.commentRepository,
-          userAchievementsRepository = achRepo,
-          io = Dispatchers.Unconfined,
-      )
+      UpdateUserAchievementsUseCase(userAchievementsRepository = achRepo)
 
   /** Helper to create a list of fake achievements. */
   private fun fakeAchievements(count: Int = 5): List<Achievement> =
@@ -115,7 +105,6 @@ class ProfileScreenTest {
             name = "A$i",
             pictureURL = "url$i",
             description = "",
-            expects = setOf(InputKey.POST_IDS),
             condition = { true },
         )
       }
@@ -129,7 +118,7 @@ class ProfileScreenTest {
 
     override suspend fun getAllAchievements(): List<Achievement> = achievements
 
-    override suspend fun updateUserAchievements(userId: String, inputs: Input) {}
+    override suspend fun updateUserAchievements(userId: String) {}
 
     override suspend fun initializeUserAchievements(userId: String) {}
 
@@ -445,11 +434,14 @@ class ProfileScreenTest {
   @Test
   fun profileImageAndName_shows_professional_badge_when_professional() {
     composeRule.setContent {
-      ProfileImageAndName(
-          name = "Jane",
-          surname = "Doe",
-          username = "jane_doe",
-          isProfessional = true,
+      ProfileContent(
+          user = sampleUser.copy(userType = UserType.PROFESSIONAL),
+          ownerProfile = false,
+          onAchievements = {},
+          onCollection = {},
+          onMap = {},
+          onFriends = {},
+          onFriendRequest = {},
       )
     }
     composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()

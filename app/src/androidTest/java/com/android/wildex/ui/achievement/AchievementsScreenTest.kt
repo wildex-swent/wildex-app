@@ -13,7 +13,6 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.Achievement
-import com.android.wildex.model.achievement.InputKey
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
@@ -39,11 +38,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.size >= 10
-          },
       )
 
   private val communityBuilder =
@@ -52,11 +46,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 20
-          },
       )
 
   private val firstPost =
@@ -65,11 +54,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
-          expects = setOf(InputKey.POST_IDS),
-          condition = { inputs ->
-            val postIds = inputs[InputKey.POST_IDS].orEmpty()
-            postIds.isNotEmpty()
-          },
       )
 
   private val conversationalist =
@@ -78,11 +62,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
-          expects = setOf(InputKey.COMMENT_IDS),
-          condition = { inputs ->
-            val commentIds = inputs[InputKey.COMMENT_IDS].orEmpty()
-            commentIds.size >= 50
-          },
       )
 
   private val mockAchievement1 =
@@ -91,11 +70,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "This is a mock achievement for testing purposes",
           name = "Mock Achievement",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 1 && testIds[0] == "mockPostId"
-          },
       )
 
   private val mockAchievement2 =
@@ -104,11 +78,6 @@ class AchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
-          expects = setOf(InputKey.TEST_IDS),
-          condition = { inputs ->
-            val testIds = inputs[InputKey.TEST_IDS].orEmpty()
-            testIds.size == 2
-          },
       )
 
   private val unlockedAchievement = listOf(postMaster, communityBuilder, firstPost)
@@ -134,10 +103,7 @@ class AchievementsScreenTest {
 
     override suspend fun getAllAchievements(): List<Achievement> = all
 
-    override suspend fun updateUserAchievements(
-        userId: String,
-        inputs: Map<InputKey, List<String>>
-    ) {}
+    override suspend fun updateUserAchievements(userId: String) {}
 
     override suspend fun getAchievementsCountOfUser(userId: String): Int = unlocked.size
 
@@ -207,7 +173,7 @@ class AchievementsScreenTest {
   @Test
   fun errorScreen_shownWhenRepositoryThrows() {
     runBlocking {
-      fakeRepo.fetchSignal = CompletableDeferred<Unit>()
+      fakeRepo.fetchSignal = CompletableDeferred()
       fakeRepo.shouldThrowOnFetch = true
 
       viewModel.loadAchievements()
@@ -300,7 +266,9 @@ class AchievementsScreenTest {
       val nodes =
           composeTestRule
               .onAllNodesWithTag(
-                  AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)
+                  AchievementsScreenTestTags.ACHIEVEMENT_IMAGE,
+                  useUnmergedTree = true,
+              )
               .fetchSemanticsNodes()
 
       val unlockedNode =

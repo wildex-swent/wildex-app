@@ -42,8 +42,7 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France",
-          friendsCount = 3)
+          country = "France")
 
   private val u2 =
       User(
@@ -56,29 +55,31 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France",
-          friendsCount = 3)
+          country = "France")
 
   private val su1 =
       SimpleUser(
           userId = "currentUserId",
           username = "currentUsername",
           profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png")
+              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+          userType = UserType.REGULAR,
+      )
 
   private val su2 =
       SimpleUser(
           userId = "otherUserId",
           username = "otherUsername",
           profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png")
+              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+          userType = UserType.REGULAR)
 
   private val defaultUser: SimpleUser =
       SimpleUser(
           userId = "defaultUserId",
           username = "defaultUsername",
           profilePictureURL = "",
-      )
+          userType = UserType.REGULAR)
 
   private val a1 =
       Animal(

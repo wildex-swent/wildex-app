@@ -16,7 +16,6 @@ import com.google.firebase.Timestamp
  * @property userType The type of user, defined by the UserType enum.
  * @property creationDate The date the user's account was created.
  * @property country The country the user is from.
- * @property friendsCount The number of friends the user has.
  */
 data class User(
     val userId: Id,
@@ -28,7 +27,6 @@ data class User(
     val userType: UserType,
     val creationDate: Timestamp,
     val country: String,
-    val friendsCount: Int,
 )
 
 /**
@@ -55,6 +53,19 @@ data class UserAnimals(
     val userId: Id = "",
     val animalsId: List<Id> = emptyList(),
     val animalsCount: Int = 0,
+)
+
+/**
+ * Represents a summary of a user's friends.
+ *
+ * @property userId The unique identifier of the user to whom these friends belong.
+ * @property friendsId A list of unique identifiers of the friends the user has.
+ * @property friendsCount The total number of friends the user has.
+ */
+data class UserFriends(
+    val userId: Id = "",
+    val friendsId: List<Id> = emptyList(),
+    val friendsCount: Int = 0,
 )
 
 /**

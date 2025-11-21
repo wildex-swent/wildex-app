@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,12 +31,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 
 object SignInScreenTestTags {
@@ -57,7 +56,7 @@ fun SignInScreen(
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
 
-  LaunchedEffect(uiState.errorMsg, uiState.username) {
+  LaunchedEffect(uiState.errorMsg) {
     // Show error message if login fails
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -65,14 +64,11 @@ fun SignInScreen(
     }
 
     // Navigate to home screen on successful login
-    uiState.username?.let {
-      Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-      onSignedIn(uiState.isNewUser)
-    }
+
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       content = { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).background(White),
@@ -88,28 +84,17 @@ fun SignInScreen(
           Spacer(modifier = Modifier.height(48.dp))
 
           // Authenticate With Google Button
-          when {
-            uiState.isLoading -> {
-              CircularProgressIndicator(
-                  modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
-            }
-            uiState.username == null -> {
-              GoogleSignInButton(
-                  context = context,
-                  onSignInClick = { authViewModel.signIn(context, credentialManager) },
-              )
-            }
-            else -> {
-              Text(
-                  text =
-                      if (uiState.username!!.isEmpty()) context.getString(R.string.welcome)
-                      else "Welcome back ${uiState.username}!",
-                  style = MaterialTheme.typography.headlineLarge,
-                  fontWeight = FontWeight.Bold,
-                  textAlign = TextAlign.Center,
-                  modifier = Modifier.testTag(SignInScreenTestTags.WELCOME),
-              )
-            }
+
+          if (uiState.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
+          } else {
+            GoogleSignInButton(
+                context = context,
+                onSignInClick = {
+                  authViewModel.signIn(context, credentialManager) { onSignedIn(it) }
+                },
+            )
           }
         }
       },

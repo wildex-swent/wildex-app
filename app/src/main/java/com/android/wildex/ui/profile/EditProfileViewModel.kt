@@ -22,7 +22,7 @@ data class EditProfileUIState(
     val surname: String = "",
     val username: String = "",
     val description: String = "",
-    val country: String = "Switzerland",
+    val country: String = "",
     val profileSaved: Boolean = false,
     val pendingProfileImageUri: Uri? = null,
     val isLoading: Boolean = false,
@@ -30,7 +30,7 @@ data class EditProfileUIState(
     val isError: Boolean = false,
     val invalidNameMsg: String? = null,
     val invalidSurnameMsg: String? = null,
-    val invalidUsernameMsg: String? = null
+    val invalidUsernameMsg: String? = null,
 ) {
   val isValid: Boolean
     get() =
@@ -45,7 +45,7 @@ data class EditProfileUIState(
 class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
@@ -69,7 +69,8 @@ class EditProfileViewModel(
                   if (!user.profilePictureURL.isBlank()) user.profilePictureURL.toUri() else null,
               isLoading = false,
               errorMsg = null,
-              isError = false)
+              isError = false,
+          )
     } catch (e: Exception) {
       Log.e("EditProfileScreenViewModel", "Error refreshing UI state", e)
       setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
@@ -85,7 +86,7 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
-  fun saveProfileChanges() {
+  fun saveProfileChanges(onSave: () -> Unit) {
     if (!_uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
       return
@@ -95,8 +96,11 @@ class EditProfileViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, isError = false)
         val user = userRepository.getUser(currentUserId)
         val newURL =
-            storageRepository.uploadUserProfilePicture(
-                currentUserId, _uiState.value.pendingProfileImageUri!!) ?: user.profilePictureURL
+            _uiState.value.pendingProfileImageUri?.let {
+              storageRepository.uploadUserProfilePicture(currentUserId, it)
+                  ?: user.profilePictureURL
+            } ?: user.profilePictureURL
+
         val newUser =
             User(
                 userId = currentUserId,
@@ -108,16 +112,13 @@ class EditProfileViewModel(
                 userType = user.userType,
                 creationDate = user.creationDate,
                 country = _uiState.value.country,
-                friendsCount = user.friendsCount,
             )
-        userRepository.editUser(
-            userId = currentUserId,
-            newUser = newUser,
-        )
+        userRepository.editUser(userId = currentUserId, newUser = newUser)
         // Reset the pending Uri after successful upload
         clearErrorMsg()
         _uiState.value =
             _uiState.value.copy(isLoading = false, isError = false, profileSaved = true)
+        onSave()
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")
@@ -129,21 +130,25 @@ class EditProfileViewModel(
   fun setName(name: String) {
     _uiState.value =
         _uiState.value.copy(
-            name = name, invalidNameMsg = if (name.isBlank()) "Name cannot be empty" else null)
+            name = name,
+            invalidNameMsg = if (name.isBlank()) "Name cannot be empty" else null,
+        )
   }
 
   fun setSurname(surname: String) {
     _uiState.value =
         _uiState.value.copy(
             surname = surname,
-            invalidSurnameMsg = if (surname.isBlank()) "Surname cannot be empty" else null)
+            invalidSurnameMsg = if (surname.isBlank()) "Surname cannot be empty" else null,
+        )
   }
 
   fun setUsername(username: String) {
     _uiState.value =
         _uiState.value.copy(
             username = username,
-            invalidUsernameMsg = if (username.isBlank()) "Username cannot be empty" else null)
+            invalidUsernameMsg = if (username.isBlank()) "Username cannot be empty" else null,
+        )
   }
 
   fun setDescription(description: String) {

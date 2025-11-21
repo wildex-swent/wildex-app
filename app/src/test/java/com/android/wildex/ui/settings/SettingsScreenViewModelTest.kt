@@ -54,7 +54,6 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val u2 =
@@ -69,7 +68,6 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   @Before
@@ -86,6 +84,7 @@ class SettingsScreenViewModelTest {
 
     viewModel =
         SettingsScreenViewModel(
+            authRepository = authRepository,
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
             currentUserId = "currentUserId",

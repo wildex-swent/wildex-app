@@ -54,7 +54,6 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   private val u2 =
@@ -69,7 +68,6 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          friendsCount = 3,
       )
 
   @Before

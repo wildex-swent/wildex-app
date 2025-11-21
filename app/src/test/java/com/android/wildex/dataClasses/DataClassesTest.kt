@@ -182,7 +182,6 @@ class DataClassesTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.Companion.now(),
             country = "Switzerland",
-            friendsCount = 100,
         )
 
     TestCase.assertEquals("user1", user.userId)
@@ -193,7 +192,6 @@ class DataClassesTest {
     TestCase.assertEquals("https://example.com/user_pic", user.profilePictureURL)
     TestCase.assertEquals(UserType.REGULAR, user.userType)
     TestCase.assertEquals("Switzerland", user.country)
-    TestCase.assertEquals(100, user.friendsCount)
   }
 
   @Test

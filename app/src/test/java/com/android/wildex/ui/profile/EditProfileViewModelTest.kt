@@ -39,7 +39,6 @@ class EditProfileViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          friendsCount = 1,
       )
 
   @Before

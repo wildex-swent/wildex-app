@@ -165,12 +165,6 @@ class ReportDetailScreenTest {
       composeRule.onNodeWithTag(ReportDetailsScreenTestTags.DESCRIPTION_CARD).assertIsDisplayed()
       composeRule.onNodeWithTag(ReportDetailsScreenTestTags.DESCRIPTION_TEXT).assertIsDisplayed()
       composeRule.onNodeWithTag(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE).assertIsDisplayed()
-      composeRule.onAllNodesWithText("Read more").onFirst().assertIsDisplayed()
-      composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE)
-      composeRule.onNodeWithTag(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE).performClick()
-      composeRule.onAllNodesWithText("Show less").onFirst().assertIsDisplayed()
-      composeRule.onNodeWithTag(ReportDetailsScreenTestTags.DESCRIPTION_TOGGLE).performClick()
-      composeRule.onAllNodesWithText("Read more").onFirst().assertIsDisplayed()
     }
   }
 

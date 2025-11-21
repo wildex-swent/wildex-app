@@ -1,7 +1,7 @@
 package com.android.wildex.ui.social
 
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.RelationshipRepository
+import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
@@ -30,7 +30,7 @@ class FriendScreenViewModelTest {
 
   private lateinit var userRepository: UserRepository
   private lateinit var userFriendsRepository: UserFriendsRepository
-  private lateinit var friendRequestRepository: RelationshipRepository
+  private lateinit var friendRequestRepository: FriendRequestRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var userRecommender: UserRecommender
   private lateinit var viewModel: FriendScreenViewModel
@@ -109,9 +109,9 @@ class FriendScreenViewModelTest {
   private val userFriends2 =
       UserFriends(userId = u2.userId, friendsId = listOf(u1.userId, u3.userId), friendsCount = 2)
 
-  private val request1 = Relationship(senderId = u1.userId, receiverId = u3.userId)
+  private val request1 = FriendRequest(senderId = u1.userId, receiverId = u3.userId)
 
-  private val request2 = Relationship(senderId = u4.userId, receiverId = u1.userId)
+  private val request2 = FriendRequest(senderId = u4.userId, receiverId = u1.userId)
 
   private val suggestions =
       listOf(
@@ -138,13 +138,12 @@ class FriendScreenViewModelTest {
 
     coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } returns
         userFriends1.friendsId
-    coEvery { friendRequestRepository.getAllPendingRelationshipsBySender("currentUserId") } returns
+    coEvery { friendRequestRepository.getAllFriendRequestsBySender("currentUserId") } returns
         listOf(request1)
     coEvery { userRepository.getSimpleUser(u2.userId) } returns su2
     coEvery { userRecommender.getRecommendedUsers() } returns suggestions
-    coEvery {
-      friendRequestRepository.getAllPendingRelationshipsByReceiver("currentUserId")
-    } returns listOf(request2)
+    coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("currentUserId") } returns
+        listOf(request2)
     coEvery { userFriendsRepository.getAllFriendsOfUser("user2") } returns userFriends2.friendsId
     coEvery { userRepository.getSimpleUser(u1.userId) } returns su1
     coEvery { userRepository.getSimpleUser(u3.userId) } returns su3
@@ -157,8 +156,8 @@ class FriendScreenViewModelTest {
 
     Assert.assertEquals(emptyList<FriendState>(), state.friends)
     Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-    Assert.assertEquals(emptyList<Relationship>(), state.receivedRequests)
-    Assert.assertEquals(emptyList<Relationship>(), state.sentRequests)
+    Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
+    Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
     Assert.assertFalse(state.isCurrentUser)
     Assert.assertFalse(state.isRefreshing)
     Assert.assertFalse(state.isLoading)
@@ -204,8 +203,8 @@ class FriendScreenViewModelTest {
       val state = viewModel.uiState.value
       Assert.assertEquals(emptyList<FriendState>(), state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<Relationship>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<Relationship>(), state.sentRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -231,8 +230,8 @@ class FriendScreenViewModelTest {
               FriendState(su3, isFriend = false, isPending = true, isCurrentUser = false))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<Relationship>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<Relationship>(), state.sentRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -250,8 +249,8 @@ class FriendScreenViewModelTest {
       val state = viewModel.uiState.value
       Assert.assertEquals(emptyList<FriendState>(), state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<Relationship>(), state.receivedRequests)
-      Assert.assertEquals(emptyList<Relationship>(), state.sentRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
       Assert.assertFalse(state.isLoading)
@@ -291,7 +290,7 @@ class FriendScreenViewModelTest {
   @Test
   fun sendFriendRequestWhenCurrentUserWorksCorrectly() {
     mainDispatcherRule.runTest {
-      coEvery { friendRequestRepository.initializeRelationship("currentUserId", u4.userId) } just
+      coEvery { friendRequestRepository.initializeFriendRequest("currentUserId", u4.userId) } just
           Runs
       viewModel.loadUIState("currentUserId")
       advanceUntilIdle()
@@ -300,7 +299,7 @@ class FriendScreenViewModelTest {
       viewModel.sendRequestToUser(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequests = listOf(request1) + listOf(Relationship(u1.userId, u4.userId))
+      val expectedSentRequests = listOf(request1) + listOf(FriendRequest(u1.userId, u4.userId))
       val expectedFriendStates =
           listOf(FriendState(su2, isFriend = true, isPending = false, isCurrentUser = false))
       val expectedSuggestions =
@@ -322,7 +321,7 @@ class FriendScreenViewModelTest {
   @Test
   fun sendFriendRequestWhenCurrentUser_WhenRepoThrows_WorksCorrectly() {
     mainDispatcherRule.runTest {
-      coEvery { friendRequestRepository.initializeRelationship("currentUserId", u4.userId) } throws
+      coEvery { friendRequestRepository.initializeFriendRequest("currentUserId", u4.userId) } throws
           RuntimeException("cheh")
       viewModel.loadUIState("currentUserId")
       advanceUntilIdle()
@@ -345,10 +344,9 @@ class FriendScreenViewModelTest {
   @Test
   fun sendFriendRequestWhenOtherUserWorksCorrectly() {
     mainDispatcherRule.runTest {
-      coEvery {
-        friendRequestRepository.getAllPendingRelationshipsBySender("currentUserId")
-      } returns emptyList()
-      coEvery { friendRequestRepository.initializeRelationship("currentUserId", u3.userId) } just
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("currentUserId") } returns
+          emptyList()
+      coEvery { friendRequestRepository.initializeFriendRequest("currentUserId", u3.userId) } just
           Runs
       viewModel.loadUIState("user2")
       advanceUntilIdle()
@@ -367,8 +365,8 @@ class FriendScreenViewModelTest {
               FriendState(su3, isFriend = false, isPending = true, isCurrentUser = false))
       Assert.assertEquals(expectedFriendStates, newState.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), newState.suggestions)
-      Assert.assertEquals(emptyList<Relationship>(), newState.receivedRequests)
-      Assert.assertEquals(emptyList<Relationship>(), newState.sentRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), newState.receivedRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), newState.sentRequests)
       Assert.assertFalse(newState.isCurrentUser)
       Assert.assertFalse(newState.isRefreshing)
       Assert.assertFalse(newState.isLoading)
@@ -432,7 +430,7 @@ class FriendScreenViewModelTest {
   fun acceptReceivedRequestWorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.acceptRelationship(Relationship(u4.userId, u1.userId))
+        friendRequestRepository.acceptFriendRequest(FriendRequest(u4.userId, u1.userId))
       } just Runs
       coEvery { userFriendsRepository.addFriendToUserFriendsOfUser(u4.userId, u1.userId) } just Runs
       coEvery { userFriendsRepository.addFriendToUserFriendsOfUser(u1.userId, u4.userId) } just Runs
@@ -442,7 +440,7 @@ class FriendScreenViewModelTest {
       viewModel.acceptReceivedRequest(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedReceivedRequests = emptyList<Relationship>()
+      val expectedReceivedRequests = emptyList<FriendRequest>()
       val expectedFriendStates =
           friendStates +
               listOf(FriendState(su4, isFriend = true, isPending = false, isCurrentUser = false))
@@ -462,7 +460,7 @@ class FriendScreenViewModelTest {
   fun acceptReceivedRequest_WhenRepoThrows_WorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.acceptRelationship(Relationship(u4.userId, u1.userId))
+        friendRequestRepository.acceptFriendRequest(FriendRequest(u4.userId, u1.userId))
       } throws RuntimeException("cheh")
       viewModel.loadUIState(u1.userId)
       advanceUntilIdle()
@@ -487,14 +485,14 @@ class FriendScreenViewModelTest {
   fun declineReceivedRequestWorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.deleteRelationship(Relationship(u4.userId, u1.userId))
+        friendRequestRepository.refuseFriendRequest(FriendRequest(u4.userId, u1.userId))
       } just Runs
       viewModel.loadUIState(u1.userId)
       advanceUntilIdle()
       viewModel.declineReceivedRequest(u4.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedReceivedRequests = emptyList<Relationship>()
+      val expectedReceivedRequests = emptyList<FriendRequest>()
       val expectedFriendStates =
           listOf(FriendState(su2, isFriend = true, isPending = false, isCurrentUser = false))
       Assert.assertEquals(expectedFriendStates, state.friends)
@@ -513,7 +511,7 @@ class FriendScreenViewModelTest {
   fun declineReceivedRequest_WhenRepoThrows_WorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.deleteRelationship(Relationship(u4.userId, u1.userId))
+        friendRequestRepository.refuseFriendRequest(FriendRequest(u4.userId, u1.userId))
       } throws RuntimeException("cheh")
       viewModel.loadUIState(u1.userId)
       advanceUntilIdle()
@@ -538,15 +536,15 @@ class FriendScreenViewModelTest {
   fun cancelSentRequestWhenCurrentUserWorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.deleteRelationship(
-            Relationship(senderId = u1.userId, receiverId = u3.userId))
+        friendRequestRepository.refuseFriendRequest(
+            FriendRequest(senderId = u1.userId, receiverId = u3.userId))
       } just Runs
       viewModel.loadUIState(u1.userId)
       advanceUntilIdle()
       viewModel.cancelSentRequest(u3.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequest = emptyList<Relationship>()
+      val expectedSentRequest = emptyList<FriendRequest>()
       val expectedFriendStates =
           listOf(FriendState(su2, isFriend = true, isPending = false, isCurrentUser = false))
       Assert.assertEquals(expectedFriendStates, state.friends)
@@ -565,22 +563,22 @@ class FriendScreenViewModelTest {
   fun cancelSentRequestWhenOtherUserWorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.deleteRelationship(
-            Relationship(senderId = u1.userId, receiverId = u3.userId))
+        friendRequestRepository.refuseFriendRequest(
+            FriendRequest(senderId = u1.userId, receiverId = u3.userId))
       } just Runs
       viewModel.loadUIState(u2.userId)
       advanceUntilIdle()
       viewModel.cancelSentRequest(u3.userId)
       advanceUntilIdle()
       val state = viewModel.uiState.value
-      val expectedSentRequests = emptyList<Relationship>()
+      val expectedSentRequests = emptyList<FriendRequest>()
       val expectedFriendStates =
           listOf(
               FriendState(su1, isFriend = false, isPending = false, isCurrentUser = true),
               FriendState(su3, isFriend = false, isPending = false, isCurrentUser = false))
       Assert.assertEquals(expectedFriendStates, state.friends)
       Assert.assertEquals(emptyList<RecommendationResult>(), state.suggestions)
-      Assert.assertEquals(emptyList<Relationship>(), state.receivedRequests)
+      Assert.assertEquals(emptyList<FriendRequest>(), state.receivedRequests)
       Assert.assertEquals(expectedSentRequests, state.sentRequests)
       Assert.assertFalse(state.isCurrentUser)
       Assert.assertFalse(state.isRefreshing)
@@ -594,8 +592,8 @@ class FriendScreenViewModelTest {
   fun cancelSentRequest_WhenRepoThrows_WorksCorrectly() {
     mainDispatcherRule.runTest {
       coEvery {
-        friendRequestRepository.deleteRelationship(
-            Relationship(senderId = u1.userId, receiverId = u3.userId))
+        friendRequestRepository.refuseFriendRequest(
+            FriendRequest(senderId = u1.userId, receiverId = u3.userId))
       } throws RuntimeException("cheh")
       viewModel.loadUIState(u1.userId)
       advanceUntilIdle()

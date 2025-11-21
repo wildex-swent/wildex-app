@@ -3,9 +3,8 @@ package com.android.wildex.ui.social
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.relationship.Relationship
-import com.android.wildex.model.relationship.RelationshipRepository
-import com.android.wildex.model.relationship.StatusEnum
+import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
@@ -21,8 +20,8 @@ import kotlinx.coroutines.launch
 data class FriendsScreenUIState(
     val friends: List<FriendState> = emptyList(),
     val suggestions: List<RecommendationResult> = emptyList(),
-    val receivedRequests: List<Relationship> = emptyList(),
-    val sentRequests: List<Relationship> = emptyList(),
+    val receivedRequests: List<FriendRequest> = emptyList(),
+    val sentRequests: List<FriendRequest> = emptyList(),
     val isCurrentUser: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoading: Boolean = false,
@@ -60,8 +59,8 @@ class FriendScreenViewModel(
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userFriendsRepository: UserFriendsRepository,
-    private val friendRequestRepository: RelationshipRepository =
-        RepositoryProvider.relationshipRepository,
+    private val friendRequestRepository: FriendRequestRepository =
+        RepositoryProvider.friendRequestRepository,
     private val userRecommender: UserRecommender =
         UserRecommender(
             currentUserId = currentUserId, userFriendsRepository = userFriendsRepository)
@@ -85,7 +84,7 @@ class FriendScreenViewModel(
       val userFriends = userFriendsRepository.getAllFriendsOfUser(userId)
       val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
       val currentUserSentRequests =
-          friendRequestRepository.getAllPendingRelationshipsBySender(currentUserId)
+          friendRequestRepository.getAllFriendRequestsBySender(currentUserId)
       val friendsStates =
           userFriends.map {
             FriendState(
@@ -97,7 +96,7 @@ class FriendScreenViewModel(
       suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests =
           if (isCurrentUser) {
-            friendRequestRepository.getAllPendingRelationshipsByReceiver(currentUserId)
+            friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId)
           } else emptyList()
       val sentRequests = if (isCurrentUser) currentUserSentRequests else emptyList()
       _uiState.value =
@@ -152,11 +151,10 @@ class FriendScreenViewModel(
   fun sendRequestToUser(userId: Id) {
     viewModelScope.launch {
       val state = _uiState.value
-      val request =
-          Relationship(senderId = currentUserId, receiverId = userId, status = StatusEnum.PENDING)
+      val request = FriendRequest(senderId = currentUserId, receiverId = userId)
       val sentRequests = state.sentRequests
       val friends = state.friends
-      var newSentRequests: List<Relationship>
+      var newSentRequests: List<FriendRequest>
       var newFriends: List<FriendState>
 
       if (state.isCurrentUser) {
@@ -180,7 +178,7 @@ class FriendScreenViewModel(
               suggestions = suggestions.value.take(5))
 
       try {
-        friendRequestRepository.initializeRelationship(currentUserId, userId)
+        friendRequestRepository.initializeFriendRequest(currentUserId, userId)
         // to always display some suggestions to the current user, we get new ones when there are
         // not enough left
         if (state.isCurrentUser && suggestions.value.size < 5) {
@@ -254,7 +252,7 @@ class FriendScreenViewModel(
       _uiState.value = state.copy(friends = newFriends, receivedRequests = newReceivedRequests)
 
       try {
-        friendRequestRepository.acceptRelationship(Relationship(userId, currentUserId))
+        friendRequestRepository.acceptFriendRequest(FriendRequest(userId, currentUserId))
         userFriendsRepository.addFriendToUserFriendsOfUser(userId, currentUserId)
         userFriendsRepository.addFriendToUserFriendsOfUser(currentUserId, userId)
       } catch (e: Exception) {
@@ -281,7 +279,7 @@ class FriendScreenViewModel(
       _uiState.value = state.copy(receivedRequests = newReceivedRequests)
 
       try {
-        friendRequestRepository.deleteRelationship(Relationship(userId, currentUserId))
+        friendRequestRepository.refuseFriendRequest(FriendRequest(userId, currentUserId))
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to decline request from user $userId : ${e.message}")
@@ -326,8 +324,7 @@ class FriendScreenViewModel(
       _uiState.value = state.copy(friends = newFriends, sentRequests = newSentRequests)
 
       try {
-        friendRequestRepository.deleteRelationship(
-            Relationship(senderId = currentUserId, receiverId = userId))
+        friendRequestRepository.refuseFriendRequest(FriendRequest(currentUserId, userId))
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to cancel request to user $userId : ${e.message}")

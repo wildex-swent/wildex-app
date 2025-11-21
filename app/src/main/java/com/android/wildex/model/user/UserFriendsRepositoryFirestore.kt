@@ -60,20 +60,7 @@ class UserFriendsRepositoryFirestore(private val db: FirebaseFirestore) : UserFr
    * @param userId The Id of the user whose UserFriends is to be updated
    */
   override suspend fun addFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
-    val docRef = collection.document(userId)
-    ensureDocumentExists(docRef, userId)
-
-    val userFriends = docRef.get().await().toObject(UserFriends::class.java)
-    val friendsId = userFriends?.friendsId?.toMutableList() ?: mutableListOf()
-    var friendsCount = userFriends?.friendsCount ?: 0
-    if (!friendsId.contains(friendId)) {
-      friendsId.add(friendId)
-      friendsCount = friendsCount.inc()
-    }
-
-    docRef
-        .set(UserFriends(userId = userId, friendsId = friendsId, friendsCount = friendsCount))
-        .await()
+    addOrDeleteFriendToUserFriendsOfUser(toAdd = true, friendId = friendId, userId = userId)
   }
 
   /**
@@ -83,20 +70,7 @@ class UserFriendsRepositoryFirestore(private val db: FirebaseFirestore) : UserFr
    * @param userId The Id of the user whose UserFriends is to be updated
    */
   override suspend fun deleteFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
-    val docRef = collection.document(userId)
-    ensureDocumentExists(docRef, userId)
-
-    val userFriends = docRef.get().await().toObject(UserFriends::class.java)
-    val friendsId = userFriends?.friendsId?.toMutableList() ?: mutableListOf()
-    var friendsCount = userFriends?.friendsCount ?: 0
-    if (friendsId.contains(friendId)) {
-      friendsId.remove(friendId)
-      friendsCount = friendsCount.dec()
-    }
-
-    docRef
-        .set(UserFriends(userId = userId, friendsId = friendsId, friendsCount = friendsCount))
-        .await()
+    addOrDeleteFriendToUserFriendsOfUser(toAdd = false, friendId = friendId, userId = userId)
   }
 
   /**
@@ -108,6 +82,41 @@ class UserFriendsRepositoryFirestore(private val db: FirebaseFirestore) : UserFr
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
     docRef.delete().await()
+  }
+
+  /**
+   * Add or Delete a Friend to the UserFriends of a specific User.
+   *
+   * @param friendId The Id of the friend to add or delete to the user's list of friends
+   * @param userId The Id of the user whose UserFriends is to be updated
+   */
+  private suspend fun addOrDeleteFriendToUserFriendsOfUser(
+      toAdd: Boolean,
+      friendId: Id,
+      userId: Id
+  ) {
+    val docRef = collection.document(userId)
+    ensureDocumentExists(docRef, userId)
+
+    val userFriends = docRef.get().await().toObject(UserFriends::class.java)
+    val friendsId = userFriends?.friendsId?.toMutableList() ?: mutableListOf()
+    var friendsCount = userFriends?.friendsCount ?: 0
+
+    if (toAdd) {
+      if (!friendsId.contains(friendId)) {
+        friendsId.add(friendId)
+        friendsCount = friendsCount.inc()
+      }
+    } else {
+      if (friendsId.contains(friendId)) {
+        friendsId.remove(friendId)
+        friendsCount = friendsCount.dec()
+      }
+    }
+
+    docRef
+        .set(UserFriends(userId = userId, friendsId = friendsId, friendsCount = friendsCount))
+        .await()
   }
 
   /**

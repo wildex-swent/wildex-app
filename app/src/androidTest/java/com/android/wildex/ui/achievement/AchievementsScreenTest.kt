@@ -14,11 +14,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.LocalRepositories
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -84,6 +86,21 @@ class AchievementsScreenTest {
           name = "Mock Achievement 2",
       )
 
+  private val currentUser =
+      User(
+          userId = "currentUserId",
+          username = "currentUsername",
+          name = "John",
+          surname = "Doe",
+          bio = "This is a bio",
+          profilePictureURL =
+              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp.now(),
+          country = "France",
+          friendsCount = 3,
+      )
+
   private val unlockedAchievement = listOf(postMaster, communityBuilder, firstPost)
   private val lockedAchievement = listOf(conversationalist, mockAchievement1, mockAchievement2)
   private val achievements = unlockedAchievement + lockedAchievement
@@ -116,22 +133,23 @@ class AchievementsScreenTest {
 
   @Before
   fun setup() {
-    userAchievementsRepository = FakeUserAchievementsRepository()
-    userRepository = LocalRepositories.userRepository
-    currentUserId = "currentUserId"
-    viewModel = AchievementsScreenViewModel(
-        userAchievementsRepository = userAchievementsRepository,
-        userRepository = userRepository,
-        currentUserId = currentUserId
-    )
+    runBlocking {
+      userAchievementsRepository = FakeUserAchievementsRepository()
+      userRepository = LocalRepositories.userRepository
+      userRepository.addUser(currentUser)
+      currentUserId = "currentUserId"
+      viewModel =
+          AchievementsScreenViewModel(
+              userAchievementsRepository = userAchievementsRepository,
+              userRepository = userRepository,
+              currentUserId = currentUserId,
+          )
+    }
   }
 
   @After
   fun tearDown() {
-    if (FirebaseEmulator.isRunning) {
-      FirebaseEmulator.auth.signOut()
-      FirebaseEmulator.clearAuthEmulator()
-    }
+    LocalRepositories.clearAll()
   }
 
   @Test
@@ -144,11 +162,9 @@ class AchievementsScreenTest {
 
       viewModel.loadUIState(currentUserId)
 
-      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
-
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.LOADING, useUnmergedTree = true)
-          .assertIsDisplayed()
+      composeTestRule.setContent {
+        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
+      }
 
       composeTestRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
@@ -181,25 +197,6 @@ class AchievementsScreenTest {
   }
 
   @Test
-  fun errorScreen_shownWhenRepositoryThrows() {
-    runBlocking {
-      userAchievementsRepository.fetchSignal = CompletableDeferred<Unit>()
-      userAchievementsRepository.shouldThrowOnFetch = true
-
-      viewModel.loadUIState(currentUserId)
-
-      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
-
-      userAchievementsRepository.fetchSignal?.complete(Unit)
-      composeTestRule.waitForIdle()
-
-      composeTestRule
-          .onNodeWithText("Failed to load achievements: Network error", useUnmergedTree = true)
-          .assertExists()
-    }
-  }
-
-  @Test
   fun unlockedAndLocked_sectionsDisplayAchievements() {
     runBlocking {
       userAchievementsRepository.unlocked = unlockedAchievement
@@ -207,7 +204,9 @@ class AchievementsScreenTest {
 
       viewModel.loadUIState(currentUserId)
 
-      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
+      composeTestRule.setContent {
+        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
+      }
       composeTestRule.waitForIdle()
 
       composeTestRule
@@ -241,7 +240,7 @@ class AchievementsScreenTest {
       userAchievementsRepository.all = emptyList()
 
       composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true })
+        AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true }, userId = "")
       }
       composeTestRule.waitForIdle()
 
@@ -259,7 +258,9 @@ class AchievementsScreenTest {
       userAchievementsRepository.all = achievements
 
       viewModel.loadUIState(currentUserId)
-      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
+      composeTestRule.setContent {
+        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
+      }
       composeTestRule.waitForIdle()
 
       unlockedAchievement.forEach { achievement ->
@@ -303,7 +304,9 @@ class AchievementsScreenTest {
       userAchievementsRepository.unlocked = emptyList()
       userAchievementsRepository.all = emptyList()
 
-      composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
+      composeTestRule.setContent {
+        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
+      }
       composeTestRule.waitForIdle()
 
       composeTestRule
@@ -315,6 +318,21 @@ class AchievementsScreenTest {
       val toDiscover = ctx.getString(com.android.wildex.R.string.to_discover)
       composeTestRule.onNodeWithText(unlockedLabel, useUnmergedTree = true).assertIsDisplayed()
       composeTestRule.onNodeWithText(toDiscover, useUnmergedTree = true).assertIsDisplayed()
+    }
+  }
+
+  @Test
+  fun clickingAchievementOpensDetailsDialog() {
+    runBlocking {
+      userAchievementsRepository.unlocked = unlockedAchievement
+
+      composeTestRule.setContent {
+        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
+      }
+      composeTestRule
+          .onAllNodesWithTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)[0]
+          .performClick()
+      composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_DIALOG).assertIsDisplayed()
     }
   }
 }

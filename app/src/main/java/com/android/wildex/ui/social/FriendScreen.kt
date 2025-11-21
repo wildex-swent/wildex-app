@@ -1,9 +1,7 @@
 package com.android.wildex.ui.social
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.graphics.LinearGradient
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,11 +32,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,33 +43,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
 import com.android.wildex.ui.utils.ClickableProfilePicture
-import com.google.firebase.Timestamp
-import com.mapbox.maps.extension.style.expressions.dsl.generated.color
-import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 
+/**
+ * Entry point Composable for the Friend Screen
+ *
+ * @param friendScreenViewModel ViewModel exposing the state to the screen and managing user actions
+ * @param userId the user whose friend list we wish to access
+ * @param onProfileClick callback function to be called when the user clicks on a profile picture
+ * @param onGoBack callback function to be called when the user clicks on the go back button
+ */
 @Composable
 fun FriendScreen (
   friendScreenViewModel: FriendScreenViewModel,
@@ -133,6 +121,12 @@ fun FriendScreen (
   }
 }
 
+/**
+ * Top bar Composable for the Friend Screen. It is very basic and consists only of a go back button and
+ * the screen's title
+ *
+ * @param onGoBack callback function to be called when the user clicks on the go back button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendScreenTopBar(
@@ -154,6 +148,14 @@ fun FriendScreenTopBar(
   )
 }
 
+/**
+ * Tab selection Composable for the current user when viewing their own friend screen. It allows to
+ * switch from the friends tab, where the user can see his friend list as well as new friend suggestions,
+ * to the requests tab where the user can manage their sent requests and received requests.
+ *
+ * @param selectedTab the initially selected tab
+ * @param onTabSelected callback function to be called when the user wants to switch tabs
+ */
 @Composable
 fun CurrentUserSelectionTab(
   selectedTab: String,
@@ -199,6 +201,12 @@ fun CurrentUserSelectionTab(
   }
 }
 
+/**
+ * Follow button Composable to be used in the template as an interactable element. This allows the
+ * current user to send a friend request to any user that is not friend with them.
+ *
+ * @param onFollow callback function to be called when the user wants to send a friend request
+ */
 @Composable
 fun FollowButton(
   onFollow: () -> Unit = {},
@@ -229,6 +237,12 @@ fun FollowButton(
   }
 }
 
+/**
+ * Unfollow button Composable to be used in the template as an interactable element. This allows the
+ * current user to revoke a friendship with any user they are friends with.
+ *
+ * @param onUnfollow callback function to be called when the user wants to revoke a friendship
+ */
 @Composable
 fun UnfollowButton(
   onUnfollow: () -> Unit = {},
@@ -254,6 +268,13 @@ fun UnfollowButton(
   }
 }
 
+/**
+ * Interactable element Composable that is to be added to the template to manage a received request.
+ * It allows to accept or decline an incoming friend request.
+ *
+ * @param onAccept callback function to be called when the user wants to accept the friend request
+ * @param onDecline callback function to be called when the user wants to decline the friend request
+ */
 @Composable
 fun ReceivedRequestInteractable(
   onAccept: () -> Unit = {},
@@ -283,6 +304,12 @@ fun ReceivedRequestInteractable(
   }
 }
 
+/**
+ * Interactable element Composable to be added to the template when willing to manage a sent request,
+ * in the current user's own friend screen. It allows to cancel a sent request in the requests tab.
+ *
+ * @param onCancel callback function to be called when the user wants to cancel the sent friend request
+ */
 @Composable
 fun CurrentUserSentRequestInteractable(
   onCancel: () -> Unit = {}
@@ -299,6 +326,13 @@ fun CurrentUserSentRequestInteractable(
   )
 }
 
+/**
+ * Interactable element Composable to be added to the template when willing to manage a sent friend request,
+ * in another user's friend screen. This allows the current user to cancel a friend request from the friend
+ * screen of another user.
+ *
+ * @param onCancel callback function to be called when the user wants to cancel the sent friend request
+ */
 @Composable
 fun OtherUserSentRequestInteractable(
   onCancel: () -> Unit = {}
@@ -324,6 +358,19 @@ fun OtherUserSentRequestInteractable(
   }
 }
 
+/**
+ * Auxiliary Composable used in the friend request interactable, whether it is for the sent or received
+ * requests. It defines an interactable button of circular shape with an icon in the middle and a background
+ * color.
+ *
+ * @param onClick callback function to be called when the user wants to interact with this request button
+ * @param icon the icon to display in the middle of the button
+ * @param contentDescription description of the button's functionality
+ * @param backgroundColor background color of the button's circular background
+ * @param iconColor color of the icon
+ * @param modifier modifier passed from the caller to be applied to the icon button as to apply padding
+ *  or any other modifier to this button
+ */
 @Composable
 fun RequestButton(
   onClick : () -> Unit = {},
@@ -349,12 +396,30 @@ fun RequestButton(
   }
 }
 
+/**
+ * Composable defining a standard template for a friend in a friend list, a suggestion or a friend request.
+ * It layouts the following elements in a Row: a user's clickable profile picture, a Column with the user's
+ * username and an optional subtext, and an interactable element at the end of the row to manage to subject
+ * of the Composable, whether it is a friend, a suggestion or a request.
+ *
+ * @param viewModel ViewModel needed to interact with the interactable element
+ * @param isCurrentUser true if the screen is the current user's friend screen, false otherwise. It is needed
+ *  to determine what type of sent friend request interactable element to display in case the subject is a
+ *  sent friend request
+ * @param user subject user of the friendship, suggestion or friend request
+ * @param subtext optional text to display below the user's username. It is particularly useful in the case
+ *  of a suggestion to display the suggestion reason
+ * @param onProfileClick callback function to be called when the current user clicks on the profile picture
+ *  of the subject user
+ * @param friendStatus enum object defining which interactable element to display at the end of the row, or
+ *  none if the subject user of this composable is the current user
+ */
 @Composable
 fun FriendRequestSuggestionTemplate(
   viewModel: FriendScreenViewModel,
-  state: FriendsScreenUIState,
+  isCurrentUser: Boolean,
   user: SimpleUser,
-  subtext: String,
+  subtext: String = "",
   onProfileClick: (Id) -> Unit = {},
   friendStatus: FriendStatus
 ){
@@ -402,7 +467,7 @@ fun FriendRequestSuggestionTemplate(
         onAccept = {viewModel.acceptReceivedRequest(user.userId)},
         onDecline = {viewModel.declineReceivedRequest(user.userId)}
       )
-      FriendStatus.PENDING_SENT -> if (state.isCurrentUser){
+      FriendStatus.PENDING_SENT -> if (isCurrentUser){
         CurrentUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
       } else OtherUserSentRequestInteractable(onCancel = {viewModel.cancelSentRequest(user.userId)})
       FriendStatus.IS_CURRENT_USER -> {}
@@ -410,6 +475,12 @@ fun FriendRequestSuggestionTemplate(
   }
 }
 
+/**
+ * Placeholder Composable to display when the user whose friend screen is displayed doesn't have any friends.
+ *
+ * @param text text to display whether we are viewing the current user's friend screen or another
+ *  user's
+ */
 @Composable
 fun NoFriends(
   text: String
@@ -434,6 +505,9 @@ fun NoFriends(
   }
 }
 
+/**
+ * Placeholder Composable to display when no suggestions are available to display to the current user
+ */
 @Composable
 fun NoSuggestions(){
   Column (
@@ -456,6 +530,14 @@ fun NoSuggestions(){
   }
 }
 
+/**
+ * Content of the friends tab when viewing the current user's friend screen. It has two sections,
+ * the friends list of the current user and a suggestion section containing suggested users
+ *
+ * @param viewModel viewModel needed to interact with the friends list and the suggestions
+ * @param state state needed to get the friends of the current user and the available suggestions
+ * @param onProfileClick callback function to be called when the current user clicks on a profile picture.
+ */
 @Composable
 fun FriendsTabContent(
   viewModel: FriendScreenViewModel,
@@ -487,12 +569,11 @@ fun FriendsTabContent(
       items(friends.size) {index ->
         val friendState = friends[index]
         FriendRequestSuggestionTemplate(
-          viewModel,
-          state,
-          friendState.friend,
-          "",
-          onProfileClick,
-          friendState.status
+          viewModel = viewModel,
+          isCurrentUser = state.isCurrentUser,
+          user = friendState.friend,
+          onProfileClick = onProfileClick,
+          friendStatus = friendState.status
         )
       }
     }
@@ -519,18 +600,22 @@ fun FriendsTabContent(
       items(suggestions.size){ index ->
         val suggestion = suggestions[index]
         FriendRequestSuggestionTemplate(
-          viewModel,
-          state,
-          suggestion.user,
-          suggestion.reason,
-          onProfileClick,
-          FriendStatus.NOT_FRIEND
+          viewModel = viewModel,
+          isCurrentUser = state.isCurrentUser,
+          user = suggestion.user,
+          subtext = suggestion.reason,
+          onProfileClick = onProfileClick,
+          friendStatus = FriendStatus.NOT_FRIEND
         )
       }
     }
   }
 }
 
+/**
+ * Placeholder Composable to be displayed when viewing the current user's friend screen if they have
+ * no sent friend requests.
+ */
 @Composable
 fun NoSentRequests(){
   Column (
@@ -553,6 +638,10 @@ fun NoSentRequests(){
   }
 }
 
+/**
+ * Placeholder Composable to be displayed when viewing the current user's friend screen if they have
+ * no incoming friend requests
+ */
 @Composable
 fun NoReceivedRequests(){
   Column (
@@ -575,6 +664,16 @@ fun NoReceivedRequests(){
   }
 }
 
+/**
+ * Content of the requests tab when viewing the current user's friend screen. It has two sections,
+ * a received friend requests section where the current user can view and manage their incoming friend
+ * requests, and a sent friend requests section where the current user can view and manage their
+ * sent friend requests.
+ *
+ * @param viewModel viewModel needed to interact with the friend requests
+ * @param state state needed to get the received and sent friend requests of the current user
+ * @param onProfileClick callback function to be called when the current user clicks on a profile picture
+ */
 @Composable
 fun RequestsTabContent(
   viewModel: FriendScreenViewModel,
@@ -607,9 +706,8 @@ fun RequestsTabContent(
         val receivedRequest = receivedRequests[index]
         FriendRequestSuggestionTemplate(
           viewModel = viewModel,
-          state = state,
+          isCurrentUser = state.isCurrentUser,
           user = receivedRequest.user,
-          subtext = "",
           onProfileClick = onProfileClick,
           friendStatus = FriendStatus.PENDING_RECEIVED
         )
@@ -639,9 +737,8 @@ fun RequestsTabContent(
         val sentRequest = sentRequests[index]
         FriendRequestSuggestionTemplate(
           viewModel = viewModel,
-          state = state,
+          isCurrentUser = state.isCurrentUser,
           user = sentRequest.user,
-          subtext = "",
           onProfileClick = onProfileClick,
           friendStatus = FriendStatus.PENDING_SENT
         )
@@ -650,6 +747,18 @@ fun RequestsTabContent(
   }
 }
 
+/**
+ * Content of the friend screen when viewing another user's friend screen. It has only one section:
+ * the friend list, in which the current user can interact freely with users. If any user in the list
+ * has sent a friend request to the current user, they can directly accept or decline it from there.
+ * If the current user sent a friend request to a user in the list, they can see it and cancel it
+ * directly from this screen.
+ *
+ * @param viewModel viewModel needed to interact with the friendships/requests with users in the friend list
+ * @param state state needed to get the friends of the screen's user as well as their respective status
+ *  relative to the current user
+ * @param onProfileClick callback function to be called when the current user clicks on a profile picture
+ */
 @Composable
 fun OtherUserFriendScreenContent(
   viewModel: FriendScreenViewModel,
@@ -680,20 +789,13 @@ fun OtherUserFriendScreenContent(
       items(friends.size) {index ->
         val friendState = friends[index]
         FriendRequestSuggestionTemplate(
-          viewModel,
-          state,
-          friendState.friend,
-          "",
-          onProfileClick,
-          friendState.status
+          viewModel = viewModel,
+          isCurrentUser = state.isCurrentUser,
+          user = friendState.friend,
+          onProfileClick = onProfileClick,
+          friendStatus = friendState.status
         )
       }
     }
   }
-}
-
-@Preview
-@Composable
-fun FriendScreenPreview() {
-  //FriendScreen()
 }

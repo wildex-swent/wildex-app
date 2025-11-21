@@ -67,13 +67,6 @@ sealed class Screen(
 
   object Settings : Screen(route = "settings", name = "Settings")
 
-  data class Friend(val userUid: Id) :
-      Screen(route = "friend_screen/${userUid}", name = "Friend Screen") {
-    companion object {
-      const val PATH = "friend_screen/{userUid}"
-    }
-  }
-
   data class Achievements(val userUid: Id) :
       Screen(route = "achievement_screen/${userUid}", name = "Achievement Screen") {
     companion object {

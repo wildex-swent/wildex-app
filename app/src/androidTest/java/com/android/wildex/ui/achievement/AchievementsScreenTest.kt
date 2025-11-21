@@ -132,7 +132,7 @@ class AchievementsScreenTest {
       fakeRepo.unlocked = unlockedAchievement
       fakeRepo.all = achievements
 
-      viewModel.loadAchievements()
+      viewModel.loadUIState("")
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
 
@@ -176,7 +176,7 @@ class AchievementsScreenTest {
       fakeRepo.fetchSignal = CompletableDeferred()
       fakeRepo.shouldThrowOnFetch = true
 
-      viewModel.loadAchievements()
+      viewModel.loadUIState("")
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
 
@@ -195,7 +195,7 @@ class AchievementsScreenTest {
       fakeRepo.unlocked = unlockedAchievement
       fakeRepo.all = achievements
 
-      viewModel.loadAchievements()
+      viewModel.loadUIState("")
 
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
@@ -248,7 +248,7 @@ class AchievementsScreenTest {
       fakeRepo.unlocked = unlockedAchievement
       fakeRepo.all = achievements
 
-      viewModel.loadAchievements()
+      viewModel.loadUIState("")
       composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = {}) }
       composeTestRule.waitForIdle()
 

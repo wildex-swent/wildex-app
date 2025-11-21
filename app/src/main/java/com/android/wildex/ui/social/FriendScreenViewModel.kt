@@ -155,35 +155,23 @@ class FriendScreenViewModel(
       val request =
           Relationship(senderId = currentUserId, receiverId = userId, status = StatusEnum.PENDING)
       val sentRequests = state.sentRequests
-      // if the screen shows the current user's friendships state, append the new request to show on
-      // the screen,
-      // otherwise we don't need to do it since we don't show requests of other users
-      val newSentRequests =
-          if (state.isCurrentUser) sentRequests + listOf(request) else sentRequests
       val friends = state.friends
+      var newSentRequests: List<Relationship>
+      var newFriends: List<FriendState>
 
-      // if the screen is the current user's, we remove the friend from the friend list, if the
-      // request was done there, to be moved to the requests
-      // otherwise we show that there is a pending request
-      val newFriends =
-          if (state.isCurrentUser) {
-            friends.filter { it.friend.userId != userId }
-          } else {
+      if (state.isCurrentUser) {
+        newSentRequests = sentRequests + listOf(request)
+        newFriends = friends.filter { it.friend.userId != userId }
+        suggestions.value = suggestions.value.filter { it.user.userId != userId }
+      } else {
+        newSentRequests = sentRequests
+        newFriends =
             friends.map {
               if (it.friend.userId == userId) {
                 it.copy(isPending = true)
               } else it
             }
-          }
-
-      // if the screen is the current user's, we remove the suggestion, if the request was done
-      // there, to be moved to the requests
-      // otherwise we don't need to do it since we don't show suggestions on other users' friend
-      // screens.
-      suggestions.value =
-          if (state.isCurrentUser) {
-            suggestions.value.filter { it.user.userId != userId }
-          } else suggestions.value
+      }
 
       _uiState.value =
           state.copy(

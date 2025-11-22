@@ -39,20 +39,44 @@ private fun clusterByDistance(
     radiusMeters: Double,
 ): List<MapPin> {
   val basePins = pins.filter { it !is MapPin.ClusterPin }
-  if (basePins.isEmpty()) return emptyList()
+  val trivial = handleTrivialClusterCases(basePins)
+  if (trivial != null) return trivial
+
   val n = basePins.size
-  if (n == 1) {
+  val parent = IntArray(n) { it }
+
+  // build union–find components
+  mergeClosePins(basePins, radiusMeters, parent)
+
+  // collect groups
+  val groups = buildClusterGroups(basePins, parent)
+
+  // build ClusterPins
+  return buildClusterPins(groups)
+}
+
+/** Handle trivial cases for clustering: empty list or single pin. */
+private fun handleTrivialClusterCases(basePins: List<MapPin>): List<MapPin>? {
+  if (basePins.isEmpty()) return emptyList()
+  if (basePins.size == 1) {
     val p = basePins[0]
     return listOf(
         MapPin.ClusterPin(
             id = "cluster_single_${p.id}",
             location = p.location,
             count = 1,
-        ))
+        ),
+    )
   }
-  // ---- union–find (disjoint sets over pins) ----
-  val parent = IntArray(n) { it }
+  return null
+}
 
+/** Merge close pins into union–find structure. */
+private fun mergeClosePins(
+    basePins: List<MapPin>,
+    radiusMeters: Double,
+    parent: IntArray,
+) {
   fun find(x: Int): Int {
     var r = x
     while (parent[r] != r) r = parent[r]
@@ -71,7 +95,7 @@ private fun clusterByDistance(
     if (ra != rb) parent[rb] = ra
   }
 
-  // ---- merge any pair closer than radiusMeters ----
+  val n = basePins.size
   for (i in 0 until n) {
     val li = basePins[i].location
     for (j in i + 1 until n) {
@@ -81,32 +105,49 @@ private fun clusterByDistance(
       }
     }
   }
+}
 
-  // ---- collect groups (components) ----
+/** Build groups of pins from union–find structure. */
+private fun buildClusterGroups(
+    basePins: List<MapPin>,
+    parent: IntArray,
+): Map<Int, MutableList<MapPin>> {
+  fun findRoot(x: Int): Int {
+    var r = x
+    while (parent[r] != r) r = parent[r]
+    var cur = x
+    while (parent[cur] != cur) {
+      val p = parent[cur]
+      parent[cur] = r
+      cur = p
+    }
+    return r
+  }
+
   val groups = mutableMapOf<Int, MutableList<MapPin>>()
-  for (i in 0 until n) {
-    val root = find(i)
+  for (i in basePins.indices) {
+    val root = findRoot(i)
     groups.getOrPut(root) { mutableListOf() }.add(basePins[i])
   }
-
-  // ---- build ClusterPins from each group ----
-  val result = mutableListOf<MapPin>()
-  for ((root, group) in groups) {
-    val avgLat = group.map { it.location.latitude }.average()
-    val avgLon = group.map { it.location.longitude }.average()
-    val count = group.size
-    val clusterId: Id = "cluster_$root"
-
-    result +=
-        MapPin.ClusterPin(
-            id = clusterId,
-            location = Location(avgLat, avgLon, "Cluster"),
-            count = count,
-        )
-  }
-
-  return result
+  return groups
 }
+
+/** Build ClusterPins from groups of pins. */
+private fun buildClusterPins(
+    groups: Map<Int, MutableList<MapPin>>,
+): List<MapPin> =
+    groups.map { (root, group) ->
+      val avgLat = group.map { it.location.latitude }.average()
+      val avgLon = group.map { it.location.longitude }.average()
+      val count = group.size
+      val clusterId: Id = "cluster_$root"
+
+      MapPin.ClusterPin(
+          id = clusterId,
+          location = Location(avgLat, avgLon, "Cluster"),
+          count = count,
+      )
+    }
 
 /** Approximate distance between two lat/lon points (meters). */
 private fun distanceMeters(

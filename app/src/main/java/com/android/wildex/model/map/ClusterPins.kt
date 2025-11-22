@@ -123,13 +123,9 @@ private fun buildClusterGroups(
     }
     return r
   }
-
-  val groups = mutableMapOf<Int, MutableList<MapPin>>()
-  for (i in basePins.indices) {
-    val root = findRoot(i)
-    groups.getOrPut(root) { mutableListOf() }.add(basePins[i])
-  }
-  return groups.mapValues { (_, pins) -> pins.toList() }
+  return basePins.indices
+      .groupBy { i -> findRoot(i) }
+      .mapValues { (_, indices) -> indices.map { idx -> basePins[idx] } }
 }
 
 /** Build ClusterPins from groups of pins. */

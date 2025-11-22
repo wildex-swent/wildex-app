@@ -71,8 +71,8 @@ class ClusterPinsTest {
   @Test
   fun threeClosePins_lowZoom_mergedIntoOneCluster() {
     val p1 = postPin("p1", 46.0000, 6.0000)
-    val p2 = postPin("p2", 46.0100, 6.0000) // ~1.1km from p1
-    val p3 = postPin("p3", 46.0200, 6.0000) // ~1.1km from p2
+    val p2 = postPin("p2", 46.0100, 6.0000)
+    val p3 = postPin("p3", 46.0200, 6.0000)
     val pins = listOf<MapPin>(p1, p2, p3)
     val result = clusterPinsForZoom(pins, zoomBand = 8)
     assertEquals(1, result.size)
@@ -101,7 +101,7 @@ class ClusterPinsTest {
   @Test
   fun samePins_clusteredAtZoom9_butNotAtZoom11() {
     val p1 = postPin("p1", 46.0000, 6.0000)
-    val p2 = postPin("p2", 46.0090, 6.0000) // ~1km away
+    val p2 = postPin("p2", 46.0090, 6.0000)
     val pins = listOf<MapPin>(p1, p2)
     val clustered = clusterPinsForZoom(pins, zoomBand = 9)
     assertEquals(1, clustered.size)

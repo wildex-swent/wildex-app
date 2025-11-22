@@ -106,7 +106,7 @@ class UserRecommender(
     // filter out users who are already friends or have pending requests with current user
     val candidates =
         users
-            .filter { it.userId != currentUserId && !currentUserFriends.contains(it.userId) }
+            .filter { it.userId != currentUserId && !currentUserFriends.contains(it) }
             .filter {
               !pendingRequestsByCurrentUser.contains(it.userId) &&
                   !pendingRequestsToCurrentUser.contains(it.userId)
@@ -200,12 +200,12 @@ class UserRecommender(
     val userToMutualFriendsCount = mutableMapOf<Id, Int>()
     val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
     for (friendId in currentUserFriends) {
-      val friendsOfFriend = userFriendsRepository.getAllFriendsOfUser(friendId)
+      val friendsOfFriend = userFriendsRepository.getAllFriendsOfUser(friendId.userId)
       for (potentialCandidateId in friendsOfFriend) {
-        if (potentialCandidateId != currentUserId &&
+        if (potentialCandidateId.userId != currentUserId &&
             !currentUserFriends.contains(potentialCandidateId)) {
-          userToMutualFriendsCount[potentialCandidateId] =
-              userToMutualFriendsCount.getOrDefault(potentialCandidateId, 0) + 1
+          userToMutualFriendsCount[potentialCandidateId.userId] =
+              userToMutualFriendsCount.getOrDefault(potentialCandidateId.userId, 0) + 1
         }
       }
     }

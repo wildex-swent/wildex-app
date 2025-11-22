@@ -90,15 +90,16 @@ class FriendScreenViewModel(
       val friendsStates =
           userFriends.map {
             FriendState(
-                friend = userRepository.getSimpleUser(it),
+                friend = userRepository.getSimpleUser(it.userId),
                 status =
                     when {
-                      it == currentUserId -> FriendStatus.IS_CURRENT_USER
+                      it.userId == currentUserId -> FriendStatus.IS_CURRENT_USER
                       currentUserFriends.contains(it) -> FriendStatus.FRIEND
-                      currentUserSentRequests.any { request -> request.receiverId == it } ->
+                      currentUserSentRequests.any { request -> request.receiverId == it.userId } ->
                           FriendStatus.PENDING_SENT
-                      currentUserReceivedRequests.any { request -> request.senderId == it } ->
-                          FriendStatus.PENDING_RECEIVED
+                      currentUserReceivedRequests.any { request ->
+                        request.senderId == it.userId
+                      } -> FriendStatus.PENDING_RECEIVED
                       else -> FriendStatus.NOT_FRIEND
                     })
           }

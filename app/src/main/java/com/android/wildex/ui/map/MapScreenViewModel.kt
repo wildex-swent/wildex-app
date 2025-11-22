@@ -152,13 +152,16 @@ class MapScreenViewModel(
                 if (isSelf) loadAllReportsAsPins() else loadReportsInvolvingUser(userUid)
           }
 
-      val previousCenter = _uiState.value.centerCoordinates
-      val defaultCenter = MapUIState().centerCoordinates // Lausanne
-
-      val centerCoordinates: Location =
+      val previousState = _uiState.value
+      val previousCenter = previousState.centerCoordinates
+      val previousPinIds = previousState.pins.map { it.id }
+      val currentPinIds = pins.map { it.id }
+      val tabChanged = previousPinIds != currentPinIds
+      val centerCoordinates =
           when {
-            previousCenter != defaultCenter -> previousCenter
-            pins.isNotEmpty() -> pins[0].location
+            // switching tab -> new pin set -> center on first pin
+            tabChanged && pins.isNotEmpty() -> pins[0].location
+            // otherwise keep current camera
             else -> previousCenter
           }
 
@@ -180,7 +183,7 @@ class MapScreenViewModel(
   }
 
   /**
-   * Handles tab selection by the user.
+   * Handles tab selection by the user. d
    *
    * @param tab The selected [MapTab].
    * @param userUid The user ID for whom to load the map data. Defaults to the current user.

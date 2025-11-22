@@ -181,20 +181,22 @@ fun MapScreen(
       if (!isMapReady) return@LaunchedEffect
       val mv = mapView ?: return@LaunchedEffect
       val loc = uiState.centerCoordinates
-      val zoom = if (uiState.selected != null) 18.0 else 12.0
-      val target = Point.fromLngLat(loc.longitude, loc.latitude)
       val cameraState = mv.mapboxMap.cameraState
-
+      val target = Point.fromLngLat(loc.longitude, loc.latitude)
+      val zoom =
+          when {
+            uiState.selected != null -> 18.0
+            // to no force a zoom-out.
+            cameraState.center.latitude() == target.latitude() &&
+                cameraState.center.longitude() == target.longitude() -> cameraState.zoom
+            else -> 12.0
+          }
       val sameCenter =
           cameraState.center.latitude() == target.latitude() &&
               cameraState.center.longitude() == target.longitude()
       val sameZoom = abs(cameraState.zoom - zoom) < 0.01
       if (sameCenter && sameZoom) return@LaunchedEffect
-      val dest =
-          CameraOptions.Builder()
-              .center(Point.fromLngLat(loc.longitude, loc.latitude))
-              .zoom(zoom)
-              .build()
+      val dest = CameraOptions.Builder().center(target).zoom(zoom).build()
       mv.mapboxMap.flyTo(
           dest,
           mapAnimationOptions { duration(500L) },

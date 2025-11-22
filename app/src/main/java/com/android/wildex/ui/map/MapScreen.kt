@@ -51,6 +51,7 @@ import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
+import kotlin.math.abs
 
 /* ---------- Test tags ---------- */
 object MapContentTestTags {
@@ -169,6 +170,14 @@ fun MapScreen(
           } else {
             12.0
           }
+      val target = Point.fromLngLat(loc.longitude, loc.latitude)
+      val cameraState = mv.mapboxMap.cameraState
+
+      val sameCenter =
+          cameraState.center.latitude() == target.latitude() &&
+              cameraState.center.longitude() == target.longitude()
+      val sameZoom = abs(cameraState.zoom - zoom) < 0.01
+      if (sameCenter && sameZoom) return@LaunchedEffect
       val dest =
           CameraOptions.Builder()
               .center(Point.fromLngLat(loc.longitude, loc.latitude))
@@ -176,7 +185,7 @@ fun MapScreen(
               .build()
       mv.mapboxMap.flyTo(
           dest,
-          mapAnimationOptions { duration(800L) },
+          mapAnimationOptions { duration(500L) },
       )
     }
 

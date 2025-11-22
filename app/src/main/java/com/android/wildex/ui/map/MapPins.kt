@@ -272,12 +272,28 @@ private suspend fun upsertPinAnnotation(
 ) {
   val id = pin.id
   val isSelected = id == selectedId
-  val showExcl = pin is MapPin.ReportPin && pin.assigneeId.isNullOrBlank() && !isSelected
   val scale = if (isSelected) 1.25f else 1.0f
-  val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
 
-  val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
-  val base = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+  val (base, showExcl) =
+      when (pin) {
+        is MapPin.ClusterPin -> {
+          // cluster: no exclamation, custom circle with count
+          renderClusterPin(count = pin.count, borderColor = borderColor, scale = scale) to false
+        }
+        is MapPin.PostPin -> {
+          val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+          val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
+          val b = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+          b to false
+        }
+        is MapPin.ReportPin -> {
+          val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
+          val baseKey = BaseKey(targetUrl, borderColor, (scale * 100f).toInt())
+          val b = getOrCreateBaseBitmap(ctx, baseKey, borderColor, baseCache, scale)
+          val showExcl = pin.assigneeId.isNullOrBlank() && !isSelected
+          b to showExcl
+        }
+      }
 
   val existing = annotationById[id]
   if (existing == null) {
@@ -579,7 +595,6 @@ internal fun composeOverlays(
   val imgRadius = (circleBoxNoRipple / 2f) - PADDING * scale
   val bobMax = BOB_AMP_PX * scale
   val badgeHeadroom = if (showExclamation) (BADGE_GAP * scale + bobMax) else 0f
-
   val outW = base.width
   val outH = (badgeHeadroom + base.height).toInt()
   val out = createBitmap(outW, outH)
@@ -588,12 +603,9 @@ internal fun composeOverlays(
       Paint(Paint.ANTI_ALIAS_FLAG).apply {
         this.alpha = (globalAlpha.coerceIn(0f, 1f) * 255).toInt()
       }
-
   c.drawBitmap(base, 0f, badgeHeadroom, p)
-
   val cx = outW / 2f
   val cy = badgeHeadroom + (circleBoxNoRipple / 2f)
-
   rippleProgress?.let { prog ->
     val rippleMax = 16f * scale
     repeat(3) { i ->
@@ -610,19 +622,16 @@ internal fun composeOverlays(
     }
     p.alpha = (globalAlpha * 255).toInt()
   }
-
   if (showExclamation) {
     val badgeScale = 0.95f * scale
     val ringR = BADGE_RING_R * badgeScale
     val clampedOffset = exclamationOffsetPx.coerceIn(-bobMax, bobMax)
     val badgeCx = cx
     val badgeCy = (cy - imgRadius) - (BADGE_GAP * scale - 8f * scale) + clampedOffset
-
     p.style = Paint.Style.STROKE
     p.strokeWidth = BADGE_STROKE * badgeScale
     p.color = borderColor
     c.drawCircle(badgeCx, badgeCy, ringR, p)
-
     p.style = Paint.Style.FILL
     val barW = BADGE_BAR_W * badgeScale
     val barH = BADGE_BAR_H * badgeScale
@@ -637,6 +646,33 @@ internal fun composeOverlays(
     val dotR = BADGE_DOT_R * badgeScale
     c.drawCircle(badgeCx, badgeCy + ringR * 0.45f, dotR, p)
   }
+
+  return out
+}
+
+@WorkerThread
+@VisibleForTesting
+internal fun renderClusterPin(count: Int, borderColor: Int, scale: Float): Bitmap {
+  val circleBox = BASE_CIRCLE * scale
+  val width = circleBox.toInt()
+  val height = width
+  val out = createBitmap(width, height)
+  val c = Canvas(out)
+  val p = Paint(Paint.ANTI_ALIAS_FLAG)
+  val cx = width / 2f
+  val cy = height / 2f
+  val radius = (circleBox / 2f) - PADDING * scale
+  p.style = Paint.Style.FILL
+  p.color = borderColor
+  c.drawCircle(cx, cy, radius, p)
+  p.color = Color.WHITE
+  p.textAlign = Paint.Align.CENTER
+  p.textSize = 32f * scale
+  val text = if (count > 99) "99+" else count.toString()
+  val textBounds = Rect()
+  p.getTextBounds(text, 0, text.length, textBounds)
+  val textY = cy - textBounds.exactCenterY()
+  c.drawText(text, cx, textY, p)
 
   return out
 }

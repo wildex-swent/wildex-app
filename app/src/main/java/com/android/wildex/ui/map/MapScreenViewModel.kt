@@ -157,9 +157,7 @@ class MapScreenViewModel(
       val tabChanged = previousPinIds != currentPinIds
       val centerCoordinates =
           when {
-            // switching tab -> new pin set -> center on first pin
             tabChanged && pins.isNotEmpty() -> pins[0].location
-            // otherwise keep current camera
             else -> previousCenter
           }
 
@@ -231,6 +229,7 @@ class MapScreenViewModel(
             _uiState.value =
                 _uiState.value.copy(selected = PinDetails.ReportDetails(report, author, assignee))
           }
+          is MapPin.ClusterPin -> {}
         }
       } catch (e: Exception) {
         setErrorMsg("Failed to load pin: ${e.message}")

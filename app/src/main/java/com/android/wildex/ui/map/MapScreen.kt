@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.map.PinDetails
+import com.android.wildex.model.map.clusterPinsForZoom
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -42,7 +43,9 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.mapbox.common.Cancelable
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraChanged
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
@@ -52,6 +55,7 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /* ---------- Test tags ---------- */
 object MapContentTestTags {
@@ -159,17 +163,25 @@ fun MapScreen(
     var isMapReady by remember { mutableStateOf(false) }
     // I added this to avoid the old pins taking the new tab color before they disappear
     var styleTab by remember { mutableStateOf(uiState.activeTab) }
+    var currentZoom by remember { mutableDoubleStateOf(12.0) }
+    val zoomBand = currentZoom.roundToInt()
+    val pinsForDisplay =
+        remember(uiState.pins, styleTab, zoomBand) {
+          if (!isMapReady) {
+            uiState.pins
+          } else {
+            clusterPinsForZoom(
+                pins = uiState.pins,
+                zoomBand = zoomBand,
+            )
+          }
+        }
 
     LaunchedEffect(uiState.centerCoordinates, isMapReady, uiState.selected, uiState.activeTab) {
       if (!isMapReady) return@LaunchedEffect
       val mv = mapView ?: return@LaunchedEffect
       val loc = uiState.centerCoordinates
-      val zoom =
-          if (uiState.selected != null) {
-            18.0
-          } else {
-            12.0
-          }
+      val zoom = if (uiState.selected != null) 18.0 else 12.0
       val target = Point.fromLngLat(loc.longitude, loc.latitude)
       val cameraState = mv.mapboxMap.cameraState
 
@@ -193,12 +205,23 @@ fun MapScreen(
       OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
     }
     DisposableEffect(mapView) {
-      val cancelable = mapView?.mapboxMap?.subscribeMapLoaded { isMapReady = true }
+      val mv = mapView
+      if (mv == null) {
+        return@DisposableEffect onDispose {}
+      }
+      val mapboxMap = mv.mapboxMap
+      val mapLoadedCancelable: Cancelable = mapboxMap.subscribeMapLoaded { isMapReady = true }
+      val cameraCancelable: Cancelable =
+          mapboxMap.subscribeCameraChanged { event: CameraChanged ->
+            currentZoom = event.cameraState.zoom
+          }
       onDispose {
-        cancelable?.cancel()
-        mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener)
+        mapLoadedCancelable.cancel()
+        cameraCancelable.cancel()
+        mv.location.removeOnIndicatorPositionChangedListener(indicatorListener)
       }
     }
+
     LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
     val showLoading = uiState.isLoading || !isMapReady
 
@@ -220,7 +243,7 @@ fun MapScreen(
         PinsOverlay(
             modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
             mapView = mapView,
-            pins = uiState.pins,
+            pins = pinsForDisplay,
             currentTab = styleTab,
             selectedId =
                 when (val s = uiState.selected) {

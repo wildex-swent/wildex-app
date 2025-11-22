@@ -14,6 +14,7 @@ import com.android.wildex.model.utils.URL
 enum class PinKind {
   POST,
   REPORT,
+  CLUSTER,
 }
 
 /**
@@ -43,7 +44,7 @@ sealed class MapPin {
       override val location: Location,
       override val imageURL: URL,
       override val kind: PinKind = PinKind.POST,
-      val isFriend: Boolean = false
+      val isFriend: Boolean = false,
   ) : MapPin()
 
   /**
@@ -57,7 +58,21 @@ sealed class MapPin {
       override val location: Location,
       override val imageURL: URL,
       override val kind: PinKind = PinKind.REPORT,
-      val assigneeId: Id?
+      val assigneeId: Id?,
+  ) : MapPin()
+
+  /**
+   * Data class representing a cluster of pins on the map.
+   *
+   * @property count The number of pins clustered together.
+   */
+  data class ClusterPin(
+      override val id: Id,
+      override val location: Location,
+      override val kind: PinKind = PinKind.CLUSTER,
+      override val imageURL: String = "",
+      override val authorId: String = "cluster",
+      val count: Int,
   ) : MapPin()
 }
 
@@ -76,7 +91,7 @@ sealed interface PinDetails {
       val post: Post,
       val author: SimpleUser?,
       val likedByMe: Boolean,
-      val animalName: String = "animal"
+      val animalName: String = "animal",
   ) : PinDetails
 
   /**

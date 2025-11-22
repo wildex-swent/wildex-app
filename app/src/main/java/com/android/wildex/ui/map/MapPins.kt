@@ -188,6 +188,7 @@ fun PinsOverlay(
 
 /* ----------------------- manager lifecycle helpers ----------------------- */
 
+/** Create a PointAnnotationManager with click listener */
 private fun createPointManager(
     mapView: MapView?,
     latestOnClick: (Id) -> Unit,
@@ -201,6 +202,7 @@ private fun createPointManager(
   }
 }
 
+/** Dispose of PointAnnotationManager and clear caches */
 @VisibleForTesting
 internal fun disposePointManager(
     mapView: MapView?,
@@ -218,6 +220,7 @@ internal fun disposePointManager(
 
 /* ----------------------- pin diff + fade helpers ----------------------- */
 
+/** Apply pin diff: create/update/remove with fade-in for new pins */
 private suspend fun applyPinDiffAndFade(
     ctx: Context,
     manager: PointAnnotationManager?,
@@ -246,6 +249,7 @@ private suspend fun applyPinDiffAndFade(
   }
 }
 
+/** Remove annotations that are no longer present in the pins list */
 private fun removeStaleAnnotations(
     manager: PointAnnotationManager,
     pins: List<MapPin>,
@@ -260,6 +264,7 @@ private fun removeStaleAnnotations(
   }
 }
 
+/** Create or update a pin annotation with optional fade-in for new pins */
 private suspend fun upsertPinAnnotation(
     ctx: Context,
     manager: PointAnnotationManager,
@@ -277,7 +282,6 @@ private suspend fun upsertPinAnnotation(
   val (base, showExcl) =
       when (pin) {
         is MapPin.ClusterPin -> {
-          // cluster: no exclamation, custom circle with count
           renderClusterPin(count = pin.count, borderColor = borderColor, scale = scale) to false
         }
         is MapPin.PostPin -> {
@@ -319,6 +323,7 @@ private suspend fun upsertPinAnnotation(
   }
 }
 
+/** Get or create the base bitmap for a pin, using the cache if available */
 private suspend fun getOrCreateBaseBitmap(
     ctx: Context,
     baseKey: BaseKey,
@@ -336,6 +341,7 @@ private suspend fun getOrCreateBaseBitmap(
   return built
 }
 
+/** Create a new annotation with a fade-in effect */
 private suspend fun createNewAnnotationWithFade(
     manager: PointAnnotationManager,
     pin: MapPin,
@@ -393,6 +399,7 @@ private suspend fun createNewAnnotationWithFade(
   }
 }
 
+/** Update an existing annotation's bitmap */
 private suspend fun updateExistingAnnotation(
     manager: PointAnnotationManager,
     existing: PointAnnotation,
@@ -419,6 +426,7 @@ private suspend fun updateExistingAnnotation(
 
 /* ----------------------- bobbing helpers ----------------------- */
 
+/** Compute the set of bobbing pin IDs (unassigned report pins, excluding selected) */
 @VisibleForTesting
 internal fun computeBobbingIds(pins: List<MapPin>, selectedId: Id?): Set<Id> =
     pins
@@ -480,6 +488,7 @@ private suspend fun runBobbingLoop(
 
 /* ----------------------- selection ripple helpers ----------------------- */
 
+/** Run the selection ripple animation for the selected pin */
 private suspend fun runSelectionRipple(
     ctx: Context,
     manager: PointAnnotationManager?,
@@ -650,6 +659,7 @@ internal fun composeOverlays(
   return out
 }
 
+/** Render a cluster pin bitmap with count text. */
 @WorkerThread
 @VisibleForTesting
 internal fun renderClusterPin(count: Int, borderColor: Int, scale: Float): Bitmap {

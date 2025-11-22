@@ -52,6 +52,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -357,7 +359,12 @@ private fun ReportDetailsContent(
                     .testTag(ReportDetailsScreenTestTags.COMMENTS_HEADER),
             ) {
               val count = uiState.commentsUI.size
-              val label = if (count == 1) "1 Comment" else "$count Comments"
+              val label =
+                  pluralStringResource(
+                      id = R.plurals.report_details_comments_count,
+                      count = count,
+                      count,
+                  )
               Text(
                   text = label,
                   style = typography.titleSmall,
@@ -568,8 +575,13 @@ private fun ReportAssigneeDetailsCard(
           profileUserType = assignee.userType,
           onProfile = onProfile,
       )
+      val label =
+          stringResource(
+              id = R.string.report_details_assigned_to,
+              assignee.username,
+          )
       Text(
-          text = "Assigned to ${assignee.username}",
+          text = label,
           style = typography.titleMedium,
           color = colorScheme.onBackground,
           maxLines = 1,
@@ -667,6 +679,7 @@ private fun ReportCommentInput(
               .padding(horizontal = 12.dp, vertical = 8.dp)
               .testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_BAR),
   ) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -686,7 +699,7 @@ private fun ReportCommentInput(
       OutlinedTextField(
           value = text,
           onValueChange = { text = it },
-          placeholder = { Text("Add a comment …") },
+          placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
           modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
           shape = RoundedCornerShape(32.dp),
           singleLine = true,

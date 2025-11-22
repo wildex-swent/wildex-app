@@ -160,4 +160,12 @@
     \n
     Shared from Wildex – a community for watching over wildlife.
 </string>
+    <string name="report_details_add_comment">Add a comment …</string>
+    <plurals name="report_details_comments_count">
+        <item quantity="one">%d Comment</item>
+        <item quantity="other">%d Comments</item>
+    </plurals>
+    <string name="report_details_assigned_to">Assigned to %1$s</string>
+
+
 </resources>

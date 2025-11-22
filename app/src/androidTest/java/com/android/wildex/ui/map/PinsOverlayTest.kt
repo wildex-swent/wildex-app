@@ -355,6 +355,24 @@ class PinsOverlayTest {
     return f
   }
 
+  @Test
+  fun renderClusterPin_producesBitmap() {
+    val out = renderClusterPin(count = 42, borderColor = Color.RED, scale = 1.2f)
+    assertTrue(out.width > 0)
+    assertTrue(out.height > 0)
+  }
+
+  @Test
+  fun sharedCoil_buildsNewInstance_whenInstanceIsNull() {
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val field = SharedCoil::class.java.getDeclaredField("instance")
+    field.isAccessible = true
+    field.set(null, null)
+    val loader1 = SharedCoil.get(ctx)
+    val loader2 = SharedCoil.get(ctx)
+    assertSame(loader1, loader2)
+  }
+
   // ---------- Cleanup between tests to prevent cross-test flakiness ----------
 
   @OptIn(ExperimentalCoilApi::class)

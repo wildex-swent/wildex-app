@@ -231,7 +231,7 @@ class MapScreenViewModel(
             _uiState.value =
                 _uiState.value.copy(selected = PinDetails.ReportDetails(report, author, assignee))
           }
-          is MapPin.ClusterPin -> {}
+          is MapPin.ClusterPin -> null
         }
       } catch (e: Exception) {
         setErrorMsg("Failed to load pin: ${e.message}")

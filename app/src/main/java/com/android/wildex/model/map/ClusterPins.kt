@@ -111,7 +111,7 @@ private fun mergeClosePins(
 private fun buildClusterGroups(
     basePins: List<MapPin>,
     parent: IntArray,
-): Map<Int, MutableList<MapPin>> {
+): Map<Int, List<MapPin>> {
   fun findRoot(x: Int): Int {
     var r = x
     while (parent[r] != r) r = parent[r]
@@ -129,12 +129,12 @@ private fun buildClusterGroups(
     val root = findRoot(i)
     groups.getOrPut(root) { mutableListOf() }.add(basePins[i])
   }
-  return groups
+  return groups.mapValues { (_, pins) -> pins.toList() }
 }
 
 /** Build ClusterPins from groups of pins. */
 private fun buildClusterPins(
-    groups: Map<Int, MutableList<MapPin>>,
+    groups: Map<Int, List<MapPin>>,
 ): List<MapPin> =
     groups.map { (root, group) ->
       val avgLat = group.map { it.location.latitude }.average()

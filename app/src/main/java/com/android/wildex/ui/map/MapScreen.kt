@@ -168,6 +168,7 @@ fun MapScreen(
     val pinsForDisplay =
         remember(uiState.pins, styleTab, zoomBand) {
           if (!isMapReady) {
+            // So this is just to avoid clustering before the map is ready
             uiState.pins
           } else {
             clusterPinsForZoom(

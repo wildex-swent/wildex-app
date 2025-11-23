@@ -40,6 +40,7 @@ import com.android.wildex.ui.navigation.Tab
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
+import com.android.wildex.ui.report.ReportDetailsScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.report.SubmitReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
@@ -103,6 +104,9 @@ fun WildexApp(
     // Reports
     reportComposable(navigationActions, currentUserId)
 
+    // Report Details
+    reportDetailsComposable(navigationActions)
+
     // Animal Information
     animalInformationComposable(navigationActions)
 
@@ -161,7 +165,7 @@ private fun NavGraphBuilder.achievementsComposable(navigationActions: Navigation
   composable(Screen.Achievements.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
-      AchievementsScreen(onGoBack = { navigationActions.goBack() })
+      AchievementsScreen(onGoBack = { navigationActions.goBack() }, userId = userId)
     }
   }
 }
@@ -238,8 +242,22 @@ private fun NavGraphBuilder.reportComposable(
           if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
         },
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onReportClick = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
         onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
     )
+  }
+}
+
+private fun NavGraphBuilder.reportDetailsComposable(navigationActions: NavigationActions) {
+  composable(Screen.ReportDetails.PATH) { backStackEntry ->
+    val reportId = backStackEntry.arguments?.getString("reportUid")
+    if (reportId != null) {
+      ReportDetailsScreen(
+          reportId = reportId,
+          onGoBack = { navigationActions.goBack() },
+          onProfile = { navigationActions.navigateTo(Screen.Profile(it)) },
+      )
+    }
   }
 }
 
@@ -310,6 +328,7 @@ private fun NavGraphBuilder.mapComposable(
             }
           },
           onPost = { navigationActions.navigateTo(Screen.PostDetails(it)) },
+          onReport = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
           isCurrentUser = currentUserId == userId,
           onGoBack = { navigationActions.goBack() },
       )

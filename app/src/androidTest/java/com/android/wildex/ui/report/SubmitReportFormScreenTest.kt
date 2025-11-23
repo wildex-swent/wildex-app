@@ -131,7 +131,7 @@ class SubmitReportFormScreenTest {
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
-    composeTestRule.onNodeWithText("Submitting...").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Submitting…").assertIsDisplayed()
   }
 
   @Test

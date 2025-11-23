@@ -9,7 +9,6 @@ import com.android.wildex.model.user.UserFriends
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
-import com.android.wildex.model.utils.Id
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.Runs
@@ -132,15 +131,25 @@ class FriendScreenViewModelTest {
             userRecommender = userRecommender,
         )
 
-    coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } returns
-        userFriends1.friendsId
+    coEvery { userRepository.getUser(u1.userId) } returns u1
+    coEvery { userRepository.getUser(u2.userId) } returns u2
+    coEvery { userRepository.getUser(u3.userId) } returns u3
+    coEvery { userRepository.getUser(u4.userId) } returns u4
+
+    coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } coAnswers
+        {
+          userFriends1.friendsId.map { id -> userRepository.getUser(id) }
+        }
     coEvery { friendRequestRepository.getAllFriendRequestsBySender("currentUserId") } returns
         listOf(request1)
     coEvery { userRepository.getSimpleUser(u2.userId) } returns su2
     coEvery { userRecommender.getRecommendedUsers() } returns suggestions
     coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("currentUserId") } returns
         listOf(request2)
-    coEvery { userFriendsRepository.getAllFriendsOfUser("user2") } returns userFriends2.friendsId
+    coEvery { userFriendsRepository.getAllFriendsOfUser("user2") } coAnswers
+        {
+          userFriends2.friendsId.map { id -> userRepository.getUser(id) }
+        }
     coEvery { userRepository.getSimpleUser(u1.userId) } returns su1
     coEvery { userRepository.getSimpleUser(u3.userId) } returns su3
     coEvery { userRepository.getSimpleUser(u4.userId) } returns su4
@@ -164,7 +173,7 @@ class FriendScreenViewModelTest {
   @Test
   fun loadingStateOfCurrentUserWorksCorrectly() {
     mainDispatcherRule.runTest {
-      val deferred = CompletableDeferred<List<Id>>()
+      val deferred = CompletableDeferred<List<User>>()
       coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } coAnswers
           {
             deferred.await()
@@ -172,7 +181,7 @@ class FriendScreenViewModelTest {
       viewModel.loadUIState("currentUserId")
       Assert.assertTrue(viewModel.uiState.value.isLoading)
       Assert.assertFalse(viewModel.uiState.value.isRefreshing)
-      deferred.complete(userFriends1.friendsId)
+      deferred.complete(userFriends1.friendsId.map { userRepository.getUser(it) })
       advanceUntilIdle()
       val state = viewModel.uiState.value
       val expectedFriendStates = listOf(FriendState(friend = su2, status = FriendStatus.FRIEND))
@@ -211,12 +220,12 @@ class FriendScreenViewModelTest {
   @Test
   fun loadingStateOfOtherUserWorksCorrectly() {
     mainDispatcherRule.runTest {
-      val deferred = CompletableDeferred<List<Id>>()
+      val deferred = CompletableDeferred<List<User>>()
       coEvery { userFriendsRepository.getAllFriendsOfUser("user2") } coAnswers { deferred.await() }
       viewModel.loadUIState("user2")
       Assert.assertTrue(viewModel.uiState.value.isLoading)
       Assert.assertFalse(viewModel.uiState.value.isRefreshing)
-      deferred.complete(userFriends2.friendsId)
+      deferred.complete(userFriends2.friendsId.map { userRepository.getUser(it) })
       advanceUntilIdle()
       val state = viewModel.uiState.value
       val expectedFriendStates =
@@ -257,7 +266,7 @@ class FriendScreenViewModelTest {
   @Test
   fun refreshingStateWorksCorrectly() {
     mainDispatcherRule.runTest {
-      val deferred = CompletableDeferred<List<Id>>()
+      val deferred = CompletableDeferred<List<User>>()
       coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } coAnswers
           {
             deferred.await()
@@ -265,7 +274,7 @@ class FriendScreenViewModelTest {
       viewModel.refreshUIState("currentUserId")
       Assert.assertFalse(viewModel.uiState.value.isLoading)
       Assert.assertTrue(viewModel.uiState.value.isRefreshing)
-      deferred.complete(userFriends1.friendsId)
+      deferred.complete(userFriends1.friendsId.map { userRepository.getUser(it) })
       advanceUntilIdle()
       val state = viewModel.uiState.value
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))

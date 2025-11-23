@@ -38,7 +38,7 @@ fun ClickableProfilePicture(
     // User profile picture
     ElevatedCard(
         shape = CircleShape,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp),
         modifier = Modifier.matchParentSize()) {
           AsyncImage(
               model = ImageRequest.Builder(context).data(profilePictureURL).crossfade(true).build(),

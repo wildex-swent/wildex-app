@@ -3,6 +3,7 @@ package com.android.wildex.usecase.user
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -29,6 +30,7 @@ class DeleteUserUseCase(
         RepositoryProvider.userAchievementsRepository,
     private val userFriendsRepository: UserFriendsRepository =
         RepositoryProvider.userFriendsRepository,
+    private val friendRequestRepository: FriendRequestRepository = RepositoryProvider.friendRequestRepository,
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
@@ -47,6 +49,7 @@ class DeleteUserUseCase(
     userAnimalsRepository.deleteUserAnimals(userId)
     userAchievementsRepository.deleteUserAchievements(userId)
     userFriendsRepository.deleteUserFriendsOfUser(userId)
+    friendRequestRepository.deleteAllFriendRequestsOfUser(userId)
     postsRepository.deletePostsByUser(userId)
     reportRepository.deleteReportsByUser(userId)
     likeRepository.deleteLikesByUser(userId)

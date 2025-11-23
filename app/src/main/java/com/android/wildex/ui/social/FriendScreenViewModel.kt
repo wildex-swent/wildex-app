@@ -1,5 +1,8 @@
 package com.android.wildex.ui.social
 
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -63,12 +66,10 @@ enum class FriendStatus {
 class FriendScreenViewModel(
   private val currentUserId: Id = Firebase.auth.uid ?: "",
   private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val userFriendsRepository: UserFriendsRepository,
+  private val userFriendsRepository: UserFriendsRepository = RepositoryProvider.userFriendsRepository,
   private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
-  private val userRecommender: UserRecommender =
-        UserRecommender(
-            currentUserId = currentUserId, userFriendsRepository = userFriendsRepository)
+  private val userRecommender: UserRecommender = UserRecommender(currentUserId = currentUserId)
 ) : ViewModel() {
   /** Backing property for the friends screen state. */
   private val _uiState = MutableStateFlow(FriendsScreenUIState())
@@ -108,7 +109,6 @@ class FriendScreenViewModel(
                       else -> FriendStatus.NOT_FRIEND
                     })
           }
-      suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests =
           if (isCurrentUser) {
             currentUserReceivedRequests.map { RequestState(userRepository.getSimpleUser(it.senderId), it) }
@@ -119,7 +119,6 @@ class FriendScreenViewModel(
       _uiState.value =
           _uiState.value.copy(
               friends = friendsStates,
-              suggestions = suggestions.value.take(5),
               receivedRequests = receivedRequests,
               sentRequests = sentRequests,
               isCurrentUser = isCurrentUser,
@@ -128,6 +127,12 @@ class FriendScreenViewModel(
               errorMsg = null,
               isError = false,
           )
+      viewModelScope.launch{
+        suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
+        _uiState.value = _uiState.value.copy(
+          suggestions = suggestions.value.take(5)
+        )
+      }
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load friends and requests.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -357,6 +362,14 @@ class FriendScreenViewModel(
 
       try {
         friendRequestRepository.refuseFriendRequest(FriendRequest(currentUserId, userId))
+        viewModelScope.launch {
+          if (state.isCurrentUser) {
+            suggestions.value = userRecommender.getRecommendedUsers()
+          }
+          _uiState.value = _uiState.value.copy(
+            suggestions = suggestions.value.take(5)
+          )
+        }
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to cancel request to user $userId : ${e.message}")

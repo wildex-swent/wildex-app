@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import android.util.Log
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.Post
@@ -78,11 +79,11 @@ private const val LOCAL_ACTIVITY_WEIGHT = 0.3
  *   recommending users with pending requests.
  */
 class UserRecommender(
-    private val currentUserId: Id,
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val postRepository: PostsRepository = RepositoryProvider.postRepository,
-    private val userFriendsRepository: UserFriendsRepository,
-    private val friendRequestRepository: FriendRequestRepository =
+  private val currentUserId: Id,
+  private val userRepository: UserRepository = RepositoryProvider.userRepository,
+  private val postRepository: PostsRepository = RepositoryProvider.postRepository,
+  private val userFriendsRepository: UserFriendsRepository = RepositoryProvider.userFriendsRepository,
+  private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
 ) {
 

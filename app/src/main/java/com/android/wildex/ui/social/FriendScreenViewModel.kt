@@ -281,8 +281,6 @@ class FriendScreenViewModel(
 
       try {
         friendRequestRepository.acceptFriendRequest(FriendRequest(userId, currentUserId))
-        userFriendsRepository.addFriendToUserFriendsOfUser(userId, currentUserId)
-        userFriendsRepository.addFriendToUserFriendsOfUser(currentUserId, userId)
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to accept request from user $userId : ${e.message}")

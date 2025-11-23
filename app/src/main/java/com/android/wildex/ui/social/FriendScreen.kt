@@ -498,7 +498,8 @@ fun FriendRequestSuggestionTemplate(
     Column (
       modifier = Modifier
         .weight(1f)
-        .fillMaxHeight(),
+        .fillMaxHeight()
+        .padding(end = 10.dp),
       verticalArrangement = Arrangement.Center
     ){
       Spacer(modifier = Modifier.weight(1f))
@@ -507,15 +508,15 @@ fun FriendRequestSuggestionTemplate(
         maxLines = 1,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
-        modifier = Modifier
       )
-      Spacer(modifier = Modifier.weight(0.4f))
-      Text(
-        text = subtext,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 10.sp,
-        modifier = Modifier
-      )
+      if (!subtext.isEmpty()) {
+        Spacer(modifier = Modifier.weight(0.4f))
+        Text(
+          text = subtext,
+          fontWeight = FontWeight.SemiBold,
+          fontSize = 10.sp,
+        )
+      }
       Spacer(modifier = Modifier.weight(1f))
     }
     when (friendStatus) {

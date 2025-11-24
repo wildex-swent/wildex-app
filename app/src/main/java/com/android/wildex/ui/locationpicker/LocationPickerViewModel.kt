@@ -97,7 +97,12 @@ class LocationPickerViewModel(
       val loc = Location(lat, lon, name ?: "Unknown Location at: ($lat, $lon)")
       _uiState.value =
           _uiState.value.copy(
-              selected = loc, center = loc, isLoading = false, showConfirmDialog = true)
+              selected = loc,
+              center = loc,
+              isLoading = false,
+              showConfirmDialog = true,
+              suggestions = emptyList(),
+          )
     }
   }
 
@@ -115,7 +120,8 @@ class LocationPickerViewModel(
               center = feature.toLocation(),
               selected = feature.toLocation(),
               isLoading = false,
-              showConfirmDialog = true)
+              showConfirmDialog = true,
+          )
     }
   }
 

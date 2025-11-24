@@ -3,8 +3,12 @@ package com.android.wildex.ui.locationpicker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.location.GeocodingFeature
 import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.location.PickedLocation
+import com.android.wildex.model.utils.Location
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,11 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class LocationPickerUiState(
-    val centerLat: Double = 46.5197,
-    val centerLon: Double = 6.6323,
-    val selectedLat: Double? = null,
-    val selectedLon: Double? = null,
-    val selectedName: String? = null,
+    val center: Location = Location(46.5197, 6.6323, name = "Lausanne"),
+    val selected: Location? = null,
+    val searchQuery: String = "",
+    val suggestions: List<GeocodingFeature> = emptyList(),
+    val isSearching: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val showConfirmDialog: Boolean = false,
@@ -38,70 +42,80 @@ class LocationPickerViewModel(
   private val _events = MutableSharedFlow<LocationPickerEvent>()
   val events: SharedFlow<LocationPickerEvent> = _events
 
+  private var searchJob: Job? = null
+
+  fun onSearchQueryChanged(query: String) {
+    _uiState.value =
+        _uiState.value.copy(
+            searchQuery = query,
+        )
+    searchJob?.cancel()
+    if (query.length < 3) {
+      _uiState.value = _uiState.value.copy(suggestions = emptyList())
+      return
+    }
+
+    searchJob =
+        viewModelScope.launch {
+          delay(300)
+          _uiState.value = _uiState.value.copy(isSearching = true)
+          val results = geocodingRepository.searchSuggestions(query, limit = 5)
+          _uiState.value =
+              _uiState.value.copy(
+                  isSearching = false,
+                  suggestions = results,
+              )
+        }
+  }
+
+  fun onSuggestionClicked(feature: GeocodingFeature) {
+    _uiState.value =
+        _uiState.value.copy(
+            searchQuery = feature.placeName ?: "",
+            suggestions = emptyList(),
+            selected = feature.toLocation(),
+            center = feature.toLocation(),
+            showConfirmDialog = true,
+        )
+  }
+
   fun onLocationPermissionResult(granted: Boolean) {
     _uiState.value = _uiState.value.copy(isLocationPermissionGranted = granted)
   }
 
   fun onUserLocationAvailable(latitude: Double, longitude: Double) {
     val current = _uiState.value
-    if (current.selectedLat == null && current.selectedLon == null) {
-      _uiState.value = current.copy(centerLat = latitude, centerLon = longitude)
+    if (current.selected == null) {
+      _uiState.value = current.copy(center = Location(latitude = latitude, longitude = longitude))
     }
   }
 
   fun onMapClicked(lat: Double, lon: Double) {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true)
+      val name = runCatching { geocodingRepository.reverseGeocode(lat, lon) }.getOrElse { null }
+      val loc = Location(lat, lon, name ?: "($lat, $lon)")
       _uiState.value =
           _uiState.value.copy(
-              selectedLat = lat,
-              selectedLon = lon,
-              isLoading = true,
-              error = null,
-          )
-
-      val name =
-          runCatching { geocodingRepository.reverseGeocode(lat = lat, lon = lon) }
-              .getOrElse { null }
-
-      _uiState.value =
-          _uiState.value.copy(
-              selectedName = name ?: "($lat, $lon)",
-              isLoading = false,
-              showConfirmDialog = true,
-          )
+              selected = loc, center = loc, isLoading = false, showConfirmDialog = true)
     }
   }
 
   fun onSearchSubmitted(query: String) {
     if (query.isBlank()) return
-
     viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
+      _uiState.value = _uiState.value.copy(isLoading = true)
       val feature = runCatching { geocodingRepository.forwardGeocode(query) }.getOrElse { null }
-
       if (feature == null) {
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                error = "No results for \"$query\"",
-            )
+        _uiState.value = _uiState.value.copy(isLoading = false, error = "No results for \"$query\"")
         return@launch
       }
-
-      val lat = feature.lat
-      val lon = feature.lon
-
       _uiState.value =
           _uiState.value.copy(
-              centerLat = lat,
-              centerLon = lon,
-              selectedLat = lat,
-              selectedLon = lon,
-              selectedName = feature.placeName ?: query,
+              center = feature.toLocation(),
+              selected = feature.toLocation(),
               isLoading = false,
-              showConfirmDialog = true,
-          )
+              showConfirmDialog = true)
     }
   }
 
@@ -110,25 +124,19 @@ class LocationPickerViewModel(
     _uiState.value =
         current.copy(
             showConfirmDialog = false,
-            selectedLat = null,
-            selectedLon = null,
-            selectedName = null,
+            selected = null,
         )
   }
 
   fun onConfirmDialogYes() {
     val current = _uiState.value
-    val lat = current.selectedLat ?: return
-    val lon = current.selectedLon ?: return
-    val name = current.selectedName ?: "($lat, $lon)"
-
     viewModelScope.launch {
       _events.emit(
           LocationPickerEvent.Confirmed(
               PickedLocation(
-                  name = name,
-                  latitude = lat,
-                  longitude = lon,
+                  name = current.selected!!.name,
+                  latitude = current.selected.latitude,
+                  longitude = current.selected.longitude,
               )))
     }
   }
@@ -136,4 +144,12 @@ class LocationPickerViewModel(
   fun clearError() {
     _uiState.value = _uiState.value.copy(error = null)
   }
+}
+
+private fun GeocodingFeature.toLocation(): Location {
+  return Location(
+      latitude = this.lat,
+      longitude = this.lon,
+      name = this.placeName!!,
+  )
 }

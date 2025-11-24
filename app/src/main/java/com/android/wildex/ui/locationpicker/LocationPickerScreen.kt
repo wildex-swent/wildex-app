@@ -7,12 +7,15 @@ import android.graphics.Canvas
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,8 +24,11 @@ import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -44,13 +50,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.location.GeocodingFeature
 import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
@@ -158,10 +164,10 @@ fun LocationPickerScreen(
     }
   }
 
-  LaunchedEffect(uiState.selectedLat, uiState.selectedLon, uiState.showConfirmDialog, mapView) {
+  LaunchedEffect(uiState.selected, uiState.showConfirmDialog, mapView) {
     val mv = mapView ?: return@LaunchedEffect
-    val lat = uiState.selectedLat
-    val lon = uiState.selectedLon
+    val lat = uiState.selected?.latitude
+    val lon = uiState.selected?.longitude
 
     if (uiState.showConfirmDialog && lat != null && lon != null) {
       val offsetLat = lat - 0.0015
@@ -177,6 +183,8 @@ fun LocationPickerScreen(
       topBar = {
         LocationPickerTopBar(
             modifier = Modifier.testTag(LocationPickerTestTags.SEARCH_BAR),
+            query = uiState.searchQuery,
+            onQueryChange = { viewModel.onSearchQueryChanged(it) },
             onBack = onBack,
             onSearch = { query -> viewModel.onSearchSubmitted(query) },
         )
@@ -196,8 +204,8 @@ fun LocationPickerScreen(
           indicatorListener = indicatorListener,
           centerCoordinates =
               Location(
-                  latitude = uiState.centerLat,
-                  longitude = uiState.centerLon,
+                  latitude = uiState.center.latitude,
+                  longitude = uiState.center.longitude,
               ),
       )
 
@@ -210,9 +218,17 @@ fun LocationPickerScreen(
       // Marker at selected point
       LocationPickerMarkerOverlay(
           mapView = mapView,
-          selectedLat = uiState.selectedLat,
-          selectedLon = uiState.selectedLon,
+          selectedLat = uiState.selected?.latitude,
+          selectedLon = uiState.selected?.longitude,
       )
+
+      if (uiState.suggestions.isNotEmpty()) {
+        SuggestionsDropdown(
+            suggestions = uiState.suggestions,
+            onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).fillMaxWidth(0.95f),
+        )
+      }
 
       // Recenter
       LocationPickerRecenterFab(
@@ -230,7 +246,7 @@ fun LocationPickerScreen(
                   mapAnimationOptions { duration(800L) },
               )
             } else {
-              val fallback = Point.fromLngLat(uiState.centerLon, uiState.centerLat)
+              val fallback = Point.fromLngLat(uiState.center.longitude, uiState.center.latitude)
               mv.mapboxMap.flyTo(
                   CameraOptions.Builder().center(fallback).zoom(12.0).build(),
                   mapAnimationOptions { duration(800L) },
@@ -243,7 +259,7 @@ fun LocationPickerScreen(
       // Confirmation dialog
       if (uiState.showConfirmDialog) {
         LocationPickerConfirmDialog(
-            placeName = uiState.selectedName.orEmpty(),
+            placeName = uiState.selected?.name.orEmpty(),
             onConfirm = { viewModel.onConfirmDialogYes() },
             onDismiss = { viewModel.onConfirmDialogNo() },
         )
@@ -260,16 +276,17 @@ fun LocationPickerScreen(
   }
 }
 
-/* ---------- Top bar: back + search ---------- */
+/* ---------- Top bar: back + search + suggestions ---------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationPickerTopBar(
     modifier: Modifier = Modifier,
+    query: String,
+    onQueryChange: (String) -> Unit,
     onBack: () -> Unit,
     onSearch: (String) -> Unit,
 ) {
-  var searchValue by remember { mutableStateOf(TextFieldValue("")) }
   val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
 
   TopAppBar(
@@ -277,8 +294,8 @@ private fun LocationPickerTopBar(
       title = {
         Box(modifier = Modifier.fillMaxWidth().padding(end = 8.dp)) {
           TextField(
-              value = searchValue,
-              onValueChange = { searchValue = it },
+              value = query,
+              onValueChange = onQueryChange,
               modifier = Modifier.fillMaxWidth(),
               placeholder = { Text("Search address") },
               singleLine = true,
@@ -295,7 +312,7 @@ private fun LocationPickerTopBar(
               trailingIcon = {
                 IconButton(
                     onClick = {
-                      val q = searchValue.text.trim()
+                      val q = query.trim()
                       if (q.isNotEmpty()) {
                         onSearch(q)
                         focusManager.clearFocus()
@@ -314,7 +331,7 @@ private fun LocationPickerTopBar(
               keyboardActions =
                   KeyboardActions(
                       onSearch = {
-                        val q = searchValue.text.trim()
+                        val q = query.trim()
                         if (q.isNotEmpty()) {
                           onSearch(q)
                           focusManager.clearFocus()
@@ -333,6 +350,60 @@ private fun LocationPickerTopBar(
         }
       },
   )
+}
+
+@Composable
+private fun SuggestionsDropdown(
+    suggestions: List<GeocodingFeature>,
+    onSuggestionClick: (GeocodingFeature) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+  Card(
+      modifier = modifier,
+      shape = RoundedCornerShape(16.dp),
+      colors =
+          cardColors(
+              containerColor = colorScheme.surface,
+          ),
+  ) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    ) {
+      suggestions.forEachIndexed { index, feature ->
+        androidx.compose.foundation.layout.Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clickable { onSuggestionClick(feature) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Icon(
+              imageVector = Icons.Default.LocationOn,
+              contentDescription = null,
+              tint = colorScheme.primary,
+              modifier = Modifier.size(18.dp),
+          )
+
+          Box(
+              modifier = Modifier.padding(start = 8.dp),
+          ) {
+            Text(
+                text = feature.placeName.orEmpty(),
+                color = colorScheme.onSurface,
+                maxLines = 1,
+            )
+          }
+        }
+
+        if (index < suggestions.lastIndex) {
+          HorizontalDivider(
+              thickness = 0.5.dp,
+              color = colorScheme.outlineVariant.copy(alpha = 0.4f),
+          )
+        }
+      }
+    }
+  }
 }
 
 /* ---------- Recenter FAB ---------- */
@@ -400,6 +471,9 @@ private fun LocationPickerConfirmDialog(
   AlertDialog(
       modifier = Modifier.testTag(LocationPickerTestTags.CONFIRM_DIALOG),
       onDismissRequest = onDismiss,
+      containerColor = colorScheme.background,
+      titleContentColor = colorScheme.primary,
+      textContentColor = colorScheme.onBackground,
       title = { Text("Confirm location") },
       text = { Text("Is \"$placeName\" the location you want to pick?") },
       confirmButton = {
@@ -432,17 +506,12 @@ private fun LocationPickerMarkerOverlay(
   DisposableEffect(mapView, selectedLat, selectedLon) {
     val mv = mapView ?: return@DisposableEffect onDispose {}
 
-    // Create a manager and clear previous annotations
     val annotationManager = mv.annotations.createPointAnnotationManager().apply { deleteAll() }
 
     if (selectedLat != null && selectedLon != null) {
       val point = Point.fromLngLat(selectedLon, selectedLat)
-
-      // Reuse the same pin style as the profile mini-map
       val pinBitmap = loadVectorAsBitmap(context, R.drawable.ic_map_pin)
-
       val options = PointAnnotationOptions().withPoint(point).withIconImage(pinBitmap)
-
       annotationManager.create(options)
     }
 
@@ -453,11 +522,12 @@ private fun LocationPickerMarkerOverlay(
 private fun loadVectorAsBitmap(
     context: Context,
     resId: Int,
+    sizePx: Int = 96,
 ): Bitmap {
   val d = AppCompatResources.getDrawable(context, resId) ?: return createBitmap(1, 1)
-  val bmp = createBitmap(64, 64)
+  val bmp = createBitmap(sizePx, sizePx)
   val canvas = Canvas(bmp)
-  d.setBounds(0, 0, 64, 64)
+  d.setBounds(0, 0, sizePx, sizePx)
   d.draw(canvas)
   return bmp
 }

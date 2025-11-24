@@ -16,6 +16,13 @@ interface GeocodingRepository {
    * @return a feature or null.
    */
   suspend fun forwardGeocode(query: String): GeocodingFeature?
+
+  /**
+   * Search for location suggestions based on a query.
+   *
+   * @return A list of geocoding features matching the query.
+   */
+  suspend fun searchSuggestions(query: String, limit: Int = 5): List<GeocodingFeature>
 }
 
 /**

@@ -92,4 +92,57 @@ class MapboxGeocodingRepository(
         lat = lat,
     )
   }
+
+  override suspend fun searchSuggestions(query: String, limit: Int): List<GeocodingFeature> =
+      withContext(Dispatchers.IO) {
+        val url =
+            HttpUrl.Builder()
+                .scheme("https")
+                .host("api.mapbox.com")
+                .addPathSegments("geocoding/v5/mapbox.places")
+                .addPathSegment("${query.trim()}.json")
+                .addQueryParameter("access_token", accessToken)
+                .addQueryParameter("language", "en")
+                .addQueryParameter("limit", limit.toString())
+                .addQueryParameter("autocomplete", "true")
+                .build()
+
+        val request = Request.Builder().url(url).get().build()
+
+        runCatching {
+              okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@use emptyList()
+                val body = response.body?.string() ?: return@use emptyList<GeocodingFeature>()
+                parseFeaturesList(body)
+              }
+            }
+            .getOrDefault(emptyList())
+      }
+
+  // parse a full list instead of only the first
+  private fun parseFeaturesList(json: String): List<GeocodingFeature> {
+    val root = JSONObject(json)
+    val features = root.optJSONArray("features") ?: return emptyList()
+
+    val out = mutableListOf<GeocodingFeature>()
+    for (i in 0 until features.length()) {
+      val first = features.optJSONObject(i) ?: continue
+
+      val name = first.optString("place_name", "").takeIf { it.isNotBlank() } ?: continue
+
+      val centerArr = first.optJSONArray("center") ?: continue
+      if (centerArr.length() < 2) continue
+
+      val lon = centerArr.optDouble(0)
+      val lat = centerArr.optDouble(1)
+
+      out +=
+          GeocodingFeature(
+              placeName = name,
+              lon = lon,
+              lat = lat,
+          )
+    }
+    return out
+  }
 }

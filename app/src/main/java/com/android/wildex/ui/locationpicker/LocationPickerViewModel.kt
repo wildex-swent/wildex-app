@@ -94,7 +94,7 @@ class LocationPickerViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true)
       val name = runCatching { geocodingRepository.reverseGeocode(lat, lon) }.getOrElse { null }
-      val loc = Location(lat, lon, name ?: "($lat, $lon)")
+      val loc = Location(lat, lon, name ?: "Unknown Location at: ($lat, $lon)")
       _uiState.value =
           _uiState.value.copy(
               selected = loc, center = loc, isLoading = false, showConfirmDialog = true)
@@ -124,7 +124,6 @@ class LocationPickerViewModel(
     _uiState.value =
         current.copy(
             showConfirmDialog = false,
-            selected = null,
         )
   }
 

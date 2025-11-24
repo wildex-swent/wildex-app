@@ -32,12 +32,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -47,13 +49,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.location.GeocodingFeature
@@ -114,6 +126,7 @@ fun LocationPickerScreen(
 
   val styleUri = context.getString(R.string.map_style)
   val standardImportId = context.getString(R.string.map_standard_import)
+  val focusManager = LocalFocusManager.current
 
   // Location permissions
   val locationPermissions =
@@ -212,7 +225,10 @@ fun LocationPickerScreen(
       // Tap to pick a point
       LocationPickerTapListener(
           mapView = mapView,
-          onTap = { lat, lon -> viewModel.onMapClicked(lat, lon) },
+          onTap = { lat, lon ->
+            focusManager.clearFocus()
+            viewModel.onMapClicked(lat, lon)
+          },
       )
 
       // Marker at selected point
@@ -287,16 +303,24 @@ private fun LocationPickerTopBar(
     onBack: () -> Unit,
     onSearch: (String) -> Unit,
 ) {
-  val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+  val focusManager = LocalFocusManager.current
+  val focusRequester = remember { FocusRequester() }
 
   TopAppBar(
       modifier = modifier,
+      colors =
+          TopAppBarDefaults.topAppBarColors(
+              containerColor = colorScheme.background,
+              scrolledContainerColor = colorScheme.background,
+              navigationIconContentColor = colorScheme.onBackground,
+              titleContentColor = colorScheme.onBackground,
+          ),
       title = {
         Box(modifier = Modifier.fillMaxWidth().padding(end = 8.dp)) {
           TextField(
               value = query,
               onValueChange = onQueryChange,
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
               placeholder = { Text("Search address") },
               singleLine = true,
               colors =
@@ -312,9 +336,11 @@ private fun LocationPickerTopBar(
               trailingIcon = {
                 IconButton(
                     onClick = {
-                      val q = query.trim()
-                      if (q.isNotEmpty()) {
-                        onSearch(q)
+                      val trimmed = query.trim()
+                      if (trimmed.isEmpty()) {
+                        focusRequester.requestFocus()
+                      } else {
+                        onSearch(trimmed)
                         focusManager.clearFocus()
                       }
                     },
@@ -461,21 +487,52 @@ private fun LocationPickerTapListener(
 }
 
 /* ---------- Confirm dialog ---------- */
-
 @Composable
 private fun LocationPickerConfirmDialog(
     placeName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+
+  val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.location_pin))
+  val progress by
+      animateLottieCompositionAsState(
+          composition = composition,
+          iterations = LottieConstants.IterateForever,
+      )
+
   AlertDialog(
       modifier = Modifier.testTag(LocationPickerTestTags.CONFIRM_DIALOG),
       onDismissRequest = onDismiss,
       containerColor = colorScheme.background,
       titleContentColor = colorScheme.primary,
       textContentColor = colorScheme.onBackground,
-      title = { Text("Confirm location") },
-      text = { Text("Is \"$placeName\" the location you want to pick?") },
+      title = {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          LottieAnimation(
+              composition = composition,
+              progress = { progress },
+              modifier = Modifier.size(160.dp),
+          )
+          Text(
+              text = "Confirm location",
+              fontWeight = FontWeight.Bold,
+              style = typography.titleMedium,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.fillMaxWidth(),
+          )
+        }
+      },
+      text = {
+        Text(
+            text = "Is \"$placeName\" the location you want to pick?",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+      },
       confirmButton = {
         TextButton(
             modifier = Modifier.testTag(LocationPickerTestTags.CONFIRM_YES),

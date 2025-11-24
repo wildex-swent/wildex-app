@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -23,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -32,6 +34,8 @@ import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
+import com.android.wildex.ui.locationpicker.LOCATION_PICKER_RESULT_KEY
+import com.android.wildex.ui.locationpicker.LocationPickerScreen
 import com.android.wildex.ui.map.MapScreen
 import com.android.wildex.ui.navigation.BottomNavigationMenu
 import com.android.wildex.ui.navigation.NavigationActions
@@ -126,14 +130,31 @@ fun WildexApp(
 
     // Submit Form
     submitFormComposable(navigationActions)
+
+    // Location Picker
+    locationPickerComposable(navigationActions, navController)
   }
 }
 
-private fun NavGraphBuilder.submitFormComposable(navigationActions: NavigationActions) {
-  composable(Screen.SubmitReport.route) {
+private fun NavGraphBuilder.submitFormComposable(
+    navigationActions: NavigationActions,
+) {
+  composable(Screen.SubmitReport.route) { backStackEntry ->
+    val savedStateHandle = backStackEntry.savedStateHandle
+    val pickedLocationFlow = remember {
+      savedStateHandle.getStateFlow<PickedLocation?>(
+          LOCATION_PICKER_RESULT_KEY,
+          null,
+      )
+    }
+    val pickedLocation by pickedLocationFlow.collectAsStateWithLifecycle()
+
     SubmitReportScreen(
         onSubmitted = { navigationActions.navigateTo(Screen.Report) },
         onGoBack = { navigationActions.goBack() },
+        onPickLocation = { navigationActions.navigateTo(Screen.LocationPicker) },
+        pickedLocation = pickedLocation,
+        onPickedLocationConsumed = { savedStateHandle[LOCATION_PICKER_RESULT_KEY] = null },
     )
   }
 }
@@ -329,6 +350,24 @@ private fun NavGraphBuilder.homeComposable(
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+    )
+  }
+}
+
+private fun NavGraphBuilder.locationPickerComposable(
+    navigationActions: NavigationActions,
+    navController: NavHostController,
+) {
+  composable(Screen.LocationPicker.route) {
+    LocationPickerScreen(
+        onBack = { navigationActions.goBack() },
+        onLocationPicked = { picked: PickedLocation ->
+          // Put result into previous back stack entry, then go back
+          navController.previousBackStackEntry
+              ?.savedStateHandle
+              ?.set(LOCATION_PICKER_RESULT_KEY, picked)
+          navigationActions.goBack()
+        },
     )
   }
 }

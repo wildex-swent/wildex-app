@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.ui.utils.location.LocationSelector
 
 /** Test tags for the Submit Report Form Screen components. */
 object SubmitReportFormScreenTestTags {
@@ -45,6 +46,7 @@ object SubmitReportFormScreenTestTags {
   const val CAMERA_ICON = "camera_icon"
   const val DESCRIPTION_FIELD = "description_field"
   const val SUBMIT_BUTTON = "submit_button"
+  const val LOCATION_SELECTOR = "location_selector"
 }
 
 /**
@@ -66,88 +68,99 @@ fun SubmitReportFormScreen(
     onSubmitClick: () -> Unit,
     context: Context,
     onGoBack: () -> Unit,
+    onPickLocation: () -> Unit,
 ) {
 
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(32.dp))
+      modifier = Modifier.fillMaxWidth(),
+  ) {
+    Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
-            text = context.getString(R.string.submit_rescue_alert),
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colorScheme.primary,
-        )
+    Text(
+        text = context.getString(R.string.submit_rescue_alert),
+        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        color = colorScheme.primary,
+    )
 
-        Spacer(modifier = Modifier.height(64.dp))
+    Spacer(modifier = Modifier.height(64.dp))
 
-        Box(
+    Box(
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(200.dp)
+                .clickable { onCameraClick() }
+                .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
+        contentAlignment = Alignment.Center,
+    ) {
+      if (uiState.imageUri != null) {
+        AsyncImage(
+            model = uiState.imageUri,
+            contentDescription = "Selected Image",
             modifier =
-                Modifier.fillMaxWidth(0.9f)
-                    .height(200.dp)
-                    .clickable { onCameraClick() }
-                    .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
-            contentAlignment = Alignment.Center,
+                Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
+            contentScale = ContentScale.Crop,
+        )
+      } else {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
-          if (uiState.imageUri != null) {
-            AsyncImage(
-                model = uiState.imageUri,
-                contentDescription = "Selected Image",
+          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier =
-                    Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
-                contentScale = ContentScale.Crop,
+                    Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
             )
-          } else {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = null,
-                    tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier =
-                        Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
-                )
-              }
-            }
           }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = uiState.description,
-            onValueChange = onDescriptionChange,
-            label = { Text(context.getString(R.string.description)) },
-            modifier =
-                Modifier.fillMaxWidth(0.9f)
-                    .height(100.dp)
-                    .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onSubmitClick,
-            enabled =
-                !uiState.isSubmitting &&
-                    uiState.imageUri != null &&
-                    uiState.description.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
-            shape = RoundedCornerShape(6.dp),
-            modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
-        ) {
-          Text(
-              text =
-                  if (uiState.isSubmitting) context.getString(R.string.submitting)
-                  else context.getString(R.string.submitted),
-              color = Color.White,
-              modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-          )
-        }
       }
+    }
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    OutlinedTextField(
+        value = uiState.description,
+        onValueChange = onDescriptionChange,
+        label = { Text(context.getString(R.string.description)) },
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(100.dp)
+                .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    LocationSelector(
+        modifier = Modifier.testTag(SubmitReportFormScreenTestTags.LOCATION_SELECTOR),
+        locationName = uiState.location?.name,
+        onClick = onPickLocation,
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+        onClick = onSubmitClick,
+        enabled =
+            !uiState.isSubmitting &&
+                uiState.imageUri != null &&
+                uiState.description.isNotBlank() &&
+                uiState.hasPickedLocation,
+        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+        shape = RoundedCornerShape(6.dp),
+        modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
+    ) {
+      Text(
+          text =
+              if (uiState.isSubmitting) context.getString(R.string.submitting)
+              else context.getString(R.string.submitted),
+          color = Color.White,
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+      )
+    }
+  }
 }

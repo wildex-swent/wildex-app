@@ -81,6 +81,8 @@ sealed class Screen(
       const val PATH = "animal_information_screen/{animalUid}"
     }
   }
+
+  object LocationPicker : Screen(route = "location_picker", name = "Location Picker")
 }
 
 open class NavigationActions(

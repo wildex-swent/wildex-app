@@ -11,6 +11,8 @@ import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepositoryFirestore
+import com.android.wildex.model.location.GeocodingRepository
+import com.android.wildex.model.location.MapboxGeocodingRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.report.ReportRepositoryFirestore
 import com.android.wildex.model.social.CommentRepository
@@ -60,5 +62,11 @@ object RepositoryProvider {
   }
   val friendRequestRepository: FriendRequestRepository by lazy {
     FriendRequestRepositoryFirestore(Firebase.firestore)
+  }
+
+  val geocodingRepository: GeocodingRepository by lazy {
+    MapboxGeocodingRepository(
+        okHttpClient = HttpClientProvider.client,
+    )
   }
 }

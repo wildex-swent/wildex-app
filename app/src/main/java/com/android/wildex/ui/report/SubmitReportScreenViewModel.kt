@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -33,6 +34,7 @@ data class SubmitReportUiState(
     val imageUri: Uri? = null,
     val description: String = "",
     val location: Location? = null,
+    val hasPickedLocation: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMsg: String? = null
 )
@@ -64,6 +66,16 @@ class SubmitReportScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Called when the user picks a location from the LocationPickerScreen. */
+  fun onLocationPicked(picked: PickedLocation) {
+    _uiState.value =
+        _uiState.value.copy(
+            location =
+                Location(
+                    latitude = picked.latitude, longitude = picked.longitude, name = picked.name),
+            hasPickedLocation = true)
+  }
+
   @SuppressLint("MissingPermission")
   fun fetchUserLocation(locationClient: FusedLocationProviderClient) {
     viewModelScope.launch {
@@ -73,7 +85,11 @@ class SubmitReportScreenViewModel(
               if (loc != null) {
                 _uiState.value =
                     _uiState.value.copy(
-                        location = Location(latitude = loc.latitude, longitude = loc.longitude))
+                        location =
+                            Location(
+                                latitude = loc.latitude,
+                                longitude = loc.longitude,
+                                name = _uiState.value.location?.name!!))
               } else {
                 setError("Unable to fetch current location.")
               }
@@ -100,7 +116,7 @@ class SubmitReportScreenViewModel(
         return
       }
       currentState.location == null -> {
-        setError("Location permission is required to submit a report.")
+        setError("Location is required to submit a report.")
         return
       }
     }

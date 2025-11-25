@@ -88,7 +88,7 @@ fun WildexApp(
   val appContext = context.applicationContext
   val connectivityObserver = remember { DefaultConnectivityObserver(appContext) }
   LaunchedEffect(connectivityObserver) {
-    connectivityObserver.isOnline.collect { online -> AppConnectivity.isOnline = online }
+    connectivityObserver.isOnline.collect { AppConnectivity.isOnline = it }
   }
 
   val signInViewModel: SignInViewModel = viewModel()

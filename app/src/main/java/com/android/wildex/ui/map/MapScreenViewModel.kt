@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 enum class MapTab {
   Posts,
   MyPosts,
-  Reports
+  Reports,
 }
 
 /**
@@ -58,7 +58,7 @@ data class MapUIState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isError: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
 )
 
 /**
@@ -71,7 +71,7 @@ data class MapUIState(
 data class MapRenderState(
     val showUserLocation: Boolean = false,
     val recenterNonce: Long? = null,
-    val renderError: String? = null
+    val renderError: String? = null,
 )
 
 /** ViewModel for managing the state and logic of the Map Screen.* */
@@ -81,7 +81,7 @@ class MapScreenViewModel(
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
   /** Backing property for the map screen UI state. */
@@ -109,7 +109,11 @@ class MapScreenViewModel(
   fun refreshUIState(userUid: Id) {
     _uiState.value =
         _uiState.value.copy(
-            isRefreshing = true, isError = false, errorMsg = null, isLoading = false)
+            isRefreshing = true,
+            isError = false,
+            errorMsg = null,
+            isLoading = false,
+        )
     viewModelScope.launch { updateUIState(userUid) }
   }
 
@@ -156,7 +160,8 @@ class MapScreenViewModel(
               isLoading = false,
               isRefreshing = false,
               isError = false,
-              errorMsg = null)
+              errorMsg = null,
+          )
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load map components.")
       _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
@@ -222,10 +227,12 @@ class MapScreenViewModel(
   fun clearSelection() {
     _uiState.value = _uiState.value.copy(selected = null)
   }
+
   /** Clears any existing error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
+
   /**
    * Handles the result of the location permission request.
    *
@@ -234,16 +241,19 @@ class MapScreenViewModel(
   fun onLocationPermissionResult(granted: Boolean) {
     _renderState.value = _renderState.value.copy(showUserLocation = granted)
   }
+
   /** Requests the map to recenter on the user's location. */
   fun requestRecenter() {
     _renderState.value = _renderState.value.copy(recenterNonce = System.currentTimeMillis())
   }
+
   /** Consumes the recenter request by clearing the nonce. */
   fun consumeRecenter() {
     if (_renderState.value.recenterNonce != null) {
       _renderState.value = _renderState.value.copy(recenterNonce = null)
     }
   }
+
   /** Clears any existing render error from the render state. */
   fun clearRenderError() {
     _renderState.value = _renderState.value.copy(renderError = null)
@@ -253,6 +263,7 @@ class MapScreenViewModel(
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
+
   /**
    * Toggles the like status of a post. If the post is already liked by the current user, it removes
    * the like. Otherwise, it creates and adds a new like entry.
@@ -316,13 +327,14 @@ class MapScreenViewModel(
             runCatching { userRepository.getSimpleUser(id).profilePictureURL }.getOrDefault("")
           }
         }
-    val avatars = authorIds.associateWith { id -> avatarDeferreds[id]!!.await() }
+    val avatars = avatarDeferreds.mapValues { (_, deferred) -> deferred.await() }
     posts.map { p ->
       MapPin.PostPin(
           id = p.postId,
           authorId = p.authorId,
           location = p.location!!,
-          imageURL = avatars[p.authorId] ?: "")
+          imageURL = avatars[p.authorId] ?: "",
+      )
     }
   }
 
@@ -341,7 +353,8 @@ class MapScreenViewModel(
               id = p.postId,
               authorId = p.authorId,
               location = p.location!!,
-              imageURL = p.pictureURL)
+              imageURL = p.pictureURL,
+          )
         }
   }
 
@@ -363,7 +376,8 @@ class MapScreenViewModel(
           authorId = r.authorId,
           location = r.location,
           imageURL = avatar,
-          assigneeId = r.assigneeId)
+          assigneeId = r.assigneeId,
+      )
     }
   }
 
@@ -383,7 +397,8 @@ class MapScreenViewModel(
           authorId = r.authorId,
           location = r.location,
           imageURL = r.imageURL,
-          assigneeId = r.assigneeId)
+          assigneeId = r.assigneeId,
+      )
     }
   }
 }

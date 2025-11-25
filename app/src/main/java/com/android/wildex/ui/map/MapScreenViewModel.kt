@@ -181,7 +181,7 @@ class MapScreenViewModel(
   }
 
   /**
-   * Handles tab selection by the user. d
+   * Handles tab selection by the user.
    *
    * @param tab The selected [MapTab].
    * @param userUid The user ID for whom to load the map data. Defaults to the current user.
@@ -200,8 +200,7 @@ class MapScreenViewModel(
   fun onPinSelected(pinId: Id) {
     viewModelScope.launch {
       val pin = _uiState.value.pins.firstOrNull { it.id == pinId } ?: return@launch
-      val newCenter = pin.location
-      _uiState.value = _uiState.value.copy(centerCoordinates = newCenter)
+      _uiState.value = _uiState.value.copy(centerCoordinates = pin.location)
 
       try {
         when (pin) {

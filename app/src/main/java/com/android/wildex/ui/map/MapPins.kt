@@ -98,7 +98,16 @@ internal data class BaseKey(
     val scaleKey: Int,
 )
 
-/** Composable overlay that displays map pins on a Mapbox MapView. */
+/**
+ * Composable overlay that displays map pins on a Mapbox MapView.
+ *
+ * @param modifier Modifier to be applied to the Box containing the map pins.
+ * @param mapView The MapView instance where the pins will be displayed.
+ * @param pins List of MapPin objects representing the pins to be displayed.
+ * @param currentTab The current MapTab indicating the map's theme.
+ * @param selectedId The ID of the currently selected pin, null if none selected.
+ * @param onPinClick Callback function invoked when a pin is clicked, passing the pin's ID.
+ */
 @Composable
 fun PinsOverlay(
     modifier: Modifier,
@@ -202,7 +211,14 @@ private fun createPointManager(
   }
 }
 
-/** Dispose of PointAnnotationManager and clear caches */
+/**
+ * Dispose of PointAnnotationManager and clear caches
+ *
+ * @param mapView The MapView instance containing the annotations.
+ * @param manager The PointAnnotationManager to be disposed.
+ * @param annotationById Mutable map of annotation IDs to PointAnnotations.
+ * @param baseCache Mutable map of BaseKey to Bitmap for caching base icons.
+ */
 @VisibleForTesting
 internal fun disposePointManager(
     mapView: MapView?,
@@ -426,7 +442,13 @@ private suspend fun updateExistingAnnotation(
 
 /* ----------------------- bobbing helpers ----------------------- */
 
-/** Compute the set of bobbing pin IDs (unassigned report pins, excluding selected) */
+/**
+ * Compute the set of bobbing pin IDs (unassigned report pins, excluding selected)
+ *
+ * @param pins List of MapPin objects representing the pins on the map.
+ * @param selectedId The ID of the currently selected pin, null if none selected.
+ * @return A set of IDs representing the pins that should bob.
+ */
 @VisibleForTesting
 internal fun computeBobbingIds(pins: List<MapPin>, selectedId: Id?): Set<Id> =
     pins
@@ -435,6 +457,7 @@ internal fun computeBobbingIds(pins: List<MapPin>, selectedId: Id?): Set<Id> =
         .map { it.id }
         .toSet()
 
+/** Run the bobbing animation loop for unselected bobbing pins */
 private suspend fun runBobbingLoop(
     ctx: Context,
     manager: PointAnnotationManager?,
@@ -534,7 +557,14 @@ private suspend fun runSelectionRipple(
 
 /* ----------------------- Rendering helpers ----------------------- */
 
-/** Render the base pin bitmap with optional photo and border. */
+/**
+ * Render the base pin bitmap with optional photo and border.
+ *
+ * @param src Source bitmap for the photo, or null for placeholder.
+ * @param borderColor Color integer for the border.
+ * @param scale Scale factor for the pin size.
+ * @return Rendered Bitmap of the base pin.
+ */
 @WorkerThread
 @VisibleForTesting
 internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap {
@@ -588,7 +618,18 @@ internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap
   return out
 }
 
-/** Compose the overlay bitmap with optional ripple and exclamation badge. */
+/**
+ * Compose the overlay bitmap with optional ripple and exclamation badge.
+ *
+ * @param base Base bitmap to overlay on.
+ * @param globalAlpha Global alpha for the entire overlay (0f to 1f).
+ * @param rippleProgress Progress of the ripple effect (0f to 1f), or null for no ripple.
+ * @param showExclamation Whether to show the exclamation badge.
+ * @param exclamationOffsetPx Vertical offset for the exclamation badge.
+ * @param borderColor Color integer for the border and badge.
+ * @param scale Scale factor for the overlay size.
+ * @return Composed Bitmap with overlays.
+ */
 @WorkerThread
 @VisibleForTesting
 internal fun composeOverlays(
@@ -659,7 +700,14 @@ internal fun composeOverlays(
   return out
 }
 
-/** Render a cluster pin bitmap with count text. */
+/**
+ * Render a cluster pin bitmap with count text.
+ *
+ * @param count Number of items in the cluster.
+ * @param borderColor Color integer for the border.
+ * @param scale Scale factor for the pin size.
+ * @return Rendered Bitmap of the cluster pin.
+ */
 @WorkerThread
 @VisibleForTesting
 internal fun renderClusterPin(count: Int, borderColor: Int, scale: Float): Bitmap {
@@ -689,7 +737,13 @@ internal fun renderClusterPin(count: Int, borderColor: Int, scale: Float): Bitma
 
 /* ----------------------- image loading ----------------------- */
 
-/** Fetch a Bitmap from a URL using Coil. */
+/**
+ * Fetch a Bitmap from a URL using Coil.
+ *
+ * @param ctx Context to use for Coil image loading.
+ * @param url URL of the image to fetch.
+ * @return Fetched Bitmap, or null if loading failed.
+ */
 @VisibleForTesting
 internal suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
     withContext(PinsDispatchers.io) {

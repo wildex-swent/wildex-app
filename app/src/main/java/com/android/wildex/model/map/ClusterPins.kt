@@ -39,8 +39,7 @@ private fun clusterByDistance(
     radiusMeters: Double,
 ): List<MapPin> {
   val basePins = pins.filter { it !is MapPin.ClusterPin }
-  val trivial = handleTrivialClusterCases(basePins)
-  if (trivial != null) return trivial
+  if (basePins.size <= 1) return handleTrivialClusterCases(basePins)
 
   val n = basePins.size
   val parent = IntArray(n) { it }
@@ -56,9 +55,9 @@ private fun clusterByDistance(
 }
 
 /** Handle trivial cases for clustering: empty list or single pin. */
-private fun handleTrivialClusterCases(basePins: List<MapPin>): List<MapPin>? {
+private fun handleTrivialClusterCases(basePins: List<MapPin>): List<MapPin> {
   if (basePins.isEmpty()) return emptyList()
-  if (basePins.size == 1) {
+  else {
     val p = basePins[0]
     return listOf(
         MapPin.ClusterPin(
@@ -68,7 +67,6 @@ private fun handleTrivialClusterCases(basePins: List<MapPin>): List<MapPin>? {
         ),
     )
   }
-  return null
 }
 
 /** Merge close pins into union–find structure. */
@@ -77,21 +75,9 @@ private fun mergeClosePins(
     radiusMeters: Double,
     parent: IntArray,
 ) {
-  fun find(x: Int): Int {
-    var r = x
-    while (parent[r] != r) r = parent[r]
-    var cur = x
-    while (parent[cur] != cur) {
-      val p = parent[cur]
-      parent[cur] = r
-      cur = p
-    }
-    return r
-  }
-
   fun union(a: Int, b: Int) {
-    val ra = find(a)
-    val rb = find(b)
+    val ra = find(a, parent)
+    val rb = find(b, parent)
     if (ra != rb) parent[rb] = ra
   }
 
@@ -107,25 +93,27 @@ private fun mergeClosePins(
   }
 }
 
+/** Find root of x in union–find structure with path compression. */
+private fun find(x: Int, parent: IntArray): Int {
+  var r = x
+  while (parent[r] != r) r = parent[r]
+  var cur = x
+  while (parent[cur] != cur) {
+    val p = parent[cur]
+    parent[cur] = r
+    cur = p
+  }
+  return r
+}
+
 /** Build groups of pins from union–find structure. */
 private fun buildClusterGroups(
     basePins: List<MapPin>,
     parent: IntArray,
 ): Map<Int, List<MapPin>> {
-  fun findRoot(x: Int): Int {
-    var r = x
-    while (parent[r] != r) r = parent[r]
-    var cur = x
-    while (parent[cur] != cur) {
-      val p = parent[cur]
-      parent[cur] = r
-      cur = p
-    }
-    return r
-  }
   return basePins.indices
-      .groupBy { i -> findRoot(i) }
-      .mapValues { (_, indices) -> indices.map { idx -> basePins[idx] } }
+      .groupBy { find(it, parent) }
+      .mapValues { (_, indices) -> indices.map { basePins[it] } }
 }
 
 /** Build ClusterPins from groups of pins. */

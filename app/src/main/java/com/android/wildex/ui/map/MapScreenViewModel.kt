@@ -17,6 +17,8 @@ import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -305,19 +307,23 @@ class MapScreenViewModel(
    *
    * @return A list of [MapPin.PostPin] representing the posts with author avatars.
    */
-  private suspend fun loadAllPostsWithAuthorAvatar(): List<MapPin> {
-    val posts = postRepository.getAllPosts()
-    val authorCache = mutableMapOf<Id, URL>()
-    return posts
-        .filter { it.location != null }
-        .map { p ->
-          val avatar =
-              authorCache.getOrPut(p.authorId) {
-                userRepository.getSimpleUser(p.authorId).profilePictureURL
-              }
-          MapPin.PostPin(
-              id = p.postId, authorId = p.authorId, location = p.location!!, imageURL = avatar)
+  private suspend fun loadAllPostsWithAuthorAvatar(): List<MapPin> = coroutineScope {
+    val posts = postRepository.getAllPosts().filter { it.location != null }
+    val authorIds = posts.map { it.authorId }.distinct()
+    val avatarDeferreds =
+        authorIds.associateWith { id ->
+          async {
+            runCatching { userRepository.getSimpleUser(id).profilePictureURL }.getOrDefault("")
+          }
         }
+    val avatars = authorIds.associateWith { id -> avatarDeferreds[id]!!.await() }
+    posts.map { p ->
+      MapPin.PostPin(
+          id = p.postId,
+          authorId = p.authorId,
+          location = p.location!!,
+          imageURL = avatars[p.authorId] ?: "")
+    }
   }
 
   /**

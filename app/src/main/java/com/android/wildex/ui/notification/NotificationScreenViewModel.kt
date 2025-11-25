@@ -3,27 +3,21 @@ package com.android.wildex.ui.notification
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
-import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
-import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-val defaultSimpleUser = SimpleUser(
-    userId = "VIBPCGUCWaaVw5cYwKkpBm4AvDA2",
-    username = "defaultUsername",
-    profilePictureURL = "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/users%2FVIBPCGUCWaaVw5cYwKkpBm4AvDA2.jpg?alt=media&token=c87cf885-89ef-4470-9272-bc76144b6c3f",
-    userType = UserType.REGULAR,
-)
+val defaultSimpleUser =
+    SimpleUser(
+        userId = "VIBPCGUCWaaVw5cYwKkpBm4AvDA2",
+        username = "defaultUsername",
+        profilePictureURL =
+            "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/users%2FVIBPCGUCWaaVw5cYwKkpBm4AvDA2.jpg?alt=media&token=c87cf885-89ef-4470-9272-bc76144b6c3f",
+        userType = UserType.REGULAR,
+    )
 private val sampleNotifications =
     listOf(
         NotificationUIState(
@@ -71,10 +65,7 @@ data class NotificationUIState(
     val notificationDescription: String = ""
 )
 
-class NotificationScreenViewModel(
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: "",
-) : ViewModel() {
+class NotificationScreenViewModel() : ViewModel() {
   /** Backing property for the home screen state. */
   private val _uiState = MutableStateFlow(NotificationScreenUIState())
 
@@ -90,7 +81,7 @@ class NotificationScreenViewModel(
     try {
       _uiState.value =
           _uiState.value.copy(
-              //notifications = fetchedNotifications,
+              // notifications = fetchedNotifications,
               isLoading = false,
               isRefreshing = false,
               errorMsg = null,
@@ -98,7 +89,7 @@ class NotificationScreenViewModel(
           )
     } catch (e: Exception) {
       handleException("Error loading notifications", e)
-        _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
+      _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
     }
   }
 

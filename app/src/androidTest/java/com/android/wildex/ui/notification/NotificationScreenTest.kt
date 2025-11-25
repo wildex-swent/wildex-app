@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.UserType
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -23,18 +25,36 @@ class NotificationScreenTest {
       listOf(
           NotificationUIState(
               notificationId = "1",
+              simpleUser =
+                  SimpleUser(
+                      userId = "user1",
+                      username = "Jean",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
               notificationType = NotificationType.LIKE,
               notificationTitle = "Jean has liked your post",
               notificationDescription = "3min ago",
           ),
           NotificationUIState(
               notificationId = "2",
+              simpleUser =
+                  SimpleUser(
+                      userId = "user2",
+                      username = "Bob",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
               notificationType = NotificationType.POST,
               notificationTitle = "Bob spotted a tiger",
               notificationDescription = "15min ago",
           ),
           NotificationUIState(
               notificationId = "3",
+              simpleUser =
+                  SimpleUser(
+                      userId = "user3",
+                      username = "Alice",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
               notificationType = NotificationType.COMMENT,
               notificationTitle = "Alice commented on your post",
               notificationDescription = "Alice said: Wow, amazing!",
@@ -77,13 +97,19 @@ class NotificationScreenTest {
         "Really really long description that should also be truncated to stay on one line"
     val authorId = "authorX"
     val contentId = "content42"
+    val testUser =
+        SimpleUser(
+            userId = authorId,
+            username = "Author",
+            profilePictureURL = "",
+            userType = UserType.REGULAR)
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
         NotificationItem(
-            authorId = authorId,
             notificationContentId = contentId,
             notificationType = NotificationType.POST,
+            simpleUser = testUser,
             notificationTitle = longTitle,
             notificationDescription = longDesc,
             onProfileClick = {},
@@ -136,7 +162,18 @@ class NotificationScreenTest {
 
   @Test
   fun noNotificationView_showsEmptyMessage() {
-    composeRule.setContent { NoNotificationView() }
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) { NoNotificationView() }
+    }
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()
+  }
+
+  @Test
+  fun notificationScreen_showsEmptyStateByDefault() {
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) { NotificationScreen() }
+    }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()
   }

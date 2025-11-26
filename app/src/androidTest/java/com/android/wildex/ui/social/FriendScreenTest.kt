@@ -466,7 +466,7 @@ class FriendScreenTest {
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.NO_FRIENDS_TEXT)
         .assertIsDisplayed()
-        .assertTextEquals("This user has no friends... Ask them to become your friend!")
+        .assertTextEquals("This user has no friends… Ask them to become your friend!")
   }
 
   @Test

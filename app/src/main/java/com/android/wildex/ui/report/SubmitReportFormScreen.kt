@@ -25,15 +25,22 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tags for the Submit Report Form Screen components. */
 object SubmitReportFormScreenTestTags {
@@ -67,7 +74,31 @@ fun SubmitReportFormScreen(
     context: Context,
     onGoBack: () -> Unit,
 ) {
+  val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
+  if (isOnline && LocalConnectivityObserver.current) {
+    SubmitReportFormScreenContent(
+        context = context,
+        onCameraClick = onCameraClick,
+        uiState = uiState,
+        onDescriptionChange = onDescriptionChange,
+        onSubmitClick = onSubmitClick,
+    )
+  } else {
+    OfflineScreen()
+  }
+}
+
+@Composable
+fun SubmitReportFormScreenContent(
+    context: Context,
+    onCameraClick: () -> Unit,
+    uiState: SubmitReportUiState,
+    onDescriptionChange: (String) -> Unit,
+    onSubmitClick: () -> Unit,
+) {
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
@@ -80,45 +111,54 @@ fun SubmitReportFormScreen(
             color = colorScheme.onBackground,
         )
 
-        Spacer(modifier = Modifier.height(64.dp))
+    Spacer(modifier = Modifier.height(64.dp))
 
-        Box(
+    Box(
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(200.dp)
+                .clickable { onCameraClick() }
+                .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
+        contentAlignment = Alignment.Center,
+    ) {
+      if (uiState.imageUri != null) {
+        AsyncImage(
+            model = uiState.imageUri,
+            contentDescription = "Selected Image",
             modifier =
-                Modifier.fillMaxWidth(0.9f)
-                    .height(200.dp)
-                    .clickable { onCameraClick() }
-                    .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
-            contentAlignment = Alignment.Center,
+                Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
+            contentScale = ContentScale.Crop,
+        )
+      } else {
+        Card(
+            colors = CardDefaults.cardColors(colorScheme.surfaceContainer),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
-          if (uiState.imageUri != null) {
-            AsyncImage(
-                model = uiState.imageUri,
-                contentDescription = "Selected Image",
+          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier =
-                    Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
-                contentScale = ContentScale.Crop,
+                    Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
             )
-          } else {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = null,
-                    tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier =
-                        Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
-                )
-              }
-            }
           }
         }
+      }
+    }
 
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(32.dp))
 
+    OutlinedTextField(
+        value = uiState.description,
+        onValueChange = onDescriptionChange,
+        label = { Text(context.getString(R.string.description)) },
+        modifier =
+            Modifier.fillMaxWidth(0.9f)
+                .height(100.dp)
+                .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
+    )
         OutlinedTextField(
             value = uiState.description,
             onValueChange = onDescriptionChange,
@@ -134,7 +174,7 @@ fun SubmitReportFormScreen(
                     .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onSubmitClick,

@@ -1,5 +1,8 @@
 package com.android.wildex
 
+import android.app.NotificationChannel
+import android.app.NotificationChannelGroup
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,6 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.notification.NotificationChannelType
+import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -67,11 +72,33 @@ object AppConnectivity {
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    createNotificationGroups()
+    createNotificationChannels()
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
       WildexTheme(theme = AppTheme.appearanceMode) {
         Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
       }
+    }
+  }
+
+  private fun createNotificationChannels() {
+    NotificationChannelType.entries.forEach {
+      val channel =
+          NotificationChannel(it.channelId, it.channelName, it.importance).apply {
+            description = it.channelDesc
+            group = it.group.groupId
+          }
+      val notificationManager = getSystemService(NotificationManager::class.java)
+      notificationManager.createNotificationChannel(channel)
+    }
+  }
+
+  private fun createNotificationGroups() {
+    NotificationGroupType.entries.forEach {
+      val group = NotificationChannelGroup(it.groupId, it.groupName)
+      val notificationManager = getSystemService(NotificationManager::class.java)
+      notificationManager.createNotificationChannelGroup(group)
     }
   }
 }

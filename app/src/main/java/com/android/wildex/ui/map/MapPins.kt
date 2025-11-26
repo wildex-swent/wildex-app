@@ -767,3 +767,10 @@ internal suspend fun fetchBitmapViaCoil(ctx: Context, url: String): Bitmap? =
         null
       }
     }
+
+// -----------------------------------------------------------------------------
+// Note:
+// Most of this file were generated with the help of ChatGPT to speed up
+// the animation / visual stuff for the map pins. Everything was still reviewed
+// and adjusted manually for the project.
+// -----------------------------------------------------------------------------

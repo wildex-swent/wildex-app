@@ -4,12 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 // Light Theme Colors
 val WildexGreen = Color(0xFF2e6f40)
+val ErrorRed = Color(0xFFFF404C)
 
 // Dark Theme Colors
 val WildexBlue = Color(0xFF5991f1)
-
-val ErrorRed = Color(0xFFFF404C)
-
 val DarkErrorRed = Color(0xFFbd000d)
 
 // Common Colors

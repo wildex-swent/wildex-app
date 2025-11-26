@@ -3,8 +3,6 @@ package com.android.wildex.ui.theme
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
-import android.view.Window
-import android.view.WindowInsets
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -17,6 +15,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowInsetsControllerCompat
 import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
@@ -81,11 +80,16 @@ fun WildexTheme(
   val view = LocalView.current
   if (!view.isInEditMode) {
     SideEffect {
-      val window = (view.context as? Activity)?.window
-      if (window != null && view.isAttachedToWindow) {
-        // Set Status bar color to match the theme
-        setStatusBarColor(window, WildexGreen.toArgb())
-      }
+      val window = (view.context as? Activity)?.window ?: return@SideEffect
+
+      val bgColor = colorScheme.background.toArgb()
+      window.statusBarColor = bgColor
+      window.navigationBarColor = bgColor
+
+      val insetsController = WindowInsetsControllerCompat(window, view)
+      val lightIcons = !isDarkTheme
+      insetsController.isAppearanceLightStatusBars = lightIcons
+      insetsController.isAppearanceLightNavigationBars = lightIcons
     }
   }
   val configuration = LocalConfiguration.current
@@ -98,15 +102,4 @@ fun WildexTheme(
       }
 
   MaterialTheme(colorScheme = colorScheme, typography = typography, content = content)
-}
-
-fun setStatusBarColor(window: Window, color: Int) {
-  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) { // Android 15+
-    window.decorView.setOnApplyWindowInsetsListener { view, insets ->
-      val statusBarInsets = insets.getInsets(WindowInsets.Type.statusBars())
-      view.setBackgroundColor(color)
-      view.setPadding(0, statusBarInsets.top, 0, 0)
-      insets
-    }
-  }
 }

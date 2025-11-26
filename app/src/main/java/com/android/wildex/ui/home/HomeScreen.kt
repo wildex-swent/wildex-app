@@ -168,13 +168,13 @@ fun NoPostsView() {
     Icon(
         painter = painterResource(R.drawable.nothing_found),
         contentDescription = "Nothing Found",
-        tint = colorScheme.primary,
+        tint = colorScheme.onBackground,
         modifier = Modifier.size(96.dp).testTag(HomeScreenTestTags.NO_POST_ICON),
     )
     Spacer(Modifier.height(12.dp))
     Text(
         text = LocalContext.current.getString(R.string.no_nearby_posts),
-        color = colorScheme.primary,
+        color = colorScheme.onBackground,
         style = typography.titleLarge,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
@@ -244,7 +244,7 @@ fun PostItem(
   Card(
       shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
+      border = BorderStroke(width = 1.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
       elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
   ) {
@@ -280,7 +280,7 @@ fun PostItem(
                   SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                       .format(post.date.toDate()),
               style = typography.labelSmall,
-              color = colorScheme.tertiary,
+              color = colorScheme.onBackground,
           )
           if (post.location?.name?.isNotBlank() == true) {
             Row(
@@ -292,13 +292,13 @@ fun PostItem(
                   imageVector = Icons.Default.LocationOn,
                   contentDescription = "Location",
                   modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-                  tint = colorScheme.tertiary,
+                  tint = colorScheme.onBackground,
               )
               Spacer(Modifier.width(2.dp))
               Text(
                   text = post.location.name,
                   style = typography.labelMedium,
-                  color = colorScheme.tertiary,
+                  color = colorScheme.onBackground,
                   maxLines = 1,
                   overflow = TextOverflow.Ellipsis,
               )
@@ -338,7 +338,7 @@ fun PostItem(
                   scaleX = heartScale
                   scaleY = heartScale
                 },
-            tint = if (liked) colorScheme.tertiary else colorScheme.onBackground,
+            tint = if (liked) colorScheme.primary else colorScheme.onBackground,
         )
       }
     }
@@ -363,7 +363,7 @@ fun PostItem(
             imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Likes",
             modifier = Modifier.size(20.dp),
-            tint = if (liked) colorScheme.tertiary else colorScheme.onBackground,
+            tint = if (liked) colorScheme.primary else colorScheme.onBackground,
         )
         Spacer(Modifier.width(6.dp))
         Text(

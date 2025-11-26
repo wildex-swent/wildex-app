@@ -66,8 +66,8 @@ fun BottomNavigationMenu(selectedTab: Tab, onTabSelected: (Tab) -> Unit = {}) {
                   .testTag(NavigationTestTags.getTabTestTag(tab)),
           colors =
               NavigationBarItemDefaults.colors(
-                  selectedIconColor = cs.secondary,
-                  unselectedIconColor = cs.primary,
+                  selectedIconColor = cs.primary,
+                  unselectedIconColor = cs.onBackground,
                   indicatorColor = cs.background,
               ),
       )

@@ -21,42 +21,38 @@ import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
     darkColorScheme(
-        primary = LightGreen,
-        secondary = LightBrown,
-        tertiary = LightDarkRed,
-        background = DarkBackground,
-        onPrimary = DarkBackground,
-        onSecondary = DarkBackground,
-        onTertiary = DarkBackground,
-        onBackground = DarkonBackground,
-        surface = DarkSurface,
-        surfaceVariant = DarkSurfaceVariant,
-        onSurface = DarkonSurface,
-        onSurfaceVariant = DarkonSurfaceVariant,
+        primary = WildexBlue,
+        secondary = White,
+        tertiary = White,
+        background = WildexBlack,
+        onPrimary = WildexBlack,
+        onSecondary = WildexBlack,
+        onTertiary = WildexBlack,
+        onBackground = White,
+        surface = WildexBlack,
+        onSurface = White,
+        surfaceVariant = WildexBlack,
+        onSurfaceVariant = White,
         error = DarkErrorRed,
-        onError = Black,
-        primaryContainer = DarkPrimaryContainer,
-        onPrimaryContainer = DarkOnPrimaryContainer,
+        onError = WildexBlack,
     )
 
 private val LightColorScheme =
     lightColorScheme(
-        primary = Green,
-        secondary = Brown,
-        tertiary = DarkRed,
+        primary = WildexGreen,
+        secondary = WildexBlack,
+        tertiary = WildexBlack,
         background = White,
         onPrimary = White,
         onSecondary = White,
         onTertiary = White,
-        onBackground = Black,
-        surface = LightSurface,
-        surfaceVariant = LightSurfaceVariant,
-        onSurface = Black,
-        onSurfaceVariant = LightOnSurfaceVariant,
+        onBackground = WildexBlack,
+        surface = White,
+        onSurface = WildexBlack,
+        surfaceVariant = White,
+        onSurfaceVariant = WildexBlack,
         error = ErrorRed,
         onError = White,
-        primaryContainer = LightPrimaryContainer,
-        onPrimaryContainer = LightOnPrimaryContainer,
     )
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -88,7 +84,7 @@ fun WildexTheme(
       val window = (view.context as? Activity)?.window
       if (window != null && view.isAttachedToWindow) {
         // Set Status bar color to match the theme
-        setStatusBarColor(window, Green.toArgb())
+        setStatusBarColor(window, WildexGreen.toArgb())
       }
     }
   }

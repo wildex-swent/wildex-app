@@ -480,7 +480,7 @@ private fun ReportInfoBar(
           Spacer(Modifier.height(2.dp))
           Text(
               text = date,
-              color = colorScheme.tertiary,
+              color = colorScheme.onBackground,
               style = typography.labelMedium,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,

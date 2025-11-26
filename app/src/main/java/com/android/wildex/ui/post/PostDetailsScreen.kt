@@ -169,7 +169,7 @@ fun PostDetailsScreen(
                               Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                           shape = RoundedCornerShape(32.dp),
                           colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                          border = BorderStroke(1.dp, colorScheme.tertiary),
+                          border = BorderStroke(1.dp, colorScheme.onBackground),
                           elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                       ) {
                         Text(
@@ -273,15 +273,15 @@ fun PostInfoBar(
       Text(
           text =
               buildAnnotatedString {
-                withStyle(SpanStyle(color = colorScheme.tertiary)) { append(authorUserName) }
+                withStyle(SpanStyle(color = colorScheme.onBackground)) { append(authorUserName) }
                 append(" saw ${if (animalName.startsWithVowel()) "an " else "a "}")
-                withStyle(SpanStyle(color = colorScheme.primary)) { append("${animalName}!") }
+                withStyle(SpanStyle(color = colorScheme.onBackground)) { append("${animalName}!") }
               },
           style = typography.titleLarge,
           maxLines = 2,
           overflow = TextOverflow.Ellipsis,
       )
-      Text(text = date, color = colorScheme.tertiary, style = typography.labelMedium)
+      Text(text = date, color = colorScheme.onBackground, style = typography.labelMedium)
 
       Spacer(Modifier.height(5.dp))
     }
@@ -314,14 +314,14 @@ fun LocationSpeciesLikeBar(
         Icon(
             imageVector = Icons.Filled.LocationOn,
             contentDescription = "Location",
-            tint = colorScheme.tertiary,
+            tint = colorScheme.onBackground,
             modifier = Modifier.size(iconSize),
         )
         Spacer(Modifier.width(spacing))
         Text(
             text = location,
             style = textStyle,
-            color = colorScheme.tertiary,
+            color = colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -336,14 +336,14 @@ fun LocationSpeciesLikeBar(
         Icon(
             imageVector = Icons.Filled.Pets,
             contentDescription = "Species",
-            tint = colorScheme.tertiary,
+            tint = colorScheme.onBackground,
             modifier = Modifier.size(iconSize),
         )
         Spacer(Modifier.width(spacing))
         Text(
             text = species,
             style = textStyle,
-            color = colorScheme.tertiary,
+            color = colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -358,7 +358,7 @@ fun LocationSpeciesLikeBar(
           imageVector =
               if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
           contentDescription = "Like status",
-          tint = colorScheme.tertiary,
+          tint = colorScheme.primary,
           modifier =
               Modifier.size(iconSize).clickable {
                 if (!likedByCurrentUser) onLike() else onUnlike()
@@ -366,7 +366,7 @@ fun LocationSpeciesLikeBar(
       )
       Text(
           text = likesCount.toString(),
-          color = colorScheme.tertiary,
+          color = colorScheme.onBackground,
           style = textStyle,
       )
     }
@@ -383,7 +383,7 @@ fun Comment(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(1.dp, colorScheme.primary),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
   ) {
     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.Top) {
@@ -482,7 +482,7 @@ fun CommentInput(
                       Icon(
                           imageVector = Icons.AutoMirrored.Filled.Send,
                           contentDescription = "Send comment",
-                          tint = colorScheme.primary,
+                          tint = colorScheme.onBackground,
                       )
                     }
               },

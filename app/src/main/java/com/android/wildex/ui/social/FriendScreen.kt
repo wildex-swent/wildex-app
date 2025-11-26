@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -100,7 +101,7 @@ fun FriendScreen (
 ){
   val uiState by friendScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val (selectedTab, setSelectedTab) = remember { mutableStateOf("Friends") }
+  val (selectedTab, setSelectedTab) = remember { mutableStateOf(context.getString(R.string.friends_tab_title)) }
 
   LaunchedEffect(Unit) { friendScreenViewModel.loadUIState(userId) }
   LaunchedEffect(uiState.errorMsg) {
@@ -135,7 +136,7 @@ fun FriendScreen (
                 selectedTab = selectedTab,
                 onTabSelected = setSelectedTab
               )
-              if (selectedTab == "Friends"){
+              if (selectedTab == context.getString(R.string.friends_tab_title)){
                 FriendsTabContent(
                   friendScreenViewModel,
                   uiState,
@@ -175,7 +176,7 @@ fun FriendScreenTopBar(
 ){
   CenterAlignedTopAppBar(
     title = { Text(
-      text = "Social",
+      text = LocalContext.current.getString(R.string.friend_screen_title),
       fontWeight = FontWeight.SemiBold,
       modifier = Modifier.testTag(FriendScreenTestTags.SCREEN_TITLE)
     ) },
@@ -207,7 +208,7 @@ fun CurrentUserSelectionTab(
   selectedTab: String,
   onTabSelected: (String) -> Unit
 ){
-  val tabs = listOf("Friends", "Requests")
+  val tabs = listOf(LocalContext.current.getString(R.string.friends_tab_title), LocalContext.current.getString(R.string.requests_tab_title))
   val screenHeight = LocalConfiguration.current.screenHeightDp.dp
   Row (
     modifier = Modifier
@@ -222,7 +223,7 @@ fun CurrentUserSelectionTab(
         Box(
           contentAlignment = Alignment.Center,
           modifier = Modifier
-            .testTag(if (tab == "Friends") FriendScreenTestTags.FRIENDS_TAB_BUTTON else FriendScreenTestTags.REQUESTS_TAB_BUTTON)
+            .testTag(if (tab == LocalContext.current.getString(R.string.friends_tab_title)) FriendScreenTestTags.FRIENDS_TAB_BUTTON else FriendScreenTestTags.REQUESTS_TAB_BUTTON)
             .fillMaxSize()
             .clickable(
               interactionSource = remember { MutableInteractionSource() },
@@ -273,7 +274,7 @@ fun FollowButton(
       )
   ){
     Text(
-      text = "Add friend",
+      text = LocalContext.current.getString(R.string.friend_screen_send_request),
       fontWeight = FontWeight.SemiBold,
       color = colorScheme.background,
       modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
@@ -306,7 +307,7 @@ fun UnfollowButton(
       )
   ){
     Text(
-      text = "Delete",
+      text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
       fontWeight = FontWeight.SemiBold,
       color = colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
@@ -402,7 +403,7 @@ fun OtherUserSentRequestInteractable(
       )
   ){
     Text(
-      text = "Pending...",
+      text = LocalContext.current.getString(R.string.friend_screen_pending_request_other_user),
       fontWeight = FontWeight.SemiBold,
       color = colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp)
@@ -591,7 +592,7 @@ fun NoSuggestions(){
   ){
     Icon(imageVector = Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
-      text = "We have no suggestions for you at the moment...",
+      text = LocalContext.current.getString(R.string.no_suggestions),
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
@@ -623,7 +624,7 @@ fun FriendsTabContent(
   ){
     item {
       Text(
-        text = "Friends",
+        text = LocalContext.current.getString(R.string.friends_section),
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = colorScheme.onBackground,
@@ -635,7 +636,7 @@ fun FriendsTabContent(
     }
     if (friends.isEmpty()){
       item {
-        NoFriends("You don't have any friends yet. Look at our suggestions and discover new people!")
+        NoFriends(LocalContext.current.getString(R.string.no_friends_current_user))
       }
     } else {
       items(friends.size) {index ->
@@ -654,7 +655,7 @@ fun FriendsTabContent(
         .fillMaxWidth()
         .padding(top = 4.dp), thickness = 1.dp)
       Text(
-        text = "Suggestions",
+        text = LocalContext.current.getString(R.string.suggestions_section),
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = colorScheme.onBackground,
@@ -700,7 +701,7 @@ fun NoSentRequests(){
   ){
     Icon(imageVector = Icons.Default.CancelScheduleSend, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
-      text = "You haven't sent any friend request yet. Look at our suggestions to discover new people!",
+      text = LocalContext.current.getString(R.string.no_sent_requests),
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
@@ -727,7 +728,7 @@ fun NoReceivedRequests(){
   ){
     Icon(imageVector = Icons.Default.Inbox, contentDescription = null, modifier = Modifier.size(60.dp))
     Text(
-      text = "You have received no friend requests yet. Post to make your profile more attractive!",
+      text = LocalContext.current.getString(R.string.no_received_requests),
       fontWeight = FontWeight.SemiBold,
       textAlign = TextAlign.Center,
       fontSize = 12.sp,
@@ -761,7 +762,7 @@ fun RequestsTabContent(
   ){
     item {
       Text(
-        text = "Received",
+        text = LocalContext.current.getString(R.string.received_requests_section),
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = colorScheme.onBackground,
@@ -792,7 +793,7 @@ fun RequestsTabContent(
         .fillMaxWidth()
         .padding(top = 4.dp), thickness = 1.dp)
       Text(
-        text = "Sent",
+        text = LocalContext.current.getString(R.string.sent_requests_section),
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = colorScheme.onBackground,
@@ -845,7 +846,7 @@ fun OtherUserFriendScreenContent(
   ) {
     item {
       Text(
-        text = "Friends",
+        text = LocalContext.current.getString(R.string.friends_section),
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = colorScheme.onBackground,
@@ -857,7 +858,7 @@ fun OtherUserFriendScreenContent(
     }
     if (friends.isEmpty()){
       item {
-        NoFriends("This user has no friends... Ask them to become your friend!")
+        NoFriends(LocalContext.current.getString(R.string.no_friends_other_user))
       }
     } else {
       items(friends.size) {index ->

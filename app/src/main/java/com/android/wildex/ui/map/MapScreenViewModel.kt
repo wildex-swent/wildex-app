@@ -152,6 +152,17 @@ class MapScreenViewModel(
                 if (isSelf) loadAllReportsAsPins() else loadReportsInvolvingUser(userUid)
           }
 
+      val previousState = _uiState.value
+      val previousCenter = previousState.centerCoordinates
+      val previousPinIds = previousState.pins.map { it.id }
+      val currentPinIds = pins.map { it.id }
+      val tabChanged = previousPinIds != currentPinIds
+      val centerCoordinates =
+          when {
+            tabChanged && pins.isNotEmpty() -> pins[0].location
+            else -> previousCenter
+          }
+
       _uiState.value =
           _uiState.value.copy(
               availableTabs = tabs,
@@ -159,6 +170,7 @@ class MapScreenViewModel(
               pins = pins,
               isLoading = false,
               isRefreshing = false,
+              centerCoordinates = centerCoordinates,
               isError = false,
               errorMsg = null,
           )
@@ -188,6 +200,8 @@ class MapScreenViewModel(
   fun onPinSelected(pinId: Id) {
     viewModelScope.launch {
       val pin = _uiState.value.pins.firstOrNull { it.id == pinId } ?: return@launch
+      _uiState.value = _uiState.value.copy(centerCoordinates = pin.location)
+
       try {
         when (pin) {
           is MapPin.PostPin -> {
@@ -216,6 +230,7 @@ class MapScreenViewModel(
             _uiState.value =
                 _uiState.value.copy(selected = PinDetails.ReportDetails(report, author, assignee))
           }
+          is MapPin.ClusterPin -> null
         }
       } catch (e: Exception) {
         setErrorMsg("Failed to load pin: ${e.message}")

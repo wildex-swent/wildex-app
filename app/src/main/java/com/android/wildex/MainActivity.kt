@@ -325,7 +325,7 @@ private fun NavGraphBuilder.mapComposable(
           onReport = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
           isCurrentUser = currentUserId == userId,
           onGoBack = { navigationActions.goBack() },
-      )
+          onProfile = { navigationActions.navigateTo(Screen.Profile(it)) })
     }
   }
 }

@@ -303,7 +303,8 @@ class FriendScreenViewModelTest {
       advanceUntilIdle()
       val state = viewModel.uiState.value
       val sentRequest = FriendRequest(u1.userId, u4.userId)
-      val expectedSentRequests = listOf(RequestState(su3, request1)) + listOf(RequestState(su4, sentRequest))
+      val expectedSentRequests =
+          listOf(RequestState(su3, request1)) + listOf(RequestState(su4, sentRequest))
       val expectedFriendStates = listOf(FriendState(su2, FriendStatus.FRIEND))
       val expectedSuggestions =
           listOf(

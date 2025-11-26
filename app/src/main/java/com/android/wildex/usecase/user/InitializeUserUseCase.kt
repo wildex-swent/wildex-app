@@ -26,7 +26,7 @@ class InitializeUserUseCase(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
     private val userFriendsRepository: UserFriendsRepository =
-      RepositoryProvider.userFriendsRepository
+        RepositoryProvider.userFriendsRepository
 ) {
 
   /**

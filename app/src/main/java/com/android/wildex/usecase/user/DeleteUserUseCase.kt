@@ -30,7 +30,8 @@ class DeleteUserUseCase(
         RepositoryProvider.userAchievementsRepository,
     private val userFriendsRepository: UserFriendsRepository =
         RepositoryProvider.userFriendsRepository,
-    private val friendRequestRepository: FriendRequestRepository = RepositoryProvider.friendRequestRepository,
+    private val friendRequestRepository: FriendRequestRepository =
+        RepositoryProvider.friendRequestRepository,
     private val postsRepository: PostsRepository = RepositoryProvider.postRepository,
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,

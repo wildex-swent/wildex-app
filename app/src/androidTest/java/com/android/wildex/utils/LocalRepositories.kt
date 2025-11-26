@@ -385,8 +385,10 @@ object LocalRepositories {
 
     override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
       listOfFriendRequest.remove(friendRequest)
-      userFriendsRepository.addFriendToUserFriendsOfUser(friendRequest.senderId, friendRequest.receiverId)
-      userFriendsRepository.addFriendToUserFriendsOfUser(friendRequest.receiverId, friendRequest.senderId)
+      userFriendsRepository.addFriendToUserFriendsOfUser(
+          friendRequest.senderId, friendRequest.receiverId)
+      userFriendsRepository.addFriendToUserFriendsOfUser(
+          friendRequest.receiverId, friendRequest.senderId)
     }
 
     override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {

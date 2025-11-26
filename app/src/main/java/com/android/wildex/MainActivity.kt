@@ -200,8 +200,7 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
           onSettings = { navigationActions.navigateTo(Screen.Settings) },
-          onFriends = {navigationActions.navigateTo(Screen.Social(it))}
-      )
+          onFriends = { navigationActions.navigateTo(Screen.Social(it)) })
     }
   }
 }
@@ -211,10 +210,9 @@ private fun NavGraphBuilder.socialComposable(navigationActions: NavigationAction
     val userId = backStackEntry.arguments?.getString("userUid")
     if (userId != null) {
       FriendScreen(
-        userId = userId,
-        onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
-        onGoBack = {navigationActions.goBack()}
-      )
+          userId = userId,
+          onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+          onGoBack = { navigationActions.goBack() })
     }
   }
 }

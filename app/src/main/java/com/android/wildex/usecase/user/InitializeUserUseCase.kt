@@ -7,6 +7,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Timestamp
@@ -26,7 +27,9 @@ class InitializeUserUseCase(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
     private val userFriendsRepository: UserFriendsRepository =
-        RepositoryProvider.userFriendsRepository
+        RepositoryProvider.userFriendsRepository,
+    private val userTokensRepository: UserTokensRepository =
+        RepositoryProvider.userTokensRepository,
 ) {
 
   /**
@@ -41,5 +44,6 @@ class InitializeUserUseCase(
     userAnimalsRepository.initializeUserAnimals(userId)
     userAchievementsRepository.initializeUserAchievements(userId)
     userFriendsRepository.initializeUserFriends(userId)
+    userTokensRepository.initializeUserTokens(userId)
   }
 }

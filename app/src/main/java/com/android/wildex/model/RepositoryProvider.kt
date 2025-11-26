@@ -31,6 +31,8 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserSettingsRepositoryFirestore
+import com.android.wildex.model.user.UserTokensRepository
+import com.android.wildex.model.user.UserTokensRepositoryFirestore
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -70,5 +72,8 @@ object RepositoryProvider {
   }
   val notificationRepository: NotificationRepository by lazy {
     NotificationRepositoryFirestore(Firebase.firestore)
+  }
+  val userTokensRepository: UserTokensRepository by lazy {
+    UserTokensRepositoryFirestore(Firebase.firestore)
   }
 }

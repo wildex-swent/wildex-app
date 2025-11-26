@@ -25,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -104,8 +103,7 @@ fun PostCreationScreen(
                 Text(
                     text = family,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = typography.titleSmall,
                 )
               }
             }
@@ -121,7 +119,7 @@ fun PostCreationScreen(
                 Text(
                     text = animalName,
                     color = colorScheme.primary,
-                    fontSize = 32.sp,
+                    style = typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     modifier =
                         Modifier.testTag(
@@ -133,7 +131,7 @@ fun PostCreationScreen(
                   Text(
                       text = speciesName,
                       color = colorScheme.primary.copy(alpha = 0.7f),
-                      fontSize = 16.sp,
+                      style = typography.titleMedium,
                       fontStyle = FontStyle.Italic,
                       modifier =
                           Modifier.testTag(
@@ -151,12 +149,12 @@ fun PostCreationScreen(
                 Text(
                     text = stringResource(R.string.confidence),
                     color = colorScheme.secondary.copy(alpha = 0.9f),
-                    fontSize = 12.sp,
+                    style = typography.bodySmall,
                 )
                 Text(
                     text = "$confidence %",
                     color = colorScheme.secondary,
-                    fontSize = 28.sp,
+                    style = typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
               }
@@ -171,7 +169,7 @@ fun PostCreationScreen(
         ) {
           Text(
               text = stringResource(R.string.add_description),
-              fontSize = 20.sp,
+              style = typography.titleLarge,
               fontWeight = FontWeight.SemiBold,
               color = colorScheme.onSurface,
           )
@@ -188,14 +186,14 @@ fun PostCreationScreen(
                 Text(
                     text = stringResource(R.string.description_placeholder),
                     color = colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    fontSize = 15.sp,
+                    style = typography.bodyLarge,
                 )
               },
               shape = RoundedCornerShape(12.dp),
               supportingText = {
                 Text(
                     text = "${description.length}/$maxCharacters characters",
-                    fontSize = 12.sp,
+                    style = typography.bodySmall,
                     color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 )
               },
@@ -258,10 +256,7 @@ fun PostCreationScreen(
                   modifier = Modifier.size(18.dp),
               )
               Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                  text = stringResource(R.string.cancel_button),
-                  fontSize = 15.sp,
-                  fontWeight = FontWeight.Medium)
+              Text(text = stringResource(R.string.cancel_button), style = typography.titleSmall)
             }
 
             // Confirm Button
@@ -274,17 +269,14 @@ fun PostCreationScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
             ) {
-              Text(
-                  text = stringResource(R.string.confirm_button),
-                  fontSize = 15.sp,
-                  fontWeight = FontWeight.Medium)
+              Text(text = stringResource(R.string.confirm_button), style = typography.titleSmall)
             }
           }
 
           // Footer text
           Text(
               text = stringResource(R.string.footer),
-              fontSize = 13.sp,
+              style = typography.bodyMedium,
               color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
               modifier = Modifier.align(Alignment.CenterHorizontally),
           )

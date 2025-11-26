@@ -38,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonColors
@@ -150,8 +151,7 @@ fun SettingsScreen(
           ) {
             Text(
                 text = context.getString(R.string.sign_out),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = colorScheme.tertiary,
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
@@ -171,8 +171,7 @@ fun SettingsScreen(
           ) {
             Text(
                 text = context.getString(R.string.delete_account),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = colorScheme.onTertiary,
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
@@ -196,8 +195,16 @@ fun SettingsScreen(
         if (showDeletionValidation) {
           AlertDialog(
               onDismissRequest = { showDeletionValidation = false },
-              title = { Text(text = context.getString(R.string.delete_account)) },
-              text = { Text(text = context.getString(R.string.delete_account_confirmation)) },
+              title = {
+                Text(
+                    text = context.getString(R.string.delete_account),
+                    style = typography.titleLarge)
+              },
+              text = {
+                Text(
+                    text = context.getString(R.string.delete_account_confirmation),
+                    style = typography.bodyMedium)
+              },
               modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
               confirmButton = {
                 TextButton(
@@ -208,7 +215,10 @@ fun SettingsScreen(
                       settingsScreenViewModel.deleteAccount { onAccountDeleteOrSignOut() }
                     },
                 ) {
-                  Text(context.getString(R.string.delete), color = Color.Red)
+                  Text(
+                      text = context.getString(R.string.delete),
+                      color = Color.Red,
+                      style = typography.bodyMedium)
                 }
               },
               dismissButton = {
@@ -217,7 +227,7 @@ fun SettingsScreen(
                         Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
                     onClick = { showDeletionValidation = false },
                 ) {
-                  Text(context.getString(R.string.cancel))
+                  Text(text = context.getString(R.string.cancel), style = typography.bodyMedium)
                 }
               },
           )
@@ -341,7 +351,7 @@ fun SettingsScreenTopBar(onGoBack: () -> Unit) {
         Text(
             modifier = Modifier.testTag(SettingsScreenTestTags.SCREEN_TITLE),
             text = LocalContext.current.getString(R.string.settings),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleLarge,
         )
       },
       navigationIcon = {
@@ -415,7 +425,7 @@ fun SettingTemplate(
     Text(
         text = settingName,
         color = colorScheme.onBackground,
-        fontWeight = FontWeight.SemiBold,
+        style = typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
         modifier = Modifier.weight(1f),
     )
     interactableElement()
@@ -568,9 +578,9 @@ fun UserStatusOption(
         ) {
           Text(
               text = option,
-              fontSize = 12.sp,
               color =
                   if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+              style = typography.bodySmall.copy(fontSize = 9.sp),
           )
         }
       }
@@ -646,12 +656,12 @@ fun AppearanceModeOption(
                     if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
                 modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(2.dp))
             Text(
                 text = option,
-                fontSize = 12.sp,
                 color =
                     if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+                style = typography.bodySmall.copy(fontSize = 9.sp),
             )
           }
         }

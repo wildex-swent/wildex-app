@@ -18,11 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,13 +40,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
@@ -151,8 +148,8 @@ fun CollectionTopBar(
           Text(
               modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
               text = LocalContext.current.getString(R.string.collection),
-              fontWeight = FontWeight.SemiBold,
-              color = colorScheme.onBackground,
+              style = typography.titleLarge,
+              color = colorScheme.primary,
               textAlign = TextAlign.Center)
         }
       },
@@ -166,10 +163,11 @@ fun CollectionTopBar(
         ) {
           Icon(
               imageVector =
-                  if (isUserOwner) Icons.Default.Notifications
+                  if (isUserOwner) Icons.Outlined.Notifications
                   else Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = if (isUserOwner) "Notifications" else "Back",
-              tint = colorScheme.onBackground,
+              tint = colorScheme.tertiary,
+              modifier = Modifier.size(30.dp),
           )
         }
       },
@@ -249,17 +247,9 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
 
             Text(
                 text = if (animalState.isUnlocked) animalName else "???",
-                fontWeight = FontWeight.Medium,
                 color = colorScheme.background,
                 textAlign = TextAlign.Center,
-                fontSize = 17.sp,
-                style =
-                    TextStyle(
-                        lineHeight = 2.2.em,
-                        lineHeightStyle =
-                            LineHeightStyle(
-                                alignment = LineHeightStyle.Alignment.Center,
-                                trim = LineHeightStyle.Trim.None)),
+                style = typography.titleMedium,
                 modifier =
                     Modifier.fillMaxWidth().weight(0.2f).background(color = colorScheme.primary),
             )
@@ -290,6 +280,7 @@ fun NoAnimalsView(isUserOwner: Boolean) {
                 if (isUserOwner) R.string.empty_current_collection
                 else R.string.empty_other_collection),
         color = colorScheme.onBackground,
+        style = typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT))
   }

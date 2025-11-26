@@ -90,7 +90,7 @@ fun WildexTheme(
     }
   }
 
-  MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+  MaterialTheme(colorScheme = colorScheme, typography = PhoneTypography, content = content)
 }
 
 fun setStatusBarColor(window: Window, color: Int) {

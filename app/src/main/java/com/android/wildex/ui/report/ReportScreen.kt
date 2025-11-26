@@ -24,8 +24,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -44,7 +44,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
@@ -158,7 +157,7 @@ fun ReportScreen(
         Text(
             text = context.getString(R.string.submit_report),
             color = colorScheme.onSecondary,
-            fontSize = 24.sp,
+            style = typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
         )
       }
@@ -288,7 +287,7 @@ fun ReportItem(
                         }
                       }
                     },
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             color = colorScheme.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -300,7 +299,7 @@ fun ReportItem(
         ) {
           Text(
               text = reportState.date,
-              style = MaterialTheme.typography.labelSmall,
+              style = typography.labelSmall,
               color = colorScheme.tertiary,
           )
           Row(
@@ -316,7 +315,7 @@ fun ReportItem(
             Spacer(Modifier.width(2.dp))
             Text(
                 text = reportState.location,
-                style = MaterialTheme.typography.labelMedium,
+                style = typography.labelMedium,
                 color = colorScheme.tertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -342,6 +341,7 @@ fun ReportItem(
     Text(
         text = reportState.description,
         color = colorScheme.tertiary,
+        style = typography.bodyMedium,
         modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp),
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
@@ -430,6 +430,7 @@ fun CancelReportButton(
     Text(
         text = LocalContext.current.getString(R.string.cancel_report),
         color = colorScheme.onTertiary,
+        style = typography.bodyMedium,
         modifier =
             Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
@@ -459,6 +460,7 @@ fun SelfAssignButton(
     Text(
         text = LocalContext.current.getString(R.string.self_assign_report),
         color = colorScheme.onTertiary,
+        style = typography.bodyMedium,
         modifier =
             Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
@@ -488,6 +490,7 @@ fun ResolveReportButton(
     Text(
         text = LocalContext.current.getString(R.string.resolve_report),
         color = colorScheme.onPrimary,
+        style = typography.bodyMedium,
         modifier =
             Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
@@ -517,6 +520,7 @@ fun UnSelfAssignReportButton(
     Text(
         text = LocalContext.current.getString(R.string.cancel_self_assigned_report),
         color = colorScheme.onTertiary,
+        style = typography.bodyMedium,
         modifier =
             Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
@@ -540,6 +544,7 @@ fun ReportAssigneeCard(modifier: Modifier = Modifier, assigneeUsername: String =
     Text(
         text = LocalContext.current.getString(R.string.report_assignee) + " " + assigneeUsername,
         color = colorScheme.onTertiary,
+        style = typography.bodyMedium,
         modifier =
             Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
                 .align(Alignment.CenterHorizontally),
@@ -565,9 +570,7 @@ fun NoReportsView() {
     Text(
         text = LocalContext.current.getString(R.string.no_reports),
         color = colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        style = typography.titleLarge,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )

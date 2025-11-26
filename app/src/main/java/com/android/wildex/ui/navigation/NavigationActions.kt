@@ -80,6 +80,30 @@ sealed class Screen(
       const val PATH = "animal_information_screen/{animalUid}"
     }
   }
+
+  companion object {
+    fun fromString(path: String): Screen {
+      val pathParts = path.split("/")
+      return when (pathParts[0]) {
+        "auth" -> Auth
+        "home" -> Home
+        "post_details" -> PostDetails(pathParts[1])
+        "profile" -> Profile(pathParts[1])
+        "edit_profile" -> EditProfile(pathParts[1].toBoolean())
+        "map" -> Map(pathParts[1])
+        "camera" -> Camera
+        "collection" -> Collection(pathParts[1])
+        "report" -> Report
+        "report_details" -> ReportDetails(pathParts[1])
+        "submit_report" -> SubmitReport
+        "settings" -> Settings
+        "friend_screen" -> Friend(pathParts[1])
+        "achievement_screen" -> Achievements(pathParts[1])
+        "animal_information_screen" -> AnimalInformation(pathParts[1])
+        else -> Auth
+      }
+    }
+  }
 }
 
 open class NavigationActions(

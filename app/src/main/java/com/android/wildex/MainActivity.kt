@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -52,6 +53,7 @@ import com.android.wildex.ui.report.SubmitReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.social.FriendScreen
 import com.android.wildex.ui.theme.WildexTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
@@ -83,6 +85,11 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+  }
+
   private fun createNotificationChannels() {
     NotificationChannelType.entries.forEach {
       val channel =
@@ -104,6 +111,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun WildexApp(
     context: Context = LocalContext.current,
@@ -122,6 +130,14 @@ fun WildexApp(
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
+  var path by remember {
+    mutableStateOf((context as ComponentActivity).intent.getStringExtra("path"))
+  }
+  LaunchedEffect(path) {
+    if (currentUserId != null) {
+      path?.let { navigationActions.navigateTo(Screen.fromString(it)) }
+    }
+  }
 
   NavHost(navController = navController, startDestination = startDestination) {
 
@@ -217,7 +233,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(

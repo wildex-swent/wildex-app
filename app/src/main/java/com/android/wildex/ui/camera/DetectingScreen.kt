@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
@@ -139,7 +140,10 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
                 modifier =
                     Modifier.fillMaxHeight()
                         .fillMaxWidth(0.6f)
-                        .offset(x = ((loadingProgress - 0.3f) * 1.6f * 300).dp)
+                        .offset {
+                          IntOffset(
+                              x = ((loadingProgress - 0.3f) * 1.6f * 300).dp.roundToPx(), y = 0)
+                        }
                         .background(
                             Brush.horizontalGradient(
                                 colors =

@@ -34,8 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -196,7 +196,7 @@ fun CollectionTopBar(
  */
 @Composable
 fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
-  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
     val rowHeight = (screenHeight) / 4

@@ -83,6 +83,10 @@ class DeleteUserUseCaseTest {
           RuntimeException("bim-boom")
       coEvery { userAchievementsRepository.deleteUserAchievements(userId) } throws
           RuntimeException("bim-boom")
+      coEvery { userFriendsRepository.deleteUserFriendsOfUser(userId) } throws
+          RuntimeException("bim-boom")
+      coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } throws
+          RuntimeException("bim-boom")
 
       try {
         useCase(userId)
@@ -104,6 +108,8 @@ class DeleteUserUseCaseTest {
       coEvery { userSettingsRepository.deleteUserSettings(userId) } just Runs
       coEvery { userAnimalsRepository.deleteUserAnimals(userId) } just Runs
       coEvery { userAchievementsRepository.deleteUserAchievements(userId) } just Runs
+      coEvery { userFriendsRepository.deleteUserFriendsOfUser(userId) } just Runs
+      coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } just Runs
       coEvery { postsRepository.deletePostsByUser(userId) } just Runs
       coEvery { reportRepository.deleteReportsByUser(userId) } just Runs
       coEvery { likeRepository.deleteLikesByUser(userId) } just Runs

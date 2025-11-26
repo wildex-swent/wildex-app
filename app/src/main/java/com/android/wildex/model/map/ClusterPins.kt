@@ -56,10 +56,11 @@ private fun clusterByDistance(
 
 /** Handle trivial cases for clustering: empty list or single pin. */
 private fun handleTrivialClusterCases(basePins: List<MapPin>): List<MapPin> {
-  if (basePins.isEmpty()) return emptyList()
-  else {
+  return if (basePins.isEmpty()) {
+    emptyList()
+  } else {
     val p = basePins[0]
-    return listOf(
+    listOf(
         MapPin.ClusterPin(
             id = "cluster_single_${p.id}",
             location = p.location,
@@ -75,22 +76,23 @@ private fun mergeClosePins(
     radiusMeters: Double,
     parent: IntArray,
 ) {
-  fun union(a: Int, b: Int) {
-    val ra = find(a, parent)
-    val rb = find(b, parent)
-    if (ra != rb) parent[rb] = ra
-  }
-
   val n = basePins.size
   for (i in 0 until n) {
     val li = basePins[i].location
     for (j in i + 1 until n) {
       val lj = basePins[j].location
       if (distanceMeters(li.latitude, li.longitude, lj.latitude, lj.longitude) <= radiusMeters) {
-        union(i, j)
+        union(i, j, parent)
       }
     }
   }
+}
+
+/** Union operation for union–find structure. */
+private fun union(a: Int, b: Int, parent: IntArray) {
+  val ra = find(a, parent)
+  val rb = find(b, parent)
+  if (ra != rb) parent[rb] = ra
 }
 
 /** Find root of x in union–find structure with path compression. */

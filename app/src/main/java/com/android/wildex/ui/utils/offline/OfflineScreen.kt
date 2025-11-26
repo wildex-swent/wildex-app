@@ -28,6 +28,11 @@ object OfflineScreenTestTags {
   const val OFFLINE_MESSAGE = "offline_screen_message"
 }
 
+/**
+ * Defines the screen to display in offline mode.
+ *
+ * @param innerPadding The padding values to be applied to the screen content.
+ */
 @Composable
 fun OfflineScreen(
     innerPadding: PaddingValues = PaddingValues(0.dp),

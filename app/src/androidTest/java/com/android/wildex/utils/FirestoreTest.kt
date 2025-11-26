@@ -56,7 +56,7 @@ open class FirestoreTest(val collectionPath: String) {
     assert(getCount() == 0) { "Test collection is not empty after clearing, count: ${getCount()}" }
   }
 
-  fun Timestamp.Companion.fromDate(year: Int, month: Int, day: Int): Timestamp {
+  fun fromDate(year: Int, month: Int, day: Int): Timestamp {
     val calendar = Calendar.getInstance()
     calendar.set(year, month, day, 0, 0, 0)
     return Timestamp(calendar.time)
@@ -81,7 +81,7 @@ open class FirestoreTest(val collectionPath: String) {
               "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.0, 0.0),
           description = "Description 1",
-          date = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
+          date = fromDate(2025, Calendar.SEPTEMBER, 1),
           animalId = "animal1",
           likesCount = 10,
           commentsCount = 5,
@@ -95,7 +95,7 @@ open class FirestoreTest(val collectionPath: String) {
               "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.1, 0.3),
           description = "Description 2",
-          date = Timestamp.Companion.fromDate(2035, Calendar.SEPTEMBER, 4),
+          date = fromDate(2035, Calendar.SEPTEMBER, 4),
           animalId = "animal2",
           likesCount = 10,
           commentsCount = 5,
@@ -109,7 +109,7 @@ open class FirestoreTest(val collectionPath: String) {
               "https://t4.ftcdn.net/jpg/04/15/79/09/360_F_415790935_7va5lMHOmyhvAcdskXbSx7lDJUp0cfja.jpg",
           location = Location(0.3, 0.3),
           description = "Description 3",
-          date = Timestamp.Companion.fromDate(2024, Calendar.SEPTEMBER, 8),
+          date = fromDate(2024, Calendar.SEPTEMBER, 8),
           animalId = "animal3",
           likesCount = 10,
           commentsCount = 5,
@@ -124,7 +124,7 @@ open class FirestoreTest(val collectionPath: String) {
           bio = "Bio 1",
           profilePictureURL = "url1",
           userType = UserType.REGULAR,
-          creationDate = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1),
+          creationDate = fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
       )
 
@@ -137,7 +137,7 @@ open class FirestoreTest(val collectionPath: String) {
           bio = "Bio 2",
           profilePictureURL = "url2",
           userType = UserType.REGULAR,
-          creationDate = Timestamp.Companion.fromDate(2025, Calendar.FEBRUARY, 2),
+          creationDate = fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
       )
 
@@ -150,7 +150,7 @@ open class FirestoreTest(val collectionPath: String) {
           bio = "Bio 3",
           profilePictureURL = "url3",
           userType = UserType.REGULAR,
-          creationDate = Timestamp.Companion.fromDate(2023, Calendar.MARCH, 3),
+          creationDate = fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
       )
 
@@ -166,8 +166,9 @@ open class FirestoreTest(val collectionPath: String) {
           parentId = "parent1",
           authorId = "author1",
           text = "text1",
-          date = Timestamp.fromDate(2003, 11, 21),
-          tag = CommentTag.POST_COMMENT)
+          date = fromDate(2003, 11, 21),
+          tag = CommentTag.POST_COMMENT,
+      )
 
   open val comment2 =
       Comment(
@@ -175,8 +176,9 @@ open class FirestoreTest(val collectionPath: String) {
           parentId = "parent2",
           authorId = "author2",
           text = "text2",
-          date = Timestamp.fromDate(2012, 12, 12),
-          tag = CommentTag.REPORT_COMMENT)
+          date = fromDate(2012, 12, 12),
+          tag = CommentTag.REPORT_COMMENT,
+      )
 
   open val animal1 =
       Animal(
@@ -201,10 +203,11 @@ open class FirestoreTest(val collectionPath: String) {
           reportId = "reportId1",
           imageURL = "imageURL1",
           location = Location(0.3, 0.3),
-          date = Timestamp.fromDate(2017, 4, 29),
+          date = fromDate(2017, 4, 29),
           description = "description1",
           authorId = "authorId1",
-          assigneeId = "assigneeId1")
+          assigneeId = "assigneeId1",
+      )
 
   open val report2 =
       Report(
@@ -214,7 +217,8 @@ open class FirestoreTest(val collectionPath: String) {
           date = Timestamp.now(),
           description = "description2",
           authorId = "authorId2",
-          assigneeId = "assigneeId2")
+          assigneeId = "assigneeId2",
+      )
 
   open val friendRequest1 = FriendRequest(senderId = user1.userId, receiverId = user2.userId)
 

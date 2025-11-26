@@ -4,6 +4,7 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.notification.Notification
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -109,7 +110,8 @@ class DataClassesTest {
             authorId = "user1",
             text = "This is a comment.",
             date = Timestamp.Companion.now(),
-            tag = CommentTag.POST_COMMENT)
+            tag = CommentTag.POST_COMMENT,
+        )
 
     TestCase.assertEquals("comment1", comment.commentId)
     TestCase.assertEquals("post1", comment.parentId)
@@ -220,5 +222,28 @@ class DataClassesTest {
     TestCase.assertEquals(50.0, location.latitude)
     TestCase.assertEquals(8.0, location.longitude)
     TestCase.assertEquals("Test Location", location.name)
+  }
+
+  @Test
+  fun testNotification() {
+    val date = Timestamp.now()
+    val notification =
+        Notification(
+            notificationId = "notification1",
+            targetId = "user1",
+            isRead = false,
+            title = "New Friend Request",
+            body = "John Doe has sent you a friend request.",
+            route = "route",
+            date = date,
+        )
+
+    TestCase.assertEquals("notification1", notification.notificationId)
+    TestCase.assertEquals("user1", notification.targetId)
+    TestCase.assertEquals(false, notification.isRead)
+    TestCase.assertEquals("New Friend Request", notification.title)
+    TestCase.assertEquals("John Doe has sent you a friend request.", notification.body)
+    TestCase.assertEquals("route", notification.route)
+    TestCase.assertEquals(date, notification.date)
   }
 }

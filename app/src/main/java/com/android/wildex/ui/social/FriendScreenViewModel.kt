@@ -273,7 +273,7 @@ class FriendScreenViewModel(
                         status = FriendStatus.FRIEND))
           } else {
             friends.map {
-              if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
+              if (it.friend.userId == userId) it.copy(status = FriendStatus.FRIEND) else it
             }
           }
 

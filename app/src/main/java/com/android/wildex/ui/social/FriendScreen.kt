@@ -62,6 +62,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 
 object FriendScreenTestTags {
   const val GO_BACK_BUTTON = "friend_screen_go_back_button"
@@ -211,7 +212,7 @@ fun CurrentUserSelectionTab(
   Row (
     modifier = Modifier
       .fillMaxWidth()
-      .height(screenHeight / 22),
+      .height(screenHeight / 20),
   ){
     tabs.forEach { tab ->
       Column(
@@ -267,12 +268,7 @@ fun FollowButton(
         onClick = onFollow
       )
       .background(
-        brush = Brush.linearGradient(
-          colors = listOf(
-            Color(red = 0xF5, green = 0, blue = 0x21, alpha = 255),
-            Color(red = 0x26, green = 0, blue = 0xFE, alpha = 255)
-          )
-        ),
+        color = colorScheme.primary,
         shape = RoundedCornerShape(5.dp)
       )
   ){
@@ -341,7 +337,7 @@ fun ReceivedRequestInteractable(
       onClick = onAccept,
       icon = Icons.Default.Check,
       contentDescription = "Accept Friend Request",
-      backgroundColor = Color(red = 36, green = 88, blue = 246),
+      backgroundColor = Color.Blue,
       iconColor = colorScheme.background,
       modifier = Modifier.weight(1f).testTag(testTagAccept)
     )
@@ -349,7 +345,7 @@ fun ReceivedRequestInteractable(
       onClick = onDecline,
       icon = Icons.Default.Close,
       contentDescription = "Decline Friend Request",
-      backgroundColor = Color(red = 202, green = 69, blue = 62),
+      backgroundColor = Color.Red,
       iconColor = colorScheme.background,
       modifier = Modifier.weight(1f).testTag(testTagDecline)
     )

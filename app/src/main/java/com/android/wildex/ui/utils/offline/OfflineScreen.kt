@@ -2,6 +2,8 @@ package com.android.wildex.ui.utils.offline
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -27,7 +29,9 @@ object OfflineScreenTestTags {
 }
 
 @Composable
-fun OfflineScreen() {
+fun OfflineScreen(
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+) {
   val context = LocalContext.current
   val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.kitty_cat_error))
   val progress by
@@ -36,7 +40,10 @@ fun OfflineScreen() {
           iterations = LottieConstants.IterateForever,
       )
   Box(
-      modifier = Modifier.testTag(OfflineScreenTestTags.OFFLINE_SCREEN),
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .testTag(OfflineScreenTestTags.OFFLINE_SCREEN),
       contentAlignment = Alignment.Center,
   ) {
     Column(

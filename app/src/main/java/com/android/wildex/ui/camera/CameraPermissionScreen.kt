@@ -73,7 +73,6 @@ fun CameraPermissionScreen(
       Text(
           text = permissionRequestMsg,
           style = typography.headlineMedium,
-          fontWeight = FontWeight.Bold,
           color = colorScheme.onBackground,
           textAlign = TextAlign.Center,
           modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1),

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +35,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.model.utils.Id
@@ -102,6 +102,7 @@ fun AnimalInformationScreen(
 
                         Text(
                             text = "Back",
+                            style = typography.labelMedium,
                             color = colorScheme.primary,
                         )
                       }
@@ -130,20 +131,20 @@ fun AnimalInformationScreen(
                     Text(
                         text = uiState.name.ifEmpty { "Animal Name" },
                         color = colorScheme.secondary,
-                        fontSize = 36.sp,
+                        style = typography.titleLarge,
                         modifier = Modifier.padding(bottom = 10.dp),
                     )
 
                     Text(
                         text = uiState.species.ifEmpty { "Animal Species" },
                         color = colorScheme.primary,
-                        fontSize = 24.sp,
+                        style = typography.titleMedium,
                         modifier = Modifier.padding(bottom = 10.dp))
 
                     Text(
                         text = uiState.description.ifEmpty { "Animal Description" },
                         color = colorScheme.onBackground,
-                        fontSize = 16.sp,
+                        style = typography.bodyMedium,
                     )
                   }
             }

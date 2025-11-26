@@ -5,7 +5,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -20,7 +21,8 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
       title = {
         Text(
             text = "Back to Homepage",
-            color = MaterialTheme.colorScheme.primary,
+            color = colorScheme.primary,
+            style = typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -32,7 +34,7 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                   contentDescription = "Back to Homepage",
-                  tint = MaterialTheme.colorScheme.primary,
+                  tint = colorScheme.primary,
               )
             }
       },

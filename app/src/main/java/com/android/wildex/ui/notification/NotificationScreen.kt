@@ -64,7 +64,7 @@ fun NotificationScreen(
     onGoBack: () -> Unit = {},
     notificationScreenViewModel: NotificationScreenViewModel = viewModel(),
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
 ) {
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -110,7 +110,7 @@ fun NotificationView(
     notifications: List<NotificationUIState> = emptyList(),
     pd: PaddingValues,
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
 ) {
   val cs = colorScheme
   LazyColumn(
@@ -123,7 +123,7 @@ fun NotificationView(
       NotificationItem(
           notificationContentId = notification.notificationId,
           simpleUser = notification.simpleUser,
-          notificationType = notification.notificationType,
+          notificationRoute = notification.notificationRoute,
           notificationTitle = notification.notificationTitle,
           notificationDescription = notification.notificationDescription,
           onNotificationClick = onNotificationClick,
@@ -138,12 +138,12 @@ fun NotificationView(
 @Composable
 fun NotificationItem(
     notificationContentId: Id = "",
-    notificationType: NotificationType = NotificationType.LIKE,
+    notificationRoute: String = "",
     simpleUser: SimpleUser,
     notificationTitle: String = "DEFAULT TITLE",
     notificationDescription: String = "DEFAULT DESCRIPTION",
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
     cs: ColorScheme,
 ) {
   Box(
@@ -179,7 +179,7 @@ fun NotificationItem(
             )
           }
           IconButton(
-              onClick = { onNotificationClick(notificationContentId, notificationType) },
+              onClick = { onNotificationClick(notificationContentId, notificationRoute) },
               modifier =
                   Modifier.size(48.dp)
                       .testTag(

@@ -3,8 +3,13 @@ package com.android.wildex.ui.notification
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,32 +27,32 @@ private val sampleNotifications =
     listOf(
         NotificationUIState(
             notificationId = "1",
-            notificationType = NotificationType.LIKE,
+            notificationRoute = "route/to/post/1",
             simpleUser = defaultSimpleUser,
             notificationTitle = "Jean has liked your post",
             notificationDescription = "3min ago"),
         NotificationUIState(
             notificationId = "2",
-            notificationType = NotificationType.POST,
+            notificationRoute = "route/to/post/2",
             simpleUser = defaultSimpleUser,
             notificationTitle = "Bob spotted a tiger",
             notificationDescription = "15min ago"),
         NotificationUIState(
             notificationId = "3",
-            notificationType = NotificationType.COMMENT,
+            notificationRoute = "route/to/post/3",
             simpleUser = defaultSimpleUser,
             notificationTitle = "Alice commented on your post",
             notificationDescription = "Alice said: Wow, amazing!",
         ))
 
-enum class NotificationType {
+/*enum class NotificationType {
   POST,
   REPORT,
   LIKE,
   COMMENT,
   FRIEND_REQUEST_RECEIVED,
   FRIEND_REQUEST_ACCEPTED,
-}
+}*/
 
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
@@ -60,12 +65,16 @@ data class NotificationScreenUIState(
 data class NotificationUIState(
     val notificationId: String = "",
     val simpleUser: SimpleUser,
-    val notificationType: NotificationType = NotificationType.POST,
+    val notificationRoute: String = "",
     val notificationTitle: String = "",
     val notificationDescription: String = ""
 )
 
-class NotificationScreenViewModel() : ViewModel() {
+class NotificationScreenViewModel(
+    // notificationRepository: NotificationRepository = RepositoryProvider.notificationRepository,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
+) : ViewModel() {
   /** Backing property for the home screen state. */
   private val _uiState = MutableStateFlow(NotificationScreenUIState())
 
@@ -81,7 +90,7 @@ class NotificationScreenViewModel() : ViewModel() {
     try {
       _uiState.value =
           _uiState.value.copy(
-              // notifications = fetchedNotifications,
+              notifications = fetchNotifications(),
               isLoading = false,
               isRefreshing = false,
               errorMsg = null,
@@ -91,6 +100,21 @@ class NotificationScreenViewModel() : ViewModel() {
       handleException("Error loading notifications", e)
       _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
     }
+  }
+
+  private fun fetchNotifications(): List<NotificationUIState> {
+    /*val notif = notificationRepository.getAllNotificationsForUser(currentUserId)
+    val notificationUIStates: List<NotificationUIState> = notif.map { n ->
+      NotificationUIState(
+          notificationId = n.notificationId,
+          simpleUser = userRepository.getSimpleUser(n.fromUserId),
+          notificationRoute = n.route,
+          notificationTitle = n.title,
+          notificationDescription = n.body,
+      )
+    }
+        return notificationUIStates*/
+    return sampleNotifications
   }
 
   fun refreshUIState() {

@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -31,7 +33,7 @@ class NotificationScreenTest {
                       username = "Jean",
                       profilePictureURL = "",
                       userType = UserType.REGULAR),
-              notificationType = NotificationType.LIKE,
+              notificationRoute = "route/to/post/1",
               notificationTitle = "Jean has liked your post",
               notificationDescription = "3min ago",
           ),
@@ -43,7 +45,7 @@ class NotificationScreenTest {
                       username = "Bob",
                       profilePictureURL = "",
                       userType = UserType.REGULAR),
-              notificationType = NotificationType.POST,
+              notificationRoute = "route/to/post/2",
               notificationTitle = "Bob spotted a tiger",
               notificationDescription = "15min ago",
           ),
@@ -55,7 +57,7 @@ class NotificationScreenTest {
                       username = "Alice",
                       profilePictureURL = "",
                       userType = UserType.REGULAR),
-              notificationType = NotificationType.COMMENT,
+              notificationRoute = "route/to/post/3",
               notificationTitle = "Alice commented on your post",
               notificationDescription = "Alice said: Wow, amazing!",
           ),
@@ -108,7 +110,7 @@ class NotificationScreenTest {
       MaterialTheme(colorScheme = lightColorScheme()) {
         NotificationItem(
             notificationContentId = contentId,
-            notificationType = NotificationType.POST,
+            notificationRoute = "route/to/$contentId",
             simpleUser = testUser,
             notificationTitle = longTitle,
             notificationDescription = longDesc,
@@ -170,11 +172,15 @@ class NotificationScreenTest {
   }
 
   @Test
-  fun notificationScreen_showsEmptyStateByDefault() {
+  fun notificationScreen_showsSampleNotificationsByDefault() {
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) { NotificationScreen() }
     }
     composeRule.waitForIdle()
-    composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()
+
+    composeRule
+        .onAllNodesWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
+        .assertCountEquals(0)
+    composeRule.onNodeWithText("Jean has liked your post").assertIsDisplayed()
   }
 }

@@ -20,6 +20,8 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -129,19 +131,29 @@ class HomeScreenViewModel(
   /**
    * Retrieves posts and converts them to [PostState] objects including like status and author data.
    */
-  private suspend fun fetchPosts(): List<PostState> =
-      postRepository.getAllPosts().mapNotNull { post ->
-        try {
-          PostState(
-              post = post,
-              author = userRepository.getSimpleUser(post.authorId),
-              isLiked = likeRepository.getLikeForPost(post.postId) != null,
-              animalName = animalRepository.getAnimal(post.animalId).name,
-          )
-        } catch (_: Exception) {
-          null
+  private suspend fun fetchPosts(): List<PostState> = coroutineScope {
+    postRepository
+        .getAllPosts()
+        .map { post ->
+          async {
+            try {
+              val author = userRepository.getSimpleUser(post.authorId)
+              val isLiked = likeRepository.getLikeForPost(post.postId) != null
+              val animalName = animalRepository.getAnimal(post.animalId).name
+
+              PostState(
+                  post = post,
+                  author = author,
+                  isLiked = isLiked,
+                  animalName = animalName,
+              )
+            } catch (_: Exception) {
+              null
+            }
+          }
         }
-      }
+        .mapNotNull { it.await() }
+  }
 
   /**
    * Handles like/unlike logic for a specific post.

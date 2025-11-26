@@ -32,21 +32,30 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.map.PinDetails
+import com.android.wildex.model.map.clusterPinsForZoom
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.mapbox.common.Cancelable
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraChanged
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
+import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
+import com.mapbox.maps.plugin.animation.flyTo
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /* ---------- Test tags ---------- */
 object MapContentTestTags {
@@ -96,6 +105,7 @@ fun MapScreen(
     onPost: (Id) -> Unit = {},
     onReport: (Id) -> Unit = {},
     onGoBack: () -> Unit = {},
+    onProfile: (Id) -> Unit = {},
     isCurrentUser: Boolean = true,
 ) {
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
@@ -105,7 +115,13 @@ fun MapScreen(
     val render by viewModel.renderState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    val isDark =
+        when (AppTheme.appearanceMode) {
+          AppearanceMode.DARK -> true
+          AppearanceMode.LIGHT -> false
+          AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+        }
+
     val styleUri = context.getString(R.string.map_style)
     val standardImportId = context.getString(R.string.map_standard_import)
 
@@ -147,17 +163,68 @@ fun MapScreen(
     var isMapReady by remember { mutableStateOf(false) }
     // I added this to avoid the old pins taking the new tab color before they disappear
     var styleTab by remember { mutableStateOf(uiState.activeTab) }
+    var currentZoom by remember { mutableDoubleStateOf(12.0) }
+    val zoomBand = currentZoom.roundToInt()
+    val pinsForDisplay =
+        remember(uiState.pins, styleTab, zoomBand) {
+          if (!isMapReady) {
+            // So this is just to avoid clustering before the map is ready
+            uiState.pins
+          } else {
+            clusterPinsForZoom(
+                pins = uiState.pins,
+                zoomBand = zoomBand,
+            )
+          }
+        }
+
+    LaunchedEffect(uiState.centerCoordinates, isMapReady, uiState.selected, uiState.activeTab) {
+      if (!isMapReady) return@LaunchedEffect
+      val mv = mapView ?: return@LaunchedEffect
+      val loc = uiState.centerCoordinates
+      val cameraState = mv.mapboxMap.cameraState
+      val target = Point.fromLngLat(loc.longitude, loc.latitude)
+      val zoom =
+          when {
+            uiState.selected != null -> 18.0
+            // to no force a zoom-out.
+            cameraState.center.latitude() == target.latitude() &&
+                cameraState.center.longitude() == target.longitude() -> cameraState.zoom
+            else -> 12.0
+          }
+      val sameCenter =
+          cameraState.center.latitude() == target.latitude() &&
+              cameraState.center.longitude() == target.longitude()
+      val sameZoom = abs(cameraState.zoom - zoom) < 0.01
+      if (sameCenter && sameZoom) return@LaunchedEffect
+      val dest = CameraOptions.Builder().center(target).zoom(zoom).build()
+      mv.mapboxMap.flyTo(
+          dest,
+          mapAnimationOptions { duration(500L) },
+      )
+    }
 
     val indicatorListener = remember {
       OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
     }
     DisposableEffect(mapView) {
-      val cancelable = mapView?.mapboxMap?.subscribeMapLoaded { isMapReady = true }
+      val mv = mapView
+      if (mv == null) {
+        return@DisposableEffect onDispose {}
+      }
+      val mapboxMap = mv.mapboxMap
+      val mapLoadedCancelable: Cancelable = mapboxMap.subscribeMapLoaded { isMapReady = true }
+      val cameraCancelable: Cancelable =
+          mapboxMap.subscribeCameraChanged { event: CameraChanged ->
+            currentZoom = event.cameraState.zoom
+          }
       onDispose {
-        cancelable?.cancel()
-        mapView?.location?.removeOnIndicatorPositionChangedListener(indicatorListener)
+        mapLoadedCancelable.cancel()
+        cameraCancelable.cancel()
+        mv.location.removeOnIndicatorPositionChangedListener(indicatorListener)
       }
     }
+
     LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
     val showLoading = uiState.isLoading || !isMapReady
 
@@ -179,7 +246,7 @@ fun MapScreen(
         PinsOverlay(
             modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
             mapView = mapView,
-            pins = uiState.pins,
+            pins = pinsForDisplay,
             currentTab = styleTab,
             selectedId =
                 when (val s = uiState.selected) {
@@ -227,6 +294,7 @@ fun MapScreen(
           onReport = onReport,
           onDismiss = { viewModel.clearSelection() },
           onToggleLike = viewModel::toggleLike,
+          onProfile = onProfile,
           isCurrentUser = isCurrentUser,
       )
 
@@ -273,13 +341,14 @@ fun MapScreen(
           val longitude = uiState.centerCoordinates.longitude
           val latitude = uiState.centerCoordinates.latitude
           val fallback = Point.fromLngLat(longitude, latitude)
-          mapView
-              ?.mapboxMap
-              ?.setCamera(
-                  CameraOptions.Builder()
-                      .center(target ?: fallback)
-                      .zoom(if (target != null) 14.0 else 12.0)
-                      .build())
+          val center = target ?: fallback
+          val zoom = if (target != null) 14.0 else 12.0
+          mapView!!
+              .mapboxMap
+              .flyTo(
+                  CameraOptions.Builder().center(center).zoom(zoom).build(),
+                  mapAnimationOptions { duration(800L) },
+              )
           viewModel.consumeRecenter()
         }
       }

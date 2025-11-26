@@ -6,8 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.android.wildex.model.utils.Location
 import com.mapbox.common.toValue
-import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -49,15 +47,10 @@ fun MapCanvas(
     centerCoordinates: Location,
 ) {
   MapboxMap(modifier = modifier) {
-    MapEffect(isDark, showUserLocation, styleUri, styleImportId) { mv ->
+    MapEffect(isDark, showUserLocation, styleUri, styleImportId, centerCoordinates) { mv ->
       mapViewRef(mv)
       val mapboxMap = mv.mapboxMap
       mapboxMap.loadStyle(styleUri) { style ->
-        mapboxMap.setCamera(
-            CameraOptions.Builder()
-                .center(Point.fromLngLat(centerCoordinates.longitude, centerCoordinates.latitude))
-                .zoom(12.0)
-                .build())
         runCatching {
           style.setStyleImportConfigProperty(
               styleImportId,

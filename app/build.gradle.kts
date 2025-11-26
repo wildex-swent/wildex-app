@@ -259,6 +259,7 @@ dependencies {
   implementation(libs.camera.camera2)
   implementation(libs.camera.lifecycle)
   implementation(libs.guava)
+  implementation(libs.firebase.messaging)
 
   // Lottie
   implementation(libs.lottie.compose)

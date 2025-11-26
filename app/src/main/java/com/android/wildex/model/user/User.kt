@@ -69,6 +69,14 @@ data class UserFriends(
 )
 
 /**
+ * Represents a summary of a user's tokens.
+ *
+ * @property userId The unique identifier of the user to whom these tokens belong.
+ * @property tokens A list of unique identifiers for the tokens the user has.
+ */
+data class UserTokens(val userId: Id = "", val tokens: List<String> = emptyList())
+
+/**
  * Represents the settings of a user.
  *
  * @property userId The unique identifier of the user to whom these settings belong.
@@ -80,7 +88,7 @@ data class UserFriends(
 data class UserSettings(
     val userId: Id = "",
     val enableNotifications: Boolean = true,
-    val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC
+    val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC,
 )
 
 /** Enum class representing the appearance mode preference of a user. */

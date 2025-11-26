@@ -1,6 +1,5 @@
 package com.android.wildex.ui.settings
 
-import android.graphics.drawable.Icon
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Autorenew
@@ -350,7 +351,7 @@ fun SettingsScreenTopBar(onGoBack: () -> Unit) {
             modifier = Modifier.testTag(SettingsScreenTestTags.GO_BACK_BUTTON),
         ) {
           Icon(
-              imageVector = Icons.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = "Go Back",
               tint = colorScheme.onBackground,
           )
@@ -450,7 +451,7 @@ fun EditProfileOption(
         modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON),
     ) {
       Icon(
-          imageVector = Icons.Filled.ArrowForward,
+          imageVector = Icons.AutoMirrored.Filled.ArrowForward,
           contentDescription = "Edit Profile Navigate Icon",
           tint = colorScheme.onBackground,
       )

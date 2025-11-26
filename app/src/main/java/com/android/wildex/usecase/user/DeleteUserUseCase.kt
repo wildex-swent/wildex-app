@@ -3,6 +3,7 @@ package com.android.wildex.usecase.user
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository

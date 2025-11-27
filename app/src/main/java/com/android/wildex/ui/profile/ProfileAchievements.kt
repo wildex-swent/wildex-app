@@ -91,10 +91,10 @@ fun ProfileAchievements(
                   modifier =
                       Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
               ) {
-                  Text(
-                      text = LocalContext.current.getString(R.string.view_achievements),
-                      style = typography.titleSmall,
-                  )
+                Text(
+                    text = LocalContext.current.getString(R.string.view_achievements),
+                    style = typography.titleSmall,
+                )
               }
             }
             Spacer(Modifier.height(8.dp))

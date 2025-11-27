@@ -96,10 +96,10 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
                           contentColor = cs.background,
                       ),
               ) {
-                  Text(
-                      text = LocalContext.current.getString(R.string.view_map),
-                      style = typography.titleSmall,
-                  )
+                Text(
+                    text = LocalContext.current.getString(R.string.view_map),
+                    style = typography.titleSmall,
+                )
               }
             }
       }

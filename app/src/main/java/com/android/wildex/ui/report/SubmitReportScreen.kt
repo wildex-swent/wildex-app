@@ -83,13 +83,7 @@ fun SubmitReportScreen(
   }
 
   // Fetch location when permission is granted
-    fetchLocation(
-        hasLocationPermission,
-        locationRequested,
-        viewModel,
-        locationClient,
-        context
-    )
+  fetchLocation(hasLocationPermission, locationRequested, viewModel, locationClient, context)
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SUBMIT_REPORT_SCREEN),
@@ -168,17 +162,17 @@ private fun fetchLocation(
     viewModel: SubmitReportScreenViewModel,
     locationClient: FusedLocationProviderClient,
     context: Context
-){
-    LaunchedEffect(hasLocationPermission, locationRequested) {
-        if (hasLocationPermission && locationRequested) {
-            viewModel.fetchUserLocation(locationClient)
-        } else if (!hasLocationPermission && locationRequested) {
-            Toast.makeText(
-                context,
-                "Location permission is required to submit a report",
-                Toast.LENGTH_SHORT,
-            )
-                .show()
-        }
+) {
+  LaunchedEffect(hasLocationPermission, locationRequested) {
+    if (hasLocationPermission && locationRequested) {
+      viewModel.fetchUserLocation(locationClient)
+    } else if (!hasLocationPermission && locationRequested) {
+      Toast.makeText(
+              context,
+              "Location permission is required to submit a report",
+              Toast.LENGTH_SHORT,
+          )
+          .show()
     }
+  }
 }

@@ -325,7 +325,8 @@ private fun PostHeader(
           modifier = Modifier.fillMaxWidth(),
       ) {
         Text(
-            text = "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
+            text =
+                "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
             style = typography.titleSmall,
             color = colorScheme.onBackground,
             maxLines = 1,
@@ -463,7 +464,7 @@ private fun PostActions(
       Row(
           modifier =
               Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
-                  onPostLike(post.postId)
+                onPostLike(post.postId)
               },
           verticalAlignment = Alignment.CenterVertically,
       ) {

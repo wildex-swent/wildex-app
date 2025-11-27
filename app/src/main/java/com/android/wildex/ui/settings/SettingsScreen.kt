@@ -659,11 +659,7 @@ fun AppearanceModeOption(
             )
 
             Spacer(modifier = Modifier.width(2.dp))
-              AppearanceModeOptionText(
-                  option,
-                  index,
-                  selectedIndex
-              )
+            AppearanceModeOptionText(option, index, selectedIndex)
           }
         }
       }
@@ -672,16 +668,11 @@ fun AppearanceModeOption(
 }
 
 @Composable
-private fun AppearanceModeOptionText(
-    option: String,
-    index: Int,
-    selectedIndex: Int
-){
-    Spacer(modifier = Modifier.width(2.dp))
-    Text(
-        text = option,
-        color =
-        if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-        style = typography.bodySmall.copy(fontSize = 9.sp),
-    )
+private fun AppearanceModeOptionText(option: String, index: Int, selectedIndex: Int) {
+  Spacer(modifier = Modifier.width(2.dp))
+  Text(
+      text = option,
+      color = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+      style = typography.bodySmall.copy(fontSize = 9.sp),
+  )
 }

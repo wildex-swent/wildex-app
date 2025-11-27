@@ -467,7 +467,7 @@ fun CommentInput(
           OutlinedTextField(
               value = text,
               onValueChange = { text = it },
-              placeholder = { Text("Add a comment …") },
+              placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
               modifier = Modifier.weight(1f),
               shape = RoundedCornerShape(32.dp),
               singleLine = true,

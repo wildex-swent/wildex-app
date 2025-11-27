@@ -498,6 +498,7 @@ fun BackButton(
 
       Text(
           text = "Back",
+          style = MaterialTheme.typography.titleMedium,
           color = mapUi.bg,
       )
     }

@@ -19,8 +19,8 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -37,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
@@ -166,14 +165,14 @@ fun NotificationItem(
             Text(
                 text = notificationTitle,
                 color = cs.onBackground,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = notificationDescription,
                 color = cs.onBackground,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
+                style = typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -215,9 +214,7 @@ fun NoNotificationView() {
     Text(
         text = LocalContext.current.getString(R.string.no_notifications),
         color = colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )

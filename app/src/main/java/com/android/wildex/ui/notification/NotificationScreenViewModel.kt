@@ -7,7 +7,6 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-val defaultSimpleUser =
+/*val defaultSimpleUser =
     SimpleUser(
         userId = "VIBPCGUCWaaVw5cYwKkpBm4AvDA2",
         username = "defaultUsername",
@@ -44,7 +43,7 @@ private val sampleNotifications =
             simpleUser = defaultSimpleUser,
             notificationTitle = "Alice commented on your post",
             notificationDescription = "Alice said: Wow, amazing!",
-        ))
+        ))*/
 
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
@@ -68,7 +67,7 @@ class NotificationScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
-  /** Backing property for the home screen state. */
+  /** Backing property for the notification screen state. */
   private val _uiState = MutableStateFlow(NotificationScreenUIState())
 
   /** Public immutable state exposed to the UI layer. */

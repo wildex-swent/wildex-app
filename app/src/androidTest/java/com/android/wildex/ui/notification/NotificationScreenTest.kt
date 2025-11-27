@@ -114,7 +114,6 @@ class NotificationScreenTest {
                   profilePictureURL = "",
                   userType = UserType.REGULAR)
 
-          // stubs / TODO pour les autres méthodes (non utilisés par ces tests)
           override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
 
           override suspend fun getAllUsers(): List<User> = emptyList()
@@ -125,6 +124,7 @@ class NotificationScreenTest {
 
           override suspend fun deleteUser(userId: Id) {}
         }
+
     val vm =
         NotificationScreenViewModel(
             notificationRepository = fakeNotifRepo,
@@ -136,6 +136,7 @@ class NotificationScreenTest {
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
+    composeRule.runOnIdle { /* ensure callback executed */}
     Assert.assertEquals(1, back)
   }
 
@@ -267,7 +268,7 @@ class NotificationScreenTest {
               title = it.notificationTitle,
               body = it.notificationDescription,
               route = it.notificationRoute,
-              date = Timestamp.now(),
+              date = Timestamp(0, 0),
           )
         }
 

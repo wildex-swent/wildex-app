@@ -36,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.android.wildex.R
 import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
@@ -116,7 +115,6 @@ fun CameraPreviewScreenContent(
           style = typography.bodyLarge,
           color = colorScheme.onSurfaceVariant,
           textAlign = TextAlign.Center,
-          lineHeight = 24.sp,
           modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
       )
     }

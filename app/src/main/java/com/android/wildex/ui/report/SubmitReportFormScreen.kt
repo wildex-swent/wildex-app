@@ -121,54 +121,45 @@ fun SubmitReportFormScreenContent(
             color = colorScheme.onBackground,
         )
 
-    Spacer(modifier = Modifier.height(64.dp))
+        Spacer(modifier = Modifier.height(64.dp))
 
-    Box(
-        modifier =
-            Modifier.fillMaxWidth(0.9f)
-                .height(200.dp)
-                .clickable { onCameraClick() }
-                .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
-        contentAlignment = Alignment.Center,
-    ) {
-      if (uiState.imageUri != null) {
-        AsyncImage(
-            model = uiState.imageUri,
-            contentDescription = "Selected Image",
+        Box(
             modifier =
-                Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
-            contentScale = ContentScale.Crop,
-        )
-      } else {
-        Card(
-            colors = CardDefaults.cardColors(colorScheme.surfaceContainer),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxSize(),
+                Modifier.fillMaxWidth(0.9f)
+                    .height(200.dp)
+                    .clickable { onCameraClick() }
+                    .testTag(SubmitReportFormScreenTestTags.IMAGE_BOX),
+            contentAlignment = Alignment.Center,
         ) {
-          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = null,
-                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+          if (uiState.imageUri != null) {
+            AsyncImage(
+                model = uiState.imageUri,
+                contentDescription = "Selected Image",
                 modifier =
-                    Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
+                    Modifier.fillMaxSize().testTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE),
+                contentScale = ContentScale.Crop,
             )
+          } else {
+            Card(
+                colors = CardDefaults.cardColors(colorScheme.surfaceContainer),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier =
+                        Modifier.size(100.dp).testTag(SubmitReportFormScreenTestTags.CAMERA_ICON),
+                )
+              }
+            }
           }
         }
-      }
-    }
 
-    Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-    OutlinedTextField(
-        value = uiState.description,
-        onValueChange = onDescriptionChange,
-        label = { Text(context.getString(R.string.description)) },
-        modifier =
-            Modifier.fillMaxWidth(0.9f)
-                .height(100.dp)
-                .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
-    )
         OutlinedTextField(
             value = uiState.description,
             onValueChange = onDescriptionChange,
@@ -184,7 +175,7 @@ fun SubmitReportFormScreenContent(
                     .testTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD),
         )
 
-    Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onSubmitClick,

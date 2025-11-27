@@ -42,7 +42,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -67,6 +66,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
@@ -173,14 +173,16 @@ fun NoPostsView() {
     Icon(
         painter = painterResource(R.drawable.nothing_found),
         contentDescription = "Nothing Found",
-        tint = colorScheme.primary,
+        tint = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier.size(96.dp).testTag(HomeScreenTestTags.NO_POST_ICON),
     )
     Spacer(Modifier.height(12.dp))
     Text(
         text = LocalContext.current.getString(R.string.no_nearby_posts),
-        color = colorScheme.primary,
-        style = typography.titleLarge,
+        color = MaterialTheme.colorScheme.onBackground,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
@@ -231,7 +233,7 @@ fun PostItem(
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit
 ) {
-  val colorScheme = colorScheme
+  val colorScheme = MaterialTheme.colorScheme
   val post = postState.post
   val author = postState.author
   val animalName = postState.animalName
@@ -246,57 +248,58 @@ fun PostItem(
           label = "heartScale",
       )
 
+  // Single place where we define like toggle logic
+  val onToggleLike: () -> Unit = {
+    liked = !liked
+    likeCount = if (liked) likeCount + 1 else likeCount - 1
+    onPostLike(post.postId)
+  }
+
   Card(
       shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(width = 1.dp, color = colorScheme.primary.copy(alpha = 0.28f)),
+      border = BorderStroke(width = 1.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
       elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
   ) {
     // Header: avatar + title + date
     PostHeader(
-        colorScheme = colorScheme,
         post = post,
         author = author,
         animalName = animalName,
+        colorScheme = colorScheme,
         onProfilePictureClick = onProfilePictureClick,
     )
 
     // Image
     PostImage(
-        colorScheme = colorScheme,
         post = post,
         liked = liked,
         heartScale = heartScale,
-        onPostLike = {
-          liked = !liked
-          likeCount = if (liked) likeCount + 1 else likeCount - 1
-          onPostLike(post.postId)
-        },
-        onPostClick = onPostClick)
+        colorScheme = colorScheme,
+        onPostClick = { onPostClick(post.postId) },
+        onToggleLike = onToggleLike,
+    )
 
     // Actions: likes & comments & location
     PostActions(
-        colorScheme = colorScheme,
         post = post,
         liked = liked,
         likeCount = likeCount,
-        onPostLike = {
-          liked = !liked
-          likeCount = if (liked) likeCount + 1 else likeCount - 1
-          onPostLike(post.postId)
-        },
-        onPostClick = onPostClick)
+        colorScheme = colorScheme,
+        onToggleLike = onToggleLike,
+        onPostClick = { onPostClick(post.postId) },
+    )
   }
 }
 
 @Composable
 private fun PostHeader(
-    colorScheme: ColorScheme,
     post: Post,
     author: SimpleUser,
     animalName: String,
-    onProfilePictureClick: (Id) -> Unit
+    colorScheme: ColorScheme,
+    onProfilePictureClick: (Id) -> Unit,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
@@ -314,7 +317,7 @@ private fun PostHeader(
       Text(
           text =
               "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
-          style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+          style = typography.titleSmall,
           color = colorScheme.onBackground,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -326,45 +329,32 @@ private fun PostHeader(
       ) {
         Text(
             text =
-                "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
-            style = typography.titleSmall,
-            color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    .format(post.date.toDate()),
+            style = typography.labelSmall,
+            color = colorScheme.tertiary,
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-          Text(
-              text =
-                  SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                      .format(post.date.toDate()),
-              style = typography.labelSmall,
-              color = colorScheme.tertiary,
-          )
-          if (post.location?.name?.isNotBlank() == true) {
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-              Icon(
-                  imageVector = Icons.Default.LocationOn,
-                  contentDescription = "Location",
-                  modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-                  tint = colorScheme.tertiary,
-              )
-              Spacer(Modifier.width(2.dp))
-              Text(
-                  text = post.location.name,
-                  style = typography.labelMedium,
-                  color = colorScheme.tertiary,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-              )
-            }
+
+        if (post.location?.name?.isNotBlank() == true) {
+          Row(
+              modifier =
+                  Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Location",
+                modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+                tint = colorScheme.tertiary,
+            )
+            Spacer(Modifier.width(2.dp))
+            Text(
+                text = post.location.name,
+                style = typography.labelMedium,
+                color = colorScheme.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
           }
         }
       }
@@ -374,14 +364,16 @@ private fun PostHeader(
 
 @Composable
 private fun PostImage(
-    colorScheme: ColorScheme,
     post: Post,
     liked: Boolean,
     heartScale: Float,
-    onPostLike: (Id) -> Unit,
-    onPostClick: (Id) -> Unit
+    colorScheme: ColorScheme,
+    onPostClick: () -> Unit,
+    onToggleLike: () -> Unit,
 ) {
-  Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick(post.postId) }) {
+  Box(
+      modifier = Modifier.fillMaxWidth().clickable { onPostClick() },
+  ) {
     AsyncImage(
         model = post.pictureURL,
         contentDescription = "Post picture",
@@ -393,7 +385,7 @@ private fun PostImage(
         contentScale = ContentScale.Crop,
     )
     IconButton(
-        onClick = { onPostLike(post.postId) },
+        onClick = onToggleLike,
         modifier =
             Modifier.align(Alignment.TopStart)
                 .testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
@@ -414,12 +406,12 @@ private fun PostImage(
 
 @Composable
 private fun PostActions(
-    colorScheme: ColorScheme,
     post: Post,
     liked: Boolean,
     likeCount: Int,
-    onPostLike: (Id) -> Unit,
-    onPostClick: (Id) -> Unit
+    colorScheme: ColorScheme,
+    onToggleLike: () -> Unit,
+    onPostClick: () -> Unit,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
@@ -429,9 +421,7 @@ private fun PostActions(
     // Likes
     Row(
         modifier =
-            Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
-              onPostLike(post.postId)
-            },
+            Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable { onToggleLike() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
@@ -443,72 +433,35 @@ private fun PostActions(
       Spacer(Modifier.width(6.dp))
       Text(
           text = likeText(likeCount),
-          style = MaterialTheme.typography.bodyMedium,
+          style = typography.bodyMedium,
           color = colorScheme.onBackground,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
       )
     }
-
     Spacer(Modifier.width(15.dp))
-
     // Comments
     Row(
         modifier =
             Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
-              onPostClick(post.postId)
+              onPostClick()
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      // Likes
-      Row(
-          modifier =
-              Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
-                onPostLike(post.postId)
-              },
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Icon(
-            imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Likes",
-            modifier = Modifier.size(20.dp),
-            tint = if (liked) colorScheme.tertiary else colorScheme.onBackground,
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = likeText(likeCount),
-            style = typography.bodyMedium,
-            color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-      }
-
-      Spacer(Modifier.width(15.dp))
-
-      // Comments
-      Row(
-          modifier =
-              Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
-                onPostClick(post.postId)
-              },
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.Comment,
-            contentDescription = "Comments",
-            modifier = Modifier.size(20.dp),
-            tint = colorScheme.onBackground,
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = commentText(post.commentsCount),
-            style = typography.bodyMedium,
-            color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-      }
+      Icon(
+          imageVector = Icons.AutoMirrored.Filled.Comment,
+          contentDescription = "Comments",
+          modifier = Modifier.size(20.dp),
+          tint = colorScheme.onBackground,
+      )
+      Spacer(Modifier.width(6.dp))
+      Text(
+          text = commentText(post.commentsCount),
+          style = typography.bodyMedium,
+          color = colorScheme.onBackground,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+      )
     }
   }
 }

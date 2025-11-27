@@ -76,9 +76,10 @@ fun SubmitReportFormScreen(
 ) {
   val context = LocalContext.current
   val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnline by connectivityObserver.isOnline.collectAsState()
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
-  if (isOnline && LocalConnectivityObserver.current) {
+  if (isOnline) {
     SubmitReportFormScreenContent(
         context = context,
         onCameraClick = onCameraClick,

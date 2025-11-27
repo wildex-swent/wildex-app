@@ -15,36 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/*val defaultSimpleUser =
-    SimpleUser(
-        userId = "VIBPCGUCWaaVw5cYwKkpBm4AvDA2",
-        username = "defaultUsername",
-        profilePictureURL =
-            "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/users%2FVIBPCGUCWaaVw5cYwKkpBm4AvDA2.jpg?alt=media&token=c87cf885-89ef-4470-9272-bc76144b6c3f",
-        userType = UserType.REGULAR,
-    )
-private val sampleNotifications =
-    listOf(
-        NotificationUIState(
-            notificationId = "1",
-            notificationRoute = "route/to/post/1",
-            simpleUser = defaultSimpleUser,
-            notificationTitle = "Jean has liked your post",
-            notificationDescription = "3min ago"),
-        NotificationUIState(
-            notificationId = "2",
-            notificationRoute = "route/to/post/2",
-            simpleUser = defaultSimpleUser,
-            notificationTitle = "Bob spotted a tiger",
-            notificationDescription = "15min ago"),
-        NotificationUIState(
-            notificationId = "3",
-            notificationRoute = "route/to/post/3",
-            simpleUser = defaultSimpleUser,
-            notificationTitle = "Alice commented on your post",
-            notificationDescription = "Alice said: Wow, amazing!",
-        ))*/
-
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
     val isLoading: Boolean = false,

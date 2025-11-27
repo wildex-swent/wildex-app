@@ -1,26 +1,22 @@
 package com.android.wildex.ui.notification
 
 import android.widget.Toast
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -35,8 +31,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -44,11 +38,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
+import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
@@ -62,12 +57,13 @@ object NotificationScreenTestTags {
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
     onGoBack: () -> Unit = {},
     notificationScreenViewModel: NotificationScreenViewModel = viewModel(),
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
 ) {
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -92,7 +88,7 @@ fun NotificationScreen(
     ) {
       when {
         uiState.isError -> LoadingFail()
-        // uiState.isLoading -> LoadingScreen()
+        uiState.isLoading -> LoadingScreen()
         uiState.notifications.isEmpty() -> NoNotificationView()
         else -> {
           NotificationView(
@@ -107,12 +103,13 @@ fun NotificationScreen(
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationView(
     notifications: List<NotificationUIState> = emptyList(),
     pd: PaddingValues,
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
 ) {
   val cs = colorScheme
   LazyColumn(
@@ -123,10 +120,9 @@ fun NotificationView(
     items(notifications.size) { index ->
       val notification = notifications[index]
       NotificationItem(
-          authorId = notification.authorId,
           notificationContentId = notification.notificationId,
-          profilePictureUrl = notification.profilePictureUrl,
-          notificationType = notification.notificationType,
+          simpleUser = notification.simpleUser,
+          notificationRoute = notification.notificationRoute,
           notificationTitle = notification.notificationTitle,
           notificationDescription = notification.notificationDescription,
           onNotificationClick = onNotificationClick,
@@ -137,16 +133,16 @@ fun NotificationView(
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationItem(
-    authorId: Id = "",
     notificationContentId: Id = "",
-    notificationType: NotificationType = NotificationType.LIKE,
-    profilePictureUrl: URL = LocalContext.current.getString(R.string.default_profile_picture_link),
+    notificationRoute: String = "",
+    simpleUser: SimpleUser,
     notificationTitle: String = "DEFAULT TITLE",
     notificationDescription: String = "DEFAULT DESCRIPTION",
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
     cs: ColorScheme,
 ) {
   Box(
@@ -155,17 +151,15 @@ fun NotificationItem(
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
-          AsyncImage(
-              model = profilePictureUrl,
-              contentDescription = "Profile picture",
+          ClickableProfilePicture(
               modifier =
-                  Modifier.width(48.dp)
-                      .aspectRatio(1f)
-                      .clip(CircleShape)
-                      .border(1.dp, cs.outline, CircleShape)
-                      .clickable(onClick = { onProfileClick(authorId) })
-                      .testTag(NotificationScreenTestTags.testTagForProfilePicture(authorId)),
-              contentScale = ContentScale.Crop,
+                  Modifier.size(48.dp)
+                      .testTag(
+                          NotificationScreenTestTags.testTagForProfilePicture(simpleUser.userId)),
+              profileId = simpleUser.userId,
+              profilePictureURL = simpleUser.profilePictureURL,
+              profileUserType = simpleUser.userType,
+              onProfile = onProfileClick,
           )
           Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
             Text(
@@ -184,7 +178,7 @@ fun NotificationItem(
             )
           }
           IconButton(
-              onClick = { onNotificationClick(notificationContentId, notificationType) },
+              onClick = { onNotificationClick(notificationContentId, notificationRoute) },
               modifier =
                   Modifier.size(48.dp)
                       .testTag(

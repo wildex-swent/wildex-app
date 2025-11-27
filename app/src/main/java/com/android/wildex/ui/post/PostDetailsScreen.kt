@@ -91,7 +91,8 @@ fun PostDetailsScreen(
   val context = LocalContext.current
   val uiState by postDetailsScreenViewModel.uiState.collectAsState()
   val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnline by connectivityObserver.isOnline.collectAsState()
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
 
@@ -116,7 +117,7 @@ fun PostDetailsScreen(
         )
       },
   ) { innerPadding ->
-    if (isOnline && LocalConnectivityObserver.current) {
+    if (isOnline) {
       PostDetailsScreenContent(
           innerPadding = innerPadding,
           uiState = uiState,

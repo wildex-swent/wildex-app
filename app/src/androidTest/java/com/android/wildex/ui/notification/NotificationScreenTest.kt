@@ -13,8 +13,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.android.wildex.model.notification.Notification
+import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.google.firebase.Timestamp
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -86,7 +92,48 @@ class NotificationScreenTest {
   @Test
   fun goBack_triggersCallback() {
     var back = 0
-    composeRule.setContent { NotificationScreen(onGoBack = { back++ }) }
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
+              emptyList()
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser =
+              SimpleUser(
+                  userId = userId,
+                  username = "u",
+                  profilePictureURL = "",
+                  userType = UserType.REGULAR)
+
+          // stubs / TODO pour les autres méthodes (non utilisés par ces tests)
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "testUser")
+
+    composeRule.setContent {
+      NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+    }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
     Assert.assertEquals(1, back)
@@ -146,7 +193,44 @@ class NotificationScreenTest {
 
   @Test
   fun refresh_keepsSampleNotificationsDisplayed() {
-    val vm = NotificationScreenViewModel()
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
+              emptyList()
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser =
+              SimpleUser(
+                  userId = userId,
+                  username = "u",
+                  profilePictureURL = "",
+                  userType = UserType.REGULAR)
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "testUser")
+
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
         TestScreenWithSamples(vm, sampleNotifications)
@@ -173,8 +257,66 @@ class NotificationScreenTest {
 
   @Test
   fun notificationScreen_showsSampleNotificationsByDefault() {
+    val domainNotifications =
+        sampleNotifications.map {
+          Notification(
+              notificationId = it.notificationId,
+              targetId = "target_${it.notificationId}",
+              authorId = it.simpleUser.userId,
+              isRead = false,
+              title = it.notificationTitle,
+              body = it.notificationDescription,
+              route = it.notificationRoute,
+              date = Timestamp.now(),
+          )
+        }
+
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
+            return domainNotifications
+          }
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser {
+            return SimpleUser(
+                userId = userId,
+                username = "unknown",
+                profilePictureURL = "",
+                userType = UserType.REGULAR)
+          }
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "anyUser")
+
     composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) { NotificationScreen() }
+      MaterialTheme(colorScheme = lightColorScheme()) {
+        NotificationScreen(notificationScreenViewModel = vm)
+      }
     }
     composeRule.waitForIdle()
 

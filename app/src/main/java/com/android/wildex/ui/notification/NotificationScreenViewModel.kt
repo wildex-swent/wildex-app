@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -71,7 +72,8 @@ data class NotificationUIState(
 )
 
 class NotificationScreenViewModel(
-    // notificationRepository: NotificationRepository = RepositoryProvider.notificationRepository,
+    private val notificationRepository: NotificationRepository =
+        RepositoryProvider.notificationRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
@@ -102,19 +104,19 @@ class NotificationScreenViewModel(
     }
   }
 
-  private fun fetchNotifications(): List<NotificationUIState> {
-    /*val notif = notificationRepository.getAllNotificationsForUser(currentUserId)
-    val notificationUIStates: List<NotificationUIState> = notif.map { n ->
-      NotificationUIState(
-          notificationId = n.notificationId,
-          simpleUser = userRepository.getSimpleUser(n.fromUserId),
-          notificationRoute = n.route,
-          notificationTitle = n.title,
-          notificationDescription = n.body,
-      )
-    }
-        return notificationUIStates*/
-    return sampleNotifications
+  private suspend fun fetchNotifications(): List<NotificationUIState> {
+    val notif = notificationRepository.getAllNotificationsForUser(currentUserId)
+    val notificationUIStates: List<NotificationUIState> =
+        notif.map { n ->
+          NotificationUIState(
+              notificationId = n.notificationId,
+              simpleUser = userRepository.getSimpleUser(n.authorId),
+              notificationRoute = n.route,
+              notificationTitle = n.title,
+              notificationDescription = n.body,
+          )
+        }
+    return notificationUIStates
   }
 
   fun refreshUIState() {

@@ -364,7 +364,7 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun offlineScreenIsDisplayedWhenOffline() {
+  fun offlineScreenIsDisplayedWhenOfflinePostDetailsScreen() {
     composeRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides false) {
         PostDetailsScreen(

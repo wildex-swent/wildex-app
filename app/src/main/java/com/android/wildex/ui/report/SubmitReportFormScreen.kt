@@ -91,6 +91,15 @@ fun SubmitReportFormScreen(
   }
 }
 
+/**
+ * Content of the Submit Report Form Screen.
+ *
+ * @param context The context of the current state of the application.
+ * @param onCameraClick Callback invoked when the camera button is clicked.
+ * @param uiState The current UI state of the submit report form.
+ * @param onDescriptionChange Callback invoked when the description text changes.
+ * @param onSubmitClick Callback invoked when the submit button is clicked.
+ */
 @Composable
 fun SubmitReportFormScreenContent(
     context: Context,

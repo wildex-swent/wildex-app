@@ -102,7 +102,7 @@ class SubmitReportScreenTest {
   }
 
   @Test
-  fun offlineScreenIsDisplayedWhenOffline() {
+  fun offlineScreenIsDisplayedWhenOfflineSubmitReportScreen() {
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides false) {
         SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)

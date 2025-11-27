@@ -519,7 +519,7 @@ class ReportDetailScreenTest {
   }
 
   @Test
-  fun offlineScreenIsDisplayedWhenOffline() {
+  fun offlineScreenIsDisplayedWhenOfflineReportDetailScreen() {
     composeRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides false) {
         ReportDetailsScreen(

@@ -110,13 +110,19 @@ class SubmitReportScreenViewModel(
         _uiState.value = currentState.copy(isSubmitting = true)
         val authorId = currentUserId
         val reportId = reportRepository.getNewReportId()
-        val imageUrl = storageRepository.uploadReportImage(reportId, currentState.imageUri!!)!!
+
+        val imageUri = currentState.imageUri ?: throw IllegalStateException("No image provided")
+        val imageUrl =
+            storageRepository.uploadReportImage(reportId, imageUri)
+                ?: throw IllegalStateException("Image upload failed: URL is null")
+
+        val location = currentState.location ?: throw IllegalStateException("No location provided")
 
         val report =
             Report(
                 reportId = reportId,
                 imageURL = imageUrl,
-                location = currentState.location!!,
+                location = location,
                 date = Timestamp(Date()),
                 description = currentState.description,
                 authorId = authorId,

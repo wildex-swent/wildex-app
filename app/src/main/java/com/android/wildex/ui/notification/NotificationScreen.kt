@@ -51,6 +51,14 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 
+data class NotificationItemData(
+    val notificationContentId: Id = "",
+    val notificationType: NotificationType = NotificationType.LIKE,
+    val notificationTitle: String = "DEFAULT TITLE",
+    val notificationDescription: String = "DEFAULT DESCRIPTION",
+    val onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> }
+)
+
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
@@ -125,13 +133,16 @@ fun NotificationView(
       val notification = notifications[index]
       NotificationItem(
           authorId = notification.authorId,
-          notificationContentId = notification.notificationId,
           profilePictureUrl = notification.profilePictureUrl,
-          notificationType = notification.notificationType,
-          notificationTitle = notification.notificationTitle,
-          notificationDescription = notification.notificationDescription,
-          onNotificationClick = onNotificationClick,
           onProfileClick = onProfileClick,
+          notificationItemData =
+              NotificationItemData(
+                  notificationContentId = notification.notificationId,
+                  notificationType = notification.notificationType,
+                  notificationTitle = notification.notificationTitle,
+                  notificationDescription = notification.notificationDescription,
+                  onNotificationClick = onNotificationClick,
+              ),
           cs = cs,
       )
     }
@@ -141,13 +152,9 @@ fun NotificationView(
 @Composable
 fun NotificationItem(
     authorId: Id = "",
-    notificationContentId: Id = "",
-    notificationType: NotificationType = NotificationType.LIKE,
     profilePictureUrl: URL = LocalContext.current.getString(R.string.default_profile_picture_link),
-    notificationTitle: String = "DEFAULT TITLE",
-    notificationDescription: String = "DEFAULT DESCRIPTION",
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, NotificationType) -> Unit = { _, _ -> },
+    notificationItemData: NotificationItemData = NotificationItemData(),
     cs: ColorScheme,
 ) {
   Box(
@@ -170,14 +177,14 @@ fun NotificationItem(
           )
           Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
             Text(
-                text = notificationTitle,
+                text = notificationItemData.notificationTitle,
                 color = cs.onBackground,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = notificationDescription,
+                text = notificationItemData.notificationDescription,
                 color = cs.onBackground,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
                 maxLines = 1,
@@ -185,12 +192,16 @@ fun NotificationItem(
             )
           }
           IconButton(
-              onClick = { onNotificationClick(notificationContentId, notificationType) },
+              onClick = {
+                notificationItemData.onNotificationClick(
+                    notificationItemData.notificationContentId,
+                    notificationItemData.notificationType)
+              },
               modifier =
                   Modifier.size(48.dp)
                       .testTag(
                           NotificationScreenTestTags.testTagForNotification(
-                              notificationContentId))) {
+                              notificationItemData.notificationContentId))) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Open notification",

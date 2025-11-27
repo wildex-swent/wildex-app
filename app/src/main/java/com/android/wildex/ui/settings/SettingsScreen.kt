@@ -61,8 +61,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -119,8 +119,8 @@ fun SettingsScreen(
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
+  val screenWidth = LocalWindowInfo.current.containerSize.width.dp
   var showDeletionValidation by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { settingsScreenViewModel.loadUIState() }
@@ -648,15 +648,29 @@ fun AppearanceModeOption(
                 modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = option,
-                fontSize = 12.sp,
-                color =
-                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-            )
+              AppearanceModeOptionText(
+                  option,
+                  index,
+                  selectedIndex
+              )
           }
         }
       }
     }
   }
+}
+
+@Composable
+private fun AppearanceModeOptionText(
+    option: String,
+    index: Int,
+    selectedIndex: Int
+){
+    Spacer(modifier = Modifier.width(4.dp))
+    Text(
+        text = option,
+        fontSize = 12.sp,
+        color =
+        if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+    )
 }

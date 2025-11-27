@@ -1,6 +1,7 @@
 package com.android.wildex.ui.report
 
 import android.Manifest
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +35,7 @@ import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
 /**
@@ -81,18 +83,13 @@ fun SubmitReportScreen(
   }
 
   // Fetch location when permission is granted
-  LaunchedEffect(hasLocationPermission, locationRequested) {
-    if (hasLocationPermission && locationRequested) {
-      viewModel.fetchUserLocation(locationClient)
-    } else if (!hasLocationPermission && locationRequested) {
-      Toast.makeText(
-              context,
-              "Location permission is required to submit a report",
-              Toast.LENGTH_SHORT,
-          )
-          .show()
-    }
-  }
+    fetchLocation(
+        hasLocationPermission,
+        locationRequested,
+        viewModel,
+        locationClient,
+        context
+    )
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SUBMIT_REPORT_SCREEN),
@@ -157,10 +154,31 @@ fun SubmitReportScreen(
                 }
               },
               context = context,
-              onGoBack = onGoBack,
           )
         }
       }
     }
   }
+}
+
+@Composable
+private fun fetchLocation(
+    hasLocationPermission: Boolean,
+    locationRequested: Boolean,
+    viewModel: SubmitReportScreenViewModel,
+    locationClient: FusedLocationProviderClient,
+    context: Context
+){
+    LaunchedEffect(hasLocationPermission, locationRequested) {
+        if (hasLocationPermission && locationRequested) {
+            viewModel.fetchUserLocation(locationClient)
+        } else if (!hasLocationPermission && locationRequested) {
+            Toast.makeText(
+                context,
+                "Location permission is required to submit a report",
+                Toast.LENGTH_SHORT,
+            )
+                .show()
+        }
+    }
 }

@@ -46,15 +46,6 @@ private val sampleNotifications =
             notificationDescription = "Alice said: Wow, amazing!",
         ))
 
-/*enum class NotificationType {
-  POST,
-  REPORT,
-  LIKE,
-  COMMENT,
-  FRIEND_REQUEST_RECEIVED,
-  FRIEND_REQUEST_ACCEPTED,
-}*/
-
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
     val isLoading: Boolean = false,

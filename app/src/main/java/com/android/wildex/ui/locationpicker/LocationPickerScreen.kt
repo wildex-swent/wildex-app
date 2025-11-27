@@ -68,7 +68,6 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.AppTheme
 import com.android.wildex.R
-import com.android.wildex.model.location.GeocodingFeature
 import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
@@ -380,8 +379,8 @@ private fun LocationPickerTopBar(
 
 @Composable
 private fun SuggestionsDropdown(
-    suggestions: List<GeocodingFeature>,
-    onSuggestionClick: (GeocodingFeature) -> Unit,
+    suggestions: List<Location>,
+    onSuggestionClick: (Location) -> Unit,
     modifier: Modifier = Modifier,
 ) {
   Card(
@@ -414,7 +413,7 @@ private fun SuggestionsDropdown(
               modifier = Modifier.padding(start = 8.dp),
           ) {
             Text(
-                text = feature.placeName.orEmpty(),
+                text = feature.name,
                 color = colorScheme.onSurface,
                 maxLines = 1,
             )

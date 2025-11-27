@@ -49,7 +49,7 @@ fun SubmitReportScreen(
     viewModel: SubmitReportScreenViewModel = viewModel(),
     onSubmitted: () -> Unit = {},
     onGoBack: () -> Unit = {},
-    onPickLocation: () -> Unit,
+    onPickLocation: () -> Unit = {},
     pickedLocation: PickedLocation? = null,
     onPickedLocationConsumed: () -> Unit = {},
 ) {

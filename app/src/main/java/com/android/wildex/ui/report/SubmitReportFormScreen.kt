@@ -67,8 +67,8 @@ fun SubmitReportFormScreen(
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
     context: Context,
-    onGoBack: () -> Unit,
-    onPickLocation: () -> Unit,
+    onGoBack: () -> Unit = {},
+    onPickLocation: () -> Unit = {},
 ) {
 
   Column(

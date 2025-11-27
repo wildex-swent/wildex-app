@@ -3,7 +3,6 @@ package com.android.wildex.ui.locationpicker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.location.GeocodingFeature
 import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.utils.Location
@@ -20,7 +19,7 @@ data class LocationPickerUiState(
     val center: Location = Location(46.5197, 6.6323, name = "Lausanne"),
     val selected: Location? = null,
     val searchQuery: String = "",
-    val suggestions: List<GeocodingFeature> = emptyList(),
+    val suggestions: List<Location> = emptyList(),
     val isSearching: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -54,12 +53,11 @@ class LocationPickerViewModel(
       _uiState.value = _uiState.value.copy(suggestions = emptyList())
       return
     }
-
     searchJob =
         viewModelScope.launch {
           delay(300)
           _uiState.value = _uiState.value.copy(isSearching = true)
-          val results = geocodingRepository.searchSuggestions(query, limit = 5)
+          val results = geocodingRepository.searchSuggestions(query)
           _uiState.value =
               _uiState.value.copy(
                   isSearching = false,
@@ -68,13 +66,13 @@ class LocationPickerViewModel(
         }
   }
 
-  fun onSuggestionClicked(feature: GeocodingFeature) {
+  fun onSuggestionClicked(feature: Location) {
     _uiState.value =
         _uiState.value.copy(
-            searchQuery = feature.placeName ?: "",
+            searchQuery = feature.name,
             suggestions = emptyList(),
-            selected = feature.toLocation(),
-            center = feature.toLocation(),
+            selected = feature,
+            center = feature,
             showConfirmDialog = true,
         )
   }
@@ -117,8 +115,8 @@ class LocationPickerViewModel(
       }
       _uiState.value =
           _uiState.value.copy(
-              center = feature.toLocation(),
-              selected = feature.toLocation(),
+              center = feature,
+              selected = feature,
               isLoading = false,
               showConfirmDialog = true,
           )
@@ -149,12 +147,4 @@ class LocationPickerViewModel(
   fun clearError() {
     _uiState.value = _uiState.value.copy(error = null)
   }
-}
-
-private fun GeocodingFeature.toLocation(): Location {
-  return Location(
-      latitude = this.lat,
-      longitude = this.lon,
-      name = this.placeName!!,
-  )
 }

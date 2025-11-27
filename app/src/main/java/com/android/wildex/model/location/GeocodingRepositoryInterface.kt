@@ -29,5 +29,5 @@ interface GeocodingRepository {
    * @param limit maximum number of results to return
    * @return A list of geocoding features matching the query.
    */
-  suspend fun searchSuggestions(query: String, limit: Int = 5): List<Location>
+  suspend fun searchSuggestions(query: String, limit: Int): List<Location>
 }

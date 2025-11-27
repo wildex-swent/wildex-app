@@ -23,7 +23,6 @@ class MapboxGeocodingRepositoryAndroidTest {
       private val responseCode: Int = 200,
       private val responseBody: String = """{ "features": [] }"""
   ) : OkHttpClient() {
-
     var lastRequest: Request? = null
 
     override fun newCall(request: Request): Call {
@@ -59,7 +58,7 @@ class MapboxGeocodingRepositoryAndroidTest {
   }
 
   @Test
-  fun reverseGeocode_success_returnsPlaceName() = runBlocking {
+  fun reverseGeocode_success_returnsPlaceName_andBuildsCorrectUrl() = runBlocking {
     val json =
         """
         {
@@ -78,7 +77,6 @@ class MapboxGeocodingRepositoryAndroidTest {
         }
         """
             .trimIndent()
-
     val client = RecordingOkHttpClient(responseCode = 200, responseBody = json)
     val repo =
         MapboxGeocodingRepository(
@@ -113,7 +111,7 @@ class MapboxGeocodingRepositoryAndroidTest {
   }
 
   @Test
-  fun forwardGeocode_success_returnsLocation() = runBlocking {
+  fun forwardGeocode_success_returnsLocation_andBuildsCorrectUrl() = runBlocking {
     val json =
         """
         {
@@ -170,7 +168,7 @@ class MapboxGeocodingRepositoryAndroidTest {
   }
 
   @Test
-  fun searchSuggestions_success_returnsListOfLocations() = runBlocking {
+  fun searchSuggestions_success_returnsListOfLocations_andBuildsCorrectUrl() = runBlocking {
     val json =
         """
         {
@@ -180,7 +178,7 @@ class MapboxGeocodingRepositoryAndroidTest {
               "type": "Feature",
               "geometry": { "type": "Point", "coordinates": [ -7.589843, 33.57311 ] },
               "properties": {
-                "full_address": "Casablanca, Morocco"
+                "place_formatted": "Casablanca, Morocco"
               }
             },
             {
@@ -244,5 +242,207 @@ class MapboxGeocodingRepositoryAndroidTest {
     val results = repo.searchSuggestions("  ", limit = 5)
     assertTrue(results.isEmpty())
     assertNull(client.lastRequest)
+  }
+
+  @Test
+  fun reverseGeocode_nameFallbacks_workCorrectly() = runBlocking {
+    val jsonPlaceFormatted =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "geometry": { "type": "Point", "coordinates": [ -7.5, 33.5 ] },
+              "properties": {
+                "full_address": "",
+                "place_formatted": "Somewhere, World",
+                "name": "IgnoredName"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val client1 = RecordingOkHttpClient(responseCode = 200, responseBody = jsonPlaceFormatted)
+    val repo1 =
+        MapboxGeocodingRepository(
+            okHttpClient = client1,
+            accessToken = "test-token",
+        )
+    val result1 = repo1.reverseGeocode(33.5, -7.5)
+    assertEquals("Somewhere, World", result1)
+
+    val jsonNameOnly =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "geometry": { "type": "Point", "coordinates": [ 1.0, 2.0 ] },
+              "properties": {
+                "full_address": "",
+                "place_formatted": "",
+                "name": "OnlyName"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val client2 = RecordingOkHttpClient(responseCode = 200, responseBody = jsonNameOnly)
+    val repo2 =
+        MapboxGeocodingRepository(
+            okHttpClient = client2,
+            accessToken = "test-token",
+        )
+    val result2 = repo2.reverseGeocode(2.0, 1.0)
+    assertEquals("OnlyName", result2)
+  }
+
+  @Test
+  fun searchSuggestions_handlesMissingNamesAndInvalidGeometry() = runBlocking {
+    val jsonUnknownName =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "geometry": { "type": "Point", "coordinates": [ 6.0, 46.0 ] },
+              "properties": {
+                "full_address": "",
+                "place_formatted": "",
+                "name": ""
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val clientUnknown = RecordingOkHttpClient(responseCode = 200, responseBody = jsonUnknownName)
+    val repoUnknown =
+        MapboxGeocodingRepository(
+            okHttpClient = clientUnknown,
+            accessToken = "test-token",
+        )
+
+    val resultsUnknown = repoUnknown.searchSuggestions("whatever", limit = 5)
+    assertEquals(1, resultsUnknown.size)
+    val loc = resultsUnknown[0]
+    assertEquals("Unknown location", loc.name)
+    assertEquals(46.0, loc.latitude, 1e-6)
+    assertEquals(6.0, loc.longitude, 1e-6)
+
+    val jsonMissingGeometry =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "full_address": "No geometry here"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val clientMissingGeom =
+        RecordingOkHttpClient(responseCode = 200, responseBody = jsonMissingGeometry)
+    val repoMissingGeom =
+        MapboxGeocodingRepository(
+            okHttpClient = clientMissingGeom,
+            accessToken = "test-token",
+        )
+
+    val resultsMissingGeom = repoMissingGeom.searchSuggestions("something", limit = 5)
+    assertTrue(resultsMissingGeom.isEmpty())
+
+    val jsonShortCoords =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "geometry": { "type": "Point", "coordinates": [ 6.0 ] },
+              "properties": {
+                "full_address": "Bad coords"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val clientShortCoords =
+        RecordingOkHttpClient(responseCode = 200, responseBody = jsonShortCoords)
+    val repoShortCoords =
+        MapboxGeocodingRepository(
+            okHttpClient = clientShortCoords,
+            accessToken = "test-token",
+        )
+
+    val resultsShortCoords = repoShortCoords.searchSuggestions("something", limit = 5)
+    assertTrue(resultsShortCoords.isEmpty())
+
+    val jsonNaNCoords =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "geometry": { "type": "Point", "coordinates": [ "NaN", 33.0 ] },
+              "properties": {
+                "full_address": "Weird coords"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+
+    val clientNaN = RecordingOkHttpClient(responseCode = 200, responseBody = jsonNaNCoords)
+    val repoNaN =
+        MapboxGeocodingRepository(
+            okHttpClient = clientNaN,
+            accessToken = "test-token",
+        )
+
+    val resultsNaN = repoNaN.searchSuggestions("something", limit = 5)
+    assertTrue(resultsNaN.isEmpty())
+  }
+
+  @Test
+  fun noFeatures_inResponse_returnsNullOrEmptyList() = runBlocking {
+    val jsonNoFeatures =
+        """
+        {
+          "type": "FeatureCollection",
+          "features": []
+        }
+        """
+            .trimIndent()
+
+    val client = RecordingOkHttpClient(responseCode = 200, responseBody = jsonNoFeatures)
+    val repo =
+        MapboxGeocodingRepository(
+            okHttpClient = client,
+            accessToken = "test-token",
+        )
+
+    val forwardResult = repo.forwardGeocode("something")
+    assertNull(forwardResult)
+
+    val suggestResult = repo.searchSuggestions("anything", limit = 5)
+    assertTrue(suggestResult.isEmpty())
   }
 }

@@ -4,64 +4,16 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.user.User
+import com.android.wildex.model.notification.NotificationRepository
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-val defaultUser =
-    User(
-        "",
-        "defaultUsername",
-        "defaultName",
-        "defaultSurname",
-        "This is a default bio.",
-        "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg",
-        UserType.REGULAR,
-        Timestamp.now(),
-        "DefaultCountry",
-    )
-private val sampleNotifications =
-    listOf(
-        NotificationUIState(
-            notificationId = "1",
-            notificationType = NotificationType.LIKE,
-            profilePictureUrl = defaultUser.profilePictureURL,
-            userType = UserType.REGULAR,
-            notificationTitle = "Jean has liked your post",
-            notificationDescription = "3min ago"),
-        NotificationUIState(
-            notificationId = "2",
-            notificationType = NotificationType.POST,
-            profilePictureUrl = defaultUser.profilePictureURL,
-            userType = UserType.REGULAR,
-            notificationTitle = "Bob spotted a tiger",
-            notificationDescription = "15min ago"),
-        NotificationUIState(
-            notificationId = "3",
-            notificationType = NotificationType.COMMENT,
-            profilePictureUrl = defaultUser.profilePictureURL,
-            userType = UserType.REGULAR,
-            notificationTitle = "Alice commented on your post",
-            notificationDescription = "Alice said: Wow, amazing!",
-        ))
-
-enum class NotificationType {
-  POST,
-  REPORT,
-  LIKE,
-  COMMENT,
-  FRIEND_REQUEST_RECEIVED,
-  FRIEND_REQUEST_ACCEPTED,
-}
 
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
@@ -73,19 +25,19 @@ data class NotificationScreenUIState(
 
 data class NotificationUIState(
     val notificationId: String = "",
-    val authorId: Id = "",
-    val notificationType: NotificationType = NotificationType.POST,
-    val profilePictureUrl: URL = defaultUser.profilePictureURL,
-    val userType: UserType = defaultUser.userType,
+    val simpleUser: SimpleUser,
+    val notificationRoute: String = "",
     val notificationTitle: String = "",
     val notificationDescription: String = ""
 )
 
 class NotificationScreenViewModel(
+    private val notificationRepository: NotificationRepository =
+        RepositoryProvider.notificationRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
-  /** Backing property for the home screen state. */
+  /** Backing property for the notification screen state. */
   private val _uiState = MutableStateFlow(NotificationScreenUIState())
 
   /** Public immutable state exposed to the UI layer. */
@@ -98,10 +50,33 @@ class NotificationScreenViewModel(
 
   private suspend fun updateUIState() {
     try {
-      /* To be implemented in the viewModel PR */
+      _uiState.value =
+          _uiState.value.copy(
+              notifications = fetchNotifications(),
+              isLoading = false,
+              isRefreshing = false,
+              errorMsg = null,
+              isError = false,
+          )
     } catch (e: Exception) {
       handleException("Error loading notifications", e)
+      _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
     }
+  }
+
+  private suspend fun fetchNotifications(): List<NotificationUIState> {
+    val notif = notificationRepository.getAllNotificationsForUser(currentUserId)
+    val notificationUIStates: List<NotificationUIState> =
+        notif.map { n ->
+          NotificationUIState(
+              notificationId = n.notificationId,
+              simpleUser = userRepository.getSimpleUser(n.authorId),
+              notificationRoute = n.route,
+              notificationTitle = n.title,
+              notificationDescription = n.body,
+          )
+        }
+    return notificationUIStates
   }
 
   fun refreshUIState() {

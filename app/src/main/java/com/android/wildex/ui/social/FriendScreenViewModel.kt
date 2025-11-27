@@ -20,14 +20,16 @@ import kotlinx.coroutines.launch
 data class FriendsScreenUIState(
     val friends: List<FriendState> = emptyList(),
     val suggestions: List<RecommendationResult> = emptyList(),
-    val receivedRequests: List<FriendRequest> = emptyList(),
-    val sentRequests: List<FriendRequest> = emptyList(),
+    val receivedRequests: List<RequestState> = emptyList(),
+    val sentRequests: List<RequestState> = emptyList(),
     val isCurrentUser: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMsg: String? = null,
 )
+
+data class RequestState(val user: SimpleUser, val request: FriendRequest)
 
 /**
  * Represents the state of a friend list element
@@ -58,12 +60,11 @@ enum class FriendStatus {
 class FriendScreenViewModel(
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val userFriendsRepository: UserFriendsRepository,
+    private val userFriendsRepository: UserFriendsRepository =
+        RepositoryProvider.userFriendsRepository,
     private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
-    private val userRecommender: UserRecommender =
-        UserRecommender(
-            currentUserId = currentUserId, userFriendsRepository = userFriendsRepository)
+    private val userRecommender: UserRecommender = UserRecommender(currentUserId = currentUserId)
 ) : ViewModel() {
   /** Backing property for the friends screen state. */
   private val _uiState = MutableStateFlow(FriendsScreenUIState())
@@ -103,16 +104,21 @@ class FriendScreenViewModel(
                       else -> FriendStatus.NOT_FRIEND
                     })
           }
-      suggestions.value = if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
       val receivedRequests =
           if (isCurrentUser) {
-            currentUserReceivedRequests
+            currentUserReceivedRequests.map {
+              RequestState(userRepository.getSimpleUser(it.senderId), it)
+            }
           } else emptyList()
-      val sentRequests = if (isCurrentUser) currentUserSentRequests else emptyList()
+      val sentRequests =
+          if (isCurrentUser) {
+            currentUserSentRequests.map {
+              RequestState(userRepository.getSimpleUser(it.receiverId), it)
+            }
+          } else emptyList()
       _uiState.value =
           _uiState.value.copy(
               friends = friendsStates,
-              suggestions = suggestions.value.take(5),
               receivedRequests = receivedRequests,
               sentRequests = sentRequests,
               isCurrentUser = isCurrentUser,
@@ -121,6 +127,11 @@ class FriendScreenViewModel(
               errorMsg = null,
               isError = false,
           )
+      viewModelScope.launch {
+        suggestions.value =
+            if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
+        _uiState.value = _uiState.value.copy(suggestions = suggestions.value.take(5))
+      }
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load friends and requests.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -162,13 +173,14 @@ class FriendScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       val request = FriendRequest(senderId = currentUserId, receiverId = userId)
+      val requestState = RequestState(userRepository.getSimpleUser(request.receiverId), request)
       val sentRequests = state.sentRequests
       val friends = state.friends
-      var newSentRequests: List<FriendRequest>
+      var newSentRequests: List<RequestState>
       var newFriends: List<FriendState>
 
       if (state.isCurrentUser) {
-        newSentRequests = sentRequests + listOf(request)
+        newSentRequests = sentRequests + listOf(requestState)
         newFriends = friends.filter { it.friend.userId != userId }
         suggestions.value = suggestions.value.filter { it.user.userId != userId }
       } else {
@@ -248,7 +260,7 @@ class FriendScreenViewModel(
       val state = _uiState.value
 
       val receivedRequests = state.receivedRequests
-      val newReceivedRequests = receivedRequests.filter { it.senderId != userId }
+      val newReceivedRequests = receivedRequests.filter { it.request.senderId != userId }
 
       val friends = state.friends
       val newFriends =
@@ -260,7 +272,7 @@ class FriendScreenViewModel(
                         status = FriendStatus.FRIEND))
           } else {
             friends.map {
-              if (it.friend.userId == userId) it.copy(status = FriendStatus.NOT_FRIEND) else it
+              if (it.friend.userId == userId) it.copy(status = FriendStatus.FRIEND) else it
             }
           }
 
@@ -268,8 +280,6 @@ class FriendScreenViewModel(
 
       try {
         friendRequestRepository.acceptFriendRequest(FriendRequest(userId, currentUserId))
-        userFriendsRepository.addFriendToUserFriendsOfUser(userId, currentUserId)
-        userFriendsRepository.addFriendToUserFriendsOfUser(currentUserId, userId)
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to accept request from user $userId : ${e.message}")
@@ -290,7 +300,7 @@ class FriendScreenViewModel(
       val state = _uiState.value
 
       val receivedRequests = state.receivedRequests
-      val newReceivedRequests = receivedRequests.filter { it.senderId != userId }
+      val newReceivedRequests = receivedRequests.filter { it.request.senderId != userId }
 
       val friends = state.friends
       val newFriendStates =
@@ -330,7 +340,7 @@ class FriendScreenViewModel(
       // screens
       val newSentRequests =
           if (state.isCurrentUser) {
-            sentRequests.filter { it.receiverId != userId }
+            sentRequests.filter { it.request.receiverId != userId }
           } else sentRequests
 
       val friends = state.friends
@@ -349,6 +359,12 @@ class FriendScreenViewModel(
 
       try {
         friendRequestRepository.refuseFriendRequest(FriendRequest(currentUserId, userId))
+        viewModelScope.launch {
+          if (state.isCurrentUser) {
+            suggestions.value = userRecommender.getRecommendedUsers()
+          }
+          _uiState.value = _uiState.value.copy(suggestions = suggestions.value.take(5))
+        }
       } catch (e: Exception) {
         _uiState.value = state
         setErrorMsg("Failed to cancel request to user $userId : ${e.message}")

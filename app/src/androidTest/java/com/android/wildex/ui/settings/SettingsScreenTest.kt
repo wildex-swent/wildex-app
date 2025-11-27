@@ -31,6 +31,8 @@ class SettingsScreenTest {
   private val userAnimalsRepository = LocalRepositories.userAnimalsRepository
 
   private val userAchievementsRepository = LocalRepositories.userAchievementsRepository
+  private val userFriendsRepository = LocalRepositories.userFriendsRepository
+  private val friendRequestRepository = LocalRepositories.friendRequestRepository
   private val postsRepository = LocalRepositories.postsRepository
   private val reportsRepository = LocalRepositories.reportRepository
   private val commentsRepository = LocalRepositories.commentRepository
@@ -58,6 +60,7 @@ class SettingsScreenTest {
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAchievementsRepository.initializeUserAchievements("currentUserId")
+    userFriendsRepository.initializeUserFriends("currentUserId")
 
     userSettingsScreenVM =
         SettingsScreenViewModel(
@@ -72,6 +75,8 @@ class SettingsScreenTest {
                     userSettingsRepository = userSettingsRepository,
                     userAnimalsRepository = userAnimalsRepository,
                     userAchievementsRepository = userAchievementsRepository,
+                    userFriendsRepository = userFriendsRepository,
+                    friendRequestRepository = friendRequestRepository,
                     postsRepository = postsRepository,
                     likeRepository = likesRepository,
                     commentRepository = commentsRepository,

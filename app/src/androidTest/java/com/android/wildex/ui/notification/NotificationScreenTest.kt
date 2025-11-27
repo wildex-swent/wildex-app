@@ -4,13 +4,23 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.android.wildex.model.notification.Notification
+import com.android.wildex.model.notification.NotificationRepository
+import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
+import com.google.firebase.Timestamp
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -23,19 +33,37 @@ class NotificationScreenTest {
       listOf(
           NotificationUIState(
               notificationId = "1",
-              notificationType = NotificationType.LIKE,
+              simpleUser =
+                  SimpleUser(
+                      userId = "user1",
+                      username = "Jean",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
+              notificationRoute = "route/to/post/1",
               notificationTitle = "Jean has liked your post",
               notificationDescription = "3min ago",
           ),
           NotificationUIState(
               notificationId = "2",
-              notificationType = NotificationType.POST,
+              simpleUser =
+                  SimpleUser(
+                      userId = "user2",
+                      username = "Bob",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
+              notificationRoute = "route/to/post/2",
               notificationTitle = "Bob spotted a tiger",
               notificationDescription = "15min ago",
           ),
           NotificationUIState(
               notificationId = "3",
-              notificationType = NotificationType.COMMENT,
+              simpleUser =
+                  SimpleUser(
+                      userId = "user3",
+                      username = "Alice",
+                      profilePictureURL = "",
+                      userType = UserType.REGULAR),
+              notificationRoute = "route/to/post/3",
               notificationTitle = "Alice commented on your post",
               notificationDescription = "Alice said: Wow, amazing!",
           ),
@@ -64,9 +92,51 @@ class NotificationScreenTest {
   @Test
   fun goBack_triggersCallback() {
     var back = 0
-    composeRule.setContent { NotificationScreen(onGoBack = { back++ }) }
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
+              emptyList()
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser =
+              SimpleUser(
+                  userId = userId,
+                  username = "u",
+                  profilePictureURL = "",
+                  userType = UserType.REGULAR)
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "testUser")
+
+    composeRule.setContent {
+      NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+    }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
+    composeRule.runOnIdle { /* ensure callback executed */}
     Assert.assertEquals(1, back)
   }
 
@@ -77,22 +147,26 @@ class NotificationScreenTest {
         "Really really long description that should also be truncated to stay on one line"
     val authorId = "authorX"
     val contentId = "content42"
+    val testUser =
+        SimpleUser(
+            userId = authorId,
+            username = "Author",
+            profilePictureURL = "",
+            userType = UserType.REGULAR)
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
-        NotificationItem(
-            authorId = authorId,
-            onProfileClick = {},
-            notificationItemData =
-                NotificationItemData(
-                    notificationContentId = contentId,
-                    notificationType = NotificationType.POST,
-                    notificationTitle = longTitle,
-                    notificationDescription = longDesc,
-                    onNotificationClick = { _, _ -> },
-                ),
-            cs = MaterialTheme.colorScheme,
-        )
+          NotificationItem(
+              simpleUser =  testUser,
+              onProfileClick = {},
+              notificationItemData = NotificationItemData(
+                  notificationContentId = contentId,
+                  notificationTitle = longTitle,
+                  notificationDescription = longDesc,
+                  onNotificationClick = { _, _ -> }
+              ),
+              cs = MaterialTheme.colorScheme,
+          )
       }
     }
     composeRule.waitForIdle()
@@ -121,7 +195,44 @@ class NotificationScreenTest {
 
   @Test
   fun refresh_keepsSampleNotificationsDisplayed() {
-    val vm = NotificationScreenViewModel()
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
+              emptyList()
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser =
+              SimpleUser(
+                  userId = userId,
+                  username = "u",
+                  profilePictureURL = "",
+                  userType = UserType.REGULAR)
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "testUser")
+
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
         TestScreenWithSamples(vm, sampleNotifications)
@@ -139,8 +250,81 @@ class NotificationScreenTest {
 
   @Test
   fun noNotificationView_showsEmptyMessage() {
-    composeRule.setContent { NoNotificationView() }
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) { NoNotificationView() }
+    }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()
+  }
+
+  @Test
+  fun notificationScreen_showsSampleNotificationsByDefault() {
+    val domainNotifications =
+        sampleNotifications.map {
+          Notification(
+              notificationId = it.notificationId,
+              targetId = "target_${it.notificationId}",
+              authorId = it.simpleUser.userId,
+              isRead = false,
+              title = it.notificationTitle,
+              body = it.notificationDescription,
+              route = it.notificationRoute,
+              date = Timestamp(0, 0),
+          )
+        }
+
+    val fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
+            return domainNotifications
+          }
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+        }
+
+    val fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser {
+            return SimpleUser(
+                userId = userId,
+                username = "unknown",
+                profilePictureURL = "",
+                userType = UserType.REGULAR)
+          }
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "anyUser")
+
+    composeRule.setContent {
+      MaterialTheme(colorScheme = lightColorScheme()) {
+        NotificationScreen(notificationScreenViewModel = vm)
+      }
+    }
+    composeRule.waitForIdle()
+
+    composeRule
+        .onAllNodesWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
+        .assertCountEquals(0)
+    composeRule.onNodeWithText("Jean has liked your post").assertIsDisplayed()
   }
 }

@@ -2,6 +2,7 @@ package com.android.wildex.ui.settings
 
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -9,6 +10,7 @@ import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
@@ -35,6 +37,8 @@ class SettingsScreenViewModelTest {
   private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var userFriendsRepository: UserFriendsRepository
+  private lateinit var friendRequestRepository: FriendRequestRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
@@ -76,6 +80,8 @@ class SettingsScreenViewModelTest {
     userSettingsRepository = mockk()
     userAnimalsRepository = mockk()
     userAchievementsRepository = mockk()
+    userFriendsRepository = mockk()
+    friendRequestRepository = mockk()
     postsRepository = mockk()
     reportRepository = mockk()
     likeRepository = mockk()
@@ -94,6 +100,8 @@ class SettingsScreenViewModelTest {
                     userSettingsRepository,
                     userAnimalsRepository,
                     userAchievementsRepository,
+                    userFriendsRepository,
+                    friendRequestRepository,
                     postsRepository,
                     reportRepository,
                     likeRepository,

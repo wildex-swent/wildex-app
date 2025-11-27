@@ -50,6 +50,7 @@ import com.android.wildex.ui.report.ReportDetailsScreen
 import com.android.wildex.ui.report.ReportScreen
 import com.android.wildex.ui.report.SubmitReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
+import com.android.wildex.ui.social.FriendScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -151,6 +152,9 @@ fun WildexApp(
     // Post Details
     postDetailComposable(navigationActions)
 
+    // Social: Friends, Requests
+    socialComposable(navigationActions)
+
     // Profile
     profileComposable(navigationActions)
 
@@ -235,7 +239,19 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
           onSettings = { navigationActions.navigateTo(Screen.Settings) },
-      )
+          onFriends = { navigationActions.navigateTo(Screen.Social(it)) })
+    }
+  }
+}
+
+private fun NavGraphBuilder.socialComposable(navigationActions: NavigationActions) {
+  composable(Screen.Social.PATH) { backStackEntry ->
+    val userId = backStackEntry.arguments?.getString("userUid")
+    if (userId != null) {
+      FriendScreen(
+          userId = userId,
+          onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+          onGoBack = { navigationActions.goBack() })
     }
   }
 }

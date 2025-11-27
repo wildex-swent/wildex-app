@@ -14,6 +14,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
@@ -61,6 +62,7 @@ class SignInViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var userFriendsRepository: UserFriendsRepository
   private lateinit var userSettingsRepository: UserSettingsRepository
   private val fakeUserIdToken = "fakeUserIdToken"
   private val testDispatcher = StandardTestDispatcher()
@@ -78,6 +80,7 @@ class SignInViewModelTest {
     userRepository = LocalRepositories.userRepository
     userAnimalsRepository = LocalRepositories.userAnimalsRepository
     userAchievementsRepository = LocalRepositories.userAchievementsRepository
+    userFriendsRepository = LocalRepositories.userFriendsRepository
     userSettingsRepository = LocalRepositories.userSettingsRepository
     val initializeUserUseCase =
         InitializeUserUseCase(
@@ -85,7 +88,7 @@ class SignInViewModelTest {
             userSettingsRepository,
             userAnimalsRepository,
             userAchievementsRepository,
-        )
+            userFriendsRepository)
     authRepository = mockk(relaxed = true)
     credentialManager = FakeCredentialManager.create("fakeToken")
     viewModel =

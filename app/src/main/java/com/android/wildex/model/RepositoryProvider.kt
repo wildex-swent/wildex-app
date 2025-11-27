@@ -67,6 +67,7 @@ object RepositoryProvider {
   }
   val userFriendsRepository: UserFriendsRepository by lazy {
     UserFriendsRepositoryFirestore(Firebase.firestore)
+  }
   val notificationRepository: NotificationRepository by lazy {
     NotificationRepositoryFirestore(Firebase.firestore)
   }

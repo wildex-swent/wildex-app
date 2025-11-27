@@ -1,16 +1,19 @@
 package com.android.wildex.ui.report
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +25,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReportScreenTest {
-
   private val reportRepository: ReportRepository = LocalRepositories.reportRepository
   private val userRepository: UserRepository = LocalRepositories.userRepository
   private lateinit var reportScreenViewModel: ReportScreenViewModel
@@ -41,7 +43,8 @@ class ReportScreenTest {
             date = Timestamp.now(),
             description = "description1",
             authorId = "user2",
-            assigneeId = null)
+            assigneeId = null,
+        )
 
     val report2 =
         Report(
@@ -52,7 +55,8 @@ class ReportScreenTest {
             date = Timestamp.now(),
             description = "description2",
             authorId = "user3",
-            assigneeId = "user1")
+            assigneeId = "user1",
+        )
 
     reportRepository.addReport(report1)
     reportRepository.addReport(report2)
@@ -68,7 +72,8 @@ class ReportScreenTest {
             profilePictureURL = "urlBob1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "USA")
+            country = "USA",
+        )
 
     val user2 =
         User(
@@ -80,7 +85,8 @@ class ReportScreenTest {
             profilePictureURL = "urlAlice1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "England")
+            country = "England",
+        )
 
     val user3 =
         User(
@@ -92,7 +98,8 @@ class ReportScreenTest {
             profilePictureURL = "urlCharlie3",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "Germany")
+            country = "Germany",
+        )
 
     userRepository.addUser(user1)
     userRepository.addUser(user2)
@@ -102,7 +109,8 @@ class ReportScreenTest {
         ReportScreenViewModel(
             reportRepository = reportRepository,
             userRepository = userRepository,
-            currentUserId = "user1")
+            currentUserId = "user1",
+        )
   }
 
   @After
@@ -116,7 +124,8 @@ class ReportScreenTest {
     composeRule.setContent {
       ReportScreen(
           reportScreenViewModel = reportScreenViewModel,
-          onNotificationClick = { notificationClicked = true })
+          onNotificationClick = { notificationClicked = true },
+      )
     }
     composeRule.waitForIdle()
 
@@ -130,7 +139,8 @@ class ReportScreenTest {
     composeRule.setContent {
       ReportScreen(
           reportScreenViewModel = reportScreenViewModel,
-          onProfileClick = { profilePictureClicked = true })
+          onProfileClick = { profilePictureClicked = true },
+      )
     }
     composeRule.waitForIdle()
 
@@ -155,12 +165,14 @@ class ReportScreenTest {
     composeRule
         .onNodeWithTag(
             ReportScreenTestTags.testTagForProfilePicture("user2", "author"),
-            useUnmergedTree = true)
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
     composeRule
         .onNodeWithTag(
             ReportScreenTestTags.testTagForProfilePicture("user3", "author"),
-            useUnmergedTree = true)
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
 
     composeRule
@@ -197,7 +209,8 @@ class ReportScreenTest {
           ReportScreenViewModel(
               reportRepository = reportRepository,
               userRepository = userRepository,
-              currentUserId = "user3")
+              currentUserId = "user3",
+          )
       reportScreenViewModel.refreshUIState()
     }
 
@@ -210,5 +223,19 @@ class ReportScreenTest {
     composeRule
         .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun offlineScreenIsDisplayedWhenOffline() {
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 }

@@ -1,9 +1,8 @@
 package com.android.wildex.ui.utils.offline
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -44,43 +43,35 @@ fun OfflineScreen(
           composition = composition,
           iterations = LottieConstants.IterateForever,
       )
-  Box(
-      modifier =
-          Modifier.fillMaxSize()
-              .padding(innerPadding)
-              .testTag(OfflineScreenTestTags.OFFLINE_SCREEN),
-      contentAlignment = Alignment.Center,
-  ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 24.dp)) {
-          Text(
-              text = context.getString(R.string.offline_title),
-              style = typography.headlineMedium,
-              color = colorScheme.primary,
-              modifier = Modifier.testTag(OfflineScreenTestTags.OFFLINE_TITLE),
-              textAlign = TextAlign.Center)
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+      modifier = Modifier.padding(innerPadding).testTag(OfflineScreenTestTags.OFFLINE_SCREEN)) {
+        Text(
+            text = context.getString(R.string.offline_title),
+            style = typography.headlineMedium,
+            color = colorScheme.primary,
+            modifier = Modifier.testTag(OfflineScreenTestTags.OFFLINE_TITLE),
+            textAlign = TextAlign.Center)
 
-          Text(
-              text = context.getString(R.string.offline_subtitle),
-              style = typography.headlineSmall,
-              color = colorScheme.primary,
-              modifier =
-                  Modifier.padding(top = 8.dp).testTag(OfflineScreenTestTags.OFFLINE_SUBTITLE),
-              textAlign = TextAlign.Center)
+        Text(
+            text = context.getString(R.string.offline_subtitle),
+            style = typography.headlineSmall,
+            color = colorScheme.primary,
+            modifier = Modifier.padding(top = 8.dp).testTag(OfflineScreenTestTags.OFFLINE_SUBTITLE),
+            textAlign = TextAlign.Center)
 
-          LottieAnimation(
-              composition = composition,
-              progress = { progress },
-              modifier = Modifier.size(404.dp).testTag(OfflineScreenTestTags.ANIMATION),
-          )
+        LottieAnimation(
+            composition = composition,
+            progress = { progress },
+            modifier = Modifier.size(404.dp).testTag(OfflineScreenTestTags.ANIMATION),
+        )
 
-          Text(
-              text = context.getString(R.string.offline_message),
-              style = typography.bodyLarge,
-              color = colorScheme.onBackground,
-              modifier = Modifier.testTag(OfflineScreenTestTags.OFFLINE_MESSAGE),
-              textAlign = TextAlign.Center)
-        }
-  }
+        Text(
+            text = context.getString(R.string.offline_message),
+            style = typography.bodyLarge,
+            color = colorScheme.onBackground,
+            modifier = Modifier.testTag(OfflineScreenTestTags.OFFLINE_MESSAGE),
+            textAlign = TextAlign.Center)
+      }
 }

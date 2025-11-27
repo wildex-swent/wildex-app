@@ -300,7 +300,8 @@ fun PostItem(
  * @param author The author of the post.
  * @param animalName The name of the animal appearing on the post.
  * @param colorScheme The colorscheme to follow.
- * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's author.
+ * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's
+ *   author.
  */
 @Composable
 private fun PostHeader(

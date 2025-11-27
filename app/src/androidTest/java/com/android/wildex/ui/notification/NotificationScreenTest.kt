@@ -156,17 +156,17 @@ class NotificationScreenTest {
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
-          NotificationItem(
-              simpleUser =  testUser,
-              onProfileClick = {},
-              notificationItemData = NotificationItemData(
-                  notificationContentId = contentId,
-                  notificationTitle = longTitle,
-                  notificationDescription = longDesc,
-                  onNotificationClick = { _, _ -> }
-              ),
-              cs = MaterialTheme.colorScheme,
-          )
+        NotificationItem(
+            simpleUser = testUser,
+            onProfileClick = {},
+            notificationItemData =
+                NotificationItemData(
+                    notificationContentId = contentId,
+                    notificationTitle = longTitle,
+                    notificationDescription = longDesc,
+                    onNotificationClick = { _, _ -> }),
+            cs = MaterialTheme.colorScheme,
+        )
       }
     }
     composeRule.waitForIdle()

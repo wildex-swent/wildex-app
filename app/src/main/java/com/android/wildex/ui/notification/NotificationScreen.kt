@@ -41,7 +41,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
@@ -130,12 +129,13 @@ fun NotificationView(
       NotificationItem(
           simpleUser = notification.simpleUser,
           onProfileClick = onProfileClick,
-          notificationItemData = NotificationItemData(
-              notificationContentId = notification.notificationId,
-              notificationTitle = notification.notificationTitle,
-              notificationDescription = notification.notificationDescription,
-              onNotificationClick = onNotificationClick,
-          ),
+          notificationItemData =
+              NotificationItemData(
+                  notificationContentId = notification.notificationId,
+                  notificationTitle = notification.notificationTitle,
+                  notificationDescription = notification.notificationDescription,
+                  onNotificationClick = onNotificationClick,
+              ),
           cs = cs,
       )
     }
@@ -186,8 +186,7 @@ fun NotificationItem(
               onClick = {
                 notificationItemData.onNotificationClick(
                     notificationItemData.notificationContentId,
-                    notificationItemData.notificationDescription
-                    )
+                    notificationItemData.notificationDescription)
               },
               modifier =
                   Modifier.size(48.dp)

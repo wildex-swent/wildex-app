@@ -4,6 +4,7 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
@@ -23,7 +24,9 @@ class InitializeUserUseCase(
     private val userAnimalsRepository: UserAnimalsRepository =
         RepositoryProvider.userAnimalsRepository,
     private val userAchievementsRepository: UserAchievementsRepository =
-        RepositoryProvider.userAchievementsRepository
+        RepositoryProvider.userAchievementsRepository,
+    private val userFriendsRepository: UserFriendsRepository =
+        RepositoryProvider.userFriendsRepository
 ) {
 
   /**
@@ -37,5 +40,6 @@ class InitializeUserUseCase(
     userSettingsRepository.initializeUserSettings(userId)
     userAnimalsRepository.initializeUserAnimals(userId)
     userAchievementsRepository.initializeUserAchievements(userId)
+    userFriendsRepository.initializeUserFriends(userId)
   }
 }

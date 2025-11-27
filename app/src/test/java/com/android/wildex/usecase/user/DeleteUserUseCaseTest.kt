@@ -2,11 +2,13 @@ package com.android.wildex.usecase.user
 
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.utils.MainDispatcherRule
@@ -28,6 +30,8 @@ class DeleteUserUseCaseTest {
   private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
+  private lateinit var userFriendsRepository: UserFriendsRepository
+  private lateinit var friendRequestRepository: FriendRequestRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
@@ -43,6 +47,8 @@ class DeleteUserUseCaseTest {
     userSettingsRepository = mockk()
     userAnimalsRepository = mockk()
     userAchievementsRepository = mockk()
+    userFriendsRepository = mockk()
+    friendRequestRepository = mockk()
     postsRepository = mockk()
     reportRepository = mockk()
     likeRepository = mockk()
@@ -55,6 +61,8 @@ class DeleteUserUseCaseTest {
             userSettingsRepository,
             userAnimalsRepository,
             userAchievementsRepository,
+            userFriendsRepository,
+            friendRequestRepository,
             postsRepository,
             reportRepository,
             likeRepository,
@@ -74,6 +82,10 @@ class DeleteUserUseCaseTest {
       coEvery { userAnimalsRepository.deleteUserAnimals(userId) } throws
           RuntimeException("bim-boom")
       coEvery { userAchievementsRepository.deleteUserAchievements(userId) } throws
+          RuntimeException("bim-boom")
+      coEvery { userFriendsRepository.deleteUserFriendsOfUser(userId) } throws
+          RuntimeException("bim-boom")
+      coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } throws
           RuntimeException("bim-boom")
 
       try {
@@ -96,6 +108,8 @@ class DeleteUserUseCaseTest {
       coEvery { userSettingsRepository.deleteUserSettings(userId) } just Runs
       coEvery { userAnimalsRepository.deleteUserAnimals(userId) } just Runs
       coEvery { userAchievementsRepository.deleteUserAchievements(userId) } just Runs
+      coEvery { userFriendsRepository.deleteUserFriendsOfUser(userId) } just Runs
+      coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } just Runs
       coEvery { postsRepository.deletePostsByUser(userId) } just Runs
       coEvery { reportRepository.deleteReportsByUser(userId) } just Runs
       coEvery { likeRepository.deleteLikesByUser(userId) } just Runs

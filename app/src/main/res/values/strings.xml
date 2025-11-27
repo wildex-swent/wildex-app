@@ -55,6 +55,24 @@
     <string name="system_default">Auto</string>
     <string name="sign_out">Sign out</string>
 
+    <!-- Friend screen -->
+    <string name="friends_tab_title">Friends</string>
+    <string name="requests_tab_title">Requests</string>
+    <string name="friend_screen_title">Social</string>
+    <string name="friend_screen_send_request">Add friend</string>
+    <string name="friend_screen_remove_friend">Delete</string>
+    <string name="friend_screen_pending_request_other_user">Pending…</string>
+    <string name="no_suggestions">We have no suggestions for you at the moment…</string>
+    <string name="no_friends_current_user">You don\'t have any friends yet. Look at our suggestions and discover new people!</string>
+    <string name="friends_section">Friends</string>
+    <string name="suggestions_section">Suggestions</string>
+    <string name="received_requests_section">Received</string>
+    <string name="sent_requests_section">Sent</string>
+    <string name="no_sent_requests">You haven\'t sent any friend request yet. Look at our suggestions to discover new people!</string>
+    <string name="no_received_requests">You have received no friend requests yet. Post to make your profile more attractive!</string>
+    <string name="no_friends_other_user">This user has no friends… Ask them to become your friend!</string>
+
+
     <!-- Collection screen -->
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
     <string name="empty_other_collection">No animals in this collection.</string>

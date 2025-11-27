@@ -126,8 +126,7 @@ fun SubmitReportFormScreen(
               Text(
                   text = context.getString(R.string.description),
                   style = typography.bodyMedium,
-                  color = colorScheme.onBackground
-              )
+                  color = colorScheme.onBackground)
             },
             modifier =
                 Modifier.fillMaxWidth(0.9f)

@@ -77,7 +77,7 @@ fun SubmitReportFormScreen(
         Text(
             text = context.getString(R.string.submit_rescue_alert),
             style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colorScheme.primary,
+            color = colorScheme.onBackground,
         )
 
         Spacer(modifier = Modifier.height(64.dp))
@@ -126,6 +126,7 @@ fun SubmitReportFormScreen(
               Text(
                   text = context.getString(R.string.description),
                   style = typography.bodyMedium,
+                  color = colorScheme.onBackground
               )
             },
             modifier =
@@ -142,7 +143,7 @@ fun SubmitReportFormScreen(
                 !uiState.isSubmitting &&
                     uiState.imageUri != null &&
                     uiState.description.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.onBackground),
             shape = RoundedCornerShape(6.dp),
             modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
         ) {
@@ -150,7 +151,7 @@ fun SubmitReportFormScreen(
               text =
                   if (uiState.isSubmitting) context.getString(R.string.submitting)
                   else context.getString(R.string.submitted),
-              color = Color.White,
+              color = colorScheme.background,
               style = typography.bodyMedium,
               modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
           )

@@ -358,7 +358,7 @@ fun LocationSpeciesLikeBar(
           imageVector =
               if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
           contentDescription = "Like status",
-          tint = colorScheme.primary,
+          tint = if (likedByCurrentUser) colorScheme.primary else colorScheme.onBackground,
           modifier =
               Modifier.size(iconSize).clickable {
                 if (!likedByCurrentUser) onLike() else onUnlike()

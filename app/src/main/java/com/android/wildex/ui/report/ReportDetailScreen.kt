@@ -514,7 +514,7 @@ private fun LocationTagButton(
   Surface(
       shape = RoundedCornerShape(32.dp),
       color = colorScheme.background,
-      border = BorderStroke(1.dp, colorScheme.primary),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       tonalElevation = 0.dp,
       modifier =
           Modifier.testTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL).widthIn(max = 140.dp),
@@ -528,13 +528,13 @@ private fun LocationTagButton(
       Icon(
           imageVector = Icons.Filled.LocationOn,
           contentDescription = "Location",
-          tint = colorScheme.primary,
+          tint = colorScheme.onBackground,
           modifier = Modifier.size(18.dp),
       )
       Text(
           text = location,
           style = typography.labelMedium,
-          color = colorScheme.primary,
+          color = colorScheme.onBackground,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
       )
@@ -556,7 +556,7 @@ private fun ReportAssigneeDetailsCard(
   Card(
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(width = 1.dp, color = colorScheme.primary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.onBackground),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
       modifier =
           Modifier.fillMaxWidth()
@@ -610,7 +610,7 @@ private fun ReportCommentRow(
               .testTag(ReportDetailsScreenTestTags.COMMENT_CARD),
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(1.dp, colorScheme.primary),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
   ) {
     Row(
@@ -716,7 +716,7 @@ private fun ReportCommentInput(
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.Send,
                   contentDescription = "Send comment",
-                  tint = colorScheme.primary,
+                  tint = colorScheme.onBackground,
               )
             }
           },

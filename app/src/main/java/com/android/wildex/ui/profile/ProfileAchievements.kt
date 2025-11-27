@@ -85,8 +85,8 @@ fun ProfileAchievements(
                   onClick = { onAchievements(id) },
                   colors =
                       ButtonDefaults.buttonColors(
-                          containerColor = cs.background,
-                          contentColor = cs.onBackground,
+                          containerColor = cs.onBackground,
+                          contentColor = cs.background,
                       ),
                   modifier =
                       Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),

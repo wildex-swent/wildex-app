@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -37,7 +37,6 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.ui.navigation.NavigationTestTags
-import com.android.wildex.ui.theme.White
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -71,7 +70,8 @@ fun SignInScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       content = { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).background(White),
+            modifier =
+                Modifier.fillMaxSize().padding(paddingValues).background(colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -105,9 +105,9 @@ fun SignInScreen(
 fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
   OutlinedButton(
       onClick = onSignInClick,
-      colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+      colors = ButtonDefaults.buttonColors(containerColor = colorScheme.background),
       shape = RoundedCornerShape(50),
-      border = BorderStroke(1.dp, Color.LightGray),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       modifier =
           Modifier.padding(8.dp)
               .fillMaxWidth(0.8f)
@@ -127,7 +127,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
 
       Text(
           text = context.getString(R.string.sign_in),
-          color = Color.Gray,
+          color = colorScheme.onBackground,
           fontSize = 16.sp,
           fontWeight = FontWeight.Medium,
       )

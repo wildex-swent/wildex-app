@@ -1,5 +1,6 @@
 package com.android.wildex.ui.theme
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
 import android.view.Window
@@ -13,6 +14,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import com.android.wildex.model.user.AppearanceMode
@@ -57,6 +59,7 @@ private val LightColorScheme =
         onPrimaryContainer = LightOnPrimaryContainer,
     )
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun WildexTheme(
     theme: AppearanceMode = AppearanceMode.AUTOMATIC,
@@ -89,8 +92,16 @@ fun WildexTheme(
       }
     }
   }
+  val configuration = LocalConfiguration.current
+  val isTablet = configuration.screenWidthDp >= 600
+  val typography =
+      if (isTablet) {
+        TabletTypography
+      } else {
+        PhoneTypography
+      }
 
-  MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+  MaterialTheme(colorScheme = colorScheme, typography = typography, content = content)
 }
 
 fun setStatusBarColor(window: Window, color: Int) {

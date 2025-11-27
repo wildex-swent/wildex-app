@@ -16,6 +16,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.geojson.Point
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,7 +59,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch { updateUIState(userId) }
   }
 
-  private suspend fun updateUIState(userId: Id) {
+  private suspend fun updateUIState(userId: Id) = coroutineScope {
     if (userId.isBlank()) {
       setErrorMsg("Empty user id")
       _uiState.value =
@@ -68,28 +69,40 @@ class ProfileScreenViewModel(
               isUserOwner = false,
               isError = true,
           )
-      return
+      return@coroutineScope
     }
-
     try {
+      // 1) Load user fast and show something
       val user = userRepository.getUser(userId)
-      val achievements = fetchAchievements(userId)
-      val pins = fetchPostPins(userId)
+
       _uiState.value =
           _uiState.value.copy(
               user = user,
               isUserOwner = (currentUserId != null && user.userId == currentUserId),
-              achievements = achievements,
               isLoading = false,
-              recentPins = pins,
               isRefreshing = false,
-              errorMsg = _uiState.value.errorMsg,
               isError = false,
           )
+
+      // 2) In parallel, load heavy stuff AFTER user is visible
+      viewModelScope.launch {
+        val achievements = fetchAchievements(userId)
+        _uiState.value = _uiState.value.copy(achievements = achievements)
+      }
+
+      viewModelScope.launch {
+        val pins = fetchPostPins(userId)
+        _uiState.value = _uiState.value.copy(recentPins = pins)
+      }
     } catch (e: Exception) {
       Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
       setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
-      _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
+      _uiState.value =
+          _uiState.value.copy(
+              isError = true,
+              isLoading = false,
+              isRefreshing = false,
+          )
     }
   }
 

@@ -410,4 +410,20 @@ class MapScreenTest {
     }
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertDoesNotExist()
   }
+
+  @Test
+  fun backButton_calls_onGoBack_whenClicked() {
+    var clicked = false
+    compose {
+      WildexTheme {
+        BackButton(
+            modifier = Modifier.testTag(MapContentTestTags.BACK_BUTTON),
+            currentTab = MapTab.Posts,
+            onGoBack = { clicked = true },
+        )
+      }
+    }
+    node(MapContentTestTags.BACK_BUTTON).assertIsDisplayed().performClick()
+    assert(clicked)
+  }
 }

@@ -4,7 +4,6 @@ import android.util.Log
 import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.FirestoreTest
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -155,7 +154,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
                 pictureURL = "Modified PictureURL",
                 location = Location(1.0, 1.0),
                 description = "Modified Description",
-                date = Timestamp.Companion.fromDate(2026, Calendar.JANUARY, 1),
+                date = fromDate(2026, Calendar.JANUARY, 1),
                 animalId = "modifiedAnimalId",
                 likesCount = 20,
                 commentsCount = 10,
@@ -185,7 +184,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
                 pictureURL = "Modified PictureURL",
                 location = Location(1.0, 1.0),
                 description = "Modified Description",
-                date = Timestamp.Companion.fromDate(2026, Calendar.JANUARY, 1),
+                date = fromDate(2026, Calendar.JANUARY, 1),
                 animalId = "modifiedAnimalId",
                 likesCount = 20,
                 commentsCount = 10,

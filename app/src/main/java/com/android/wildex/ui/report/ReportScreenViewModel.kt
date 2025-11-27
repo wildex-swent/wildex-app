@@ -16,6 +16,9 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,7 +70,8 @@ private val defaultUser: SimpleUser =
         userId = "defaultUserId",
         username = "defaultUsername",
         profilePictureURL = "",
-        userType = UserType.REGULAR)
+        userType = UserType.REGULAR,
+    )
 
 /**
  * ViewModel for the report screen. Loads the reports and user data and handles UI state updates
@@ -141,31 +145,20 @@ class ReportScreenViewModel(
   }
 
   /** Converts reports to [ReportUIState] objects with author data. */
-  private suspend fun reportsToReportUIStates(reports: List<Report>): List<ReportUIState> {
-    return reports.map { report ->
-      val author =
-          try {
-            userRepository.getSimpleUser(report.authorId)
-          } catch (e: Exception) {
-            handleException(
-                "Error loading author ${report.authorId} user data for report ${report.reportId}",
-                e,
-            )
-            defaultUser
-          }
-      val assigneeUsername =
-          if (report.assigneeId.isNullOrEmpty()) {
-            ""
-          } else {
-            try {
-              userRepository.getSimpleUser(report.assigneeId).username
-            } catch (e: Exception) {
-              handleException(
-                  "Error loading assignee ${report.assigneeId} user data for report ${report.assigneeId}",
-                  e)
-              ""
-            }
-          }
+  private suspend fun reportsToReportUIStates(reports: List<Report>): List<ReportUIState> =
+      coroutineScope {
+        reports
+            .map { report -> async { buildReportUiStateOrNull(report) } }
+            .awaitAll()
+            .filterNotNull()
+      }
+
+  /** Builds a [ReportUIState] for a single report or null if something goes wrong. */
+  private suspend fun buildReportUiStateOrNull(report: Report): ReportUIState? {
+    return try {
+      val author = loadAuthorOrDefault(report)
+      val assigneeUsername = loadAssigneeUsernameOrEmpty(report)
+
       ReportUIState(
           reportId = report.reportId,
           imageURL = report.imageURL,
@@ -175,6 +168,38 @@ class ReportScreenViewModel(
           author = author,
           assigneeUsername = assigneeUsername,
       )
+    } catch (e: Exception) {
+      handleException("Error building UI state for report ${report.reportId}", e)
+      null
+    }
+  }
+
+  /** Loads the author for a report, falling back to [defaultUser] on failure. */
+  private suspend fun loadAuthorOrDefault(report: Report): SimpleUser {
+    return try {
+      userRepository.getSimpleUser(report.authorId)
+    } catch (e: Exception) {
+      handleException(
+          "Error loading author ${report.authorId} user data for report ${report.reportId}",
+          e,
+      )
+      defaultUser
+    }
+  }
+
+  /** Loads the assignee username for a report, or an empty string if missing/failing. */
+  private suspend fun loadAssigneeUsernameOrEmpty(report: Report): String {
+    val assigneeId = report.assigneeId ?: return ""
+    if (assigneeId.isEmpty()) return ""
+
+    return try {
+      userRepository.getSimpleUser(assigneeId).username
+    } catch (e: Exception) {
+      handleException(
+          "Error loading assignee $assigneeId user data for report ${report.reportId}",
+          e,
+      )
+      ""
     }
   }
 

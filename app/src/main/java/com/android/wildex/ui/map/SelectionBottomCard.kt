@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +25,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.model.map.PinDetails
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.utils.ClickableProfilePicture
 
 /**
  * Composable that displays a bottom card with details about the selected pin.
@@ -47,7 +50,8 @@ fun SelectionBottomCard(
     onReport: (Id) -> Unit,
     onDismiss: () -> Unit,
     onToggleLike: (Id) -> Unit,
-    isCurrentUser: Boolean
+    onProfile: (Id) -> Unit = {},
+    isCurrentUser: Boolean,
 ) {
   if (selection == null) return
   val cs = MaterialTheme.colorScheme
@@ -69,10 +73,17 @@ fun SelectionBottomCard(
               onPost = onPost,
               onToggleLike = onToggleLike,
               activeTab = activeTab,
-              isCurrentUser = isCurrentUser)
+              isCurrentUser = isCurrentUser,
+              onProfile = onProfile,
+          )
         }
         is PinDetails.ReportDetails -> {
-          ReportSelectionCard(details = selection, ui = ui, onReport = onReport)
+          ReportSelectionCard(
+              details = selection,
+              ui = ui,
+              onReport = onReport,
+              onProfile = onProfile,
+          )
         }
       }
       IconButton(
@@ -106,24 +117,6 @@ private fun PreviewImage(data: Any?, tag: String, desc: String) {
 }
 
 /**
- * Composable that displays an author's avatar image with rounded corners.
- *
- * @param data The image data to be loaded.
- */
-@Composable
-private fun AuthorAvatar(data: Any?) {
-  AsyncImage(
-      model = ImageRequest.Builder(LocalContext.current).data(data).build(),
-      contentDescription = "Author",
-      contentScale = ContentScale.Crop,
-      modifier =
-          Modifier.size(48.dp)
-              .clip(RoundedCornerShape(28.dp))
-              .testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
-  )
-}
-
-/**
  * Composable that displays a location row with an icon and name.
  *
  * @param name The name of the location.
@@ -144,7 +137,7 @@ private fun LocationRow(name: String, ui: MapUiColors) {
     )
     Text(
         text = name.ifEmpty { "Unknown" },
-        style = MaterialTheme.typography.bodyMedium,
+        style = typography.bodyMedium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -216,14 +209,21 @@ private fun PostSelectionCard(
     onPost: (Id) -> Unit,
     onToggleLike: (Id) -> Unit,
     activeTab: MapTab = MapTab.Posts,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onProfile: (Id) -> Unit = {},
 ) {
   SelectionRow(
       left = {
         PreviewImage(details.post.pictureURL, MapContentTestTags.SELECTION_POST_IMAGE, "Post image")
       },
   ) {
-    AuthorAvatar(details.author?.profilePictureURL)
+    ClickableProfilePicture(
+        modifier = Modifier.size(48.dp).testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
+        profileId = details.author?.userId ?: "",
+        profilePictureURL = details.author?.profilePictureURL ?: "",
+        profileUserType = details.author?.userType ?: UserType.REGULAR,
+        onProfile = onProfile,
+    )
 
     Text(
         text =
@@ -231,7 +231,7 @@ private fun PostSelectionCard(
                 "You saw ${articleWithWord(details.animalName)}"
             else
                 "${details.author?.username ?: "Someone"} saw ${articleWithWord(details.animalName)}",
-        style = MaterialTheme.typography.titleMedium,
+        style = typography.titleMedium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -259,7 +259,7 @@ private fun PostSelectionCard(
 
         Text(
             text = details.post.likesCount.toString(),
-            style = MaterialTheme.typography.bodySmall,
+            style = typography.bodySmall,
             color = ui.fg,
         )
       }
@@ -277,7 +277,7 @@ private fun PostSelectionCard(
 
         Text(
             text = details.post.commentsCount.toString(),
-            style = MaterialTheme.typography.bodySmall,
+            style = typography.bodySmall,
             color = ui.fg,
         )
       }
@@ -303,6 +303,7 @@ private fun ReportSelectionCard(
     details: PinDetails.ReportDetails,
     ui: MapUiColors,
     onReport: (Id) -> Unit,
+    onProfile: (Id) -> Unit = {},
 ) {
   SelectionRow(
       left = {
@@ -313,7 +314,13 @@ private fun ReportSelectionCard(
         )
       },
   ) {
-    AuthorAvatar(details.author?.profilePictureURL)
+    ClickableProfilePicture(
+        modifier = Modifier.size(48.dp).testTag(MapContentTestTags.SELECTION_AUTHOR_IMAGE),
+        profileId = details.author?.userId ?: "",
+        profilePictureURL = details.author?.profilePictureURL ?: "",
+        profileUserType = details.author?.userType ?: UserType.REGULAR,
+        onProfile = onProfile,
+    )
 
     // Centered description text
     Text(
@@ -324,7 +331,7 @@ private fun ReportSelectionCard(
               }
               append(" ${details.report.description}")
             },
-        style = MaterialTheme.typography.titleMedium,
+        style = typography.titleMedium,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
@@ -352,7 +359,7 @@ private fun ReportSelectionCard(
           Text(
               text = "Not assigned :(",
               modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-              style = MaterialTheme.typography.bodySmall,
+              style = typography.bodySmall,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
           )
@@ -362,7 +369,7 @@ private fun ReportSelectionCard(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(6.dp),
           ) {
-            Text(text = "Assigned to", style = MaterialTheme.typography.bodySmall, maxLines = 1)
+            Text(text = "Assigned to", style = typography.bodySmall, maxLines = 1)
             // tiny inline avatar
             AsyncImage(
                 model =
@@ -376,7 +383,7 @@ private fun ReportSelectionCard(
             // username, single line with ellipsis
             Text(
                 text = details.assignee?.username ?: "Unknown",
-                style = MaterialTheme.typography.bodySmall,
+                style = typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),

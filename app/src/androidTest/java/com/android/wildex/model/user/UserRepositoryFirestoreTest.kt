@@ -3,7 +3,6 @@ package com.android.wildex.model.user
 import android.util.Log
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.util.Calendar
@@ -246,7 +245,7 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
   @Test
   fun getUser_withInvalidUserType_fallsBackToRegular() = runTest {
     val id = "invalidUserType"
-    val creationTs = Timestamp.Companion.fromDate(2024, Calendar.JANUARY, 1)
+    val creationTs = fromDate(2024, Calendar.JANUARY, 1)
     FirebaseEmulator.firestore
         .collection(USERS_COLLECTION_PATH)
         .document(id)

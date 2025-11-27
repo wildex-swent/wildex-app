@@ -1,5 +1,8 @@
 package com.android.wildex
 
+import android.app.NotificationChannel
+import android.app.NotificationChannelGroup
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,6 +26,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.notification.NotificationChannelType
+import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -60,14 +66,40 @@ object AppTheme {
   var appearanceMode by mutableStateOf(AppearanceMode.AUTOMATIC)
 }
 
+object AppConnectivity {
+  var isOnline by mutableStateOf(true)
+}
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    createNotificationGroups()
+    createNotificationChannels()
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
       WildexTheme(theme = AppTheme.appearanceMode) {
         Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
       }
+    }
+  }
+
+  private fun createNotificationChannels() {
+    NotificationChannelType.entries.forEach {
+      val channel =
+          NotificationChannel(it.channelId, it.channelName, it.importance).apply {
+            description = it.channelDesc
+            group = it.group.groupId
+          }
+      val notificationManager = getSystemService(NotificationManager::class.java)
+      notificationManager.createNotificationChannel(channel)
+    }
+  }
+
+  private fun createNotificationGroups() {
+    NotificationGroupType.entries.forEach {
+      val group = NotificationChannelGroup(it.groupId, it.groupName)
+      val notificationManager = getSystemService(NotificationManager::class.java)
+      notificationManager.createNotificationChannelGroup(group)
     }
   }
 }
@@ -80,6 +112,13 @@ fun WildexApp(
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
+
+  val appContext = context.applicationContext
+  val connectivityObserver = remember { DefaultConnectivityObserver(appContext) }
+  LaunchedEffect(connectivityObserver) {
+    connectivityObserver.isOnline.collect { AppConnectivity.isOnline = it }
+  }
+
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
@@ -329,7 +368,7 @@ private fun NavGraphBuilder.mapComposable(
           onReport = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
           isCurrentUser = currentUserId == userId,
           onGoBack = { navigationActions.goBack() },
-      )
+          onProfile = { navigationActions.navigateTo(Screen.Profile(it)) })
     }
   }
 }

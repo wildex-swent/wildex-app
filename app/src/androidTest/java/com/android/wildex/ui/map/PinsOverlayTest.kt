@@ -13,6 +13,12 @@ import coil.annotation.ExperimentalCoilApi
 import coil.request.ImageRequest
 import coil.request.ImageResult
 import coil.request.SuccessResult
+import com.android.wildex.model.map.MapPin
+import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
+import io.mockk.every
+import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.reflect.Field
@@ -278,10 +284,93 @@ class PinsOverlayTest {
     assertEquals("D", map[k4])
   }
 
+  @Test
+  fun computeBobbingIds_includesOnlyUnassignedReportsExcludingSelected() {
+    val id1: Id = "report-1"
+    val id2: Id = "report-2"
+    val id3: Id = "report-3"
+    val pins =
+        listOf(
+            MapPin.ReportPin(
+                id = id1,
+                authorId = "author-1",
+                location = Location(latitude = 0.0, longitude = 0.0),
+                imageURL = "",
+                assigneeId = null,
+            ),
+            MapPin.ReportPin(
+                id = id2,
+                authorId = "author-2",
+                location = Location(latitude = 1.0, longitude = 1.0),
+                imageURL = "",
+                assigneeId = "some-assignee",
+            ),
+            MapPin.ReportPin(
+                id = id3,
+                authorId = "author-3",
+                location = Location(latitude = 2.0, longitude = 2.0),
+                imageURL = "",
+                assigneeId = null,
+            ),
+        )
+    val result = computeBobbingIds(pins, selectedId = id3)
+    assertTrue(result.contains(id1))
+    assertFalse(result.contains(id2))
+    assertFalse(result.contains(id3))
+  }
+
+  @Test
+  fun disposePointManager_alwaysClearsCaches_evenWithNullManager() {
+    val annotationById =
+        mutableMapOf(
+            "a" to mockPointAnnotation(),
+            "b" to mockPointAnnotation(),
+        )
+    val baseCache =
+        mutableMapOf<BaseKey, Bitmap>(
+            BaseKey("u", 0, 100) to Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+        )
+    disposePointManager(
+        mapView = null,
+        manager = null,
+        annotationById = annotationById,
+        baseCache = baseCache,
+    )
+    assertTrue(annotationById.isEmpty())
+    assertTrue(baseCache.isEmpty())
+  }
+
+  private fun mockPointAnnotation(): PointAnnotation {
+    val annotation = mockk<PointAnnotation>(relaxed = true)
+    var lastBitmap: Bitmap? = null
+
+    every { annotation.iconImageBitmap = any() } answers { lastBitmap = firstArg() }
+    every { annotation.iconImageBitmap } answers { lastBitmap }
+    return annotation
+  }
+
   private fun getSharedCoilInstanceField(): Field {
     val f = SharedCoil::class.java.getDeclaredField("instance")
     f.isAccessible = true
     return f
+  }
+
+  @Test
+  fun renderClusterPin_producesBitmap() {
+    val out = renderClusterPin(count = 42, borderColor = Color.RED, scale = 1.2f)
+    assertTrue(out.width > 0)
+    assertTrue(out.height > 0)
+  }
+
+  @Test
+  fun sharedCoil_buildsNewInstance_whenInstanceIsNull() {
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val field = SharedCoil::class.java.getDeclaredField("instance")
+    field.isAccessible = true
+    field.set(null, null)
+    val loader1 = SharedCoil.get(ctx)
+    val loader2 = SharedCoil.get(ctx)
+    assertSame(loader1, loader2)
   }
 
   // ---------- Cleanup between tests to prevent cross-test flakiness ----------

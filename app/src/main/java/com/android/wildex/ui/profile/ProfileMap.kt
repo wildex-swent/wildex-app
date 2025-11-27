@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,7 +25,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
@@ -56,6 +59,12 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
   val context = LocalContext.current
   val styleUri = context.getString(R.string.map_style)
   val styleImportId = context.getString(R.string.map_standard_import)
+  val isDark =
+      when (AppTheme.appearanceMode) {
+        AppearanceMode.DARK -> true
+        AppearanceMode.LIGHT -> false
+        AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+      }
   ElevatedCard(
       modifier =
           Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag(ProfileScreenTestTags.MAP),
@@ -74,7 +83,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
               pins = pins,
               styleUri = styleUri,
               styleImportId = styleImportId,
-              isDark = isSystemInDarkTheme(),
+              isDark = isDark,
               context = context,
           )
           Button(
@@ -86,7 +95,10 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
                       contentColor = cs.onPrimary,
                   ),
           ) {
-            Text(text = LocalContext.current.getString(R.string.view_map))
+            Text(
+                text = LocalContext.current.getString(R.string.view_map),
+                style = typography.titleSmall,
+            )
           }
         }
   }

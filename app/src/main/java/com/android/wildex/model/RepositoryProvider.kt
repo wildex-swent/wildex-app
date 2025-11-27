@@ -11,6 +11,8 @@ import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepositoryFirestore
+import com.android.wildex.model.notification.NotificationRepository
+import com.android.wildex.model.notification.NotificationRepositoryFirestore
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.report.ReportRepositoryFirestore
 import com.android.wildex.model.social.CommentRepository
@@ -65,5 +67,7 @@ object RepositoryProvider {
   }
   val userFriendsRepository: UserFriendsRepository by lazy {
     UserFriendsRepositoryFirestore(Firebase.firestore)
+  val notificationRepository: NotificationRepository by lazy {
+    NotificationRepositoryFirestore(Firebase.firestore)
   }
 }

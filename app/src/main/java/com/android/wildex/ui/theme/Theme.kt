@@ -20,7 +20,7 @@ import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
     darkColorScheme(
-        primary = WildexBlue,
+        primary = WildexLightGreen,
         secondary = White,
         tertiary = White,
         background = WildexBlack,
@@ -38,7 +38,7 @@ private val DarkColorScheme =
 
 private val LightColorScheme =
     lightColorScheme(
-        primary = WildexGreen,
+        primary = WildexDarkGreen,
         secondary = WildexBlack,
         tertiary = WildexBlack,
         background = White,

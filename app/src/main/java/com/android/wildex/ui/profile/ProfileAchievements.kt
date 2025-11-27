@@ -73,6 +73,11 @@ fun ProfileAchievements(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .border(
+                    1.dp,
+                    cs.onBackground.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(14.dp),
+                )
                 .testTag(ProfileScreenTestTags.ACHIEVEMENTS),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
@@ -80,6 +85,12 @@ fun ProfileAchievements(
               modifier = Modifier.padding(12.dp),
               horizontalAlignment = Alignment.CenterHorizontally,
           ) {
+            Text(
+                text = LocalContext.current.getString(R.string.no_achievements),
+                color = cs.onBackground,
+                style = typography.titleMedium,
+            )
+            Spacer(Modifier.height(8.dp))
             if (ownerProfile) {
               Button(
                   onClick = { onAchievements(id) },
@@ -97,13 +108,6 @@ fun ProfileAchievements(
                 )
               }
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = LocalContext.current.getString(R.string.no_achievements),
-                color = cs.onBackground,
-                style = typography.titleMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
           }
         }
     return

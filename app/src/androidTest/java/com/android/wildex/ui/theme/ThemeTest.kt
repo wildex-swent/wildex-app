@@ -69,7 +69,7 @@ class ThemeTest {
     }
     composeRule.onNodeWithText("DarkThemeTest").assertIsDisplayed()
     // DarkColorScheme.primary = LightGreen (0xFFd4f7d7)
-    assertEquals(Color(0xFF5991f1), primarySeen)
+    assertEquals(Color(0xFF2fab68), primarySeen)
   }
 
   @Test

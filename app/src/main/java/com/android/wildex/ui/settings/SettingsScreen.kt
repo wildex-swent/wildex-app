@@ -145,7 +145,7 @@ fun SettingsScreen(
                   Modifier.padding(bottom = 16.dp)
                       .padding(horizontal = screenWidth / 25)
                       .fillMaxWidth()
-                      .border(2.dp, colorScheme.onBackground, RoundedCornerShape(16.dp))
+                      .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON),
           ) {
@@ -159,20 +159,20 @@ fun SettingsScreen(
           FloatingActionButton(
               onClick = { showDeletionValidation = true },
               shape = RoundedCornerShape(16.dp),
-              containerColor = colorScheme.onBackground,
+              containerColor = colorScheme.primary,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
                   Modifier.padding(bottom = 16.dp)
                       .padding(horizontal = screenWidth / 25)
                       .fillMaxWidth()
-                      .border(2.dp, colorScheme.onBackground, RoundedCornerShape(16.dp))
+                      .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON),
           ) {
             Text(
                 text = context.getString(R.string.delete_account),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.background,
+                color = colorScheme.onPrimary,
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
           }

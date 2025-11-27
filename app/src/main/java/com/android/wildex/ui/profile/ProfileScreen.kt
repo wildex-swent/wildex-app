@@ -6,6 +6,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -346,6 +347,11 @@ fun ProfileDescription(description: String = "Bio:...") {
           Modifier.padding(horizontal = 16.dp)
               .fillMaxWidth()
               .defaultMinSize(minHeight = 94.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
               .testTag(ProfileScreenTestTags.PROFILE_DESCRIPTION),
       shape = RoundedCornerShape(14.dp),
       colors = CardDefaults.elevatedCardColors(containerColor = cs.background),

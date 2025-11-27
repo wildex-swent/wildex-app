@@ -68,40 +68,42 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
       }
   ElevatedCard(
       modifier =
-          Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag(ProfileScreenTestTags.MAP),
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
+              .testTag(ProfileScreenTestTags.MAP),
       shape = RoundedCornerShape(14.dp),
       colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
         Column(
-            modifier =
-                Modifier.border(
-                        1.dp,
-                        cs.onBackground.copy(alpha = 0.08f),
-                        shape = RoundedCornerShape(14.dp),
-                    )
-                    .padding(12.dp)) {
-              StaticMiniMap(
-                  modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp)),
-                  pins = pins,
-                  styleUri = styleUri,
-                  styleImportId = styleImportId,
-                  isDark = isDark,
-                  context = context,
-              )
-              Button(
-                  onClick = { onMap(id) },
-                  modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = cs.onBackground,
-                          contentColor = cs.background,
-                      ),
-              ) {
-                Text(
-                    text = LocalContext.current.getString(R.string.view_map),
-                    style = typography.titleSmall,
-                )
-              }
-            }
+            modifier = Modifier.padding(12.dp),
+        ) {
+          StaticMiniMap(
+              modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp)),
+              pins = pins,
+              styleUri = styleUri,
+              styleImportId = styleImportId,
+              isDark = isDark,
+              context = context,
+          )
+          Button(
+              onClick = { onMap(id) },
+              modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = cs.onBackground,
+                      contentColor = cs.background,
+                  ),
+          ) {
+            Text(
+                text = LocalContext.current.getString(R.string.view_map),
+                style = typography.titleSmall,
+            )
+          }
+        }
       }
 }
 

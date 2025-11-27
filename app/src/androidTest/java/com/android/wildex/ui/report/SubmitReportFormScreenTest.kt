@@ -64,7 +64,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 
@@ -80,7 +79,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 
@@ -105,7 +103,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 
@@ -126,7 +123,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 
@@ -143,7 +139,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 
@@ -165,7 +160,6 @@ class SubmitReportFormScreenTest {
           onDescriptionChange = onDescriptionChange,
           onSubmitClick = onSubmitClick,
           context = context,
-          onGoBack = onGoBack,
       )
     }
 

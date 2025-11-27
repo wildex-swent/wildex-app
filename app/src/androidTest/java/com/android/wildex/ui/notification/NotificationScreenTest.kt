@@ -82,12 +82,15 @@ class NotificationScreenTest {
       MaterialTheme(colorScheme = lightColorScheme()) {
         NotificationItem(
             authorId = authorId,
-            notificationContentId = contentId,
-            notificationType = NotificationType.POST,
-            notificationTitle = longTitle,
-            notificationDescription = longDesc,
             onProfileClick = {},
-            onNotificationClick = { _, _ -> },
+            notificationItemData =
+                NotificationItemData(
+                    notificationContentId = contentId,
+                    notificationType = NotificationType.POST,
+                    notificationTitle = longTitle,
+                    notificationDescription = longDesc,
+                    onNotificationClick = { _, _ -> },
+                ),
             cs = MaterialTheme.colorScheme,
         )
       }

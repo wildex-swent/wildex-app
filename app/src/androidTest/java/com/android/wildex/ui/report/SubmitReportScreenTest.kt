@@ -2,6 +2,7 @@ package com.android.wildex.ui.report
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -9,8 +10,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -96,5 +99,19 @@ class SubmitReportScreenTest {
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE, useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun offlineScreenIsDisplayedWhenOffline() {
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      }
+    }
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 }

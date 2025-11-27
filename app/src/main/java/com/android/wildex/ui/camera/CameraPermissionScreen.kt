@@ -102,13 +102,13 @@ fun CameraPreviewScreenContent(
                 .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON),
     )
 
-      Text(
-          text = permissionRequestMsg,
-          style = typography.headlineMedium,
-          color = colorScheme.onBackground,
-          textAlign = TextAlign.Center,
-          modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1),
-      )
+    Text(
+        text = permissionRequestMsg,
+        style = typography.headlineMedium,
+        color = colorScheme.onBackground,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1),
+    )
 
     if (extraRequestMsg.isNotEmpty()) {
       Text(

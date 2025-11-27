@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -94,7 +95,10 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
                       contentColor = cs.onPrimary,
                   ),
           ) {
-            Text(text = LocalContext.current.getString(R.string.view_map))
+            Text(
+                text = LocalContext.current.getString(R.string.view_map),
+                style = typography.titleSmall,
+            )
           }
         }
   }

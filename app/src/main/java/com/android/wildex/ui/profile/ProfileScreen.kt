@@ -35,8 +35,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -296,11 +296,7 @@ fun ProfileImageAndName(
       Text(
           modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_NAME),
           text = "$name $surname",
-          style =
-              MaterialTheme.typography.titleMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  fontSize = 24.sp,
-              ),
+          style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
           color = cs.onBackground,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -308,11 +304,7 @@ fun ProfileImageAndName(
       Text(
           modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_USERNAME),
           text = username,
-          style =
-              MaterialTheme.typography.bodyMedium.copy(
-                  fontWeight = FontWeight.SemiBold,
-                  fontSize = 18.sp,
-              ),
+          style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
           color = cs.onBackground.copy(alpha = 0.85f),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -331,15 +323,11 @@ fun ProfileImageAndName(
             tint = cs.onSecondary,
             modifier = Modifier.size(16.dp),
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_COUNTRY),
             text = country,
-            style =
-                MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             color = cs.onSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -374,7 +362,7 @@ fun ProfileDescription(description: String = "Bio:...") {
         Text(
             "Bio",
             color = cs.secondary,
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+            style = typography.labelLarge,
         )
       }
       Spacer(Modifier.height(8.dp))
@@ -384,11 +372,7 @@ fun ProfileDescription(description: String = "Bio:...") {
           color = cs.onBackground,
           maxLines = 4,
           overflow = TextOverflow.Ellipsis,
-          style =
-              MaterialTheme.typography.bodyMedium.copy(
-                  fontWeight = FontWeight.Normal,
-                  fontSize = 14.sp,
-              ),
+          style = typography.bodyMedium,
       )
     }
   }
@@ -446,15 +430,13 @@ private fun ProfileStatCard(
         Text(
             text = value,
             color = contentColor,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 24.sp,
+            style = typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1,
         )
         Text(
             text = title,
             color = contentColor.copy(alpha = 0.95f),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
+            style = typography.labelLarge.copy(fontSize = 18.sp),
             maxLines = 1,
         )
       }
@@ -546,7 +528,9 @@ fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
       Text(
           text =
               if (requestSent) context.getString(R.string.cancel_friend_request)
-              else context.getString(R.string.send_friend_request))
+              else context.getString(R.string.send_friend_request),
+          style = typography.labelLarge,
+      )
     }
   }
 }

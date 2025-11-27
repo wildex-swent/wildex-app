@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -201,8 +202,8 @@ fun AchievementsTopBar(
         Text(
             modifier = Modifier.fillMaxWidth().testTag(AchievementsScreenTestTags.TOP_APP_BAR),
             text = context.getString(R.string.trophies),
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onBackground,
+            style = typography.titleLarge,
+            color = colorScheme.primary,
             textAlign = TextAlign.Center,
         )
       },
@@ -214,7 +215,7 @@ fun AchievementsTopBar(
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = context.getString(R.string.back),
-              tint = colorScheme.onBackground,
+              tint = colorScheme.primary,
           )
         }
       },
@@ -255,7 +256,7 @@ fun AchievementItem(achievement: Achievement, isUnlocked: Boolean, onAchievement
 
     Text(
         text = achievement.name,
-        style = MaterialTheme.typography.bodySmall,
+        style = typography.bodySmall,
         fontWeight = FontWeight.SemiBold,
         modifier =
             Modifier.padding(top = 4.dp).testTag(AchievementsScreenTestTags.ACHIEVEMENT_NAME),
@@ -288,14 +289,14 @@ fun AchievementDetailsDialog(achievement: Achievement, onClose: () -> Unit) {
           Spacer(modifier = Modifier.height(16.dp))
           Text(
               text = achievement.name,
-              style = MaterialTheme.typography.titleLarge,
+              style = typography.titleLarge,
               fontWeight = FontWeight.Bold,
               textAlign = TextAlign.Center,
           )
           Spacer(modifier = Modifier.height(12.dp))
           Text(
               text = achievement.description,
-              style = MaterialTheme.typography.bodyMedium,
+              style = typography.bodyMedium,
               textAlign = TextAlign.Center,
           )
         }
@@ -329,7 +330,7 @@ fun LabeledDivider(text: String, color: Color, thickness: Dp = 2.dp, padding: Dp
     Text(
         text = text,
         color = color,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
         modifier = Modifier.padding(horizontal = padding),
     )
     HorizontalDivider(modifier = Modifier.weight(4f).height(thickness), color = color)

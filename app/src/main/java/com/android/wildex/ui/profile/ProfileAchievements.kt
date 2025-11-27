@@ -33,8 +33,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -90,13 +90,17 @@ fun ProfileAchievements(
               modifier =
                   Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
           ) {
-            Text(LocalContext.current.getString(R.string.view_achievements))
+            Text(
+                text = LocalContext.current.getString(R.string.view_achievements),
+                style = typography.titleSmall,
+            )
           }
         }
         Spacer(Modifier.height(8.dp))
         Text(
             text = LocalContext.current.getString(R.string.no_achievements),
             color = cs.onBackground,
+            style = typography.titleMedium,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
       }
@@ -134,7 +138,10 @@ fun ProfileAchievements(
                         contentColor = cs.onBackground,
                     ),
             ) {
-              Text(LocalContext.current.getString(R.string.view_achievements))
+              Text(
+                  text = LocalContext.current.getString(R.string.view_achievements),
+                  style = typography.titleSmall,
+              )
             }
           }
 
@@ -229,7 +236,7 @@ private fun AchievementChip(a: Achievement) {
     Text(
         text = a.name,
         color = cs.onBackground,
-        style = MaterialTheme.typography.bodySmall,
+        style = typography.bodySmall,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )

@@ -4,6 +4,7 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.friendRequest.FriendRequest
+import com.android.wildex.model.notification.Notification
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -86,7 +87,7 @@ class DataClassesTest {
             reportId = "report1",
             imageURL = "https://example.com/report_pic",
             location = Location(50.0, 8.0, "Test Location"),
-            date = Timestamp.Companion.now(),
+            date = Timestamp.now(),
             description = "Test report",
             authorId = "user1",
             assigneeId = "user2",
@@ -108,8 +109,9 @@ class DataClassesTest {
             parentId = "post1",
             authorId = "user1",
             text = "This is a comment.",
-            date = Timestamp.Companion.now(),
-            tag = CommentTag.POST_COMMENT)
+            date = Timestamp.now(),
+            tag = CommentTag.POST_COMMENT,
+        )
 
     TestCase.assertEquals("comment1", comment.commentId)
     TestCase.assertEquals("post1", comment.parentId)
@@ -135,7 +137,7 @@ class DataClassesTest {
             pictureURL = "https://example.com/post_pic",
             location = Location(51.0, 9.0, "Post Location"),
             description = "Post description",
-            date = Timestamp.Companion.now(),
+            date = Timestamp.now(),
             animalId = "animal1",
             likesCount = 10,
             commentsCount = 5,
@@ -177,7 +179,7 @@ class DataClassesTest {
             bio = "Nature enthusiast",
             profilePictureURL = "https://example.com/user_pic",
             userType = UserType.REGULAR,
-            creationDate = Timestamp.Companion.now(),
+            creationDate = Timestamp.now(),
             country = "Switzerland",
         )
 
@@ -220,5 +222,30 @@ class DataClassesTest {
     TestCase.assertEquals(50.0, location.latitude)
     TestCase.assertEquals(8.0, location.longitude)
     TestCase.assertEquals("Test Location", location.name)
+  }
+
+  @Test
+  fun testNotification() {
+    val date = Timestamp.now()
+    val notification =
+        Notification(
+            notificationId = "notification1",
+            targetId = "user1",
+            authorId = "user2",
+            isRead = false,
+            title = "New Friend Request",
+            body = "John Doe has sent you a friend request.",
+            route = "route",
+            date = date,
+        )
+
+    TestCase.assertEquals("notification1", notification.notificationId)
+    TestCase.assertEquals("user1", notification.targetId)
+    TestCase.assertEquals("user2", notification.authorId)
+    TestCase.assertEquals(false, notification.isRead)
+    TestCase.assertEquals("New Friend Request", notification.title)
+    TestCase.assertEquals("John Doe has sent you a friend request.", notification.body)
+    TestCase.assertEquals("route", notification.route)
+    TestCase.assertEquals(date, notification.date)
   }
 }

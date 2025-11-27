@@ -10,13 +10,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 
@@ -31,7 +31,7 @@ fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {
               text =
                   if (isNewUser) LocalContext.current.getString(R.string.create_profile_title)
                   else LocalContext.current.getString(R.string.edit_profile_title),
-              fontWeight = FontWeight.SemiBold,
+              style = typography.titleLarge,
               color = cs.onBackground,
           )
         }

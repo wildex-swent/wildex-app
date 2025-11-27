@@ -14,7 +14,8 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -50,7 +51,11 @@ fun HomeTopBar(
             modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.TITLE),
             contentAlignment = Alignment.Center,
         ) {
-          Text(text = "Wildex", style = MaterialTheme.typography.titleLarge)
+          Text(
+              text = "Wildex",
+              style = typography.titleLarge,
+              color = colorScheme.primary,
+          )
         }
       },
       navigationIcon = {
@@ -61,7 +66,7 @@ fun HomeTopBar(
           Icon(
               imageVector = Icons.Outlined.Notifications,
               contentDescription = "Notifications",
-              tint = MaterialTheme.colorScheme.tertiary,
+              tint = colorScheme.tertiary,
               modifier = Modifier.size(30.dp))
         }
       },
@@ -78,8 +83,8 @@ fun HomeTopBar(
       },
       colors =
           TopAppBarDefaults.topAppBarColors(
-              titleContentColor = MaterialTheme.colorScheme.primary,
-              navigationIconContentColor = MaterialTheme.colorScheme.primary,
+              titleContentColor = colorScheme.primary,
+              navigationIconContentColor = colorScheme.primary,
           ),
   )
 }

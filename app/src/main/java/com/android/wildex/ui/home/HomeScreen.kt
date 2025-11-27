@@ -42,6 +42,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -65,7 +67,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
@@ -172,16 +173,14 @@ fun NoPostsView() {
     Icon(
         painter = painterResource(R.drawable.nothing_found),
         contentDescription = "Nothing Found",
-        tint = MaterialTheme.colorScheme.primary,
+        tint = colorScheme.primary,
         modifier = Modifier.size(96.dp).testTag(HomeScreenTestTags.NO_POST_ICON),
     )
     Spacer(Modifier.height(12.dp))
     Text(
         text = LocalContext.current.getString(R.string.no_nearby_posts),
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        color = colorScheme.primary,
+        style = typography.titleLarge,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
@@ -232,7 +231,7 @@ fun PostItem(
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit
 ) {
-  val colorScheme = MaterialTheme.colorScheme
+  val colorScheme = colorScheme
   val post = postState.post
   val author = postState.author
   val animalName = postState.animalName
@@ -326,32 +325,45 @@ private fun PostHeader(
           modifier = Modifier.fillMaxWidth(),
       ) {
         Text(
-            text =
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    .format(post.date.toDate()),
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.tertiary,
+            text = "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
+            style = typography.titleSmall,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        if (post.location?.name?.isNotBlank() == true) {
-          Row(
-              modifier =
-                  Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
-              verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location",
-                modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-                tint = colorScheme.tertiary,
-            )
-            Spacer(Modifier.width(2.dp))
-            Text(
-                text = post.location.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = colorScheme.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+          Text(
+              text =
+                  SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                      .format(post.date.toDate()),
+              style = typography.labelSmall,
+              color = colorScheme.tertiary,
+          )
+          if (post.location?.name?.isNotBlank() == true) {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Icon(
+                  imageVector = Icons.Default.LocationOn,
+                  contentDescription = "Location",
+                  modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+                  tint = colorScheme.tertiary,
+              )
+              Spacer(Modifier.width(2.dp))
+              Text(
+                  text = post.location.name,
+                  style = typography.labelMedium,
+                  color = colorScheme.tertiary,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+              )
+            }
           }
         }
       }
@@ -447,20 +459,55 @@ private fun PostActions(
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(
-          imageVector = Icons.AutoMirrored.Filled.Comment,
-          contentDescription = "Comments",
-          modifier = Modifier.size(20.dp),
-          tint = colorScheme.onBackground,
-      )
-      Spacer(Modifier.width(6.dp))
-      Text(
-          text = commentText(post.commentsCount),
-          style = MaterialTheme.typography.bodyMedium,
-          color = colorScheme.onBackground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-      )
+      // Likes
+      Row(
+          modifier =
+              Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
+                  onPostLike(post.postId)
+              },
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Icon(
+            imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = "Likes",
+            modifier = Modifier.size(20.dp),
+            tint = if (liked) colorScheme.tertiary else colorScheme.onBackground,
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = likeText(likeCount),
+            style = typography.bodyMedium,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
+
+      Spacer(Modifier.width(15.dp))
+
+      // Comments
+      Row(
+          modifier =
+              Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
+                onPostClick(post.postId)
+              },
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Comment,
+            contentDescription = "Comments",
+            modifier = Modifier.size(20.dp),
+            tint = colorScheme.onBackground,
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = commentText(post.commentsCount),
+            style = typography.bodyMedium,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
     }
   }
 }

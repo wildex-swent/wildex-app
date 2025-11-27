@@ -20,8 +20,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +74,7 @@ fun SubmitReportFormScreen(
 
         Text(
             text = context.getString(R.string.submit_rescue_alert),
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             color = colorScheme.primary,
         )
 
@@ -120,7 +120,12 @@ fun SubmitReportFormScreen(
         OutlinedTextField(
             value = uiState.description,
             onValueChange = onDescriptionChange,
-            label = { Text(context.getString(R.string.description)) },
+            label = {
+              Text(
+                  text = context.getString(R.string.description),
+                  style = typography.bodyMedium,
+              )
+            },
             modifier =
                 Modifier.fillMaxWidth(0.9f)
                     .height(100.dp)
@@ -144,6 +149,7 @@ fun SubmitReportFormScreen(
                   if (uiState.isSubmitting) context.getString(R.string.submitting)
                   else context.getString(R.string.submitted),
               color = Color.White,
+              style = typography.bodyMedium,
               modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
           )
         }

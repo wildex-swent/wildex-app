@@ -18,8 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
@@ -667,6 +665,13 @@ fun AppearanceModeOption(
   }
 }
 
+/**
+ * Displays the text for the appearance mode option.
+ *
+ * @param option The name of the option.
+ * @param index The index of the option.
+ * @param selectedIndex The selected index.
+ */
 @Composable
 private fun AppearanceModeOptionText(option: String, index: Int, selectedIndex: Int) {
   Spacer(modifier = Modifier.width(2.dp))

@@ -155,6 +155,15 @@ fun SubmitReportScreen(
   }
 }
 
+/**
+ * Screen displaying the Submit Report Screen.
+ *
+ * @param hasLocationPermission True if there's access to the location, false otherwise.
+ * @param locationRequested True if the location is requested, false otherwise.
+ * @param viewModel The viewmodel of the screen.
+ * @param locationClient The location of the client.
+ * @param context The context.
+ */
 @Composable
 private fun fetchLocation(
     hasLocationPermission: Boolean,

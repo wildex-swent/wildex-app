@@ -293,6 +293,15 @@ fun PostItem(
   }
 }
 
+/**
+ * Displays a post's header.
+ *
+ * @param post The post whose header is to be displayed.
+ * @param author The author of the post.
+ * @param animalName The name of the animal appearing on the post.
+ * @param colorScheme The colorscheme to follow.
+ * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's author.
+ */
 @Composable
 private fun PostHeader(
     post: Post,
@@ -362,6 +371,16 @@ private fun PostHeader(
   }
 }
 
+/**
+ * Displays a post's image.
+ *
+ * @param post The post whose image is to be displayed.
+ * @param liked True if the post is liked by the user, false otherwise.
+ * @param heartScale the scale of the heart to display.
+ * @param colorScheme The colorscheme to follow.
+ * @param onPostClick The action when the user clicks on the post, to see its details.
+ * @param onToggleLike The action when the user clicks on the heart, to like it.
+ */
 @Composable
 private fun PostImage(
     post: Post,
@@ -404,6 +423,16 @@ private fun PostImage(
   }
 }
 
+/**
+ * Displays a post's actions.
+ *
+ * @param post The post whose actions are to be displayed.
+ * @param liked True if the post is liked by the user, false otherwise.
+ * @param likeCount the number of likes the post has.
+ * @param colorScheme The colorscheme to follow.
+ * @param onToggleLike The action when the user clicks on the heart, to like it.
+ * @param onPostClick The action when the user clicks on the post, to see its details.
+ */
 @Composable
 private fun PostActions(
     post: Post,

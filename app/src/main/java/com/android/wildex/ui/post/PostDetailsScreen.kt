@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,6 +60,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
@@ -67,6 +70,7 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags.testTagForProfilePicture
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object PostDetailsScreenTestTags {
   fun testTagForProfilePicture(profileId: String, role: String = ""): String {
@@ -84,8 +88,10 @@ fun PostDetailsScreen(
     onGoBack: () -> Unit = {},
     onProfile: (Id) -> Unit = {},
 ) {
-  val uiState by postDetailsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val uiState by postDetailsScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
 
@@ -109,58 +115,79 @@ fun PostDetailsScreen(
             postDetailsScreenViewModel = postDetailsScreenViewModel,
         )
       },
-  ) { pd ->
-    val pullState = rememberPullToRefreshState()
+  ) { innerPadding ->
+    if (isOnline && LocalConnectivityObserver.current) {
+      PostDetailsScreenContent(
+          innerPadding = innerPadding,
+          uiState = uiState,
+          postDetailsScreenViewModel = postDetailsScreenViewModel,
+          postId = postId,
+          onProfile = onProfile,
+      )
+    } else {
+      OfflineScreen(innerPadding = innerPadding)
+    }
+  }
+}
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        else -> {
+@Composable
+fun PostDetailsScreenContent(
+    innerPadding: PaddingValues,
+    uiState: PostDetailsUIState,
+    postDetailsScreenViewModel: PostDetailsScreenViewModel,
+    postId: Id,
+    onProfile: (Id) -> Unit,
+) {
+  val pullState = rememberPullToRefreshState()
 
-          Box(Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-              // HERO IMAGE with soft gradient top and bottom
-              item { PostPicture(uiState.pictureURL) }
+  PullToRefreshBox(
+      state = pullState,
+      isRefreshing = uiState.isRefreshing,
+      modifier = Modifier.padding(innerPadding),
+      onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
+  ) {
+    when {
+      uiState.isError -> LoadingFail()
+      uiState.isLoading -> LoadingScreen()
+      else -> {
+        Box(Modifier.fillMaxSize()) {
+          LazyColumn(
+              modifier = Modifier.fillMaxSize(),
+              verticalArrangement = Arrangement.spacedBy(0.dp),
+          ) {
+            // HERO IMAGE with soft gradient top and bottom
+            item { PostPicture(uiState.pictureURL) }
 
-              // CONTENT SHEET (rounded top), contains info + description + "Comments" header
-              item {
-                Surface(
-                    color = colorScheme.background,
-                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                  Column(Modifier.fillMaxWidth()) {
-                    // make the sheet overlap a bit with the image to look continuous
-                    Spacer(Modifier.height(8.dp))
+            // CONTENT SHEET (rounded top), contains info + description + "Comments" header
+            item {
+              Surface(
+                  color = colorScheme.background,
+                  shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                  modifier = Modifier.fillMaxWidth(),
+              ) {
+                Column(Modifier.fillMaxWidth()) {
+                  // make the sheet overlap a bit with the image to look continuous
+                  Spacer(Modifier.height(8.dp))
 
-                    LocationSpeciesLikeBar(
-                        location = uiState.location,
-                        species = uiState.animalSpecies,
-                        likedByCurrentUser = uiState.likedByCurrentUser,
-                        likesCount = uiState.likesCount,
-                        onLike = { postDetailsScreenViewModel.addLike() },
-                        onUnlike = { postDetailsScreenViewModel.removeLike() },
-                    )
+                  LocationSpeciesLikeBar(
+                      location = uiState.location,
+                      species = uiState.animalSpecies,
+                      likedByCurrentUser = uiState.likedByCurrentUser,
+                      likesCount = uiState.likesCount,
+                      onLike = { postDetailsScreenViewModel.addLike() },
+                      onUnlike = { postDetailsScreenViewModel.removeLike() },
+                  )
 
-                    // INFO BAR
-                    PostInfoBar(
-                        authorId = uiState.authorId,
-                        authorProfilePictureURL = uiState.authorProfilePictureURL,
-                        authorUserName = uiState.authorUsername,
-                        authorUserType = uiState.currentUserUserType,
-                        animalName = uiState.animalName,
-                        date = uiState.date,
-                        onProfile = onProfile,
-                    )
+                  // INFO BAR
+                  PostInfoBar(
+                      authorId = uiState.authorId,
+                      authorProfilePictureURL = uiState.authorProfilePictureURL,
+                      authorUserName = uiState.authorUsername,
+                      authorUserType = uiState.currentUserUserType,
+                      animalName = uiState.animalName,
+                      date = uiState.date,
+                      onProfile = onProfile,
+                  )
 
                     // DESCRIPTION – clean card with subtle border
                     if (uiState.description.isNotBlank()) {
@@ -194,14 +221,13 @@ fun PostDetailsScreen(
                 }
               }
 
-              // COMMENTS LIST – full-width, airy rows
-              items(uiState.commentsUI) { commentUI ->
-                Comment(commentUI = commentUI, onProfile = onProfile)
-              }
-
-              // Spacer so the last comment clears the bottom input
-              item { Spacer(Modifier.height(96.dp)) }
+            // COMMENTS LIST – full-width, airy rows
+            items(uiState.commentsUI) { commentUI ->
+              Comment(commentUI = commentUI, onProfile = onProfile)
             }
+
+            // Spacer so the last comment clears the bottom input
+            item { Spacer(Modifier.height(96.dp)) }
           }
         }
       }

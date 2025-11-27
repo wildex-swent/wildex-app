@@ -1,5 +1,6 @@
 package com.android.wildex.ui.post
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasContentDescription
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
@@ -25,6 +27,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -157,7 +160,8 @@ class PostDetailsScreenTest {
             authorId = commenter1.userId,
             text = "Amazing shot!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
     commentRepository.addComment(
         Comment(
             commentId = "comment2",
@@ -165,7 +169,8 @@ class PostDetailsScreenTest {
             authorId = commenter2.userId,
             text = "Love this!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
 
     val animal =
         Animal(
@@ -356,5 +361,24 @@ class PostDetailsScreenTest {
     composeRule
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun offlineScreenIsDisplayedWhenOffline() {
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
+    }
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 }

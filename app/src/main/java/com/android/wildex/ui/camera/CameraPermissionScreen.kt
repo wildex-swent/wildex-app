@@ -25,8 +25,12 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +38,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object CameraPermissionScreenTestTags {
   const val CAMERA_PERMISSION_CAMERA_ICON = "camera_permission_camera_icon"
@@ -51,24 +58,49 @@ fun CameraPermissionScreen(
     permissionRequestMsg: String = "",
     extraRequestMsg: String = ""
 ) {
+  val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+
   Box(
       modifier = modifier.fillMaxSize().background(colorScheme.background),
       contentAlignment = Alignment.Center,
   ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        modifier = Modifier.padding(32.dp),
-    ) {
-      // Sad camera icon
-      Icon(
-          imageVector = Icons.Default.CameraAlt,
-          contentDescription = null,
-          tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-          modifier =
-              Modifier.size(120.dp)
-                  .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON),
+    if (isOnline) {
+      CameraPreviewScreenContent(
+          onRequestPermission = onRequestPermission,
+          onUploadClick = onUploadClick,
+          permissionRequestMsg = permissionRequestMsg,
+          extraRequestMsg = extraRequestMsg,
       )
+    } else {
+      OfflineScreen()
+    }
+  }
+}
+
+@Composable
+fun CameraPreviewScreenContent(
+    permissionRequestMsg: String,
+    extraRequestMsg: String,
+    onRequestPermission: () -> Unit,
+    onUploadClick: () -> Unit,
+) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(24.dp),
+      modifier = Modifier.padding(32.dp),
+  ) {
+    // Sad camera icon
+    Icon(
+        imageVector = Icons.Default.CameraAlt,
+        contentDescription = null,
+        tint = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        modifier =
+            Modifier.size(120.dp)
+                .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_CAMERA_ICON),
+    )
 
       Text(
           text = permissionRequestMsg,
@@ -78,68 +110,67 @@ fun CameraPermissionScreen(
           modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_1),
       )
 
-      if (extraRequestMsg.isNotEmpty()) {
-        Text(
-            text = extraRequestMsg,
-            style = typography.bodyLarge,
-            color = colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp,
-            modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
-        )
-      }
+    if (extraRequestMsg.isNotEmpty()) {
+      Text(
+          text = extraRequestMsg,
+          style = typography.bodyLarge,
+          color = colorScheme.onSurfaceVariant,
+          textAlign = TextAlign.Center,
+          lineHeight = 24.sp,
+          modifier = Modifier.testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_MESSAGE_2),
+      )
+    }
 
-      Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(16.dp))
 
-      // Request permission button
-      Button(
-          onClick = onRequestPermission,
-          modifier =
-              Modifier.fillMaxWidth()
-                  .height(56.dp)
-                  .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_BUTTON),
-          colors =
-              ButtonDefaults.buttonColors(
-                  containerColor = colorScheme.primary,
-                  contentColor = colorScheme.onPrimary,
-              ),
-          shape = RoundedCornerShape(16.dp),
-      ) {
-        Icon(
-            imageVector = Icons.Default.Lock,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.request_permission_button),
-            style = typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-      }
+    // Request permission button
+    Button(
+        onClick = onRequestPermission,
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(56.dp)
+                .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_BUTTON),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = colorScheme.primary,
+                contentColor = colorScheme.onPrimary,
+            ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Default.Lock,
+          contentDescription = null,
+          modifier = Modifier.size(20.dp),
+      )
+      Spacer(modifier = Modifier.width(8.dp))
+      Text(
+          text = stringResource(R.string.request_permission_button),
+          style = typography.titleMedium,
+          fontWeight = FontWeight.SemiBold,
+      )
+    }
 
-      // Upload button
-      OutlinedButton(
-          onClick = onUploadClick,
-          modifier =
-              Modifier.fillMaxWidth()
-                  .height(56.dp)
-                  .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON),
-          border = BorderStroke(2.dp, colorScheme.outline),
-          shape = RoundedCornerShape(16.dp),
-      ) {
-        Icon(
-            imageVector = Icons.Default.Upload,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.upload_button),
-            style = typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-      }
+    // Upload button
+    OutlinedButton(
+        onClick = onUploadClick,
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(56.dp)
+                .testTag(CameraPermissionScreenTestTags.CAMERA_PERMISSION_UPLOAD_BUTTON),
+        border = BorderStroke(2.dp, colorScheme.outline),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Default.Upload,
+          contentDescription = null,
+          modifier = Modifier.size(20.dp),
+      )
+      Spacer(modifier = Modifier.width(8.dp))
+      Text(
+          text = stringResource(R.string.upload_button),
+          style = typography.titleMedium,
+          fontWeight = FontWeight.SemiBold,
+      )
     }
   }
 }

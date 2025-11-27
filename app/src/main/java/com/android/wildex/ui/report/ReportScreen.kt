@@ -1,5 +1,6 @@
 package com.android.wildex.ui.report
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,12 +49,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
@@ -90,8 +95,11 @@ fun ReportScreen(
     onSubmitReportClick: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
 ) {
-  val uiState by reportScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val uiState by reportScreenViewModel.uiState.collectAsState()
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -114,7 +122,44 @@ fun ReportScreen(
         )
       },
   ) { innerPadding ->
-    val pullState = rememberPullToRefreshState()
+    if (isOnline) {
+      ReportScreenContent(
+          innerPadding = innerPadding,
+          uiState = uiState,
+          reportScreenViewModel = reportScreenViewModel,
+          context = context,
+          onProfileClick = onProfileClick,
+          onReportClick = onReportClick,
+          onSubmitReportClick = onSubmitReportClick,
+      )
+    } else {
+      OfflineScreen(innerPadding = innerPadding)
+    }
+  }
+}
+
+/**
+ * Displays the content of the report screen for when the user is online.
+ *
+ * @param innerPadding The padding values for the inner content.
+ * @param uiState The UI state of the report screen.
+ * @param viewModel The view model for the report screen.
+ * @param context The context of the application.
+ * @param onProfileClick The function to be called when a profile picture is clicked.
+ * @param onReportClick The function to be called when a report is clicked.
+ * @param onSubmitReportClick The function to be called when the submit report button is clicked.
+ */
+@Composable
+fun ReportScreenContent(
+    innerPadding: PaddingValues,
+    uiState: ReportScreenUIState,
+    reportScreenViewModel: ReportScreenViewModel,
+    context: Context,
+    onProfileClick: (Id) -> Unit,
+    onReportClick: (Id) -> Unit,
+    onSubmitReportClick: () -> Unit,
+) {
+  val pullState = rememberPullToRefreshState()
 
     Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
       PullToRefreshBox(

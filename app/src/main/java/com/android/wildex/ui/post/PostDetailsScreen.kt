@@ -190,37 +190,37 @@ fun PostDetailsScreenContent(
                       onProfile = onProfile,
                   )
 
-                    // DESCRIPTION – clean card with subtle border
-                    if (uiState.description.isNotBlank()) {
-                      Card(
-                          modifier =
-                              Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                          shape = RoundedCornerShape(32.dp),
-                          colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                          border = BorderStroke(1.dp, colorScheme.onBackground),
-                          elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                      ) {
-                        Text(
-                            text = uiState.description,
-                            color = colorScheme.onBackground,
-                            modifier = Modifier.padding(14.dp),
-                            style = typography.bodyMedium,
-                        )
-                      }
-                    }
-                    // COMMENTS HEADER
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                  // DESCRIPTION – clean card with subtle border
+                  if (uiState.description.isNotBlank()) {
+                    Card(
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(32.dp),
+                        colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+                        border = BorderStroke(1.dp, colorScheme.onBackground),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    ) {
                       Text(
-                          text =
-                              if (uiState.commentsUI.size == 1) "1 Comment"
-                              else "${uiState.commentsUI.size} Comments",
-                          style = typography.titleSmall,
+                          text = uiState.description,
                           color = colorScheme.onBackground,
+                          modifier = Modifier.padding(14.dp),
+                          style = typography.bodyMedium,
                       )
                     }
                   }
+                  // COMMENTS HEADER
+                  Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text =
+                            if (uiState.commentsUI.size == 1) "1 Comment"
+                            else "${uiState.commentsUI.size} Comments",
+                        style = typography.titleSmall,
+                        color = colorScheme.onBackground,
+                    )
+                  }
                 }
               }
+            }
 
             // COMMENTS LIST – full-width, airy rows
             items(uiState.commentsUI) { commentUI ->

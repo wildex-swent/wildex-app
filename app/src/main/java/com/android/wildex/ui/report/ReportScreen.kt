@@ -43,6 +43,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -160,51 +161,50 @@ fun ReportScreenContent(
 ) {
   val pullState = rememberPullToRefreshState()
 
-    Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-      PullToRefreshBox(
-          state = pullState,
-          isRefreshing = uiState.isRefreshing,
-          onRefresh = { reportScreenViewModel.refreshUIState() },
-      ) {
-        when {
-          uiState.isError -> LoadingFail()
-          uiState.isLoading -> LoadingScreen()
-          uiState.reports.isEmpty() -> NoReportsView()
-          else -> {
-            ReportsView(
-                reports = uiState.reports,
-                userId = uiState.currentUser.userId,
-                username = uiState.currentUser.username,
-                userType = uiState.currentUser.userType,
-                onProfileClick = onProfileClick,
-                onReportClick = onReportClick,
-                cancelReport = reportScreenViewModel::cancelReport,
-                selfAssignReport = reportScreenViewModel::selfAssignReport,
-                resolveReport = reportScreenViewModel::resolveReport,
-                unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
-            )
-          }
+  Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = { reportScreenViewModel.refreshUIState() },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.reports.isEmpty() -> NoReportsView()
+        else -> {
+          ReportsView(
+              reports = uiState.reports,
+              userId = uiState.currentUser.userId,
+              username = uiState.currentUser.username,
+              userType = uiState.currentUser.userType,
+              onProfileClick = onProfileClick,
+              onReportClick = onReportClick,
+              cancelReport = reportScreenViewModel::cancelReport,
+              selfAssignReport = reportScreenViewModel::selfAssignReport,
+              resolveReport = reportScreenViewModel::resolveReport,
+              unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+          )
         }
       }
-      // Submit Report button
-      Card(
-          shape = RoundedCornerShape(8.dp),
-          colors = CardDefaults.cardColors(containerColor = colorScheme.onBackground),
-          border = BorderStroke(width = 8.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
-          elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-          modifier =
-              Modifier.align(Alignment.BottomCenter)
-                  .padding(horizontal = 16.dp, vertical = 16.dp)
-                  .clickable { onSubmitReportClick() }
-                  .testTag(ReportScreenTestTags.SUBMIT_REPORT),
-      ) {
-        Text(
-            text = context.getString(R.string.submit_report),
-            color = colorScheme.background,
-            style = typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-        )
-      }
+    }
+    // Submit Report button
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.onBackground),
+        border = BorderStroke(width = 8.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        modifier =
+            Modifier.align(Alignment.BottomCenter)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .clickable { onSubmitReportClick() }
+                .testTag(ReportScreenTestTags.SUBMIT_REPORT),
+    ) {
+      Text(
+          text = context.getString(R.string.submit_report),
+          color = colorScheme.background,
+          style = typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
+          modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+      )
     }
   }
 }

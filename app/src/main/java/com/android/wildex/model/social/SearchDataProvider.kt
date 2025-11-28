@@ -8,7 +8,7 @@ class SearchDataProvider(
   val dataNeedsUpdate = storage.updated
 
   fun getSearchData(): Map<String, String> {
-    if (cache == null) {
+    if (cache == null || dataNeedsUpdate.value) {
       cache = storage.read()
     }
     return cache!!

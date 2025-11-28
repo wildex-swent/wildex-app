@@ -116,6 +116,7 @@ fun AchievementsScreen(
       topBar = {
         if (!uiState.isLoading) {
           AchievementsTopBar(
+              isUserOwner = uiState.isUserOwner,
               onGoBack = onGoBack,
               context = context,
           )
@@ -188,12 +189,14 @@ fun AchievementsScreen(
  * Displays the title, a back button or notifications button depending on whether the user is
  * viewing their own profile, and the user's profile picture if they are the owner.
  *
+ * @param isUserOwner Whether the current user is viewing their own achievements.
  * @param onGoBack Callback invoked when the back button is pressed.
  * @param context The [Context] used to access string resources.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AchievementsTopBar(
+    isUserOwner: Boolean,
     onGoBack: () -> Unit,
     context: Context,
 ) {

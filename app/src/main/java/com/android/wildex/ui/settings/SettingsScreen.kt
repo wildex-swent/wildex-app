@@ -139,40 +139,40 @@ fun SettingsScreen(
           FloatingActionButton(
               onClick = { settingsScreenViewModel.signOut { onAccountDeleteOrSignOut() } },
               shape = RoundedCornerShape(16.dp),
-              containerColor = colorScheme.onTertiary,
+              containerColor = colorScheme.background,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
                   Modifier.padding(bottom = 16.dp)
                       .padding(horizontal = screenWidth / 25)
                       .fillMaxWidth()
-                      .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
+                      .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON),
           ) {
             Text(
                 text = context.getString(R.string.sign_out),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.tertiary,
+                color = colorScheme.onBackground,
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
           }
           FloatingActionButton(
               onClick = { showDeletionValidation = true },
               shape = RoundedCornerShape(16.dp),
-              containerColor = colorScheme.tertiary,
+              containerColor = colorScheme.primary,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
                   Modifier.padding(bottom = 16.dp)
                       .padding(horizontal = screenWidth / 25)
                       .fillMaxWidth()
-                      .border(2.dp, colorScheme.tertiary, RoundedCornerShape(16.dp))
+                      .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON),
           ) {
             Text(
                 text = context.getString(R.string.delete_account),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.onTertiary,
+                color = colorScheme.onPrimary,
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
           }

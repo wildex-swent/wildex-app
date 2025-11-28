@@ -6,6 +6,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -314,13 +315,13 @@ fun ProfileImageAndName(
           verticalAlignment = Alignment.CenterVertically,
           modifier =
               Modifier.clip(RoundedCornerShape(20.dp))
-                  .background(cs.secondary)
+                  .background(cs.onBackground)
                   .padding(horizontal = 10.dp, vertical = 6.dp),
       ) {
         Icon(
             imageVector = Icons.Filled.Place,
             contentDescription = "Country Icon",
-            tint = cs.onSecondary,
+            tint = cs.background,
             modifier = Modifier.size(16.dp),
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -328,7 +329,7 @@ fun ProfileImageAndName(
             modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_COUNTRY),
             text = country,
             style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = cs.onSecondary,
+            color = cs.background,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -346,6 +347,11 @@ fun ProfileDescription(description: String = "Bio:...") {
           Modifier.padding(horizontal = 16.dp)
               .fillMaxWidth()
               .defaultMinSize(minHeight = 94.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
               .testTag(ProfileScreenTestTags.PROFILE_DESCRIPTION),
       shape = RoundedCornerShape(14.dp),
       colors = CardDefaults.elevatedCardColors(containerColor = cs.background),
@@ -355,13 +361,13 @@ fun ProfileDescription(description: String = "Bio:...") {
         Icon(
             Icons.Filled.Info,
             contentDescription = "Bio",
-            tint = cs.secondary,
+            tint = cs.onBackground,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
         Text(
             "Bio",
-            color = cs.secondary,
+            color = cs.onBackground,
             style = typography.labelLarge,
         )
       }
@@ -455,13 +461,13 @@ fun ProfileAnimals(
   val cs = colorScheme
   ProfileStatCard(
       modifier = modifier,
-      containerColor = cs.primary,
-      contentColor = cs.onPrimary,
+      containerColor = cs.onBackground,
+      contentColor = cs.background,
       icon = {
         Icon(
             imageVector = Icons.Filled.Pets,
             contentDescription = "Animals Icon",
-            tint = cs.onPrimary,
+            tint = cs.background,
             modifier = Modifier.size(32.dp),
         )
       },
@@ -483,13 +489,13 @@ fun ProfileFriends(
   val cs = colorScheme
   ProfileStatCard(
       modifier = modifier,
-      containerColor = cs.tertiary,
-      contentColor = cs.onTertiary,
+      containerColor = cs.onBackground,
+      contentColor = cs.background,
       icon = {
         Icon(
             imageVector = Icons.Filled.Person,
             contentDescription = "Friends Icon",
-            tint = cs.onTertiary,
+            tint = cs.background,
             modifier = Modifier.size(32.dp),
         )
       },
@@ -520,8 +526,8 @@ fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
         },
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = if (!requestSent) cs.secondary else cs.tertiary,
-                contentColor = cs.onSecondary,
+                containerColor = if (!requestSent) cs.primary else cs.onBackground,
+                contentColor = cs.background,
             ),
         shape = RoundedCornerShape(10.dp),
     ) {

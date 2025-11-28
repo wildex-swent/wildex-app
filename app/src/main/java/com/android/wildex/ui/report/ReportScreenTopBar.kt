@@ -54,7 +54,7 @@ fun ReportScreenTopBar(
                       LocalContext.current.getString(R.string.report_title_professional)
                 },
             textAlign = TextAlign.Center,
-            color = colorScheme.primary,
+            color = colorScheme.onBackground,
             style = typography.titleLarge)
       },
       navigationIcon = {
@@ -64,7 +64,7 @@ fun ReportScreenTopBar(
               Icon(
                   imageVector = Icons.Outlined.Notifications,
                   contentDescription = "Notifications",
-                  tint = colorScheme.tertiary,
+                  tint = colorScheme.onBackground,
                   modifier = Modifier.size(30.dp))
             }
       },

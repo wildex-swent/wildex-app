@@ -54,7 +54,6 @@ fun HomeTopBar(
           Text(
               text = "Wildex",
               style = typography.titleLarge,
-              color = colorScheme.primary,
           )
         }
       },
@@ -66,7 +65,7 @@ fun HomeTopBar(
           Icon(
               imageVector = Icons.Outlined.Notifications,
               contentDescription = "Notifications",
-              tint = colorScheme.tertiary,
+              tint = colorScheme.onBackground,
               modifier = Modifier.size(30.dp))
         }
       },
@@ -83,8 +82,8 @@ fun HomeTopBar(
       },
       colors =
           TopAppBarDefaults.topAppBarColors(
-              titleContentColor = colorScheme.primary,
-              navigationIconContentColor = colorScheme.primary,
+              titleContentColor = colorScheme.onBackground,
+              navigationIconContentColor = colorScheme.onBackground,
           ),
   )
 }

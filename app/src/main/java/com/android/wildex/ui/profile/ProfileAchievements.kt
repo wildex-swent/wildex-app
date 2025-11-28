@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,39 +73,43 @@ fun ProfileAchievements(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .border(
+                    1.dp,
+                    cs.onBackground.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(14.dp),
+                )
                 .testTag(ProfileScreenTestTags.ACHIEVEMENTS),
         shape = RoundedCornerShape(14.dp),
-    ) {
-      Column(
-          modifier = Modifier.padding(12.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        if (ownerProfile) {
-          Button(
-              onClick = { onAchievements(id) },
-              colors =
-                  ButtonDefaults.buttonColors(
-                      containerColor = cs.background,
-                      contentColor = cs.onBackground,
-                  ),
-              modifier =
-                  Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+        colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
+          Column(
+              modifier = Modifier.padding(12.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
           ) {
             Text(
-                text = LocalContext.current.getString(R.string.view_achievements),
-                style = typography.titleSmall,
+                text = LocalContext.current.getString(R.string.no_achievements),
+                color = cs.onBackground,
+                style = typography.titleMedium,
             )
+            Spacer(Modifier.height(8.dp))
+            if (ownerProfile) {
+              Button(
+                  onClick = { onAchievements(id) },
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = cs.onBackground,
+                          contentColor = cs.background,
+                      ),
+                  modifier =
+                      Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+              ) {
+                Text(
+                    text = LocalContext.current.getString(R.string.view_achievements),
+                    style = typography.titleSmall,
+                )
+              }
+            }
           }
         }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_achievements),
-            color = cs.onBackground,
-            style = typography.titleMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-      }
-    }
     return
   }
 
@@ -150,7 +155,7 @@ fun ProfileAchievements(
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             ArrowButton(
                 isLeft = true,
-                tint = cs.secondary,
+                tint = cs.onBackground,
                 onClick = {
                   navDirection = -1
                   startIndex = wrap(startIndex - 1)
@@ -203,7 +208,7 @@ fun ProfileAchievements(
 
             ArrowButton(
                 isLeft = false,
-                tint = cs.secondary,
+                tint = cs.onBackground,
                 onClick = {
                   navDirection = +1
                   startIndex = wrap(startIndex + 1)

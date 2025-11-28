@@ -133,7 +133,7 @@ fun AchievementsScreen(
                   Spacer(modifier = Modifier.height(8.dp))
                   LabeledDivider(
                       text = context.getString(R.string.unlocked_achievements),
-                      color = colorScheme.primary,
+                      color = colorScheme.onBackground,
                   )
                   LazyVerticalGrid(
                       columns = GridCells.Fixed(3),
@@ -154,7 +154,7 @@ fun AchievementsScreen(
                   Spacer(modifier = Modifier.height(24.dp))
                   LabeledDivider(
                       text = context.getString(R.string.to_discover),
-                      color = colorScheme.primary,
+                      color = colorScheme.onBackground,
                   )
                   LazyVerticalGrid(
                       columns = GridCells.Fixed(3),

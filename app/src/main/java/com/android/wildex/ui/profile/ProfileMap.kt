@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -67,17 +68,19 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
       }
   ElevatedCard(
       modifier =
-          Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag(ProfileScreenTestTags.MAP),
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
+              .testTag(ProfileScreenTestTags.MAP),
       shape = RoundedCornerShape(14.dp),
-  ) {
-    Column(
-        modifier =
-            Modifier.border(
-                    1.dp,
-                    cs.onBackground.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(14.dp),
-                )
-                .padding(12.dp)) {
+      colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+        ) {
           StaticMiniMap(
               modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp)),
               pins = pins,
@@ -91,8 +94,8 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
               modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
               colors =
                   ButtonDefaults.buttonColors(
-                      containerColor = cs.primary,
-                      contentColor = cs.onPrimary,
+                      containerColor = cs.onBackground,
+                      contentColor = cs.background,
                   ),
           ) {
             Text(
@@ -101,7 +104,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
             )
           }
         }
-  }
+      }
 }
 
 /**

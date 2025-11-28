@@ -37,11 +37,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.utils.ClickableProfilePicture
+
+object SearchBarTestTags{
+  const val TRAILING_ICON = "trailing_icon"
+  const val SEARCH_BAR = "search_bar"
+  const val INPUT_FIELD = "input_field"
+  const val LEADING_ICON = "leading_icon"
+  fun testTagForResult(userId: Id) = "result_$userId"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,11 +92,13 @@ fun UserSearchBar(
       ),
       shape = RoundedCornerShape(8.dp),
       modifier = Modifier
+        .testTag(SearchBarTestTags.SEARCH_BAR)
         .align(Alignment.TopCenter)
         .fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 5.dp),
       inputField = {
         SearchBarDefaults.InputField(
-          modifier = Modifier.height(screenHeight / 45),
+          modifier = Modifier.height(screenHeight / 45)
+            .testTag(SearchBarTestTags.INPUT_FIELD),
           colors = SearchBarDefaults.colors().inputFieldColors.copy(
             focusedTextColor = colorScheme.onBackground,
             unfocusedTextColor = colorScheme.onBackground,
@@ -109,7 +120,10 @@ fun UserSearchBar(
             if (!expanded){
               Icon(Icons.Default.Search, contentDescription = "Search")
             } else {
-              IconButton(onClick = { expanded = false }) {
+              IconButton(
+                modifier = Modifier.testTag(SearchBarTestTags.LEADING_ICON),
+                onClick = { expanded = false }
+              ) {
                 Icon(Icons.Default.ChevronLeft, contentDescription = "Go Back")
               }
             }
@@ -117,6 +131,7 @@ fun UserSearchBar(
           trailingIcon = {
             if (expanded){
               IconButton(
+                modifier = Modifier.testTag(SearchBarTestTags.TRAILING_ICON),
                 onClick = {textFieldState.edit { delete(0, textFieldState.text.length) }}
               ) {
                 Icon(Icons.Default.Clear, contentDescription = "Clear text")
@@ -143,6 +158,7 @@ fun UserSearchBar(
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             modifier = Modifier
+              .testTag(SearchBarTestTags.testTagForResult(user.userId))
               .clickable {
                 onResultClick(user.userId)
                 expanded = false

@@ -159,7 +159,8 @@ class PostDetailsScreenTest {
             authorId = commenter1.userId,
             text = "Amazing shot!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
     commentRepository.addComment(
         Comment(
             commentId = "comment2",
@@ -167,7 +168,8 @@ class PostDetailsScreenTest {
             authorId = commenter2.userId,
             text = "Love this!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
 
     val animal =
         Animal(
@@ -361,4 +363,23 @@ class PostDetailsScreenTest {
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
   }
+
+  //  @Test
+  //  fun offlineScreenIsDisplayedWhenOfflinePostDetailsScreen() {
+  //    composeRule.setContent {
+  //      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+  //        PostDetailsScreen(
+  //            postId = "post1",
+  //            postDetailsScreenViewModel = postDetailsViewModel,
+  //            onGoBack = {},
+  //            onProfile = {},
+  //        )
+  //      }
+  //    }
+  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+  //    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
+  //  }
 }

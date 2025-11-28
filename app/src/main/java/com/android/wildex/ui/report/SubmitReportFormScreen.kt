@@ -25,15 +25,21 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tags for the Submit Report Form Screen components. */
 object SubmitReportFormScreenTestTags {
@@ -67,7 +73,41 @@ fun SubmitReportFormScreen(
     context: Context,
     onGoBack: () -> Unit,
 ) {
+  val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
+  if (isOnline) {
+    SubmitReportFormScreenContent(
+        context = context,
+        onCameraClick = onCameraClick,
+        uiState = uiState,
+        onDescriptionChange = onDescriptionChange,
+        onSubmitClick = onSubmitClick,
+    )
+  } else {
+    OfflineScreen()
+  }
+}
+
+/**
+ * Content of the Submit Report Form Screen.
+ *
+ * @param context The context of the current state of the application.
+ * @param onCameraClick Callback invoked when the camera button is clicked.
+ * @param uiState The current UI state of the submit report form.
+ * @param onDescriptionChange Callback invoked when the description text changes.
+ * @param onSubmitClick Callback invoked when the submit button is clicked.
+ */
+@Composable
+fun SubmitReportFormScreenContent(
+    context: Context,
+    onCameraClick: () -> Unit,
+    uiState: SubmitReportUiState,
+    onDescriptionChange: (String) -> Unit,
+    onSubmitClick: () -> Unit,
+) {
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
@@ -100,7 +140,7 @@ fun SubmitReportFormScreen(
             )
           } else {
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
+                colors = CardDefaults.cardColors(colorScheme.surfaceContainer),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {

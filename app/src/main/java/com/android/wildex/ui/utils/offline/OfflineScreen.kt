@@ -3,6 +3,7 @@ package com.android.wildex.ui.utils.offline
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -46,7 +47,10 @@ fun OfflineScreen(
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
-      modifier = Modifier.padding(innerPadding).testTag(OfflineScreenTestTags.OFFLINE_SCREEN)) {
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .testTag(OfflineScreenTestTags.OFFLINE_SCREEN)) {
         Text(
             text = context.getString(R.string.offline_title),
             style = typography.headlineMedium,

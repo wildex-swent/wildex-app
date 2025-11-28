@@ -11,6 +11,7 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -31,6 +32,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
 import kotlin.coroutines.CoroutineContext
@@ -187,7 +189,8 @@ object LocalRepositories {
           userId = user.userId,
           username = user.username,
           profilePictureURL = user.profilePictureURL,
-          userType = user.userType)
+          userType = user.userType,
+      )
     }
 
     override suspend fun addUser(user: User) {
@@ -343,7 +346,8 @@ object LocalRepositories {
       mapUserToFriends[userId] =
           userFriends.copy(
               friendsId = userFriends.friendsId + friendId,
-              friendsCount = userFriends.friendsCount + 1)
+              friendsCount = userFriends.friendsCount + 1,
+          )
     }
 
     override suspend fun deleteFriendToUserFriendsOfUser(friendId: Id, userId: Id) {
@@ -351,7 +355,8 @@ object LocalRepositories {
       mapUserToFriends[userId] =
           userFriends.copy(
               friendsId = userFriends.friendsId.filter { it != friendId },
-              friendsCount = userFriends.friendsCount - 1)
+              friendsCount = userFriends.friendsCount - 1,
+          )
     }
 
     override suspend fun deleteUserFriendsOfUser(userId: Id) {
@@ -386,9 +391,13 @@ object LocalRepositories {
     override suspend fun acceptFriendRequest(friendRequest: FriendRequest) {
       listOfFriendRequest.remove(friendRequest)
       userFriendsRepository.addFriendToUserFriendsOfUser(
-          friendRequest.senderId, friendRequest.receiverId)
+          friendRequest.senderId,
+          friendRequest.receiverId,
+      )
       userFriendsRepository.addFriendToUserFriendsOfUser(
-          friendRequest.receiverId, friendRequest.senderId)
+          friendRequest.receiverId,
+          friendRequest.senderId,
+      )
     }
 
     override suspend fun refuseFriendRequest(friendRequest: FriendRequest) {
@@ -530,7 +539,7 @@ object LocalRepositories {
     override suspend fun detectAnimal(
         context: Context,
         imageUri: Uri,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): List<AnimalDetectResponse> {
       return listOf(
           AnimalDetectResponse(
@@ -549,15 +558,29 @@ object LocalRepositories {
 
     override suspend fun getAnimalDescription(
         animalName: String,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): String {
       return "This is a default animal"
     }
 
     override suspend fun getAnimalPicture(
         animalName: String,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): URL = "imageUrl:$animalName"
+  }
+
+  open class GeocodingRepositoryImpl() : GeocodingRepository {
+    override suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
+      return "Location($latitude, $longitude)"
+    }
+
+    override suspend fun forwardGeocode(query: String): Location? {
+      return Location(0.0, 0.0, query)
+    }
+
+    override suspend fun searchSuggestions(query: String, limit: Int): List<Location> {
+      return List(limit) { index -> Location(0.0 + index, 0.0 + index, "$query Suggestion $index") }
+    }
   }
 
   val postsRepository: PostsRepository = PostsRepositoryImpl()
@@ -574,6 +597,7 @@ object LocalRepositories {
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val userFriendsRepository: UserFriendsRepository = UserFriendsRepositoryImpl()
   val friendRequestRepository: FriendRequestRepository = FriendRequestRepositoryImpl()
+  val geocodingRepository: GeocodingRepository = GeocodingRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -588,6 +612,7 @@ object LocalRepositories {
     (storageRepository as ClearableRepository).clear()
     (userFriendsRepository as ClearableRepository).clear()
     (friendRequestRepository as ClearableRepository).clear()
+    (geocodingRepository as? ClearableRepository)?.clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

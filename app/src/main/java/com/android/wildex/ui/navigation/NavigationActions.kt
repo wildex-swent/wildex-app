@@ -97,7 +97,7 @@ sealed class Screen(
         "report_details" -> ReportDetails(pathParts[1])
         "submit_report" -> SubmitReport
         "settings" -> Settings
-        "friend_screen" -> Friend(pathParts[1])
+        "friend_screen" -> Social(pathParts[1])
         "achievement_screen" -> Achievements(pathParts[1])
         "animal_information_screen" -> AnimalInformation(pathParts[1])
         else -> Auth

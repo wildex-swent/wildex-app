@@ -11,6 +11,7 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -32,6 +33,7 @@ import com.android.wildex.model.user.UserSettings
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import kotlin.collections.mutableMapOf
 import kotlin.coroutines.CoroutineContext
@@ -569,6 +571,20 @@ object LocalRepositories {
     ): Uri = Uri.parse("imageUrl:$animalName")
   }
 
+  open class GeocodingRepositoryImpl() : GeocodingRepository {
+    override suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
+      return "Location($latitude, $longitude)"
+    }
+
+    override suspend fun forwardGeocode(query: String): Location? {
+      return Location(0.0, 0.0, query)
+    }
+
+    override suspend fun searchSuggestions(query: String, limit: Int): List<Location> {
+      return List(limit) { index -> Location(0.0 + index, 0.0 + index, "$query Suggestion $index") }
+    }
+  }
+
   open class UserTokensRepositoryImpl() : UserTokensRepository, ClearableRepository {
     val map = mutableMapOf<Id, List<String>>()
     val currentToken = "currentToken"
@@ -616,6 +632,7 @@ object LocalRepositories {
   val userAchievementsRepository: UserAchievementsRepository = UserAchievementsRepositoryImpl()
   val userFriendsRepository: UserFriendsRepository = UserFriendsRepositoryImpl()
   val friendRequestRepository: FriendRequestRepository = FriendRequestRepositoryImpl()
+  val geocodingRepository: GeocodingRepository = GeocodingRepositoryImpl()
   val userTokensRepository: UserTokensRepository = UserTokensRepositoryImpl()
 
   fun clearAll() {
@@ -631,6 +648,7 @@ object LocalRepositories {
     (storageRepository as ClearableRepository).clear()
     (userFriendsRepository as ClearableRepository).clear()
     (friendRequestRepository as ClearableRepository).clear()
+    (geocodingRepository as? ClearableRepository)?.clear()
     (userTokensRepository as ClearableRepository).clear()
   }
 

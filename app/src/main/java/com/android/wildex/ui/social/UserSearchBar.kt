@@ -50,6 +50,8 @@ object SearchBarTestTags{
   const val INPUT_FIELD = "input_field"
   const val LEADING_ICON = "leading_icon"
   fun testTagForResult(userId: Id) = "result_$userId"
+
+  fun testTagForResultUsername(userId: Id) = "result_username_$userId"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,7 +150,10 @@ fun UserSearchBar(
           val user = searchResults[index]
           ListItem(
             headlineContent = { Text(user.name + " " + user.surname) },
-            supportingContent = { Text(user.username)},
+            supportingContent = { Text(
+              user.username,
+              modifier = Modifier.testTag(SearchBarTestTags.testTagForResultUsername(user.userId))
+            )},
             leadingContent = {
               ClickableProfilePicture(
                 modifier = Modifier.size(45.dp),

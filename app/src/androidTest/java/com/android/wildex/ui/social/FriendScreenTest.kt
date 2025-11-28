@@ -153,6 +153,7 @@ class FriendScreenTest {
     composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.SCREEN_TITLE)
         .assertIsDisplayed()
@@ -196,6 +197,7 @@ class FriendScreenTest {
     composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.SCREEN_TITLE)
         .assertIsDisplayed()
@@ -240,6 +242,7 @@ class FriendScreenTest {
           onGoBack = {})
     }
 
+    composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).assertIsDisplayed()
     composeTestRule
@@ -732,4 +735,16 @@ class FriendScreenTest {
         .onNodeWithTag(FriendScreenTestTags.testTagForFollowButton(user3.userId))
         .assertIsDisplayed()
   }
+
+  @Test
+  fun searchBarFocusTakesAllScreen(){}
+
+  @Test
+  fun searchBarUnFocusRestoresScreen(){}
+
+  @Test
+  fun searchBarInputDisplaysCorrectRecommendations(){}
+
+  @Test
+  fun searchBarResultsAreClickableAndWorkAsIntended(){}
 }

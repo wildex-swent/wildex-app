@@ -17,7 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class LocationPickerViewModelTest {
+class LocationPickerScreenViewModelTest {
 
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
   private lateinit var geocodingRepository: GeocodingRepository

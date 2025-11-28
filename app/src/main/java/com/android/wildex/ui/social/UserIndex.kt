@@ -1,7 +1,9 @@
 package com.android.wildex.ui.social
 
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.social.SearchDataProvider
-import com.android.wildex.model.utils.Id
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepository
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -15,7 +17,8 @@ private const val WORD_START_FACTOR = 4
 private const val WORD_END_FACTOR = 2
 
 class UserIndex(
-  private val searchDataProvider: SearchDataProvider
+  private val searchDataProvider: SearchDataProvider,
+  private val userRepository: UserRepository = RepositoryProvider.userRepository
 ) {
   private val subQuerySeparator = Regex("\\s+")
 
@@ -28,22 +31,27 @@ class UserIndex(
     "u" to "[uúùûü]"
   )
 
-  private fun searchMap() = searchDataProvider.getSearchData()
+  private fun searchData() = searchDataProvider.getSearchData()
 
-  fun usersMatching(query: String, limit: Int): List<Id>{
-    val searchDataToUserIds = searchMap()
+  suspend fun usersMatching(query: String, limit: Int): List<User>{
+    if (searchDataProvider.dataNeedsUpdate.value) {
+      searchDataProvider.invalidateCache()
+    }
+    val searchDataToUserIds = searchData()
 
     val patterns = subQuerySeparator.split(query)
       .filter { it.isNotBlank() }
       .map { patternFor(it) }
 
-    return searchDataToUserIds.keys.asSequence()
+    val suggestionIds = searchDataToUserIds.keys.asSequence()
       .mapNotNull { totalScore(it, patterns) }
       .sortedByDescending { it.score }
-      .distinctBy { it.string }
-      .take(limit)
       .mapNotNull { searchDataToUserIds[it.string] }
+      .distinct()
+      .take(limit)
       .toList()
+
+    return suggestionIds.map { userRepository.getUser(it) }
   }
 
   private fun patternFor(subQuery: String): Pattern{

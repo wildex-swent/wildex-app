@@ -14,8 +14,7 @@ class SearchDataUpdater(
     val index = mutableMapOf<String, String>()
 
     users.forEach { user ->
-      index[user.name + " " + user.surname] = user.userId
-      index[user.username] = user.userId
+      index[user.name + " " + user.surname + " " + user.username] = user.userId
     }
 
     storage.write(index)

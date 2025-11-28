@@ -5,6 +5,8 @@ class SearchDataProvider(
 ) {
   private var cache: Map<String, String>? = null
 
+  val dataNeedsUpdate = storage.updated
+
   fun getSearchData(): Map<String, String> {
     if (cache == null) {
       cache = storage.read()

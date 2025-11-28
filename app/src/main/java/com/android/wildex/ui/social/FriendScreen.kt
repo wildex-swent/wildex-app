@@ -734,6 +734,7 @@ fun CurrentUserFriendScreenContent(
     state: FriendsScreenUIState,
     onProfileClick: (Id) -> Unit
 ) {
+  UserSearchBar(onResultClick = onProfileClick)
   CurrentUserSelectionTab(selectedTab = selectedTab, onTabSelected = setSelectedTab)
   if (selectedTab == LocalContext.current.getString(R.string.friends_tab_title)) {
     FriendsTabContent(friendScreenViewModel, state, onProfileClick)

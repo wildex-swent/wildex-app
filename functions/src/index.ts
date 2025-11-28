@@ -4,11 +4,35 @@ import {
   onDocumentUpdatedWithAuthContext,
 } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import { logger } from "firebase-functions";
-import { Comment, FCMTokenData, FriendRequest, Like, Post, Report, User, UserFriends } from "./types";
+import {logger} from "firebase-functions";
+import {
+  Comment,
+  FCMTokenData,
+  FriendRequest,
+  Like,
+  Post,
+  Report,
+  User,
+  UserFriends,
+} from "./types";
 
 admin.initializeApp();
 
+const appAction = "OPEN_MAIN";
+
+const postNotificationTitle = "New Post";
+const likeNotificationTitle = "New Like";
+const commentNotificationTitle = "New Comment";
+const friendRequestNotificationTitle = "New Friend Request";
+const friendRequestAcceptedNotificationTitle = "Friend Request Accepted";
+const reportAssignedNotificationTitle = "Report Assigned";
+const reportResolvedNotificationTitle = "Report Resolved";
+
+const postChannelId = "post_channel";
+const likeChannelId = "like_channel";
+const commentChannelId = "comment_channel";
+const friendRequestChannelId = "friend_request_channel";
+const reportChannelId = "report_channel";
 /**
  * Maps notification types to notification bodies.
  * @param {string} type - Notification type
@@ -38,14 +62,20 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
     try {
       const post = event.data?.data() as Post;
       const userFriends = (
-        await admin.firestore().collection("userFriends").doc(post.authorId).get()
+        await admin.firestore()
+          .collection("userFriends")
+          .doc(post.authorId)
+          .get()
       ).data() as UserFriends;
 
       const friendTokens = (
         await Promise.all(
           userFriends.friendsId.map(async (friendId) => {
             const tokenData = (
-              await admin.firestore().collection("userTokens").doc(friendId).get()
+              await admin.firestore()
+                .collection("userTokens")
+                .doc(friendId)
+                .get()
             ).data() as FCMTokenData;
             return tokenData ? tokenData.tokens : [];
           })
@@ -60,10 +90,10 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "New Post",
+            title: postNotificationTitle,
             body: getNotificationBody("POST", user.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "0",
+            clickAction: appAction,
+            channelId: postChannelId,
           },
         },
         data: {
@@ -111,13 +141,18 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "New Friend Request",
-            body: getNotificationBody("FRIEND_REQUEST_RECEIVED", fromUser.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "3",
+            title: friendRequestNotificationTitle,
+            body: getNotificationBody(
+              "FRIEND_REQUEST_RECEIVED",
+              fromUser.username
+            ),
+            clickAction: appAction,
+            channelId: friendRequestChannelId,
           },
         },
-        data: { path: `friend_screen/${requestData.receiverId}` },
+        data: {
+          path: `friend_screen/${requestData.receiverId}`,
+        },
       }));
 
       return admin.messaging().sendEach(messages);
@@ -131,7 +166,7 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
   }
 );
 
-exports.sendFriendAcceptedOrRefusedNotifications = onDocumentDeletedWithAuthContext(
+exports.sendFriendNotifications = onDocumentDeletedWithAuthContext(
   {
     document: "friendRequests/{requestId}",
     region: "europe-west6",
@@ -157,9 +192,6 @@ exports.sendFriendAcceptedOrRefusedNotifications = onDocumentDeletedWithAuthCont
       ).data() as UserFriends;
 
       if (!userFriends.friendsId.includes(requestData.receiverId)) {
-        logger.log(
-          `No notification sent: ${requestData.receiverId} is not a friend of ${requestData.senderId}`
-        );
         return null;
       }
 
@@ -176,21 +208,20 @@ exports.sendFriendAcceptedOrRefusedNotifications = onDocumentDeletedWithAuthCont
         token,
         android: {
           notification: {
-            title: "Friend Request Accepted",
-            body: getNotificationBody("FRIEND_REQUEST_ACCEPTED", toUser.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "3",
+            title: friendRequestAcceptedNotificationTitle,
+            body: getNotificationBody(
+              "FRIEND_REQUEST_ACCEPTED",
+              toUser.username
+            ),
+            clickAction: appAction,
+            channelId: friendRequestChannelId,
           },
         },
-        data: { path: `friend_screen/${requestData.senderId}` },
+        data: {path: `friend_screen/${requestData.senderId}`},
       }));
 
       return admin.messaging().sendEach(messages);
     } catch (error) {
-      logger.error(
-        "Friend Request Accepted Notifications : The following error has occured\n",
-        error
-      );
       return null;
     }
   }
@@ -232,13 +263,13 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "New Like",
+            title: likeNotificationTitle,
             body: getNotificationBody("LIKE", fromUser.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "1",
+            clickAction: appAction,
+            channelId: likeChannelId,
           },
         },
-        data: { path: `post_details/${postData.postId}` },
+        data: {path: `post_details/${postData.postId}`},
       }));
 
       return admin.messaging().sendEach(messages);
@@ -288,13 +319,17 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "New Comment",
-            body: getNotificationBody("COMMENT", fromUser.username) + ` ${commentData.tag == "POST_COMMENT" ? "post." : "comment."}`,
-            clickAction: "android.intent.action.MAIN",
-            channelId: "2",
+            title: commentNotificationTitle,
+            body: getNotificationBody(
+              "COMMENT",
+              fromUser.username
+            ) + ` ${commentData.tag == "POST_COMMENT" ? "post." : "comment."}`,
+            clickAction: appAction,
+            channelId: commentChannelId,
           },
         },
-        data: { path: `post_details/${postData.postId}` },
+        data: {path: `post_details/${postData.postId}`},
+
       }));
 
       return admin.messaging().sendEach(messages);
@@ -344,23 +379,22 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "Report Assigned",
-            body: getNotificationBody("REPORT_IS_ASSIGNED", assigneeUser.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "4",
+            title: reportAssignedNotificationTitle,
+            body: getNotificationBody(
+              "REPORT_IS_ASSIGNED",
+              assigneeUser.username
+            ),
+            clickAction: appAction,
+            channelId: reportChannelId,
           },
         },
-        data: { path: `report_details/${reportData.reportId}` },
+        data: {path: `report_details/${reportData.reportId}`},
       }));
 
       return admin.messaging().sendEach(messages);
     } catch (error) {
-      logger.error(
-        "Report Assignment Notifications : The following error has occured\n",
-        error
-      );
+      return null;
     }
-    return null;
   }
 );
 
@@ -381,6 +415,9 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
           .get()
       ).data() as FCMTokenData;
 
+      if (!reportData.assigneeId) {
+        return null;
+      }
       const assigneeUser = (
         await admin
           .firestore()
@@ -393,13 +430,16 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
         token,
         android: {
           notification: {
-            title: "Report Resolved",
-            body: getNotificationBody("REPORT_IS_RESOLVED", assigneeUser.username),
-            clickAction: "android.intent.action.MAIN",
-            channelId: "4",
+            title: reportResolvedNotificationTitle,
+            body: getNotificationBody(
+              "REPORT_IS_RESOLVED",
+              assigneeUser.username
+            ),
+            clickAction: appAction,
+            channelId: reportChannelId,
           },
         },
-        data: { path: `report_details/${reportData.reportId}` },
+        data: {path: `report_details/${reportData.reportId}`},
       }));
 
       return admin.messaging().sendEach(messages);

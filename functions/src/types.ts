@@ -18,7 +18,7 @@ export interface Notification {
   title: string;
   isRead: boolean;
   type: NotificationType;
-  date: string; // using ISO string for Timestamp
+  date: string;
 }
 
 export type NotificationType =

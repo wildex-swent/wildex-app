@@ -37,7 +37,7 @@ class UserIndex(
     if (searchDataProvider.dataNeedsUpdate.value) {
       searchDataProvider.invalidateCache()
     }
-    val searchDataToUserIds = searchData()
+    val searchDataToUserIds: Map<String, String> = searchData()
 
     val patterns = subQuerySeparator.split(query)
       .filter { it.isNotBlank() }

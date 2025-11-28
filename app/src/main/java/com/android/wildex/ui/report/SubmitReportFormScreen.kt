@@ -55,7 +55,6 @@ object SubmitReportFormScreenTestTags {
  * @param onDescriptionChange Callback invoked when the description text changes.
  * @param onSubmitClick Callback invoked when the submit button is clicked.
  * @param context The context of the current state of the application.
- * @param onGoBack Callback invoked when the user wants to go back to the previous screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +64,6 @@ fun SubmitReportFormScreen(
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
     context: Context,
-    onGoBack: () -> Unit,
 ) {
 
   Column(

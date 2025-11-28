@@ -157,13 +157,14 @@ class NotificationScreenTest {
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
         NotificationItem(
-            notificationContentId = contentId,
-            notificationRoute = "route/to/$contentId",
             simpleUser = testUser,
-            notificationTitle = longTitle,
-            notificationDescription = longDesc,
             onProfileClick = {},
-            onNotificationClick = { _, _ -> },
+            notificationItemData =
+                NotificationItemData(
+                    notificationContentId = contentId,
+                    notificationTitle = longTitle,
+                    notificationDescription = longDesc,
+                    onNotificationClick = { _, _ -> }),
             cs = MaterialTheme.colorScheme,
         )
       }

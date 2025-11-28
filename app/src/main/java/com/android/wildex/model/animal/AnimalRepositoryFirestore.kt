@@ -33,9 +33,8 @@ class AnimalRepositoryFirestore(private val db: FirebaseFirestore) : AnimalRepos
     val documentRef = db.collection(ANIMAL_COLLECTION_PATH).document(animal.animalId)
     val documentSnapshot = documentRef.get().await()
 
-    if (documentSnapshot.exists()) {
-      throw IllegalArgumentException(
-          "AnimalRepositoryFirestore: An animal with ID '${animal.animalId}' already exists.")
+    require(!documentSnapshot.exists()) {
+      "AnimalRepositoryFirestore: An animal with ID '${animal.animalId}' already exists."
     }
 
     documentRef.set(animal).await()

@@ -28,21 +28,25 @@ class AuthRepositoryFirebase(
 
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
     return try {
-      if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-        val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
-        val firebaseCred = GoogleAuthProvider.getCredential(idToken, null)
+      val result: Result<FirebaseUser> =
+          if (credential is CustomCredential &&
+              credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+            val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+            val firebaseCred = GoogleAuthProvider.getCredential(idToken, null)
 
-        // Sign in with Firebase
-        val user =
-            auth.signInWithCredential(firebaseCred).await().user
-                ?: return Result.failure(
-                    IllegalStateException("Login failed : Could not retrieve user information"))
+            val user = auth.signInWithCredential(firebaseCred).await().user
+            if (user != null) {
+              Result.success(user)
+            } else {
+              Result.failure(
+                  IllegalStateException("Login failed: Could not retrieve user information"))
+            }
+          } else {
+            Result.failure(
+                IllegalStateException("Login failed: Credential is not of type Google ID"))
+          }
 
-        return Result.success(user)
-      } else {
-        return Result.failure(
-            java.lang.IllegalStateException("Login failed: Credential is not of type Google ID"))
-      }
+      result
     } catch (e: Exception) {
       Result.failure(
           IllegalStateException("Login failed: ${e.localizedMessage ?: NO_KNOWN_ERROR_MSG}"))

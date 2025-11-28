@@ -47,9 +47,7 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
   override suspend fun addLike(like: Like) {
     val docRef = db.collection(LIKE_COLLECTION_PATH).document(like.likeId)
     val doc = docRef.get().await()
-    if (doc.exists()) {
-      throw IllegalArgumentException("A Like with likeId '${like.likeId}' already exists.")
-    }
+    require(!doc.exists()) { "A Like with likeId '${like.likeId}' already exists." }
     docRef.set(like).await()
   }
 
@@ -57,9 +55,7 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
     val docRef = db.collection(LIKE_COLLECTION_PATH).document(likeId)
     val doc = docRef.get().await()
 
-    if (!doc.exists()) {
-      throw IllegalArgumentException("Like with given Id not found")
-    }
+    require(doc.exists()) { "Like with given Id not found" }
 
     docRef.delete().await()
   }

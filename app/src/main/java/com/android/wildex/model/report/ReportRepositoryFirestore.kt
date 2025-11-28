@@ -158,7 +158,7 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
           document.getString(ReportsFields.IMAGE_URL)
               ?: throwMissingFieldException(ReportsFields.IMAGE_URL)
       val locationData =
-          document.get(ReportsFields.LOCATION) as? Map<*, *>
+          document[ReportsFields.LOCATION] as? Map<*, *>
               ?: throwMissingFieldException(ReportsFields.LOCATION)
       val location =
           locationData.let {

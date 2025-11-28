@@ -92,7 +92,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
       val postId = doc.id
       val authorId = doc.getString("authorId") ?: throwMissingFieldException("authorId")
       val pictureURL = doc.getString("pictureURL") ?: throwMissingFieldException("pictureURL")
-      val locationData = doc.get("location") as? Map<*, *>
+      val locationData = doc["location"] as? Map<*, *>
       val location =
           locationData?.let {
             Location(

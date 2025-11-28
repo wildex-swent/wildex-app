@@ -13,9 +13,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override suspend fun getUser(userId: Id): User {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
-    if (!document.exists()) {
-      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
-    }
+    require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     return documentToUser(document)
         ?: throw Exception("UserRepositoryFirestore: User $userId not found")
   }
@@ -36,9 +34,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override suspend fun getSimpleUser(userId: Id): SimpleUser {
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
-    if (!document.exists()) {
-      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
-    }
+    require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     return documentToSimpleUser(document)
         ?: throw Exception("UserRepositoryFirestore: User $userId not found")
   }
@@ -46,9 +42,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   override suspend fun addUser(user: User) {
     val documentId = db.collection(USERS_COLLECTION_PATH).document(user.userId)
     val document = documentId.get().await()
-    if (document.exists()) {
-      throw IllegalArgumentException(
-          "UserRepositoryFirestore: A User with userId '${user.userId}' already exists.")
+    require(!document.exists()) {
+      "UserRepositoryFirestore: A User with userId '${user.userId}' already exists."
     }
     documentId.set(user).await()
   }
@@ -56,9 +51,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   override suspend fun editUser(userId: Id, newUser: User) {
     val documentId = db.collection(USERS_COLLECTION_PATH).document(userId)
     val document = documentId.get().await()
-    if (!document.exists()) {
-      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
-    }
+    require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     documentId.set(newUser).await()
   }
 
@@ -66,9 +59,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     val documentId = db.collection(USERS_COLLECTION_PATH).document(userId)
     val document = documentId.get().await()
 
-    if (!document.exists()) {
-      throw IllegalArgumentException("UserRepositoryFirestore: User $userId not found")
-    }
+    require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     documentId.delete().await()
   }
 

@@ -27,7 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.android.wildex.model.location.PickedLocation
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.camera.CameraPermissionScreen
 import com.android.wildex.ui.camera.CameraPreviewScreen
@@ -50,7 +50,7 @@ fun SubmitReportScreen(
     onSubmitted: () -> Unit = {},
     onGoBack: () -> Unit = {},
     onPickLocation: () -> Unit = {},
-    pickedLocation: PickedLocation? = null,
+    serializedLocation: Location? = null,
     onPickedLocationConsumed: () -> Unit = {},
 ) {
   val uiState by viewModel.uiState.collectAsState()
@@ -58,9 +58,9 @@ fun SubmitReportScreen(
 
   var showCamera by remember { mutableStateOf(false) }
 
-  LaunchedEffect(pickedLocation) {
-    if (pickedLocation != null) {
-      viewModel.onLocationPicked(pickedLocation)
+  LaunchedEffect(serializedLocation) {
+    if (serializedLocation != null) {
+      viewModel.onLocationPicked(serializedLocation)
       onPickedLocationConsumed()
     }
   }

@@ -68,7 +68,6 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.AppTheme
 import com.android.wildex.R
-import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.map.MapCanvas
@@ -110,7 +109,7 @@ object LocationPickerTestTags {
 @Composable
 fun LocationPickerScreen(
     onBack: () -> Unit,
-    onLocationPicked: (PickedLocation) -> Unit,
+    onLocationPicked: (Location) -> Unit,
     viewModel: LocationPickerViewModel = viewModel(),
 ) {
   val context = LocalContext.current
@@ -182,8 +181,7 @@ fun LocationPickerScreen(
     val lon = uiState.selected?.longitude
 
     if (uiState.showConfirmDialog && lat != null && lon != null) {
-      val offsetLat = lat - 0.0015
-      val center = Point.fromLngLat(lon, offsetLat)
+      val center = Point.fromLngLat(lon, lat)
       mv.mapboxMap.flyTo(
           CameraOptions.Builder().center(center).zoom(17.5).pitch(60.0).bearing(40.0).build(),
           mapAnimationOptions { duration(800L) },

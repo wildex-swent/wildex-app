@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
-import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -67,7 +66,7 @@ class SubmitReportScreenViewModel(
   }
 
   /** Called when the user picks a location from the LocationPickerScreen. */
-  fun onLocationPicked(picked: PickedLocation) {
+  fun onLocationPicked(picked: Location) {
     _uiState.value =
         _uiState.value.copy(
             location =

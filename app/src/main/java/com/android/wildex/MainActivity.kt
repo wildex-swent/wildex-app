@@ -24,9 +24,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
@@ -141,19 +141,19 @@ private fun NavGraphBuilder.submitFormComposable(
 ) {
   composable(Screen.SubmitReport.route) { backStackEntry ->
     val savedStateHandle = backStackEntry.savedStateHandle
-    val pickedLocationFlow = remember {
-      savedStateHandle.getStateFlow<PickedLocation?>(
+    val serializedLocationFlow = remember {
+      savedStateHandle.getStateFlow<Location?>(
           LOCATION_PICKER_RESULT_KEY,
           null,
       )
     }
-    val pickedLocation by pickedLocationFlow.collectAsStateWithLifecycle()
+    val pickedLocation by serializedLocationFlow.collectAsStateWithLifecycle()
 
     SubmitReportScreen(
         onSubmitted = { navigationActions.navigateTo(Screen.Report) },
         onGoBack = { navigationActions.goBack() },
         onPickLocation = { navigationActions.navigateTo(Screen.LocationPicker) },
-        pickedLocation = pickedLocation,
+        serializedLocation = pickedLocation,
         onPickedLocationConsumed = { savedStateHandle[LOCATION_PICKER_RESULT_KEY] = null },
     )
   }
@@ -361,7 +361,7 @@ private fun NavGraphBuilder.locationPickerComposable(
   composable(Screen.LocationPicker.route) {
     LocationPickerScreen(
         onBack = { navigationActions.goBack() },
-        onLocationPicked = { picked: PickedLocation ->
+        onLocationPicked = { picked: Location ->
           // Put result into previous back stack entry, then go back
           navController.previousBackStackEntry
               ?.savedStateHandle

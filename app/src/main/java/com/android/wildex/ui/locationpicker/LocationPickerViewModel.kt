@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.location.GeocodingRepository
-import com.android.wildex.model.location.PickedLocation
 import com.android.wildex.model.utils.Location
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,7 +27,7 @@ data class LocationPickerUiState(
 )
 
 sealed interface LocationPickerEvent {
-  data class Confirmed(val location: PickedLocation) : LocationPickerEvent
+  data class Confirmed(val location: Location) : LocationPickerEvent
 }
 
 class LocationPickerViewModel(
@@ -136,7 +135,7 @@ class LocationPickerViewModel(
     viewModelScope.launch {
       _events.emit(
           LocationPickerEvent.Confirmed(
-              PickedLocation(
+              Location(
                   name = current.selected!!.name,
                   latitude = current.selected.latitude,
                   longitude = current.selected.longitude,

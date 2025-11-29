@@ -136,9 +136,9 @@ class UserIndex(
    */
   private fun score(string: String, matcher: Matcher): Int {
     var baseScore = 100 * (matcher.end() - matcher.start()) / string.length
-    if (matcher.start() == 0 || !string[matcher.start() - 1].isLetter())
+    if (matcher.start() == 0 || string[matcher.start() - 1].isWhitespace())
         baseScore *= WORD_START_FACTOR
-    if (matcher.end() == string.length || !string[matcher.end()].isLetter())
+    if (matcher.end() == string.length || string[matcher.end()].isWhitespace())
         baseScore *= WORD_END_FACTOR
     return baseScore
   }

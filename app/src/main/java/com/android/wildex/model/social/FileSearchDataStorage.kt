@@ -1,21 +1,19 @@
 package com.android.wildex.model.social
 
 import android.content.Context
+import java.io.File
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
-import java.io.File
-import java.io.IOException
 
 /**
  * Maintains a local search data file to allow fast user searching
  *
  * @param context Android application environment to access the device's cache directory where the
- *  file is stored
+ *   file is stored
  */
-class FileSearchDataStorage (
-  context: Context
-){
+class FileSearchDataStorage(context: Context) {
   private val file: File = File(context.cacheDir, "search_data.json")
 
   private val _updated = MutableStateFlow(false)
@@ -53,17 +51,15 @@ class FileSearchDataStorage (
   }
 
   /**
-   * Writes the given mapping to a temporary file for security before deleting the old file and renaming
-   * the temporary one
+   * Writes the given mapping to a temporary file for security before deleting the old file and
+   * renaming the temporary one
    *
    * @param data the map to write to the file
    */
-  fun write(data: Map<String, String>){
+  fun write(data: Map<String, String>) {
     try {
       val jsonObject = JSONObject()
-      data.forEach { (key, value) ->
-        jsonObject.put(key, value)
-      }
+      data.forEach { (key, value) -> jsonObject.put(key, value) }
 
       val tempFile = File(file.absolutePath + ".tmp")
       tempFile.writeText(jsonObject.toString())
@@ -71,7 +67,6 @@ class FileSearchDataStorage (
       if (file.exists()) file.delete()
       tempFile.renameTo(file)
       _updated.value = true
-
     } catch (e: IOException) {
       e.printStackTrace()
     }

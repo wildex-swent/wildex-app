@@ -12,12 +12,12 @@ import org.junit.Test
 
 class SearchDataProviderTest {
 
-  private val mockMap = mapOf(
-    "jonathan pilemand jona82" to "jonaUserId",
-    "paul atreides muaddib" to "paulUserId",
-    "rania hida ainar" to "raniaUserId",
-    "youssef benhayoun youssef-9511" to "youssefUserId"
-  )
+  private val mockMap =
+      mapOf(
+          "jonathan pilemand jona82" to "jonaUserId",
+          "paul atreides muaddib" to "paulUserId",
+          "rania hida ainar" to "raniaUserId",
+          "youssef benhayoun youssef-9511" to "youssefUserId")
 
   private lateinit var fileSearchDataStorage: FileSearchDataStorage
 
@@ -26,12 +26,13 @@ class SearchDataProviderTest {
   private val fileUpdated = MutableStateFlow(false)
 
   @Before
-  fun setup(){
+  fun setup() {
     fileSearchDataStorage = mockk(relaxed = true)
-    every { fileSearchDataStorage.read() } answers {
-      fileUpdated.value = false
-      mockMap
-    }
+    every { fileSearchDataStorage.read() } answers
+        {
+          fileUpdated.value = false
+          mockMap
+        }
     every { fileSearchDataStorage.write(any()) } answers { fileUpdated.value = true }
     every { fileSearchDataStorage.updated } returns fileUpdated
     searchDataProvider = SearchDataProvider(fileSearchDataStorage)
@@ -43,45 +44,45 @@ class SearchDataProviderTest {
   }
 
   @Test
-  fun dataDoesNotNeedUpdateByDefault(){
+  fun dataDoesNotNeedUpdateByDefault() {
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
   }
 
   @Test
-  fun cachingWorksAsIntended(){
+  fun cachingWorksAsIntended() {
     val result = searchDataProvider.getSearchData()
     Assert.assertEquals(mockMap, result)
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
-    verify(exactly = 1){fileSearchDataStorage.read()}
+    verify(exactly = 1) { fileSearchDataStorage.read() }
     val result2 = searchDataProvider.getSearchData()
     Assert.assertEquals(mockMap, result2)
-    verify(exactly = 1){fileSearchDataStorage.read()}
+    verify(exactly = 1) { fileSearchDataStorage.read() }
   }
 
   @Test
-  fun invalidateCacheWorksAsIntended(){
+  fun invalidateCacheWorksAsIntended() {
     val result = searchDataProvider.getSearchData()
     Assert.assertEquals(mockMap, result)
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
-    verify(exactly = 1){fileSearchDataStorage.read()}
+    verify(exactly = 1) { fileSearchDataStorage.read() }
     searchDataProvider.invalidateCache()
     val result2 = searchDataProvider.getSearchData()
     Assert.assertEquals(mockMap, result2)
-    verify(exactly = 2){fileSearchDataStorage.read()}
+    verify(exactly = 2) { fileSearchDataStorage.read() }
   }
 
   @Test
-  fun getSearchDataAfterFileOverwriteUpdates(){
+  fun getSearchDataAfterFileOverwriteUpdates() {
     searchDataProvider.getSearchData()
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
     fileSearchDataStorage.write(emptyMap())
     Assert.assertTrue(searchDataProvider.dataNeedsUpdate.value)
-    verify(exactly = 1){fileSearchDataStorage.read()}
+    verify(exactly = 1) { fileSearchDataStorage.read() }
     searchDataProvider.invalidateCache()
     searchDataProvider.getSearchData()
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
-    verify(exactly = 2){fileSearchDataStorage.read()}
+    verify(exactly = 2) { fileSearchDataStorage.read() }
     searchDataProvider.getSearchData()
-    verify(exactly = 2){fileSearchDataStorage.read()}
+    verify(exactly = 2) { fileSearchDataStorage.read() }
   }
 }

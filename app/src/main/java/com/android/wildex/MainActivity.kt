@@ -5,7 +5,6 @@ import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -115,7 +114,9 @@ fun WildexApp(
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
-  LaunchedEffect(Unit) { SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData() }
+  LaunchedEffect(Unit) {
+    SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
+  }
 
   val appContext = context.applicationContext
   val connectivityObserver = remember { DefaultConnectivityObserver(appContext) }

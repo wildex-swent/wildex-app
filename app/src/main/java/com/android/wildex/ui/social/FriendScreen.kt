@@ -104,11 +104,10 @@ fun FriendScreen(
     userId: Id = "",
     onProfileClick: (Id) -> Unit = {},
     onGoBack: () -> Unit = {},
-    userIndex: UserIndex = UserIndex(
-      searchDataProvider = SearchDataProvider(
-        storage = FileSearchDataStorage(LocalContext.current)
-      )
-    )
+    userIndex: UserIndex =
+        UserIndex(
+            searchDataProvider =
+                SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)))
 ) {
   val uiState by friendScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -141,7 +140,12 @@ fun FriendScreen(
               Column(modifier = Modifier.fillMaxSize()) {
                 if (uiState.isCurrentUser) {
                   CurrentUserFriendScreenContent(
-                      selectedTab, setSelectedTab, friendScreenViewModel, uiState, onProfileClick, userIndex)
+                      selectedTab,
+                      setSelectedTab,
+                      friendScreenViewModel,
+                      uiState,
+                      onProfileClick,
+                      userIndex)
                 } else {
                   OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
                 }

@@ -5,9 +5,7 @@ package com.android.wildex.model.social
  *
  * @property storage local file maintainer used to read the local search data file
  */
-class SearchDataProvider(
-  private val storage: FileSearchDataStorage
-) {
+class SearchDataProvider(private val storage: FileSearchDataStorage) {
   private var cache: Map<String, String>? = null
 
   /** Broadcasts the file maintainer update status to know when the cache is obsolete */
@@ -25,9 +23,7 @@ class SearchDataProvider(
     return cache!!
   }
 
-  /**
-   * Invalidates the cache. To be used when the search data is updated
-   */
+  /** Invalidates the cache. To be used when the search data is updated */
   fun invalidateCache() {
     cache = null
   }

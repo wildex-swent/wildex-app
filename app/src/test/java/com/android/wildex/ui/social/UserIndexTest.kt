@@ -24,7 +24,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserIndexTest {
 
@@ -34,59 +33,55 @@ class UserIndexTest {
 
   private val testDispatcher = StandardTestDispatcher()
 
-  private val users = listOf(
-    User(
-      userId = "1",
-      username = "jona82",
-      name = "jonathan",
-      surname = "pilemand",
-      bio = "",
-      profilePictureURL = "",
-      userType = UserType.REGULAR,
-      creationDate = Timestamp.now(),
-      country = ""
-    ),
-    User(
-      userId = "2",
-      username = "muaddib",
-      name = "paul",
-      surname = "atreides",
-      bio = "",
-      profilePictureURL = "",
-      userType = UserType.REGULAR,
-      creationDate = Timestamp.now(),
-      country = ""
-    ),
-    User(
-      userId = "3",
-      username = "ainar",
-      name = "rania",
-      surname = "hida",
-      bio = "",
-      profilePictureURL = "",
-      userType = UserType.REGULAR,
-      creationDate = Timestamp.now(),
-      country = ""
-    ),
-    User(
-      userId = "4",
-      username = "youssef-9511",
-      name = "youssef",
-      surname = "benhayoun",
-      bio = "",
-      profilePictureURL = "",
-      userType = UserType.REGULAR,
-      creationDate = Timestamp.now(),
-      country = ""
-    )
-  )
+  private val users =
+      listOf(
+          User(
+              userId = "1",
+              username = "jona82",
+              name = "jonathan",
+              surname = "pilemand",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""),
+          User(
+              userId = "2",
+              username = "muaddib",
+              name = "paul",
+              surname = "atreides",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""),
+          User(
+              userId = "3",
+              username = "ainar",
+              name = "rania",
+              surname = "hida",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""),
+          User(
+              userId = "4",
+              username = "youssef-9511",
+              name = "youssef",
+              surname = "benhayoun",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
 
-  private val searchData = mapOf(
-    "jonathan pilemand jona82" to "1",
-    "paul atreides muaddib" to "2",
-    "rania hida ainar" to "3",
-    "youssef benhayoun youssef-9511" to "4"
-  )
+  private val searchData =
+      mapOf(
+          "jonathan pilemand jona82" to "1",
+          "paul atreides muaddib" to "2",
+          "rania hida ainar" to "3",
+          "youssef benhayoun youssef-9511" to "4")
 
   private val updatedFlow = MutableStateFlow(false)
 
@@ -102,9 +97,7 @@ class UserIndexTest {
     every { searchDataProvider.dataNeedsUpdate } returns updatedFlow
     every { searchDataProvider.invalidateCache() } just Runs
 
-    users.forEach { user ->
-      coEvery { userRepository.getUser(user.userId) } returns user
-    }
+    users.forEach { user -> coEvery { userRepository.getUser(user.userId) } returns user }
 
     userIndex = UserIndex(searchDataProvider, userRepository)
   }
@@ -184,9 +177,7 @@ class UserIndexTest {
 
     userIndex.usersMatching("jon", 10)
 
-    verify(exactly = 1) {
-      searchDataProvider.invalidateCache()
-    }
+    verify(exactly = 1) { searchDataProvider.invalidateCache() }
   }
 
   @Test
@@ -195,8 +186,6 @@ class UserIndexTest {
 
     userIndex.usersMatching("jon", 10)
 
-    verify(exactly = 0) {
-      searchDataProvider.invalidateCache()
-    }
+    verify(exactly = 0) { searchDataProvider.invalidateCache() }
   }
 }

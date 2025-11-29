@@ -10,16 +10,16 @@ import com.android.wildex.model.user.UserRepository
  * @property storage local file maintainer used to write to the local search data file
  */
 class SearchDataUpdater(
-  private val userRepository: UserRepository = RepositoryProvider.userRepository,
-  private val storage: FileSearchDataStorage
+    private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val storage: FileSearchDataStorage
 ) {
 
   /**
    * Updates the search data by fetching all users from the database and writing to the local search
-   * data file a map from users' string representation (user's name + user's surname + user's username)
-   * to the users's unique identifiers.
+   * data file a map from users' string representation (user's name + user's surname + user's
+   * username) to the users's unique identifiers.
    */
-  suspend fun updateSearchData(){
+  suspend fun updateSearchData() {
     val users = userRepository.getAllUsers()
 
     val index = mutableMapOf<String, String>()
@@ -30,5 +30,4 @@ class SearchDataUpdater(
 
     storage.write(index)
   }
-
 }

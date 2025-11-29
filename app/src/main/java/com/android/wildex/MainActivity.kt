@@ -227,8 +227,7 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }
-          ),
+              }),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(

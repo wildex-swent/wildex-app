@@ -167,7 +167,6 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
             clickAction: appAction,
             channelId: friendRequestChannelId,
             tag: `friend_request_${requestData.senderId}`,
-            image: fromUser.profilePictureURL,
           },
         },
         data: {
@@ -250,7 +249,6 @@ exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
             clickAction: appAction,
             channelId: friendRequestChannelId,
             tag: `friend_request_${requestData.receiverId}`,
-            image: toUser.profilePictureURL,
           },
         },
         data: {
@@ -328,7 +326,6 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
             clickAction: appAction,
             channelId: likeChannelId,
             tag: `liker_${likeData.userId}`,
-            image: fromUser.profilePictureURL,
           },
         },
         data: {
@@ -415,7 +412,6 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
             clickAction: appAction,
             channelId: commentChannelId,
             tag: `comment_${commentData.commentId}`,
-            image: fromUser.profilePictureURL,
           },
         },
         data: {
@@ -495,7 +491,6 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
             clickAction: appAction,
             channelId: reportChannelId,
             tag: `report_${reportData.reportId}`,
-            image: assigneeUser.profilePictureURL,
           },
         },
         data: {
@@ -569,7 +564,6 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
             clickAction: appAction,
             channelId: reportChannelId,
             tag: `report_${reportData.reportId}`,
-            image: assigneeUser.profilePictureURL,
           },
         },
         data: {

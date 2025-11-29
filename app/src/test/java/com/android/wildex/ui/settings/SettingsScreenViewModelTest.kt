@@ -13,6 +13,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.usecase.user.DeleteUserUseCase
 import com.android.wildex.utils.MainDispatcherRule
@@ -38,6 +39,7 @@ class SettingsScreenViewModelTest {
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
   private lateinit var userFriendsRepository: UserFriendsRepository
+  private lateinit var userTokensRepository: UserTokensRepository
   private lateinit var friendRequestRepository: FriendRequestRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var reportRepository: ReportRepository
@@ -81,6 +83,7 @@ class SettingsScreenViewModelTest {
     userAnimalsRepository = mockk()
     userAchievementsRepository = mockk()
     userFriendsRepository = mockk()
+    userTokensRepository = mockk()
     friendRequestRepository = mockk()
     postsRepository = mockk()
     reportRepository = mockk()
@@ -93,6 +96,7 @@ class SettingsScreenViewModelTest {
             authRepository = authRepository,
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
+            userTokensRepository = userTokensRepository,
             currentUserId = "currentUserId",
             deleteUserUseCase =
                 DeleteUserUseCase(
@@ -107,7 +111,7 @@ class SettingsScreenViewModelTest {
                     likeRepository,
                     commentRepository,
                     authRepository,
-                ),
+                    userTokensRepository),
         )
 
     coEvery { userRepository.getUser("currentUserId") } returns u1

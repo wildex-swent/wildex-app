@@ -7,15 +7,18 @@ import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.usecase.user.DeleteUserUseCase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class SettingsUIState(
     val appearanceMode: AppearanceMode = AppearanceMode.AUTOMATIC,
@@ -31,6 +34,8 @@ class SettingsScreenViewModel(
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
+    private val userTokensRepository: UserTokensRepository =
+        RepositoryProvider.userTokensRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase(),
 ) : ViewModel() {
@@ -130,6 +135,7 @@ class SettingsScreenViewModel(
 
   fun signOut(onSignOut: () -> Unit) {
     viewModelScope.launch {
+      userTokensRepository.deleteTokenOfUser(currentUserId, Firebase.messaging.token.await())
       authRepository
           .signOut()
           .fold(

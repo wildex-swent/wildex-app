@@ -7,6 +7,7 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
@@ -79,6 +80,7 @@ class MapScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
+    private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
@@ -216,9 +218,19 @@ class MapScreenViewModel(
                 } catch (_: Exception) {
                   "animal"
                 }
+            val likeCount = likeRepository.getLikesForPost(post.postId).size
+            val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
             _uiState.value =
                 _uiState.value.copy(
-                    selected = PinDetails.PostDetails(post, author, liked, animalName))
+                    selected =
+                        PinDetails.PostDetails(
+                            post,
+                            author,
+                            liked,
+                            likeCount,
+                            commentCount,
+                            animalName,
+                        ))
           }
           is MapPin.ReportPin -> {
             val report = reportRepository.getReport(pin.id)
@@ -301,11 +313,8 @@ class MapScreenViewModel(
               val likedNow = !sel.likedByMe
               sel.copy(
                   likedByMe = likedNow,
-                  post =
-                      sel.post.copy(
-                          likesCount =
-                              if (likedNow) sel.post.likesCount + 1
-                              else (sel.post.likesCount - 1).coerceAtLeast(0)),
+                  likeCount =
+                      if (likedNow) sel.likeCount + 1 else (sel.likeCount - 1).coerceAtLeast(0),
               )
             }
     if (optimistic != null) _uiState.value = before.copy(selected = optimistic)

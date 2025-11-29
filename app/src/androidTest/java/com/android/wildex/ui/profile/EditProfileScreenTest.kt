@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -33,6 +34,7 @@ class EditProfileScreenTest {
   @get:Rule val composeRule = createComposeRule()
 
   private lateinit var userRepository: UserRepository
+  private lateinit var storageRepository: StorageRepository
 
   private fun sampleUser() =
       User(
@@ -50,6 +52,7 @@ class EditProfileScreenTest {
   @Before
   fun setup() {
     userRepository = LocalRepositories.userRepository
+    storageRepository = LocalRepositories.storageRepository
   }
 
   @After
@@ -61,7 +64,11 @@ class EditProfileScreenTest {
   fun initialState_showsFields_andProfilePreview() {
 
     runBlocking { userRepository.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
+    val vm =
+        EditProfileViewModel(
+            userRepository = userRepository,
+            storageRepository = storageRepository,
+            currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -82,7 +89,11 @@ class EditProfileScreenTest {
   fun countryDropdown_opens_and_selects_country() {
 
     runBlocking { userRepository.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
+    val vm =
+        EditProfileViewModel(
+            userRepository = userRepository,
+            storageRepository = storageRepository,
+            currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
     composeRule.waitForIdle()
@@ -121,7 +132,11 @@ class EditProfileScreenTest {
   fun changeProfileImage_updatesPreview() {
 
     runBlocking { userRepository.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
+    val vm =
+        EditProfileViewModel(
+            userRepository = userRepository,
+            storageRepository = storageRepository,
+            currentUserId = "uid-1")
 
     composeRule.setContent { EditProfileScreen(editScreenViewModel = vm) }
     composeRule.waitForIdle()
@@ -136,7 +151,11 @@ class EditProfileScreenTest {
   fun goBack_invokes_callback() {
 
     runBlocking { userRepository.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
+    val vm =
+        EditProfileViewModel(
+            userRepository = userRepository,
+            storageRepository = storageRepository,
+            currentUserId = "uid-1")
 
     var back = 0
     composeRule.setContent {
@@ -152,7 +171,11 @@ class EditProfileScreenTest {
   @Test
   fun save_click_invokes_onSave_when_isNewUser_true() {
     runBlocking { userRepository.addUser(sampleUser()) }
-    val vm = EditProfileViewModel(userRepository = userRepository, currentUserId = "uid-1")
+    val vm =
+        EditProfileViewModel(
+            userRepository = userRepository,
+            storageRepository = storageRepository,
+            currentUserId = "uid-1")
 
     vm.setName("Jane")
     vm.setSurname("Doe")

@@ -63,7 +63,9 @@ object Achievements {
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
           condition = { userId ->
-            postRepository.getAllPostsByGivenAuthor(userId).sumOf { it.likesCount } >= 1000
+            postRepository.getAllPostsByGivenAuthor(userId).sumOf {
+              likeRepository.getLikesForPost(it.postId).size
+            } >= 1000
           },
       )
 
@@ -85,7 +87,9 @@ object Achievements {
           description = "Get 100 likes on a single post",
           name = "Rising Star",
           condition = { userId ->
-            postRepository.getAllPostsByGivenAuthor(userId).any { it.likesCount >= 100 }
+            postRepository.getAllPostsByGivenAuthor(userId).any {
+              likeRepository.getLikesForPost(it.postId).size >= 100
+            }
           },
       )
 

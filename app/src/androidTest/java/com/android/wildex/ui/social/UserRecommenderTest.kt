@@ -38,9 +38,7 @@ class UserRecommenderTest {
           location = Location(0.0, 0.0, ""),
           description = "",
           date = Timestamp.now(),
-          animalId = "",
-          likesCount = 0,
-          commentsCount = 0)
+          animalId = "")
 
   private val userRepository = LocalRepositories.userRepository
   private val userFriendsRepository = LocalRepositories.userFriendsRepository

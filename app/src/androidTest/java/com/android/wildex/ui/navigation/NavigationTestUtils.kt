@@ -141,8 +141,6 @@ abstract class NavigationTestUtils {
           description = "This is my first post",
           date = Timestamp.now(),
           animalId = "0",
-          likesCount = 0,
-          commentsCount = 0,
       )
 
   open val post1 =
@@ -154,8 +152,6 @@ abstract class NavigationTestUtils {
           description = "This my post",
           date = Timestamp.now(),
           animalId = "0",
-          likesCount = 0,
-          commentsCount = 0,
       )
 
   open val animal0 =

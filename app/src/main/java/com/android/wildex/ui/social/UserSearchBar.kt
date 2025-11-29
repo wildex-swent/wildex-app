@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
 import com.android.wildex.model.user.User
@@ -121,7 +122,7 @@ fun UserSearchBar(
           },
           expanded = expanded,
           onExpandedChange = { expanded = it },
-          placeholder = { Text("Search users") },
+          placeholder = { Text("Search users", style = typography.bodyMedium) },
           leadingIcon = {
             if (!expanded){
               Icon(Icons.Default.Search, contentDescription = "Search")
@@ -153,10 +154,11 @@ fun UserSearchBar(
         items(count = searchResults.size) { index ->
           val user = searchResults[index]
           ListItem(
-            headlineContent = { Text(user.name + " " + user.surname) },
+            headlineContent = { Text(user.name + " " + user.surname, style = typography.bodyLarge) },
             supportingContent = { Text(
               text = user.username,
-              modifier = Modifier.testTag(SearchBarTestTags.testTagForResultUsername(user.userId))
+              modifier = Modifier.testTag(SearchBarTestTags.testTagForResultUsername(user.userId)),
+              style = typography.bodyMedium
             )},
             leadingContent = {
               ClickableProfilePicture(

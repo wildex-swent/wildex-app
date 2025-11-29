@@ -64,8 +64,12 @@ class FileSearchDataStorage(context: Context) {
       val tempFile = File(file.absolutePath + ".tmp")
       tempFile.writeText(jsonObject.toString())
 
-      if (file.exists()) file.delete()
-      tempFile.renameTo(file)
+      if (file.exists()) {
+        val deleteResult = file.delete()
+        if (!deleteResult) throw IOException("couldn't delete the file")
+      }
+      val renameResult = tempFile.renameTo(file)
+      if (!renameResult) throw IOException("couldn't rename temp file")
       _updated.value = true
     } catch (e: IOException) {
       e.printStackTrace()

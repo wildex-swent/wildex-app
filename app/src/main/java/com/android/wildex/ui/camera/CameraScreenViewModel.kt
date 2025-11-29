@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -97,7 +96,7 @@ class CameraScreenViewModel(
     viewModelScope.launch {
       try {
         val postId = postsRepository.getNewPostId()
-        val imageUrl = storageRepository.uploadPostImage(postId, uri)!!
+        val imageUrl = storageRepository.uploadPostImage(postId, uri)
         val animalId = response.taxonomy.id
         val location =
             if (_uiState.value.addLocation) {
@@ -118,7 +117,7 @@ class CameraScreenViewModel(
                 commentsCount = 0,
             )
         postsRepository.addPost(finalPost)
-        registerAnimal(animalId)
+        registerAnimal(animalId, context)
         resetState()
         onPost()
       } catch (e: Exception) {
@@ -139,12 +138,12 @@ class CameraScreenViewModel(
   }
 
   /* registers the animal from the animal response in the repository if not already there */
-  private suspend fun registerAnimal(animalId: Id) {
+  private suspend fun registerAnimal(animalId: Id, context: Context) {
     val detection = uiState.value.animalDetectResponse ?: return
-    val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType)
 
-    val animalPicture = animalInfoRepository.getAnimalPicture(detection.animalType).toUri()
-    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId, animalPicture) ?: ""
+    val animalDescription = animalInfoRepository.getAnimalDescription(detection.animalType)
+    val animalPicture = animalInfoRepository.getAnimalPicture(context, detection.animalType)
+    val animalPictureURL = storageRepository.uploadAnimalPicture(animalId, animalPicture)
     val animal =
         Animal(
             animalId,

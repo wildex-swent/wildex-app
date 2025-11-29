@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -50,7 +51,9 @@ private val defaultUser: SimpleUser =
         userId = "defaultUserId",
         username = "defaultUsername",
         profilePictureURL = "",
-        userType = UserType.REGULAR)
+        userType = UserType.REGULAR,
+    )
+
 /**
  * Combines post data with associated metadata for display.
  *
@@ -64,6 +67,8 @@ data class PostState(
     val isLiked: Boolean,
     val author: SimpleUser,
     val animalName: String,
+    val likeCount: Int,
+    val commentsCount: Int,
 )
 
 /**
@@ -83,6 +88,7 @@ class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
+    private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
@@ -140,12 +146,16 @@ class HomeScreenViewModel(
               val author = userRepository.getSimpleUser(post.authorId)
               val isLiked = likeRepository.getLikeForPost(post.postId) != null
               val animalName = animalRepository.getAnimal(post.animalId).name
+              val likeCount = likeRepository.getLikesForPost(post.postId).size
+              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
 
               PostState(
                   post = post,
                   author = author,
                   isLiked = isLiked,
                   animalName = animalName,
+                  likeCount = likeCount,
+                  commentsCount = commentCount,
               )
             } catch (_: Exception) {
               null

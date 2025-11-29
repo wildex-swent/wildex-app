@@ -258,7 +258,7 @@ private fun PostSelectionCard(
         }
 
         Text(
-            text = details.post.likesCount.toString(),
+            text = details.likeCount.toString(),
             style = typography.bodySmall,
             color = ui.fg,
         )
@@ -276,7 +276,7 @@ private fun PostSelectionCard(
         )
 
         Text(
-            text = details.post.commentsCount.toString(),
+            text = details.commentCount.toString(),
             style = typography.bodySmall,
             color = ui.fg,
         )

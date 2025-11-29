@@ -14,11 +14,15 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.CommentTag
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.post.Comment
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -36,6 +40,7 @@ class HomeScreenTest {
   private val postRepository = LocalRepositories.postsRepository
   private val userRepository = LocalRepositories.userRepository
   private val likeRepository = LocalRepositories.likeRepository
+  private val commentRepository = LocalRepositories.commentRepository
   private val animalRepository = LocalRepositories.animalRepository
 
   private val fullPost =
@@ -48,8 +53,6 @@ class HomeScreenTest {
           description = "Description 1",
           date = Timestamp.now(),
           animalId = "a1",
-          likesCount = 10,
-          commentsCount = 5,
       )
 
   private lateinit var homeScreenVM: HomeScreenViewModel
@@ -61,6 +64,7 @@ class HomeScreenTest {
             postRepository,
             userRepository,
             likeRepository,
+            commentRepository,
             animalRepository,
             "currentUserId-1",
         )
@@ -377,9 +381,31 @@ class HomeScreenTest {
 
   @Test
   fun likeAndCommentCountsAreDisplayedCorrectly() {
-    val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
-    val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)
+    val postWithCounts = fullPost.copy(postId = "counts")
+    val postWithCount = fullPost.copy(postId = "count")
     runBlocking {
+      (1..42).forEach { likeRepository.addLike(Like("like${it}", "counts", "currentUserId-1")) }
+      likeRepository.addLike(Like("like1", "count", "currentUserId-1"))
+      (1..7).forEach {
+        commentRepository.addComment(
+            Comment(
+                "comment$it",
+                "counts",
+                "currentUserId-1",
+                "",
+                Timestamp.now(),
+                CommentTag.POST_COMMENT,
+            ))
+      }
+      commentRepository.addComment(
+          Comment(
+              "comment1",
+              "count",
+              "currentUserId-1",
+              "",
+              Timestamp.now(),
+              CommentTag.POST_COMMENT,
+          ))
       postRepository.addPost(postWithCounts)
       postRepository.addPost(postWithCount)
       homeScreenVM.refreshUIState()
@@ -432,6 +458,7 @@ class HomeScreenTest {
               delayedPostsRepo,
               LocalRepositories.userRepository,
               LocalRepositories.likeRepository,
+              LocalRepositories.commentRepository,
               LocalRepositories.animalRepository,
               "currentUserId-1",
           )

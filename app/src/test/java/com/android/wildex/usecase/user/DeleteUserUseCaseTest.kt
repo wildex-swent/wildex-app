@@ -11,6 +11,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.utils.MainDispatcherRule
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -31,6 +32,7 @@ class DeleteUserUseCaseTest {
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
   private lateinit var userFriendsRepository: UserFriendsRepository
+  private lateinit var userTokensRepository: UserTokensRepository
   private lateinit var friendRequestRepository: FriendRequestRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var reportRepository: ReportRepository
@@ -48,6 +50,7 @@ class DeleteUserUseCaseTest {
     userAnimalsRepository = mockk()
     userAchievementsRepository = mockk()
     userFriendsRepository = mockk()
+    userTokensRepository = mockk()
     friendRequestRepository = mockk()
     postsRepository = mockk()
     reportRepository = mockk()
@@ -68,6 +71,7 @@ class DeleteUserUseCaseTest {
             likeRepository,
             commentRepository,
             authRepository,
+            userTokensRepository,
         )
   }
 
@@ -87,6 +91,7 @@ class DeleteUserUseCaseTest {
           RuntimeException("bim-boom")
       coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } throws
           RuntimeException("bim-boom")
+      coEvery { userTokensRepository.deleteUserTokens(userId) } throws RuntimeException("bim-boom")
 
       try {
         useCase(userId)
@@ -114,6 +119,7 @@ class DeleteUserUseCaseTest {
       coEvery { reportRepository.deleteReportsByUser(userId) } just Runs
       coEvery { likeRepository.deleteLikesByUser(userId) } just Runs
       coEvery { commentRepository.deleteCommentsByUser(userId) } just Runs
+      coEvery { userTokensRepository.deleteUserTokens(userId) } just Runs
       coEvery { authRepository.deleteUserAuth() } returns Result.success(Unit)
 
       try {

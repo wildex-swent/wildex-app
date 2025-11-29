@@ -14,12 +14,16 @@ import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * Represents the UI state for authentication.
@@ -42,6 +46,8 @@ class SignInViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
+    private val userTokensRepository: UserTokensRepository =
+        RepositoryProvider.userTokensRepository,
     private val initializeUserUseCase: InitializeUserUseCase = InitializeUserUseCase(),
 ) : ViewModel() {
 
@@ -76,19 +82,28 @@ class SignInViewModel(
             .signInWithGoogle(credential)
             .fold(
                 onSuccess = { firebaseUser ->
-                  val userId = firebaseUser.uid
-                  val isNewUser =
-                      try {
-                        userRepository.getUser(userId)
-                        AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
-                        false
-                      } catch (_: Exception) {
-                        initializeUserUseCase(userId)
-                        AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
-                        true
-                      }
-                  _uiState.update { it.copy(isLoading = false, errorMsg = null) }
-                  onSignedIn(isNewUser)
+                  try {
+                    val userId = firebaseUser.uid
+                    val isNewUser =
+                        try {
+                          userRepository.getUser(userId)
+                          AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
+                          false
+                        } catch (_: Exception) {
+                          initializeUserUseCase(userId)
+                          AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+                          true
+                        } finally {
+                          userTokensRepository.addTokenToUser(
+                              userId,
+                              Firebase.messaging.token.await(),
+                          )
+                        }
+                    _uiState.update { it.copy(isLoading = false, errorMsg = null) }
+                    onSignedIn(isNewUser)
+                  } catch (e: Exception) {
+                    _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
+                  }
                 },
                 onFailure = { failure ->
                   _uiState.update {

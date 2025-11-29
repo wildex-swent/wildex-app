@@ -132,31 +132,7 @@ class EditProfileViewModelTest {
       }
 
   @Test
-  fun saveProfileChanges_uploadFails_setsError() =
-      mainDispatcherRule.runTest {
-        viewModel.setName("A")
-        viewModel.setSurname("B")
-        viewModel.setUsername("C")
-        viewModel.setDescription("D")
-        val anyUri = mockk<Uri>(relaxed = true)
-        viewModel.setNewProfileImageUri(anyUri)
-        coEvery { userRepository.getUser("uid-1") } returns u1
-        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
-            RuntimeException("x")
-
-        viewModel.saveProfileChanges {}
-
-        advanceUntilIdle()
-
-        Assert.assertEquals("Failed to save profile changes: x", viewModel.uiState.value.errorMsg)
-        coVerify(exactly = 1) { userRepository.getUser("uid-1") }
-        coVerify(exactly = 1) { storageRepository.uploadUserProfilePicture("uid-1", anyUri) }
-        coVerify(exactly = 0) { userRepository.editUser(any(), any()) }
-        confirmVerified(userRepository, storageRepository)
-      }
-
-  @Test
-  fun saveProfileChanges_uploadReturnsNull_keepsOldUrl() =
+  fun saveProfileChanges_uploadThrows_keepsOldUrl() =
       mainDispatcherRule.runTest {
         viewModel.setName("A")
         viewModel.setSurname("B")
@@ -165,7 +141,8 @@ class EditProfileViewModelTest {
         val pending = mockk<Uri>(relaxed = true)
         viewModel.setNewProfileImageUri(pending)
         coEvery { userRepository.getUser("uid-1") } returns u1
-        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns null
+        coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } throws
+            Exception("Boom")
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
         viewModel.saveProfileChanges {}

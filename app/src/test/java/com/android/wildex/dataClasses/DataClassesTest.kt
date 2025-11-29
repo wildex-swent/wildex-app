@@ -139,8 +139,6 @@ class DataClassesTest {
             description = "Post description",
             date = Timestamp.now(),
             animalId = "animal1",
-            likesCount = 10,
-            commentsCount = 5,
         )
 
     TestCase.assertEquals("post1", post.postId)
@@ -148,8 +146,6 @@ class DataClassesTest {
     TestCase.assertEquals("https://example.com/post_pic", post.pictureURL)
     TestCase.assertEquals("Post Location", post.location?.name)
     TestCase.assertEquals("Post description", post.description)
-    TestCase.assertEquals(10, post.likesCount)
-    TestCase.assertEquals(5, post.commentsCount)
   }
 
   @Test

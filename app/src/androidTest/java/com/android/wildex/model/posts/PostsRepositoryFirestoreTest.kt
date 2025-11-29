@@ -155,10 +155,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
                 location = Location(1.0, 1.0),
                 description = "Modified Description",
                 date = fromDate(2026, Calendar.JANUARY, 1),
-                animalId = "modifiedAnimalId",
-                likesCount = 20,
-                commentsCount = 10,
-            )
+                animalId = "modifiedAnimalId")
         repository.editPost(post1.postId, modifiedPost)
         assertEquals(1, getPostsCount())
         val postsAfterEdit = repository.getAllPosts()
@@ -185,10 +182,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
                 location = Location(1.0, 1.0),
                 description = "Modified Description",
                 date = fromDate(2026, Calendar.JANUARY, 1),
-                animalId = "modifiedAnimalId",
-                likesCount = 20,
-                commentsCount = 10,
-            )
+                animalId = "modifiedAnimalId")
         repository.editPost(post1.postId, modifiedPost)
         val postsAfterEdit = repository.getAllPosts()
         assertEquals(postsAfterEdit.size, 3)
@@ -274,8 +268,6 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
   fun testGetAllPostsByAuthorWhenNoPostsByAuthorExist() =
       runTest(timeout = 60.seconds) {
         Firebase.auth.signInAnonymously().await()
-        val currentUserId =
-            Firebase.auth.currentUser?.uid ?: throw Exception("No current user found")
         val post1 = post1.copy(authorId = "author1")
         val post2 = post2.copy(authorId = "author2")
         repository.addPost(post1)

@@ -118,6 +118,8 @@ class PostDetailsScreenViewModel(
             if (localErrorMsg == null) localErrorMsg = "Failed to load user like: ${e.message}"
             false
           }
+      val likeCount = likeRepository.getLikesForPost(postId).size
+      val commentCount = comments.size
 
       _uiState.value =
           PostDetailsUIState(
@@ -126,8 +128,8 @@ class PostDetailsScreenViewModel(
               location = post.location?.name ?: "",
               description = post.description,
               date = formatDate(post.date),
-              likesCount = post.likesCount,
-              commentsCount = post.commentsCount,
+              likesCount = likeCount,
+              commentsCount = commentCount,
               authorId = post.authorId,
               authorUsername = simpleAuthor.username,
               authorProfilePictureURL = simpleAuthor.profilePictureURL,
@@ -170,21 +172,6 @@ class PostDetailsScreenViewModel(
       try {
         val likeId = likeRepository.getNewLikeId()
         likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
-
-        // Update count in the post (optional to keep server in sync)
-        try {
-          val post = postRepository.getPost(postId)
-          postRepository.editPost(
-              postId = postId,
-              newValue = post.copy(likesCount = post.likesCount + 1),
-          )
-        } catch (e: Exception) {
-          Log.w(
-              "PostDetailsViewModel",
-              "Failed to increment post likesCount on server: ${e.message}",
-          )
-          setErrorMsg("Failed to update post likes: ${e.message}.")
-        }
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "addLike failed for $postId", e)
         setErrorMsg("Failed to like: ${e.message}")
@@ -215,21 +202,6 @@ class PostDetailsScreenViewModel(
         val like =
             likeRepository.getLikeForPost(postId) ?: throw IllegalStateException("Like not found")
         likeRepository.deleteLike(like.likeId)
-
-        // Update count in the post (optional to keep server in sync)
-        try {
-          val post = postRepository.getPost(postId)
-          postRepository.editPost(
-              postId = postId,
-              newValue = post.copy(likesCount = post.likesCount - 1),
-          )
-        } catch (e: Exception) {
-          Log.w(
-              "PostDetailsViewModel",
-              "Failed to decrement post likesCount on server: ${e.message}",
-          )
-          setErrorMsg("Failed to update post likes: ${e.message}.")
-        }
       } catch (e: Exception) {
         Log.e("PostDetailsViewModel", "removeLike failed for $postId", e)
         setErrorMsg("Failed to remove like: ${e.message}")
@@ -283,21 +255,6 @@ class PostDetailsScreenViewModel(
                 text = text,
                 date = now,
                 tag = CommentTag.POST_COMMENT))
-
-        // 3) Update count in the post (optional to keep server in sync)
-        try {
-          val post = postRepository.getPost(postId)
-          postRepository.editPost(
-              postId = postId,
-              newValue = post.copy(commentsCount = post.commentsCount + 1),
-          )
-        } catch (e: Exception) {
-          Log.w(
-              "PostDetailsViewModel",
-              "Failed to increment post commentsCount on server: ${e.message}",
-          )
-          setErrorMsg("Failed to update post comments: ${e.message}.")
-        }
       } catch (e: Exception) {
         // Rollback UI
         Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)

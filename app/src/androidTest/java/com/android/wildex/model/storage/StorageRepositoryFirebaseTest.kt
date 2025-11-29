@@ -6,13 +6,12 @@ import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.storage.StorageReference
 import java.io.File
 import java.io.FileOutputStream
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -52,18 +51,18 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runBlocking {
+  fun storageRepository_canBeInstantiatedWithDefaultConstructor() = runTest {
     val defaultRepository = StorageRepositoryFirebase()
     assertNotNull("Repository should be created with default constructor", defaultRepository)
   }
 
   @Test
-  fun uploadUserProfilePicture_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
+  fun uploadUserProfilePicture_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val userId = "user123"
     try {
       val result = storageRepository.uploadUserProfilePicture(userId, testImageUri)
       assertNotNull("Upload should return a URL", result)
-      assertTrue("URL should contain userId", result!!.contains(userId))
+      assertTrue("URL should contain userId", result.contains(userId))
       assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
@@ -71,7 +70,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadUserProfilePicture_createsFileAtCorrectPath() = runBlocking {
+  fun uploadUserProfilePicture_createsFileAtCorrectPath() = runTest {
     val userId = "testUser456"
     try {
       val url = storageRepository.uploadUserProfilePicture(userId, testImageUri)
@@ -79,7 +78,7 @@ class StorageRepositoryFirebaseTest {
       val expectedPathSegment = "users%2F$userId.jpg"
       assertTrue(
           "URL should contain correct path: $expectedPathSegment",
-          url!!.contains(expectedPathSegment),
+          url.contains(expectedPathSegment),
       )
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
@@ -87,13 +86,13 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadPostImage_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
+  fun uploadPostImage_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val postId = "post789"
     try {
       val result = storageRepository.uploadPostImage(postId, testImageUri)
 
       assertNotNull("Upload should return a URL", result)
-      assertTrue("URL should contain postId", result!!.contains(postId))
+      assertTrue("URL should contain postId", result.contains(postId))
       assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
@@ -101,7 +100,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadPostImage_createsFileAtCorrectPath() = runBlocking {
+  fun uploadPostImage_createsFileAtCorrectPath() = runTest {
     val postId = "testPost123"
     try {
       val url = storageRepository.uploadPostImage(postId, testImageUri)
@@ -110,7 +109,7 @@ class StorageRepositoryFirebaseTest {
       val expectedPathSegment = "posts%2F$postId.jpg"
       assertTrue(
           "URL should contain correct path: $expectedPathSegment",
-          url!!.contains(expectedPathSegment),
+          url.contains(expectedPathSegment),
       )
     } finally {
       runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
@@ -118,14 +117,14 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadReportImage_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
+  fun uploadReportImage_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val reportId = "report456"
 
     try {
       val result = storageRepository.uploadReportImage(reportId, testImageUri)
 
       assertNotNull("Upload should return a URL", result)
-      assertTrue("URL should contain reportId", result!!.contains(reportId))
+      assertTrue("URL should contain reportId", result.contains(reportId))
       assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
     } finally {
       runCatching {
@@ -135,7 +134,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadReportImage_createsFileAtCorrectPath() = runBlocking {
+  fun uploadReportImage_createsFileAtCorrectPath() = runTest {
     val reportId = "testReport321"
     try {
       val url = storageRepository.uploadReportImage(reportId, testImageUri)
@@ -144,7 +143,7 @@ class StorageRepositoryFirebaseTest {
       val expectedPathSegment = "reports%2F$reportId.jpg"
       assertTrue(
           "URL should contain correct path: $expectedPathSegment",
-          url!!.contains(expectedPathSegment),
+          url.contains(expectedPathSegment),
       )
     } finally {
       runCatching {
@@ -154,14 +153,14 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadAnimalPicture_returnsDownloadUrl_whenUploadSucceeds() = runBlocking {
+  fun uploadAnimalPicture_returnsDownloadUrl_whenUploadSucceeds() = runTest {
     val animalId = "animal123"
 
     try {
       val result = storageRepository.uploadAnimalPicture(animalId, testImageUri)
 
       assertNotNull("Upload should return a URL", result)
-      assertTrue("URL should contain animalId", result!!.contains(animalId))
+      assertTrue("URL should contain animalId", result.contains(animalId))
       assertTrue("URL should point to Firebase Storage", result.contains("firebasestorage"))
     } finally {
       runCatching {
@@ -171,7 +170,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadAnimalPicture_createsFileAtCorrectPath() = runBlocking {
+  fun uploadAnimalPicture_createsFileAtCorrectPath() = runTest {
     val animalId = "testAnimal789"
 
     try {
@@ -181,7 +180,7 @@ class StorageRepositoryFirebaseTest {
       val expectedPathSegment = "animals%2F$animalId.jpg"
       assertTrue(
           "URL should contain correct path: $expectedPathSegment",
-          url!!.contains(expectedPathSegment),
+          url.contains(expectedPathSegment),
       )
     } finally {
       runCatching {
@@ -191,7 +190,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadMultipleUserProfilePictures_eachReturnsUniqueUrl() = runBlocking {
+  fun uploadMultipleUserProfilePictures_eachReturnsUniqueUrl() = runTest {
     val userId1 = "user001"
     val userId2 = "user002"
     val userId3 = "user003"
@@ -219,7 +218,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun uploadUserProfilePicture_overwritesExistingImage() = runBlocking {
+  fun uploadUserProfilePicture_overwritesExistingImage() = runTest {
     val userId = "userOverwrite"
 
     try {
@@ -243,7 +242,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteUserProfilePicture_succeeds_afterUpload() = runBlocking {
+  fun deleteUserProfilePicture_succeeds_afterUpload() = runTest {
     val userId = "userToDelete"
 
     try {
@@ -258,7 +257,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deletePostImage_succeeds_afterUpload() = runBlocking {
+  fun deletePostImage_succeeds_afterUpload() = runTest {
     val postId = "postToDelete"
 
     try {
@@ -273,7 +272,7 @@ class StorageRepositoryFirebaseTest {
   }
 
   @Test
-  fun deleteAnimalPicture_succeeds_afterUpload() = runBlocking {
+  fun deleteAnimalPicture_succeeds_afterUpload() = runTest {
     val animalId = "animalToDelete"
 
     try {
@@ -289,107 +288,49 @@ class StorageRepositoryFirebaseTest {
     }
   }
 
-  @Test
-  fun uploadUserProfilePicture_returnsNull_whenInvalidUriProvided() = runBlocking {
+  @Test(expected = Exception::class)
+  fun uploadUserProfilePicture_throwsException_whenInvalidUriProvided() = runTest {
     val userId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
 
-    try {
-      val result = storageRepository.uploadUserProfilePicture(userId, invalidUri)
-
-      assertNull("Upload should return null for invalid URI", result)
-    } finally {
-      runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
-    }
+    storageRepository.uploadUserProfilePicture(userId, invalidUri)
   }
 
-  @Test
-  fun uploadPostImage_returnsNull_whenInvalidUriProvided() = runBlocking {
+  @Test(expected = Exception::class)
+  fun uploadPostImage_throwsException_whenInvalidUriProvided() = runTest {
     val postId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
 
-    try {
-      val result = storageRepository.uploadPostImage(postId, invalidUri)
-
-      assertNull("Upload should return null for invalid URI", result)
-    } finally {
-      runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
-    }
+    storageRepository.uploadPostImage(postId, invalidUri)
   }
 
-  @Test
-  fun uploadAnimalPicture_returnsNull_whenInvalidUriProvided() = runBlocking {
+  @Test(expected = Exception::class)
+  fun uploadAnimalPicture_throwsException_whenInvalidUriProvided() = runTest {
     val animalId = "invalidUriTest"
     val invalidUri = Uri.parse("invalid://path/to/nowhere")
-
-    try {
-      val result = storageRepository.uploadAnimalPicture(animalId, invalidUri)
-
-      assertNull("Upload should return null for invalid URI", result)
-    } finally {
-      runCatching {
-        FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
-      }
-    }
+    storageRepository.uploadAnimalPicture(animalId, invalidUri)
   }
 
-  @Test
-  fun deleteUserProfilePicture_catchesException_whenFileDoesNotExist() = runBlocking {
+  @Test(expected = Exception::class)
+  fun deleteUserProfilePicture_throwsException_whenFileDoesNotExist() = runTest {
     val userId = "nonExistentUserDelete"
-
-    try {
-      // Attempt to delete non-existent file - should catch exception and log it
-      storageRepository.deleteUserProfilePicture(userId)
-
-      // If we reach here, exception was caught (not propagated)
-      assertFalse(
-          "File should not exist",
-          FirebaseEmulator.storage.reference.child("users/$userId.jpg").exists(),
-      )
-    } finally {
-      runCatching { FirebaseEmulator.storage.reference.child("users/$userId.jpg").delete().await() }
-    }
+    storageRepository.deleteUserProfilePicture(userId)
   }
 
-  @Test
-  fun deletePostImage_catchesException_whenFileDoesNotExist() = runBlocking {
+  @Test(expected = Exception::class)
+  fun deletePostImage_throwsException_whenFileDoesNotExist() = runTest {
     val postId = "nonExistentPostDelete"
-
-    try {
-      // Attempt to delete non-existent file - should catch exception and log it
-      storageRepository.deletePostImage(postId)
-
-      // If we reach here, exception was caught (not propagated)
-      assertFalse(
-          "File should not exist",
-          FirebaseEmulator.storage.reference.child("posts/$postId.jpg").exists(),
-      )
-    } finally {
-      runCatching { FirebaseEmulator.storage.reference.child("posts/$postId.jpg").delete().await() }
-    }
+    storageRepository.deletePostImage(postId)
   }
 
-  @Test
-  fun deleteAnimalPicture_catchesException_whenFileDoesNotExist() = runBlocking {
+  @Test(expected = Exception::class)
+  fun deleteAnimalPicture_throwsException_whenFileDoesNotExist() = runTest {
     val animalId = "nonExistentAnimalDelete"
-
-    try {
-      storageRepository.deleteAnimalPicture(animalId)
-
-      // If we reach here, exception was caught (not propagated)
-      assertFalse(
-          "File should not exist",
-          FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").exists(),
-      )
-    } finally {
-      runCatching {
-        FirebaseEmulator.storage.reference.child("animals/$animalId.jpg").delete().await()
-      }
-    }
+    storageRepository.deleteAnimalPicture(animalId)
   }
 
   @Test
-  fun deleteReportImage_succeeds_afterUpload() = runBlocking {
+  fun deleteReportImage_succeeds_afterUpload() = runTest {
     val reportId = "reportToDelete"
 
     try {
@@ -405,32 +346,17 @@ class StorageRepositoryFirebaseTest {
     }
   }
 
-  @Test
-  fun deleteReportImage_catchesException_whenFileDoesNotExist() = runBlocking {
+  @Test(expected = Exception::class)
+  fun deleteReportImage_throwsException_whenFileDoesNotExist() = runTest {
     val reportId = "nonExistentReportDelete"
+    storageRepository.deleteReportImage(reportId)
+  }
 
-    try {
-      // Attempt to delete non-existent file - should catch exception and log it
-      storageRepository.deleteReportImage(reportId)
-
-      // If we reach here, exception was caught (not propagated)
-      assertFalse(
-          "File should not exist",
-          FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").exists(),
-      )
-    } finally {
-      runCatching {
-        FirebaseEmulator.storage.reference.child("reports/$reportId.jpg").delete().await()
+  private suspend fun StorageReference.exists(): Boolean =
+      try {
+        metadata.await()
+        true
+      } catch (_: Exception) {
+        false
       }
-    }
-  }
-
-  private fun StorageReference.exists(): Boolean = runBlocking {
-    try {
-      metadata.await()
-      true
-    } catch (_: Exception) {
-      false
-    }
-  }
 }

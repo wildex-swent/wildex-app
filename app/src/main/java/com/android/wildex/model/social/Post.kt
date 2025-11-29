@@ -14,8 +14,6 @@ import com.google.firebase.Timestamp
  * @property location The location where the post was made.
  * @property date The date and time when the post was created.
  * @property animalId The ID of the animal related to the post.
- * @property likesCount The number of likes the post has received.
- * @property commentsCount The number of comments the post has received.
  */
 data class Post(
     val postId: Id,
@@ -24,7 +22,5 @@ data class Post(
     val location: Location?,
     val description: String = "",
     val date: Timestamp,
-    val animalId: Id,
-    val likesCount: Int,
-    val commentsCount: Int,
+    val animalId: Id
 )

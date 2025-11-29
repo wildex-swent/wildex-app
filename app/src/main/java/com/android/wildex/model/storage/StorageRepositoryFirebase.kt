@@ -1,7 +1,6 @@
 package com.android.wildex.model.storage
 
 import android.net.Uri
-import android.util.Log
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
@@ -23,22 +22,22 @@ import kotlinx.coroutines.tasks.await
 class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.storage) :
     StorageRepository {
 
-  override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL? {
+  override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL {
     val path = getUserProfilePicturePath(userId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL? {
+  override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL {
     val path = getPostImagePath(postId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL? {
+  override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL {
     val path = getReportImagePath(reportId)
     return uploadImageToStorage(imageUri, path)
   }
 
-  override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
+  override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL {
     val path = getAnimalPicturePath(animalId)
     return uploadImageToStorage(imageUri, path)
   }
@@ -64,7 +63,6 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
   }
 
   companion object {
-    private const val TAG = "StorageRepositoryFirebase"
     private const val USERS_PATH = "users"
     private const val POSTS_PATH = "posts"
     private const val REPORTS_PATH = "reports"
@@ -78,16 +76,11 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @param path The storage path where the image will be saved (e.g., "users/userId.jpg")
    * @return The download URL of the uploaded image, or null if the upload fails
    */
-  private suspend fun uploadImageToStorage(imageUri: Uri, path: String): URL? {
-    try {
-      val storageRef: StorageReference = storage.reference.child(path)
-      storageRef.putFile(imageUri).await()
-      val downloadUrl = storageRef.downloadUrl.await()
-      return downloadUrl.toString()
-    } catch (e: Exception) {
-      Log.e(TAG, "Failed to upload image: ${e.message}", e)
-      return null
-    }
+  private suspend fun uploadImageToStorage(imageUri: Uri, path: String): URL {
+    val storageRef: StorageReference = storage.reference.child(path)
+    storageRef.putFile(imageUri).await()
+    val downloadUrl = storageRef.downloadUrl.await()
+    return downloadUrl.toString()
   }
 
   /**
@@ -96,12 +89,8 @@ class StorageRepositoryFirebase(private val storage: FirebaseStorage = Firebase.
    * @param path The storage path of the image to delete (e.g., "users/userId.jpg")
    */
   private suspend fun deleteImageFromStorage(path: String) {
-    try {
-      val storageRef: StorageReference = storage.reference.child(path)
-      storageRef.delete().await()
-    } catch (e: Exception) {
-      Log.e(TAG, "Failed to delete image: ${e.message}", e)
-    }
+    val storageRef: StorageReference = storage.reference.child(path)
+    storageRef.delete().await()
   }
 
   /**

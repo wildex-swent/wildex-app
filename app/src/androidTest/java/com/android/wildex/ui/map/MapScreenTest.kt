@@ -74,10 +74,7 @@ class MapScreenTest {
           location = Location(46.5197, 6.6323, "Lausanne"),
           description = "A nice post",
           date = Timestamp.now(),
-          animalId = "fox",
-          likesCount = 3,
-          commentsCount = 1,
-      )
+          animalId = "fox")
   private val report1 =
       Report(
           reportId = "r1",
@@ -100,6 +97,7 @@ class MapScreenTest {
 
   private val userRepository = LocalRepositories.userRepository
   private val likeRepository = LocalRepositories.likeRepository
+  private val commentRepository = LocalRepositories.commentRepository
   private val reportRepository = LocalRepositories.reportRepository
   private val postsRepository = LocalRepositories.postsRepository
   private val animalRepository = LocalRepositories.animalRepository
@@ -121,6 +119,7 @@ class MapScreenTest {
             postRepository = postsRepository,
             userRepository = userRepository,
             likeRepository = likeRepository,
+            commentRepository = commentRepository,
             reportRepository = reportRepository,
             animalRepository = animalRepository,
             currentUserId = currentUserId,
@@ -197,11 +196,11 @@ class MapScreenTest {
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin }?.id)
     viewModel.onPinSelected(postPinId)
     composeTestRule.waitForIdle()
-    val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
+    val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
     requireNotNull(before)
     node(MapContentTestTags.SELECTION_LIKE_BUTTON).assertIsDisplayed().performClick()
     composeTestRule.waitForIdle()
-    val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
+    val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
     requireNotNull(after)
     assert(before != after)
     node(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
@@ -333,7 +332,13 @@ class MapScreenTest {
     var opened: Id? = null
     var liked: Id? = null
     val details =
-        PinDetails.PostDetails(post = post1, author = null, likedByMe = false, animalName = "fox")
+        PinDetails.PostDetails(
+            post = post1,
+            author = null,
+            likedByMe = false,
+            animalName = "fox",
+            likeCount = 0,
+            commentCount = 0)
     setSelectionCard(
         selection = details,
         tab = MapTab.Posts,
@@ -377,7 +382,8 @@ class MapScreenTest {
                 SimpleUser(user1.userId, user1.username, user1.profilePictureURL, user1.userType),
             likedByMe = true,
             animalName = "owl",
-        )
+            likeCount = 0,
+            commentCount = 0)
     setSelectionCard(selection = details, tab = MapTab.MyPosts)
     nodeText("You saw an owl", substring = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LOCATION).assertIsDisplayed()

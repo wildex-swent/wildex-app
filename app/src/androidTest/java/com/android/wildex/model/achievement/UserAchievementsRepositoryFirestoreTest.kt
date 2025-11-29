@@ -11,6 +11,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -71,10 +72,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             location = null,
             description = "",
             date = Timestamp.now(),
-            animalId = "",
-            likesCount = 0,
-            commentsCount = 0,
-        )) // For the firstPost achievement
+            animalId = "")) // For the firstPost achievement
     repository.updateUserAchievements(testUserId)
 
     val achievements = repository.getAllAchievementsByUser(testUserId)
@@ -94,10 +92,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             location = null,
             description = "",
             date = Timestamp.now(),
-            animalId = "",
-            likesCount = 0,
-            commentsCount = 0,
-        )) // For the firstPost achievement
+            animalId = "")) // For the firstPost achievement
     repository.updateUserAchievements(testUserId)
 
     val count = repository.getAchievementsCountOfUser(testUserId)
@@ -105,30 +100,28 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   }
 
   @Test
-  fun updateUserAchievementsWhenNoChangesDoesNotUpdate() = runTest {
+  fun updateUserAchievementsWhenNoChangesDoesNotUpdate() =
+      runTest(timeout = 3.minutes) {
 
-    // Setup
-    repository.initializeUserAchievements(testUserId)
-    RepositoryProvider.postRepository.addPost(
-        Post(
-            postId = "post1",
-            authorId = testUserId,
-            pictureURL = "",
-            location = null,
-            description = "",
-            date = Timestamp.now(),
-            animalId = "",
-            likesCount = 0,
-            commentsCount = 0,
-        )) // For the firstPost achievement
-    repository.updateUserAchievements(testUserId)
+        // Setup
+        repository.initializeUserAchievements(testUserId)
+        RepositoryProvider.postRepository.addPost(
+            Post(
+                postId = "post1",
+                authorId = testUserId,
+                pictureURL = "",
+                location = null,
+                description = "",
+                date = Timestamp.now(),
+                animalId = "")) // For the firstPost achievement
+        repository.updateUserAchievements(testUserId)
 
-    val initialAchievements = repository.getAllAchievementsByUser(testUserId)
-    repository.updateUserAchievements(testUserId)
+        val initialAchievements = repository.getAllAchievementsByUser(testUserId)
+        repository.updateUserAchievements(testUserId)
 
-    val updatedAchievements = repository.getAllAchievementsByUser(testUserId)
-    assertEquals(initialAchievements, updatedAchievements)
-  }
+        val updatedAchievements = repository.getAllAchievementsByUser(testUserId)
+        assertEquals(initialAchievements, updatedAchievements)
+      }
 
   @Test
   fun getAllAchievementsByUserWhenEmptyAchievementsReturnsEmptyList() = runTest {

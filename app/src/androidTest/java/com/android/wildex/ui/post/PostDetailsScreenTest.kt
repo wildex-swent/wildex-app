@@ -142,8 +142,6 @@ class PostDetailsScreenTest {
             description = "Saw this beautiful tiger during my trip!",
             date = Timestamp.now(),
             animalId = "tiger",
-            likesCount = 2,
-            commentsCount = 2,
         )
     postRepository.addPost(post)
 
@@ -328,8 +326,6 @@ class PostDetailsScreenTest {
               description = "",
               date = Timestamp.now(),
               animalId = "",
-              likesCount = 0,
-              commentsCount = 0,
           ))
       val vm =
           PostDetailsScreenViewModel(

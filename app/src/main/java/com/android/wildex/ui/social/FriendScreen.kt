@@ -123,10 +123,6 @@ fun FriendScreen(
     }
   }
 
-  LaunchedEffect(uiState.isRefreshing) {
-    SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
-  }
-
   Scaffold(
       modifier = Modifier.fillMaxSize(), topBar = { FriendScreenTopBar(onGoBack = onGoBack) }) {
           paddingValues ->

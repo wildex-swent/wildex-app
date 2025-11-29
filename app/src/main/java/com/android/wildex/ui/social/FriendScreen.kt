@@ -58,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataProvider
+import com.android.wildex.model.social.SearchDataUpdater
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -120,6 +121,10 @@ fun FriendScreen(
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       friendScreenViewModel.clearErrorMsg()
     }
+  }
+
+  LaunchedEffect(uiState.isRefreshing) {
+    SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
   }
 
   Scaffold(

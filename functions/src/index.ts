@@ -10,6 +10,7 @@ import {
   FCMTokenData,
   FriendRequest,
   Like,
+  Notification,
   Post,
   Report,
   User,
@@ -20,38 +21,11 @@ admin.initializeApp();
 
 const appAction = "OPEN_MAIN";
 
-const postNotificationTitle = "New Post";
-const likeNotificationTitle = "New Like";
-const commentNotificationTitle = "New Comment";
-const friendRequestNotificationTitle = "New Friend Request";
-const friendRequestAcceptedNotificationTitle = "Friend Request Accepted";
-const reportAssignedNotificationTitle = "Report Assigned";
-const reportResolvedNotificationTitle = "Report Resolved";
-
 const postChannelId = "post_channel";
 const likeChannelId = "like_channel";
 const commentChannelId = "comment_channel";
 const friendRequestChannelId = "friend_request_channel";
 const reportChannelId = "report_channel";
-/**
- * Maps notification types to notification bodies.
- * @param {string} type - Notification type
- * @param {string} username - Username of the actor
- * @return {string} Notification body string
- */
-function getNotificationBody(type: string, username: string): string {
-  const bodies: { [key: string]: string } = {
-    POST: `${username} shared a new post.`,
-    LIKE: `${username} liked your post.`,
-    COMMENT: `${username} commented on your`,
-    FRIEND_REQUEST_ACCEPTED: `${username} accepted your friend request.`,
-    FRIEND_REQUEST_RECEIVED: `${username} sent you a friend request.`,
-    REPORT_IS_ASSIGNED: `${username} is assigned to your report.`,
-    REPORT_IS_RESOLVED: `${username} resolved your report.`,
-  };
-  return bodies[type] || "You have a new notification.";
-}
-
 
 exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
   {
@@ -82,22 +56,53 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
         )
       ).flat();
 
-      const user = (
+      const author = (
         await admin.firestore().collection("users").doc(post.authorId).get()
       ).data() as User;
+
+      const notifications: Notification[] = userFriends.friendsId.map(
+        (friendId) => (
+          {
+            notificationId: admin.firestore()
+              .collection("notifications")
+              .doc()
+              .id,
+            targetId: friendId,
+            authorId: post.authorId,
+            title: `${author.username} shared a new post.`,
+            body: post.description ? post.description : "",
+            route: `post_details/${post.postId}`,
+            isRead: false,
+            date: admin.firestore.Timestamp.now(),
+          }
+        )
+      );
+
+      // Create notification documents in Firestore
+      await Promise.all(
+        notifications.map((notification) =>
+          admin.firestore()
+            .collection("notifications")
+            .doc(notification.notificationId)
+            .set(notification)
+        )
+      );
 
       const messages = friendTokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: postNotificationTitle,
-            body: getNotificationBody("POST", user.username),
+            title: `${author.username} shared a new post.`,
+            body: post.description ? post.description : "",
             clickAction: appAction,
             channelId: postChannelId,
+            tag: `post_${post.postId}`,
+            image: post.pictureURL,
           },
         },
         data: {
           path: `post_details/${post.postId}`,
+          authorId: post.authorId,
         },
       }));
 
@@ -137,21 +142,37 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
           .get()
       ).data() as User;
 
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: requestData.receiverId,
+        authorId: requestData.senderId,
+        title: `${fromUser.username} sent you a friend request.`,
+        body: "",
+        route: `friend_screen/${requestData.receiverId}`,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
+
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: friendRequestNotificationTitle,
-            body: getNotificationBody(
-              "FRIEND_REQUEST_RECEIVED",
-              fromUser.username
-            ),
+            title: `${fromUser.username} sent you a friend request.`,
             clickAction: appAction,
             channelId: friendRequestChannelId,
+            tag: `friend_request_${requestData.senderId}`,
+            image: fromUser.profilePictureURL,
           },
         },
         data: {
           path: `friend_screen/${requestData.receiverId}`,
+          authorId: requestData.senderId,
         },
       }));
 
@@ -166,7 +187,7 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
   }
 );
 
-exports.sendFriendNotifications = onDocumentDeletedWithAuthContext(
+exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
   {
     document: "friendRequests/{requestId}",
     region: "europe-west6",
@@ -204,20 +225,38 @@ exports.sendFriendNotifications = onDocumentDeletedWithAuthContext(
           .get()
       ).data() as User;
 
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: requestData.senderId,
+        authorId: requestData.receiverId,
+        title: `${toUser.username} accepted your friend request.`,
+        body: "",
+        route: `friend_screen/${requestData.senderId}`,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
+
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: friendRequestAcceptedNotificationTitle,
-            body: getNotificationBody(
-              "FRIEND_REQUEST_ACCEPTED",
-              toUser.username
-            ),
+            title: `${toUser.username} accepted your friend request.`,
             clickAction: appAction,
             channelId: friendRequestChannelId,
+            tag: `friend_request_${requestData.receiverId}`,
+            image: toUser.profilePictureURL,
           },
         },
-        data: {path: `friend_screen/${requestData.senderId}`},
+        data: {
+          path: `friend_screen/${requestData.senderId}`,
+          authorId: requestData.receiverId,
+        },
       }));
 
       return admin.messaging().sendEach(messages);
@@ -243,6 +282,10 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
         .get();
       const postData = postDoc.data() as Post;
 
+      if (likeData.userId === postData.authorId) {
+        return null;
+      }
+
       const tokenData = (
         await admin
           .firestore()
@@ -259,17 +302,39 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
           .get()
       ).data() as User;
 
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: postData.authorId,
+        authorId: likeData.userId,
+        title: `${fromUser.username} liked your post.`,
+        body: "",
+        route: `post_details/${postData.postId}`,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
+
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: likeNotificationTitle,
-            body: getNotificationBody("LIKE", fromUser.username),
+            title: `${fromUser.username} liked your post.`,
+            body: "",
             clickAction: appAction,
             channelId: likeChannelId,
+            tag: `liker_${likeData.userId}`,
+            image: fromUser.profilePictureURL,
           },
         },
-        data: {path: `post_details/${postData.postId}`},
+        data: {
+          path: `post_details/${postData.postId}`,
+          authorId: likeData.userId,
+        },
       }));
 
       return admin.messaging().sendEach(messages);
@@ -291,57 +356,82 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
   async (event) => {
     try {
       const commentData = event.data?.data() as Comment;
-
-      const postDoc = await admin
-        .firestore()
-        .collection("posts")
-        .doc(commentData.parentId)
-        .get();
-      const postData = postDoc.data() as Post;
-
-      const tokenData = (
-        await admin
-          .firestore()
-          .collection("userTokens")
-          .doc(postData.authorId)
-          .get()
-      ).data() as FCMTokenData;
-
       const fromUser = (
-        await admin
-          .firestore()
-          .collection("users")
+        await admin.firestore().collection("users")
           .doc(commentData.authorId)
           .get()
       ).data() as User;
+
+      const isPostComment = commentData.tag === "POST_COMMENT";
+
+      const collection = isPostComment ? "posts" : "reports";
+      const parentDoc = await admin.firestore().collection(collection)
+        .doc(commentData.parentId)
+        .get();
+      const parentData = parentDoc.data() as Post | Report;
+
+      if (commentData.authorId === parentData.authorId) {
+        return null;
+      }
+
+      const tokenData = (
+        await admin.firestore()
+          .collection("userTokens")
+          .doc(parentData.authorId)
+          .get()
+      ).data() as FCMTokenData | undefined;
+
+      if (!tokenData?.tokens?.length) return null;
+
+      const detailPath = isPostComment ?
+        `post_details/${(parentData as Post).postId}` :
+        `report_details/${(parentData as Report).reportId}`;
+
+      const bodySuffix = isPostComment ? " post." : " report.";
+
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: parentData.authorId,
+        authorId: commentData.authorId,
+        title: `${fromUser.username} commented on your${bodySuffix}`,
+        body: commentData.text,
+        route: detailPath,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
 
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: commentNotificationTitle,
-            body: getNotificationBody(
-              "COMMENT",
-              fromUser.username
-            ) + ` ${commentData.tag == "POST_COMMENT" ? "post." : "comment."}`,
+            title: `${fromUser.username} commented on your${bodySuffix}`,
+            body: commentData.text,
             clickAction: appAction,
             channelId: commentChannelId,
+            tag: `comment_${commentData.commentId}`,
+            image: fromUser.profilePictureURL,
           },
         },
-        data: {path: `post_details/${postData.postId}`},
-
+        data: {
+          path: detailPath,
+          authorId: commentData.authorId,
+        },
       }));
 
       return admin.messaging().sendEach(messages);
     } catch (error) {
-      logger.error(
-        "Comment Notifications : The following error has occured\n",
-        error
-      );
+      logger.error("Comment Notifications error\n", error);
       return null;
     }
   }
 );
+
 
 exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
   {
@@ -356,6 +446,10 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
         logger.log(
           `No notification sent: Report ${reportData.reportId} has no assignee`
         );
+        return null;
+      }
+
+      if (reportData.assigneeId === reportData.authorId) {
         return null;
       }
 
@@ -375,20 +469,39 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
           .get()
       ).data() as User;
 
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: reportData.authorId,
+        authorId: reportData.assigneeId,
+        title: `${assigneeUser.username} is assigned to your report.`,
+        body: "",
+        route: `report_details/${reportData.reportId}`,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
+
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: reportAssignedNotificationTitle,
-            body: getNotificationBody(
-              "REPORT_IS_ASSIGNED",
-              assigneeUser.username
-            ),
+            title: `${assigneeUser.username} is assigned to your report.`,
+            body: "",
             clickAction: appAction,
             channelId: reportChannelId,
+            tag: `report_${reportData.reportId}`,
+            image: assigneeUser.profilePictureURL,
           },
         },
-        data: {path: `report_details/${reportData.reportId}`},
+        data: {
+          path: `report_details/${reportData.reportId}`,
+          authorId: reportData.assigneeId!,
+        },
       }));
 
       return admin.messaging().sendEach(messages);
@@ -418,28 +531,51 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
       if (!reportData.assigneeId) {
         return null;
       }
+
+      if (reportData.assigneeId === reportData.authorId) {
+        return null;
+      }
+
       const assigneeUser = (
         await admin
           .firestore()
           .collection("users")
-          .doc(reportData.assigneeId!)
+          .doc(reportData.assigneeId)
           .get()
       ).data() as User;
+
+      const notification: Notification = {
+        notificationId: admin.firestore().collection("notifications").doc().id,
+        targetId: reportData.authorId,
+        authorId: reportData.assigneeId,
+        title: `${assigneeUser.username} resolved your report.`,
+        body: "",
+        route: `report_details/${reportData.reportId}`,
+        isRead: false,
+        date: admin.firestore.Timestamp.now(),
+      };
+
+      // Create notification document in Firestore
+      await admin.firestore()
+        .collection("notifications")
+        .doc(notification.notificationId)
+        .set(notification);
 
       const messages = tokenData.tokens.map((token) => ({
         token,
         android: {
           notification: {
-            title: reportResolvedNotificationTitle,
-            body: getNotificationBody(
-              "REPORT_IS_RESOLVED",
-              assigneeUser.username
-            ),
+            title: `${assigneeUser.username} resolved your report.`,
             clickAction: appAction,
             channelId: reportChannelId,
+            tag: `report_${reportData.reportId}`,
+            image: assigneeUser.profilePictureURL,
           },
         },
-        data: {path: `report_details/${reportData.reportId}`},
+        data: {
+          path: "report",
+          authorId: reportData.assigneeId!,
+        },
       }));
 
       return admin.messaging().sendEach(messages);

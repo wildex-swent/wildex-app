@@ -1,3 +1,5 @@
+import {Timestamp} from "firebase-admin/firestore";
+
 export interface Animal {
   animalId: string;
   pictureURL: string;
@@ -14,11 +16,12 @@ export interface FriendRequest {
 export interface Notification {
   notificationId: string;
   targetId: string;
-  objectId: string;
+  authorId: string;
   title: string;
+  body: string;
+  route: string;
   isRead: boolean;
-  type: NotificationType;
-  date: string;
+  date: Timestamp;
 }
 
 export type NotificationType =

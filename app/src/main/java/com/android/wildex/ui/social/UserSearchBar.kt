@@ -41,6 +41,9 @@ import androidx.compose.ui.unit.dp
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
+/**
+ * Test tags to assign to the different components of the search bar for testing purposes
+ */
 object SearchBarTestTags{
   const val TRAILING_ICON = "trailing_icon"
   const val SEARCH_BAR = "search_bar"
@@ -51,6 +54,15 @@ object SearchBarTestTags{
   fun testTagForResultUsername(userId: Id) = "result_username_$userId"
 }
 
+/**
+ * Search bar Composable that allows to search for users of the app. When focused, the search bar expands
+ * into a search view that takes all available space within the parent and shows the result of the field's
+ * input in a list.
+ *
+ * @param userIndex Algorithm which determines and ranks users matching a typed query in the field
+ * @param onResultClick callback function that takes to the current user to a user's profile when they
+ *  click on a search result
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSearchBar(

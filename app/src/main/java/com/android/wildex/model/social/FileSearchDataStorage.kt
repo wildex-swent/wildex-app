@@ -7,6 +7,12 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
+/**
+ * Maintains a local search data file to allow fast user searching
+ *
+ * @param context Android application environment to access the device's cache directory where the
+ *  file is stored
+ */
 class FileSearchDataStorage (
   context: Context
 ){
@@ -14,8 +20,15 @@ class FileSearchDataStorage (
 
   private val _updated = MutableStateFlow(false)
 
+  /** Boolean state flow, true if the file was written to but not yet read, false otherwise */
   val updated = _updated.asStateFlow()
 
+  /**
+   * Reads the local file, which contains a Json map, and turns it into a Map from user string
+   * representation to user id.
+   *
+   * @return the mapping from user string representation to user id
+   */
   fun read(): Map<String, String> {
     if (!file.exists()) return emptyMap()
 
@@ -39,6 +52,12 @@ class FileSearchDataStorage (
     }
   }
 
+  /**
+   * Writes the given mapping to a temporary file for security before deleting the old file and renaming
+   * the temporary one
+   *
+   * @param data the map to write to the file
+   */
   fun write(data: Map<String, String>){
     try {
       val jsonObject = JSONObject()

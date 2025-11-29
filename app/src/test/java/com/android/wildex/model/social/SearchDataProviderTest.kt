@@ -77,6 +77,7 @@ class SearchDataProviderTest {
     fileSearchDataStorage.write(emptyMap())
     Assert.assertTrue(searchDataProvider.dataNeedsUpdate.value)
     verify(exactly = 1){fileSearchDataStorage.read()}
+    searchDataProvider.invalidateCache()
     searchDataProvider.getSearchData()
     Assert.assertFalse(searchDataProvider.dataNeedsUpdate.value)
     verify(exactly = 2){fileSearchDataStorage.read()}

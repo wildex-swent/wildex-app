@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.utils.URL
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -282,9 +283,10 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
       }
 
   override suspend fun getAnimalPicture(
+      context: Context,
       animalName: String,
       coroutineContext: CoroutineContext,
-  ): URL =
+  ): Uri =
       withContext(coroutineContext) {
         val search = "search?query=$animalName&size=small&page=1&per_page=1"
         val request =
@@ -299,16 +301,22 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
 
           val body = response.body?.string() ?: throw IOException("No response body")
           val json = Json.parseToJsonElement(body)
-          json.jsonObject["photos"]
-              ?.jsonArray
-              ?.firstOrNull()
-              ?.jsonObject
-              ?.get("src")
-              ?.jsonObject
-              ?.get("medium")
-              ?.jsonPrimitive
-              ?.takeIf { it.isString }
-              ?.content ?: throw IOException("No content found")
+          val url =
+              json.jsonObject["photos"]
+                  ?.jsonArray
+                  ?.firstOrNull()
+                  ?.jsonObject
+                  ?.get("src")
+                  ?.jsonObject
+                  ?.get("medium")
+                  ?.jsonPrimitive
+                  ?.takeIf { it.isString }
+                  ?.content ?: throw IOException("No content found")
+          val inputStream = java.net.URL(url).openConnection().getInputStream()
+
+          val cacheFile = File(context.cacheDir, "temp_upload_${System.currentTimeMillis()}.jpg")
+          cacheFile.outputStream().use { outputStream -> inputStream.copyTo(outputStream) }
+          Uri.fromFile(cacheFile)
         }
       }
 }

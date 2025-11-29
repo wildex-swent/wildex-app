@@ -97,8 +97,11 @@ class EditProfileViewModel(
         val user = userRepository.getUser(currentUserId)
         val newURL =
             _uiState.value.pendingProfileImageUri?.let {
-              storageRepository.uploadUserProfilePicture(currentUserId, it)
-                  ?: user.profilePictureURL
+              try {
+                storageRepository.uploadUserProfilePicture(currentUserId, it)
+              } catch (_: Exception) {
+                user.profilePictureURL
+              }
             } ?: user.profilePictureURL
 
         val newUser =

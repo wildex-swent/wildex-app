@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.social.FileSearchDataStorage
+import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -101,7 +103,12 @@ fun FriendScreen(
     friendScreenViewModel: FriendScreenViewModel = viewModel(),
     userId: Id = "",
     onProfileClick: (Id) -> Unit = {},
-    onGoBack: () -> Unit = {}
+    onGoBack: () -> Unit = {},
+    userIndex: UserIndex = UserIndex(
+      searchDataProvider = SearchDataProvider(
+        storage = FileSearchDataStorage(LocalContext.current)
+      )
+    )
 ) {
   val uiState by friendScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -134,7 +141,7 @@ fun FriendScreen(
               Column(modifier = Modifier.fillMaxSize()) {
                 if (uiState.isCurrentUser) {
                   CurrentUserFriendScreenContent(
-                      selectedTab, setSelectedTab, friendScreenViewModel, uiState, onProfileClick)
+                      selectedTab, setSelectedTab, friendScreenViewModel, uiState, onProfileClick, userIndex)
                 } else {
                   OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
                 }
@@ -732,9 +739,10 @@ fun CurrentUserFriendScreenContent(
     setSelectedTab: (String) -> Unit,
     friendScreenViewModel: FriendScreenViewModel,
     state: FriendsScreenUIState,
-    onProfileClick: (Id) -> Unit
+    onProfileClick: (Id) -> Unit,
+    userIndex: UserIndex
 ) {
-  UserSearchBar(onResultClick = onProfileClick)
+  UserSearchBar(userIndex = userIndex, onResultClick = onProfileClick)
   CurrentUserSelectionTab(selectedTab = selectedTab, onTabSelected = setSelectedTab)
   if (selectedTab == LocalContext.current.getString(R.string.friends_tab_title)) {
     FriendsTabContent(friendScreenViewModel, state, onProfileClick)

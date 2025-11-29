@@ -35,12 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.android.wildex.model.social.FileSearchDataStorage
-import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
@@ -49,20 +46,15 @@ object SearchBarTestTags{
   const val SEARCH_BAR = "search_bar"
   const val INPUT_FIELD = "input_field"
   const val LEADING_ICON = "leading_icon"
+  const val RESULT_LIST = "search_results"
   fun testTagForResult(userId: Id) = "result_$userId"
-
   fun testTagForResultUsername(userId: Id) = "result_username_$userId"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSearchBar(
-  userIndex: UserIndex =
-    UserIndex(
-      searchDataProvider = SearchDataProvider(
-        storage = FileSearchDataStorage(LocalContext.current)
-      )
-    ),
+  userIndex: UserIndex,
   onResultClick: (Id) -> Unit
 ){
   var expanded by rememberSaveable { mutableStateOf(false) }
@@ -145,13 +137,13 @@ fun UserSearchBar(
       expanded = expanded,
       onExpandedChange = { expanded = it },
     ) {
-      LazyColumn {
+      LazyColumn (modifier = Modifier.testTag(SearchBarTestTags.RESULT_LIST)){
         items(count = searchResults.size) { index ->
           val user = searchResults[index]
           ListItem(
             headlineContent = { Text(user.name + " " + user.surname) },
             supportingContent = { Text(
-              user.username,
+              text = user.username,
               modifier = Modifier.testTag(SearchBarTestTags.testTagForResultUsername(user.userId))
             )},
             leadingContent = {

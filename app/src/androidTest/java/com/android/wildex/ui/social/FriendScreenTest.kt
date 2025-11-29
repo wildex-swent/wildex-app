@@ -1,14 +1,19 @@
 package com.android.wildex.ui.social
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.friendRequest.FriendRequestRepository
+import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.social.SearchDataProvider
+import com.android.wildex.model.social.SearchDataUpdater
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
@@ -33,6 +38,8 @@ class FriendScreenTest {
       LocalRepositories.friendRequestRepository
   private val postsRepository: PostsRepository = LocalRepositories.postsRepository
   private lateinit var friendScreenViewModel: FriendScreenViewModel
+
+  private lateinit var searchDataUpdater: SearchDataUpdater
 
   private val currentUser =
       User(
@@ -737,14 +744,171 @@ class FriendScreenTest {
   }
 
   @Test
-  fun searchBarFocusTakesAllScreen(){}
+  fun searchBarFocusTakesAllScreen(){
+    composeTestRule.setContent {
+      FriendScreen(
+        friendScreenViewModel = friendScreenViewModel,
+        userId = "currentUserId",
+        onProfileClick = {},
+        onGoBack = {})
+    }
+    composeTestRule.onNodeWithTag(SearchBarTestTags.TRAILING_ICON).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.TRAILING_ICON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsNotDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user1.userId))
+      .assertIsNotDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user2.userId))
+      .assertIsNotDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user3.userId))
+      .assertIsNotDisplayed()
+  }
 
   @Test
-  fun searchBarUnFocusRestoresScreen(){}
+  fun searchBarUnFocusRestoresScreen(){
+    composeTestRule.setContent {
+      FriendScreen(
+        friendScreenViewModel = friendScreenViewModel,
+        userId = "currentUserId",
+        onProfileClick = {},
+        onGoBack = {})
+    }
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.LEADING_ICON).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user1.userId))
+      .assertIsDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user2.userId))
+      .assertIsDisplayed()
+    composeTestRule
+      .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user3.userId))
+      .assertIsDisplayed()
+  }
 
   @Test
-  fun searchBarInputDisplaysCorrectRecommendations(){}
+  fun clickingTrailingIconClearsText(){
+    composeTestRule.setContent {
+      FriendScreen(
+        friendScreenViewModel = friendScreenViewModel,
+        userId = "currentUserId",
+        onProfileClick = {},
+        onGoBack = {})
+    }
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
+      .performClick()
+      .performTextInput("testtest")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).assertTextEquals("testtest")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.TRAILING_ICON).assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).assertTextEquals("Search users", "")
+  }
 
   @Test
-  fun searchBarResultsAreClickableAndWorkAsIntended(){}
+  fun searchBarInputDisplaysCorrectRecommendations(){
+    composeTestRule.setContent {
+      searchDataUpdater = SearchDataUpdater(userRepository,
+        FileSearchDataStorage(LocalContext.current))
+      runBlocking {
+        searchDataUpdater.updateSearchData()
+      }
+      FriendScreen(
+        friendScreenViewModel = friendScreenViewModel,
+        userId = "currentUserId",
+        onProfileClick = {},
+        onGoBack = {},
+        userIndex = UserIndex(
+          searchDataProvider = SearchDataProvider(
+            storage = FileSearchDataStorage(LocalContext.current)
+          ),
+          userRepository = userRepository
+        )
+      )
+    }
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
+      .performClick()
+      .performTextInput("gil")
+
+    composeTestRule.onNodeWithTag(SearchBarTestTags.RESULT_LIST).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user2"), useUnmergedTree = true)
+      .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResultUsername("user2"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals("user2")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult(user1.userId)).assertDoesNotExist()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult(user3.userId)).assertDoesNotExist()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult(user4.userId)).assertDoesNotExist()
+
+    composeTestRule.onNodeWithTag(SearchBarTestTags.TRAILING_ICON).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performTextInput("o")
+
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user2"), useUnmergedTree = true)
+      .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResultUsername("user2"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals("user2")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user1"), useUnmergedTree = true)
+      .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResultUsername("user1"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals("user1")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user4"), useUnmergedTree = true)
+      .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResultUsername("user4"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals("user4")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult(user3.userId)).assertDoesNotExist()
+  }
+
+  @Test
+  fun searchBarResultsAreClickableAndWorkAsIntended(){
+    var profileClicked = ""
+    composeTestRule.setContent {
+      searchDataUpdater = SearchDataUpdater(userRepository,
+        FileSearchDataStorage(LocalContext.current))
+      runBlocking {
+        searchDataUpdater.updateSearchData()
+      }
+      FriendScreen(
+        friendScreenViewModel = friendScreenViewModel,
+        userId = "currentUserId",
+        onProfileClick = {profileClicked = it},
+        onGoBack = {},
+        userIndex = UserIndex(
+          searchDataProvider = SearchDataProvider(
+            storage = FileSearchDataStorage(LocalContext.current)
+          ),
+          userRepository = userRepository
+        )
+      )
+    }
+
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick().performTextInput("o")
+
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user2"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .performClick()
+    Assert.assertEquals("user2", profileClicked)
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user1"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .performClick()
+    Assert.assertEquals("user1", profileClicked)
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule.onNodeWithTag(SearchBarTestTags.testTagForResult("user4"), useUnmergedTree = true)
+      .assertIsDisplayed()
+      .performClick()
+    Assert.assertEquals("user4", profileClicked)
+  }
 }

@@ -272,6 +272,7 @@ class HomeScreenViewModelTest {
               postsRepository,
               userRepository,
               likeRepository,
+              commentRepository,
               animalRepository,
               userSettingsRepository,
               "")

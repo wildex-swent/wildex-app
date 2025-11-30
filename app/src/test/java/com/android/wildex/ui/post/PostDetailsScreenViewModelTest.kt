@@ -350,6 +350,19 @@ class PostDetailsScreenViewModelTest {
       }
 
   @Test
+  fun refreshOffline_sets_error_post_details() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
+    }
+  }
+
+  @Test
   fun removePost_calls_repositories_and_updates_state() =
       mainDispatcherRule.runTest {
         coEvery { postsRepository.deletePost("post1") } just Runs

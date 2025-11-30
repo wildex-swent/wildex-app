@@ -319,6 +319,11 @@ class PostDetailsScreenViewModel(
     }
   }
 
+  /** Shows an offline error message when trying to refresh while offline. */
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
+  }
+
   /** Optimistically update like state in UI. */
   private fun applyOptimisticLike(liked: Boolean) {
     _uiState.value =

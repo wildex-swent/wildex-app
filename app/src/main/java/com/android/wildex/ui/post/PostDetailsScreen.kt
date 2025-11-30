@@ -61,6 +61,7 @@ object PostDetailsScreenTestTags {
   const val DELETE_POST_DIALOG = "delete_post_dialog"
   const val DELETE_POST_CONFIRM_BUTTON = "delete_post_confirm_button"
   const val DELETE_POST_DISMISS_BUTTON = "delete_post_dismiss_button"
+  const val PULL_TO_REFRESH = "pullToRefresh"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,6 +117,7 @@ fun PostDetailsScreen(
           onGoBack = onGoBack,
           showActionSheet = showActionSheet,
           onDismissActionSheet = { showActionSheet = false },
+          isOnline = isOnline
       )
     } else {
       OfflineScreen(innerPadding = innerPadding)
@@ -133,6 +135,7 @@ fun PostDetailsScreenContent(
     onGoBack: () -> Unit,
     showActionSheet: Boolean = false,
     onDismissActionSheet: () -> Unit,
+    isOnline: Boolean
 ) {
   val context = LocalContext.current
   val pullState = rememberPullToRefreshState()
@@ -151,7 +154,10 @@ fun PostDetailsScreenContent(
       state = pullState,
       isRefreshing = uiState.isRefreshing,
       modifier = Modifier.padding(innerPadding),
-      onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
+      onRefresh = {
+          if (isOnline) postDetailsScreenViewModel.refreshPostDetails(postId)
+          else postDetailsScreenViewModel.refreshOffline()
+      },
   ) {
     when {
       uiState.isError -> LoadingFail()

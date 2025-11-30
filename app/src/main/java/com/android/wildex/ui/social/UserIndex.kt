@@ -4,6 +4,7 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.utils.Id
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -61,7 +62,11 @@ class UserIndex(
    * @param limit the maximum number of wanted results
    * @return the list of matching users
    */
-  suspend fun usersMatching(query: String, limit: Int): List<User> {
+  suspend fun usersMatching(
+      query: String,
+      limit: Int,
+      excludeIds: List<Id> = emptyList()
+  ): List<User> {
     if (searchDataProvider.dataNeedsUpdate.value) {
       searchDataProvider.invalidateCache()
     }
@@ -75,6 +80,7 @@ class UserIndex(
             .mapNotNull { totalScore(it, patterns) }
             .sortedByDescending { it.score }
             .mapNotNull { searchDataToUserIds[it.string] }
+            .filter { !excludeIds.contains(it) }
             .distinct()
             .take(limit)
             .toList()

@@ -172,6 +172,15 @@ class UserIndexTest {
   }
 
   @Test
+  fun excludeIdsAreIndeedExcluded() = runTest {
+    val result = userIndex.usersMatching("a", 10, listOf("1", "2"))
+
+    Assert.assertEquals(2, result.size)
+    Assert.assertEquals("rania", result.first().name)
+    Assert.assertEquals("youssef", result[1].name)
+  }
+
+  @Test
   fun cacheIsInvalidatedWhenDataNeedsUpdateIsTrue() = runTest {
     updatedFlow.value = true
 

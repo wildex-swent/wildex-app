@@ -66,7 +66,7 @@ object SearchBarTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit) {
+fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUserId: Id) {
   var expanded by rememberSaveable { mutableStateOf(false) }
 
   val textFieldState = rememberTextFieldState()
@@ -83,7 +83,7 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit) {
       return@LaunchedEffect
     }
 
-    searchResults = userIndex.usersMatching(query, 10)
+    searchResults = userIndex.usersMatching(query, 10, listOf(currentUserId))
   }
 
   Box(modifier = Modifier.fillMaxWidth()) {

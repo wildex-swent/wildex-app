@@ -145,7 +145,8 @@ fun FriendScreen(
                       friendScreenViewModel,
                       uiState,
                       onProfileClick,
-                      userIndex)
+                      userIndex,
+                      userId)
                 } else {
                   OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
                 }
@@ -744,9 +745,11 @@ fun CurrentUserFriendScreenContent(
     friendScreenViewModel: FriendScreenViewModel,
     state: FriendsScreenUIState,
     onProfileClick: (Id) -> Unit,
-    userIndex: UserIndex
+    userIndex: UserIndex,
+    currentUserId: Id
 ) {
-  UserSearchBar(userIndex = userIndex, onResultClick = onProfileClick)
+  UserSearchBar(
+      userIndex = userIndex, onResultClick = onProfileClick, currentUserId = currentUserId)
   CurrentUserSelectionTab(selectedTab = selectedTab, onTabSelected = setSelectedTab)
   if (selectedTab == LocalContext.current.getString(R.string.friends_tab_title)) {
     FriendsTabContent(friendScreenViewModel, state, onProfileClick)

@@ -932,4 +932,31 @@ class FriendScreenTest {
         .performClick()
     Assert.assertEquals("user4", profileClicked)
   }
+
+  @Test
+  fun searchBarResultsExcludeCurrentUser() {
+    composeTestRule.setContent {
+      searchDataUpdater =
+          SearchDataUpdater(userRepository, FileSearchDataStorage(LocalContext.current))
+      runBlocking { searchDataUpdater.updateSearchData() }
+      FriendScreen(
+          friendScreenViewModel = friendScreenViewModel,
+          userId = "currentUserId",
+          onProfileClick = {},
+          onGoBack = {},
+          userIndex =
+              UserIndex(
+                  searchDataProvider =
+                      SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
+                  userRepository = userRepository))
+    }
+
+    composeTestRule
+        .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
+        .performClick()
+        .performTextInput("current")
+    composeTestRule
+        .onNodeWithTag(SearchBarTestTags.testTagForResult(currentUser.userId))
+        .assertDoesNotExist()
+  }
 }

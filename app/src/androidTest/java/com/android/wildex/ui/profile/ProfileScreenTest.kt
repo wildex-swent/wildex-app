@@ -1,5 +1,6 @@
 package com.android.wildex.ui.profile
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -20,7 +21,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.action.ViewActions.swipeDown
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.animal.Animal
@@ -43,6 +47,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -634,5 +639,38 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineProfileScreen() {
+    val user = sampleUser.copy(userId = "u-1")
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo = FakeAchievementsRepo(emptyList())
+    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
+            currentUserId = "u-1",
+        )
+    var achievements = 0
+    var map = 0
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        ProfileScreen(
+            profileScreenViewModel = vm,
+            userUid = "u-1",
+            onAchievements = { if (it == "u-1") achievements++ },
+            onMap = { if (it == "u-1") map++ },
+        )
+      }
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(vm.uiState.value.isRefreshing)
   }
 }

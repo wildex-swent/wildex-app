@@ -150,13 +150,13 @@ fun PostDetailsScreenContent(
     )
   }
 
-  PullToRefreshBox(
-      state = pullState,
-      isRefreshing = uiState.isRefreshing,
-      modifier = Modifier.padding(innerPadding),
-      onRefresh = {
-          if (isOnline) postDetailsScreenViewModel.refreshPostDetails(postId)
-          else postDetailsScreenViewModel.refreshOffline()
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier = Modifier.padding(innerPadding),
+        onRefresh = {
+            if (isOnline) postDetailsScreenViewModel.refreshPostDetails(postId)
+            else postDetailsScreenViewModel.refreshOffline()
       },
   ) {
     when {

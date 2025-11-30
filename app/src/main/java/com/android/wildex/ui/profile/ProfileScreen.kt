@@ -70,6 +70,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -96,6 +98,7 @@ object ProfileScreenTestTags {
   const val MAP_CTA = "ProfileScreenMapCTA"
   const val ACHIEVEMENTS_PREV = "ProfileScreenAchievementsPrev"
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
+  const val PULL_TO_REFRESH = "ProfileScreenPullToRefresh"
   const val ANIMAL_COUNT = "ProfileScreenAnimalCount"
   const val FRIENDS_COUNT = "ProfileScreenFriendsCount"
   const val FOLLOW_BUTTON = "ProfileScreenFollowButton"
@@ -118,8 +121,11 @@ fun ProfileScreen(
     onFriends: (Id) -> Unit = {},
     onMap: (Id) -> Unit = {},
 ) {
-  val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val uiState by profileScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   var showMap by remember { mutableStateOf(true) }
 
@@ -153,9 +159,12 @@ fun ProfileScreen(
 
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
+        isRefreshing = uiState.isRefreshing && isOnline,
+        modifier = Modifier.padding(pd).testTag(ProfileScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) profileScreenViewModel.refreshUIState(userUid)
+          else profileScreenViewModel.refreshOffline()
+        },
     ) {
       when {
         uiState.isError -> LoadingFail()

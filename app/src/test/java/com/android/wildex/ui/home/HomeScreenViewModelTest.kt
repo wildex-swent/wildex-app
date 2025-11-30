@@ -7,8 +7,10 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
@@ -33,6 +35,7 @@ class HomeScreenViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var likeRepository: LikeRepository
   private lateinit var animalRepository: AnimalRepository
+  private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var viewModel: HomeScreenViewModel
 
   private val defaultUser: SimpleUser =
@@ -106,14 +109,17 @@ class HomeScreenViewModelTest {
     userRepository = mockk()
     likeRepository = mockk()
     animalRepository = mockk()
+    userSettingsRepository = mockk()
     viewModel =
         HomeScreenViewModel(
             postsRepository,
             userRepository,
             likeRepository,
             animalRepository,
+            userSettingsRepository,
             "uid-1",
         )
+    coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
     coEvery { likeRepository.getLikeForPost("p1") } returns null
@@ -211,7 +217,13 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
       viewModel =
-          HomeScreenViewModel(postsRepository, userRepository, likeRepository, animalRepository, "")
+          HomeScreenViewModel(
+              postsRepository,
+              userRepository,
+              likeRepository,
+              animalRepository,
+              userSettingsRepository,
+              "")
       viewModel.refreshUIState()
       advanceUntilIdle()
 

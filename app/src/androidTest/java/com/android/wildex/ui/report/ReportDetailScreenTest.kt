@@ -13,6 +13,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -25,7 +28,9 @@ import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.not
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -515,6 +520,22 @@ class ReportDetailScreenTest {
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).performClick()
     assert(confirmed)
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineReportDetails() {
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
+    }
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(reportDetailsViewModel.uiState.value.isRefreshing)
   }
 
   @Test

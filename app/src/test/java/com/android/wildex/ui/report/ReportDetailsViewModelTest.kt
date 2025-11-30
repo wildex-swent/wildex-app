@@ -51,35 +51,40 @@ class ReportDetailsViewModelTest {
           date = timestamp,
           description = "Test report description",
           authorId = authorId,
-          assigneeId = assigneeId)
+          assigneeId = assigneeId,
+      )
 
   private val currentUser =
       SimpleUser(
           userId = currentUserId,
           username = "currentUser",
           profilePictureURL = "currentPic",
-          userType = UserType.PROFESSIONAL)
+          userType = UserType.PROFESSIONAL,
+      )
 
   private val authorUser =
       SimpleUser(
           userId = authorId,
           username = "authorUser",
           profilePictureURL = "authorPic",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   private val assigneeUser =
       SimpleUser(
           userId = assigneeId,
           username = "assigneeUser",
           profilePictureURL = "assigneePic",
-          userType = UserType.PROFESSIONAL)
+          userType = UserType.PROFESSIONAL,
+      )
 
   private val defaultUser =
       SimpleUser(
           userId = "defaultUserId",
           username = "defaultUsername",
           profilePictureURL = "",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   @Before
   fun setUp() {
@@ -92,7 +97,8 @@ class ReportDetailsViewModelTest {
             reportRepository = reportRepository,
             userRepository = userRepository,
             commentRepository = commentRepository,
-            currentUserId = currentUserId)
+            currentUserId = currentUserId,
+        )
 
     coEvery { reportRepository.getReport(reportId) } returns report
     coEvery { userRepository.getSimpleUser(currentUserId) } returns currentUser
@@ -149,7 +155,8 @@ class ReportDetailsViewModelTest {
                 authorId = authorId,
                 text = "Nice job",
                 date = timestamp,
-                tag = CommentTag.REPORT_COMMENT)
+                tag = CommentTag.REPORT_COMMENT,
+            )
         val badAuthorId = "bad-author"
         val badComment =
             Comment(
@@ -158,7 +165,8 @@ class ReportDetailsViewModelTest {
                 authorId = badAuthorId,
                 text = "Should not appear",
                 date = timestamp,
-                tag = CommentTag.REPORT_COMMENT)
+                tag = CommentTag.REPORT_COMMENT,
+            )
         coEvery { commentRepository.getAllCommentsByReport(reportId) } returns
             listOf(okComment, badComment)
         coEvery { userRepository.getSimpleUser(badAuthorId) } throws Exception("no such user")
@@ -255,7 +263,9 @@ class ReportDetailsViewModelTest {
         val event = eventDeferred.await()
         assertTrue(event is ReportDetailsEvent.ShowCompletion)
         assertEquals(
-            ReportCompletionType.CANCELED, (event as ReportDetailsEvent.ShowCompletion).type)
+            ReportCompletionType.CANCELED,
+            (event as ReportDetailsEvent.ShowCompletion).type,
+        )
         coEvery { reportRepository.deleteReport(reportId) } throws Exception("cancel fail")
         viewModel.cancelReport()
         advanceUntilIdle()
@@ -278,7 +288,9 @@ class ReportDetailsViewModelTest {
         val event = eventDeferred.await()
         assertTrue(event is ReportDetailsEvent.ShowCompletion)
         assertEquals(
-            ReportCompletionType.RESOLVED, (event as ReportDetailsEvent.ShowCompletion).type)
+            ReportCompletionType.RESOLVED,
+            (event as ReportDetailsEvent.ShowCompletion).type,
+        )
         coEvery { reportRepository.deleteReport(reportId) } throws Exception("resolve fail")
         viewModel.resolveReport()
         advanceUntilIdle()
@@ -373,4 +385,19 @@ class ReportDetailsViewModelTest {
         assertNotNull(state.errorMsg)
         assertTrue(state.errorMsg!!.contains("Failed to add comment"))
       }
+
+  @Test
+  fun refreshOffline_sets_error_report_details() {
+    mainDispatcherRule.runTest {
+      viewModel.loadReportDetails(reportId)
+      advanceUntilIdle()
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
+    }
+  }
 }

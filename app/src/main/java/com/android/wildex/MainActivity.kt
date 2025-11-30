@@ -29,6 +29,8 @@ import androidx.navigation.navArgument
 import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.notification.NotificationChannelType
 import com.android.wildex.model.notification.NotificationGroupType
+import com.android.wildex.model.social.FileSearchDataStorage
+import com.android.wildex.model.social.SearchDataUpdater
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -112,6 +114,9 @@ fun WildexApp(
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
+  LaunchedEffect(Unit) {
+    SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
+  }
 
   val appContext = context.applicationContext
   val connectivityObserver = remember { DefaultConnectivityObserver(appContext) }

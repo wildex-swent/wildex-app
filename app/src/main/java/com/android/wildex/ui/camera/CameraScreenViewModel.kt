@@ -113,8 +113,6 @@ class CameraScreenViewModel(
                 date = Timestamp.now(),
                 pictureURL = imageUrl,
                 animalId = animalId,
-                likesCount = 0,
-                commentsCount = 0,
             )
         postsRepository.addPost(finalPost)
         registerAnimal(animalId, context)

@@ -54,7 +54,7 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
 
     val updated =
         Achievements.ALL.mapNotNull {
-          if (it.progress(userId).all { pair -> pair.first >= pair.second }) it.achievementId
+          if (it.progress(userId).all { triple -> triple.second >= triple.third }) it.achievementId
           else null
         }
 

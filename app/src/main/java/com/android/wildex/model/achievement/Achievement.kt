@@ -1,6 +1,7 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.ProgressInfo
 import com.android.wildex.model.utils.URL
 
 /**
@@ -18,5 +19,5 @@ data class Achievement(
     val pictureURL: URL,
     val description: String,
     val name: String,
-    val progress: suspend (Id) -> List<Pair<Int, Int>> = { emptyList() },
+    val progress: suspend (Id) -> List<ProgressInfo> = { emptyList() },
 )

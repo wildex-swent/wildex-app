@@ -30,7 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AchievementsScreenTest {
+class fireAchievementsScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var userAchievementsRepository: FakeUserAchievementsRepository
@@ -173,7 +173,7 @@ class AchievementsScreenTest {
       composeTestRule.waitForIdle()
 
       composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+          .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
           .assertExists()
       composeTestRule
           .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
@@ -181,7 +181,7 @@ class AchievementsScreenTest {
 
       unlockedAchievement.forEach { achievement ->
         composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
             .performScrollToNode(hasText(achievement.name))
         composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
       }
@@ -209,7 +209,7 @@ class AchievementsScreenTest {
       composeTestRule.waitForIdle()
 
       composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+          .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
           .assertExists()
       composeTestRule
           .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
@@ -217,7 +217,7 @@ class AchievementsScreenTest {
 
       unlockedAchievement.forEach { achievement ->
         composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
             .performScrollToNode(hasText(achievement.name))
         composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
       }
@@ -264,7 +264,7 @@ class AchievementsScreenTest {
 
       unlockedAchievement.forEach { achievement ->
         composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.UNLOCKED_SECTION, useUnmergedTree = true)
+            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
             .performScrollToNode(hasText(achievement.name))
       }
       lockedAchievement.forEach { achievement ->

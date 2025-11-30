@@ -30,7 +30,7 @@ object Achievements {
           description = "Reach 10 posts",
           name = "Post Master",
           progress = { userId ->
-            listOf(Pair(postRepository.getAllPostsByGivenAuthor(userId).size, 10))
+            listOf(Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 10))
           },
       )
 
@@ -44,7 +44,7 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "Like 50 posts",
           name = "Social Butterfly",
-          progress = { userId -> listOf(Pair(likeRepository.getAllLikesByUser(userId).size, 50)) },
+          progress = { userId -> listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 50)) },
       )
 
   /** Community Builder — awarded for writing at least 20 comments. */
@@ -55,7 +55,7 @@ object Achievements {
           description = "Write 20 comments",
           name = "Community Builder",
           progress = { userId ->
-            listOf(Pair(commentRepository.getCommentsByUser(userId).size, 20))
+            listOf(Triple("Comments", commentRepository.getCommentsByUser(userId).size, 20))
           },
       )
 
@@ -67,7 +67,7 @@ object Achievements {
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
           progress = { userId ->
-            listOf(Pair(likeRepository.getAllLikesByUser(userId).size, 1000))
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 1000))
           },
       )
 
@@ -79,7 +79,7 @@ object Achievements {
           description = "Create your first post",
           name = "First Post",
           progress = { userId ->
-            listOf(Pair(postRepository.getAllPostsByGivenAuthor(userId).size, 1))
+            listOf(Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 1))
           },
       )
 
@@ -91,7 +91,7 @@ object Achievements {
           description = "Get 100 likes on a single post",
           name = "Rising Star",
           progress = { userId ->
-            listOf(Pair(likeRepository.getAllLikesByUser(userId).size, 100))
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 100))
           },
       )
 
@@ -103,7 +103,7 @@ object Achievements {
           description = "Write 50 comments overall",
           name = "Conversationalist",
           progress = { userId ->
-            listOf(Pair(commentRepository.getCommentsByUser(userId).size, 50))
+            listOf(Triple("Comments", commentRepository.getCommentsByUser(userId).size, 50))
           },
       )
 
@@ -121,9 +121,9 @@ object Achievements {
           name = "Engaged Creator",
           progress = { userId ->
             listOf(
-                Pair(postRepository.getAllPostsByGivenAuthor(userId).size, 5),
-                Pair(likeRepository.getAllLikesByUser(userId).size, 10),
-                Pair(commentRepository.getCommentsByUser(userId).size, 10),
+                Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 5),
+                Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 10),
+                Triple("Comments", commentRepository.getCommentsByUser(userId).size, 10),
             )
           },
       )

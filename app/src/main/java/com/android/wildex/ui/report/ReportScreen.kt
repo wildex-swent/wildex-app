@@ -66,6 +66,7 @@ object ReportScreenTestTags {
   const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
   const val SUBMIT_REPORT = "report_screen_submit_report"
+  const val PULL_TO_REFRESH = "report_screen_pull_to_refresh"
 
   fun testTagForReport(reportId: Id, element: String): String =
       "ReportScreen_report_${reportId}_$element"
@@ -96,8 +97,8 @@ fun ReportScreen(
     bottomBar: @Composable () -> Unit = {},
 ) {
   val context = LocalContext.current
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
   val uiState by reportScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
   val isOnlineObs by connectivityObserver.isOnline.collectAsState()
   val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
@@ -131,6 +132,7 @@ fun ReportScreen(
           onProfileClick = onProfileClick,
           onReportClick = onReportClick,
           onSubmitReportClick = onSubmitReportClick,
+          isOnline = isOnline
       )
     } else {
       OfflineScreen(innerPadding = innerPadding)
@@ -158,56 +160,61 @@ fun ReportScreenContent(
     onProfileClick: (Id) -> Unit,
     onReportClick: (Id) -> Unit,
     onSubmitReportClick: () -> Unit,
+    isOnline: Boolean
 ) {
   val pullState = rememberPullToRefreshState()
 
-  Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        onRefresh = { reportScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.reports.isEmpty() -> NoReportsView()
-        else -> {
-          ReportsView(
-              reports = uiState.reports,
-              userId = uiState.currentUser.userId,
-              username = uiState.currentUser.username,
-              userType = uiState.currentUser.userType,
-              onProfileClick = onProfileClick,
-              onReportClick = onReportClick,
-              cancelReport = reportScreenViewModel::cancelReport,
-              selfAssignReport = reportScreenViewModel::selfAssignReport,
-              resolveReport = reportScreenViewModel::resolveReport,
-              unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
-          )
+    Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+      PullToRefreshBox(
+          state = pullState,
+          isRefreshing = uiState.isRefreshing,
+          onRefresh = {
+              if (isOnline) reportScreenViewModel.refreshUIState()
+              else reportScreenViewModel.refreshOffline()
+          },
+          modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)
+      ) {
+        when {
+          uiState.isError -> LoadingFail()
+          uiState.isLoading -> LoadingScreen()
+          uiState.reports.isEmpty() -> NoReportsView()
+          else -> {
+            ReportsView(
+                reports = uiState.reports,
+                userId = uiState.currentUser.userId,
+                username = uiState.currentUser.username,
+                userType = uiState.currentUser.userType,
+                onProfileClick = onProfileClick,
+                onReportClick = onReportClick,
+                cancelReport = reportScreenViewModel::cancelReport,
+                selfAssignReport = reportScreenViewModel::selfAssignReport,
+                resolveReport = reportScreenViewModel::resolveReport,
+                unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+            )
+          }
         }
       }
-    }
-    // Submit Report button
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.onBackground),
-        border = BorderStroke(width = 8.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        modifier =
-            Modifier.align(Alignment.BottomCenter)
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .clickable { onSubmitReportClick() }
-                .testTag(ReportScreenTestTags.SUBMIT_REPORT),
-    ) {
-      Text(
-          text = context.getString(R.string.submit_report),
-          color = colorScheme.background,
-          style = typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
-          modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-      )
+      // Submit Report button
+      Card(
+          shape = RoundedCornerShape(8.dp),
+          colors = CardDefaults.cardColors(containerColor = colorScheme.onBackground),
+          border = BorderStroke(width = 8.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
+          elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+          modifier =
+              Modifier.align(Alignment.BottomCenter)
+                  .padding(horizontal = 16.dp, vertical = 16.dp)
+                  .clickable { onSubmitReportClick() }
+                  .testTag(ReportScreenTestTags.SUBMIT_REPORT),
+      ) {
+        Text(
+            text = context.getString(R.string.submit_report),
+            color = colorScheme.background,
+            style = typography.headlineSmall.copy(fontWeight = FontWeight.Medium),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+        )
+      }
     }
   }
-}
 
 /**
  * A composable that displays a list of reports.

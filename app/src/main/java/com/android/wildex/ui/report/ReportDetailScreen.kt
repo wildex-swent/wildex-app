@@ -236,8 +236,8 @@ fun ReportDetailsScreenContent(
           if(!showCompletionDialog) reportDetailsViewModel.refreshReportDetails(reportId)
         },
     ) {
-      when {
-        uiState.isError -> LoadingFail()
+        when {
+            uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
         else ->
             ReportDetailsContent(

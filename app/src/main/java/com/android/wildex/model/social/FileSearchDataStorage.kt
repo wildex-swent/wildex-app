@@ -3,6 +3,8 @@ package com.android.wildex.model.social
 import android.content.Context
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
@@ -64,12 +66,12 @@ class FileSearchDataStorage(context: Context) {
       val tempFile = File(file.absolutePath + ".tmp")
       tempFile.writeText(jsonObject.toString())
 
-      if (file.exists()) {
-        val deleteResult = file.delete()
-        if (!deleteResult) throw IOException("couldn't delete the file")
-      }
-      val renameResult = tempFile.renameTo(file)
-      if (!renameResult) throw IOException("couldn't rename temp file")
+      Files.move(
+          tempFile.toPath(),
+          file.toPath(),
+          StandardCopyOption.REPLACE_EXISTING,
+          StandardCopyOption.ATOMIC_MOVE)
+
       _updated.value = true
     } catch (e: IOException) {
       e.printStackTrace()

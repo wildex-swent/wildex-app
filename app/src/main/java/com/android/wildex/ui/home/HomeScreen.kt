@@ -227,7 +227,8 @@ fun PostItem(
 
   // -------- Optimistic Like State (instant UI) --------
   var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
-  var likeCount by remember(post.postId) { mutableIntStateOf(post.likesCount) }
+  var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
+  var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
 
   Card(
       shape = RoundedCornerShape(16.dp),
@@ -360,7 +361,7 @@ fun PostItem(
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = "${post.commentsCount}",
+            text = "$commentCount",
             style = typography.bodyLarge,
             fontWeight = FontWeight.SemiBold,
             color = colorScheme.onBackground,

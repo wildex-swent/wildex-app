@@ -3,8 +3,9 @@ package com.android.wildex.model.animaldetector
 import android.content.Context
 import android.net.Uri
 import com.android.wildex.BuildConfig
-import com.android.wildex.model.utils.URL
+import java.io.File
 import java.io.IOException
+import java.net.URL
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.Base64
@@ -28,11 +29,18 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * @property client The OkHttpClient instance used for making HTTP requests.
  */
-class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository {
+class AnimalInfoRepositoryHttp(client: OkHttpClient) : AnimalInfoRepository {
   companion object {
     private const val CONTENT_TYPE = "application/json"
   }
 
+  private val client =
+      client
+          .newBuilder()
+          .connectTimeout(60, TimeUnit.SECONDS)
+          .readTimeout(60, TimeUnit.SECONDS)
+          .writeTimeout(60, TimeUnit.SECONDS)
+          .build()
   private val hfApikey = BuildConfig.HUGGINGFACE_API_KEY
   private val pxApiKey = BuildConfig.PEXELS_API_KEY
 
@@ -153,9 +161,7 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
                    ],
                    "prediction": "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
                    "prediction_score": 0.9870538115501404,
-                   "prediction_source": "cla
-    contentResolver = Mockito.mock(ContentResolver::class.java)
-    Mockito.`when`(context.contentResolver).thenReturn(contentResolver)ssifier",
+                   "prediction_source": "classifier",
                    "model_version": "4.0.1a"
                  }
                ]
@@ -185,7 +191,7 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
     return (0 until length).mapNotNull { i ->
       val className = classesArray[i].jsonPrimitive.content
       val score = scoresArray[i].jsonPrimitive.float
-      if (score < 0.5) null
+      if (score < 0.7) null
       else {
         val (taxonomy, animalType) = parseClassification(className)
         AnimalDetectResponse(
@@ -250,14 +256,7 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
                 .post(requestBody)
                 .build()
 
-        val longTimeoutClient =
-            client
-                .newBuilder()
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .build()
-        longTimeoutClient.newCall(request).execute().use { response ->
+        client.newCall(request).execute().use { response ->
           if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
           val body = response.body?.string() ?: throw IOException("Empty response body")
@@ -282,9 +281,10 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
       }
 
   override suspend fun getAnimalPicture(
+      context: Context,
       animalName: String,
       coroutineContext: CoroutineContext,
-  ): URL =
+  ): Uri =
       withContext(coroutineContext) {
         val search = "search?query=$animalName&size=small&page=1&per_page=1"
         val request =
@@ -299,16 +299,21 @@ class AnimalInfoRepositoryHttp(val client: OkHttpClient) : AnimalInfoRepository 
 
           val body = response.body?.string() ?: throw IOException("No response body")
           val json = Json.parseToJsonElement(body)
-          json.jsonObject["photos"]
-              ?.jsonArray
-              ?.firstOrNull()
-              ?.jsonObject
-              ?.get("src")
-              ?.jsonObject
-              ?.get("medium")
-              ?.jsonPrimitive
-              ?.takeIf { it.isString }
-              ?.content ?: throw IOException("No content found")
+          val url =
+              json.jsonObject["photos"]
+                  ?.jsonArray
+                  ?.firstOrNull()
+                  ?.jsonObject
+                  ?.get("src")
+                  ?.jsonObject
+                  ?.get("large")
+                  ?.jsonPrimitive
+                  ?.takeIf { it.isString }
+                  ?.content ?: throw IOException("No content found")
+          val inputStream = URL(url).openConnection().getInputStream()
+          val cacheFile = File(context.cacheDir, "temp_upload_${System.currentTimeMillis()}.jpg")
+          cacheFile.outputStream().use { outputStream -> inputStream.copyTo(outputStream) }
+          Uri.fromFile(cacheFile)
         }
       }
 }

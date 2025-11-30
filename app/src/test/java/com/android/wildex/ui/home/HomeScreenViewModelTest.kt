@@ -28,6 +28,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -459,6 +462,19 @@ class HomeScreenViewModelTest {
 
       viewModel.clearErrorMsg()
       Assert.assertNull(viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshOffline_sets_error_home_screen() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
     }
   }
 

@@ -1,5 +1,6 @@
 package com.android.wildex.ui.home
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -12,7 +13,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
@@ -28,6 +32,7 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -466,6 +471,42 @@ class HomeScreenTest {
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsNotDisplayed()
     }
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineWithPostsHomeScreen() {
+    val fullPost2 = fullPost.copy(postId = "post2", animalId = "a2")
+    val fullPost3 = fullPost.copy(postId = "post3", animalId = "a3")
+
+    runBlocking {
+      postRepository.addPost(fullPost)
+      postRepository.addPost(fullPost2)
+      postRepository.addPost(fullPost3)
+      homeScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        HomeScreen(homeScreenVM)
+      }
+    }
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(homeScreenVM.uiState.value.isRefreshing)
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineWithoutPostsHomeScreen() {
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        HomeScreen(homeScreenVM)
+      }
+    }
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(homeScreenVM.uiState.value.isRefreshing)
   }
 
   private fun scrollToPost(postId: String) {

@@ -65,6 +65,8 @@ import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
@@ -81,6 +83,7 @@ object HomeScreenTestTags {
   const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
+  const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -116,6 +119,9 @@ fun HomeScreen(
   val postStates = uiState.postStates
 
   val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   LaunchedEffect(Unit) { homeScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -132,29 +138,30 @@ fun HomeScreen(
   ) { pd ->
     val pullState = rememberPullToRefreshState()
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { homeScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        postStates.isEmpty() -> NoPostsView()
-        else -> {
-          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
-
-          PostsView(
-              postStates = filteredPostStates,
-              onProfilePictureClick = onProfilePictureClick,
-              onPostLike = homeScreenViewModel::toggleLike,
-              onPostClick = onPostClick,
-          )
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = uiState.isRefreshing && isOnline,
+            modifier = Modifier.padding(pd).testTag(HomeScreenTestTags.PULL_TO_REFRESH),
+            onRefresh = {
+              if (isOnline) homeScreenViewModel.refreshUIState()
+              else homeScreenViewModel.refreshOffline()
+            },
+        ) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            postStates.isEmpty() -> NoPostsView()
+            else -> {
+                val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
+                PostsView(
+                    postStates = postStates,
+                    onProfilePictureClick = onProfilePictureClick,
+                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostClick = onPostClick,
+                )
+          }}
         }
       }
-    }
-  }
 }
 
 /** Displays a placeholder view when there are no posts available. */
@@ -224,7 +231,7 @@ fun PostItem(
     postState: PostState,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
-    onPostClick: (Id) -> Unit,
+    onPostClick: (Id) -> Unit
 ) {
   val colorScheme = colorScheme
   val post = postState.post

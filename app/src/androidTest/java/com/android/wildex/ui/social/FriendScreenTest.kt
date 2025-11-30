@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -7,8 +8,11 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.PostsRepository
@@ -23,6 +27,7 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -992,5 +997,22 @@ class FriendScreenTest {
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
         .assertTextEquals("Search users", "")
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineProfileScreen() {
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {})
+      }
+    }
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(friendScreenViewModel.uiState.value.isRefreshing)
   }
 }

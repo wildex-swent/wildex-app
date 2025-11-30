@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.user.SimpleUser
@@ -74,6 +76,7 @@ object FriendScreenTestTags {
   const val NO_SUGGESTIONS = "no_suggestions"
   const val NO_SENT_REQUESTS = "no_sent_requests"
   const val NO_RECEIVED_REQUESTS = "no_received_requests"
+  const val PULL_TO_REFRESH = "pull_to_refresh"
 
   fun testTagForTemplate(userId: Id) = "template_$userId"
 
@@ -109,8 +112,12 @@ fun FriendScreen(
             searchDataProvider =
                 SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)))
 ) {
-  val uiState by friendScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val uiState by friendScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+
   val (selectedTab, setSelectedTab) =
       remember { mutableStateOf(context.getString(R.string.friends_tab_title)) }
 
@@ -127,34 +134,41 @@ fun FriendScreen(
           paddingValues ->
         val pullState = rememberPullToRefreshState()
 
-        PullToRefreshBox(
-            state = pullState,
-            isRefreshing = uiState.isRefreshing,
-            modifier = Modifier.padding(paddingValues).fillMaxSize(),
-            onRefresh = { friendScreenViewModel.refreshUIState(userId) },
-        ) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            else -> {
-              Column(modifier = Modifier.fillMaxSize()) {
-                if (uiState.isCurrentUser) {
-                  CurrentUserFriendScreenContent(
-                      selectedTab,
-                      setSelectedTab,
-                      friendScreenViewModel,
-                      uiState,
-                      onProfileClick,
-                      userIndex,
-                      userId)
-                } else {
-                  OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
-                }
-              }
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing && isOnline,
+        modifier =
+            Modifier.padding(paddingValues)
+                .fillMaxSize()
+                .testTag(FriendScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) friendScreenViewModel.refreshUIState(userId)
+          else friendScreenViewModel.refreshOffline()
+        }
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else -> {
+          Column(modifier = Modifier.fillMaxSize()) {
+            if (uiState.isCurrentUser) {
+              CurrentUserFriendScreenContent(
+                  selectedTab,
+                  setSelectedTab,
+                  friendScreenViewModel,
+                  uiState,
+                  onProfileClick,
+                  userIndex,
+                  userId
+              )
+            } else {
+              OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
             }
           }
         }
       }
+    }
+  }
 }
 
 /**

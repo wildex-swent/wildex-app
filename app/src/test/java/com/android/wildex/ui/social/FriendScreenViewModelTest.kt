@@ -19,6 +19,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -610,6 +613,19 @@ class FriendScreenViewModelTest {
       Assert.assertEquals(stateBeforeFailure.isError, stateAfterFailure.isError)
       Assert.assertEquals(
           "Failed to cancel request to user user3 : cheh", stateAfterFailure.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshOffline_sets_error_friends_screen() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
     }
   }
 }

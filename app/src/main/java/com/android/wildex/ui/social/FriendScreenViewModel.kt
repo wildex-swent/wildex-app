@@ -377,6 +377,11 @@ class FriendScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Shows an offline error message when trying to refresh while offline. */
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
+  }
+
   /**
    * Sets a new error message in the UI state.
    *

@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -48,6 +51,7 @@ import com.android.wildex.ui.utils.ClickableProfilePicture
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
+  const val PULL_TO_REFRESH = "pull_to_refresh"
 
   fun testTagForNotification(notificationId: Id): String =
       "NotificationScreen_notification_$notificationId"
@@ -73,8 +77,12 @@ fun NotificationScreen(
     onProfileClick: (Id) -> Unit = {},
     onNotificationClick: (Id, String) -> Unit = { _, _ -> },
 ) {
-  val uiState by notificationScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val uiState by notificationScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+
   LaunchedEffect(Unit) { notificationScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
@@ -91,23 +99,26 @@ fun NotificationScreen(
     val pullState = rememberPullToRefreshState()
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        onRefresh = { notificationScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.notifications.isEmpty() -> NoNotificationView()
-        else -> {
-          NotificationView(
-              notifications = uiState.notifications,
-              pd = pd,
-              onNotificationClick = onNotificationClick,
-              onProfileClick = onProfileClick,
-          )
+        isRefreshing = uiState.isRefreshing && isOnline,
+        onRefresh = {
+          if (isOnline) notificationScreenViewModel.refreshUIState()
+          else notificationScreenViewModel.refreshOffline()
+        },
+        modifier = Modifier.testTag(NotificationScreenTestTags.PULL_TO_REFRESH)) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            uiState.notifications.isEmpty() -> NoNotificationView()
+            else -> {
+              NotificationView(
+                  notifications = uiState.notifications,
+                  pd = pd,
+                  onNotificationClick = onNotificationClick,
+                  onProfileClick = onProfileClick,
+              )
+            }
+          }
         }
-      }
-    }
   }
 }
 

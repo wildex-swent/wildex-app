@@ -37,7 +37,6 @@ import com.android.wildex.ui.camera.CameraPreviewScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -63,9 +62,6 @@ fun SubmitReportScreen(
   val isOnlineObs by connectivityObserver.isOnline.collectAsState()
   val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
-  val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
-
   val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
   // Display error messages as Toasts
@@ -84,8 +80,6 @@ fun SubmitReportScreen(
       SubmitReportScreenContent(
           uiState = uiState,
           viewModel = viewModel,
-          cameraPermissionState = cameraPermissionState,
-          locationPermissionState = locationPermissionState,
           locationClient = locationClient,
           context = context,
           onSubmitted = onSubmitted,
@@ -103,10 +97,8 @@ fun SubmitReportScreen(
 fun SubmitReportScreenContent(
     uiState: SubmitReportUiState,
     viewModel: SubmitReportScreenViewModel,
-    cameraPermissionState: PermissionState,
-    locationPermissionState: PermissionState,
     locationClient: FusedLocationProviderClient,
-    context: android.content.Context,
+    context: Context,
     onSubmitted: () -> Unit,
     onGoBack: () -> Unit,
     innerPadding: PaddingValues,
@@ -114,6 +106,8 @@ fun SubmitReportScreenContent(
   var showCamera by remember { mutableStateOf(false) }
   var locationRequested by remember { mutableStateOf(false) }
 
+  val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
   val hasCameraPermission = cameraPermissionState.status.isGranted
   val hasLocationPermission = locationPermissionState.status.isGranted
 

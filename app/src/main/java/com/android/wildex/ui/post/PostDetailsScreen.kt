@@ -150,88 +150,98 @@ fun PostDetailsScreenContent(
     when {
       uiState.isError -> LoadingFail()
       uiState.isLoading -> LoadingScreen()
-      else -> {
-        Box(Modifier.fillMaxSize()) {
-          LazyColumn(
-              modifier = Modifier.fillMaxSize(),
-              verticalArrangement = Arrangement.spacedBy(0.dp),
-          ) {
-            // HERO IMAGE with soft gradient top and bottom
-            item { PostPicture(uiState.pictureURL) }
+      else ->
+          PostDetailsContent(
+              uiState = uiState,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+              onProfile = onProfile)
+    }
+  }
+}
 
-            // CONTENT SHEET (rounded top), contains info + description + "Comments" header
-            item {
-              Surface(
-                  color = colorScheme.background,
-                  shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                  modifier = Modifier.fillMaxWidth(),
+@Composable
+fun PostDetailsContent(
+    uiState: PostDetailsUIState,
+    postDetailsScreenViewModel: PostDetailsScreenViewModel,
+    onProfile: (Id) -> Unit
+) {
+  Box(Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+      // HERO IMAGE with soft gradient top and bottom
+      item { PostPicture(uiState.pictureURL) }
+
+      // CONTENT SHEET (rounded top), contains info + description + "Comments" header
+      item {
+        Surface(
+            color = colorScheme.background,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+          Column(Modifier.fillMaxWidth()) {
+            // make the sheet overlap a bit with the image to look continuous
+            Spacer(Modifier.height(8.dp))
+
+            LocationSpeciesLikeBar(
+                location = uiState.location,
+                species = uiState.animalSpecies,
+                likedByCurrentUser = uiState.likedByCurrentUser,
+                likesCount = uiState.likesCount,
+                onLike = { postDetailsScreenViewModel.addLike() },
+                onUnlike = { postDetailsScreenViewModel.removeLike() },
+            )
+
+            // INFO BAR
+            PostInfoBar(
+                authorId = uiState.authorId,
+                authorProfilePictureURL = uiState.authorProfilePictureURL,
+                authorUserName = uiState.authorUsername,
+                authorUserType = uiState.currentUserUserType,
+                animalName = uiState.animalName,
+                date = uiState.date,
+                onProfile = onProfile,
+            )
+
+            // DESCRIPTION – clean card with subtle border
+            if (uiState.description.isNotBlank()) {
+              Card(
+                  modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                  shape = RoundedCornerShape(32.dp),
+                  colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+                  border = BorderStroke(1.dp, colorScheme.onBackground),
+                  elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
               ) {
-                Column(Modifier.fillMaxWidth()) {
-                  // make the sheet overlap a bit with the image to look continuous
-                  Spacer(Modifier.height(8.dp))
-
-                  LocationSpeciesLikeBar(
-                      location = uiState.location,
-                      species = uiState.animalSpecies,
-                      likedByCurrentUser = uiState.likedByCurrentUser,
-                      likesCount = uiState.likesCount,
-                      onLike = { postDetailsScreenViewModel.addLike() },
-                      onUnlike = { postDetailsScreenViewModel.removeLike() },
-                  )
-
-                  // INFO BAR
-                  PostInfoBar(
-                      authorId = uiState.authorId,
-                      authorProfilePictureURL = uiState.authorProfilePictureURL,
-                      authorUserName = uiState.authorUsername,
-                      authorUserType = uiState.currentUserUserType,
-                      animalName = uiState.animalName,
-                      date = uiState.date,
-                      onProfile = onProfile,
-                  )
-
-                  // DESCRIPTION – clean card with subtle border
-                  if (uiState.description.isNotBlank()) {
-                    Card(
-                        modifier =
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                        shape = RoundedCornerShape(32.dp),
-                        colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                        border = BorderStroke(1.dp, colorScheme.onBackground),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    ) {
-                      Text(
-                          text = uiState.description,
-                          color = colorScheme.onBackground,
-                          modifier = Modifier.padding(14.dp),
-                          style = typography.bodyMedium,
-                      )
-                    }
-                  }
-                  // COMMENTS HEADER
-                  Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    Text(
-                        text =
-                            if (uiState.commentsUI.size == 1) "1 Comment"
-                            else "${uiState.commentsUI.size} Comments",
-                        style = typography.titleSmall,
-                        color = colorScheme.onBackground,
-                    )
-                  }
-                }
+                Text(
+                    text = uiState.description,
+                    color = colorScheme.onBackground,
+                    modifier = Modifier.padding(14.dp),
+                    style = typography.bodyMedium,
+                )
               }
             }
-
-            // COMMENTS LIST – full-width, airy rows
-            items(uiState.commentsUI) { commentUI ->
-              Comment(commentUI = commentUI, onProfile = onProfile)
+            // COMMENTS HEADER
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+              Text(
+                  text =
+                      if (uiState.commentsUI.size == 1) "1 Comment"
+                      else "${uiState.commentsUI.size} Comments",
+                  style = typography.titleSmall,
+                  color = colorScheme.onBackground,
+              )
             }
-
-            // Spacer so the last comment clears the bottom input
-            item { Spacer(Modifier.height(96.dp)) }
           }
         }
       }
+
+      // COMMENTS LIST – full-width, airy rows
+      items(uiState.commentsUI) { commentUI ->
+        Comment(commentUI = commentUI, onProfile = onProfile)
+      }
+
+      // Spacer so the last comment clears the bottom input
+      item { Spacer(Modifier.height(96.dp)) }
     }
   }
 }

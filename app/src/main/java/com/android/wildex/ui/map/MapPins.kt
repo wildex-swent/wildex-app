@@ -648,7 +648,11 @@ internal fun composeOverlays(
   val badgeHeadroom = if (showExclamation) (BADGE_GAP * scale + bobMax) else 0f
   val outW = (base.width + ripplePadding * 2f).toInt()
   val outH = (badgeHeadroom + base.height + ripplePadding).toInt()
+  if (globalAlpha <= 0f) {
+    return createBitmap(outW, outH).apply { eraseColor(Color.TRANSPARENT) }
+  }
   val out = createBitmap(outW, outH)
+  out.eraseColor(Color.TRANSPARENT)
   val c = Canvas(out)
   val p =
       Paint(Paint.ANTI_ALIAS_FLAG).apply {

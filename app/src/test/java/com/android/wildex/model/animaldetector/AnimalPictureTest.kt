@@ -37,7 +37,7 @@ class AnimalPictureTest : AnimalInfoRepositoryTest() {
           "photos": [
             {
               "src": {
-                "medium": "${mockWebServer.url("/test-image.jpg")}"
+                "large": "${mockWebServer.url("/test-image.jpg")}"
               }
             }
           ]
@@ -69,30 +69,6 @@ class AnimalPictureTest : AnimalInfoRepositoryTest() {
         }
 
     assert(exception.message!!.contains("Unexpected code"))
-  }
-
-  @Test
-  fun `getAnimalPicture throws IOException when medium is missing`() = runBlocking {
-    val jsonResponse =
-        """
-        {
-          "photos": [
-            {
-              "src": {}
-            }
-          ]
-        }
-        """
-            .trimIndent()
-
-    mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
-
-    val exception =
-        assertThrows(IOException::class.java) {
-          runBlocking { repository.getAnimalPicture(mockContext, "lion") }
-        }
-
-    assert(exception.message!!.contains("No content found"))
   }
 
   @Test
@@ -140,7 +116,7 @@ class AnimalPictureTest : AnimalInfoRepositoryTest() {
   }
 
   @Test
-  fun `getAnimalPicture throws IOException when medium key is missing`() = runBlocking {
+  fun `getAnimalPicture throws IOException when large key is missing`() = runBlocking {
     val jsonResponse =
         """
         {
@@ -160,12 +136,12 @@ class AnimalPictureTest : AnimalInfoRepositoryTest() {
   }
 
   @Test
-  fun `getAnimalPicture throws IOException when medium is not string`() = runBlocking {
+  fun `getAnimalPicture throws IOException when large is not string`() = runBlocking {
     val jsonResponse =
         """
         {
           "photos": [
-            { "src": { "medium": 123 } }
+            { "src": { "large": 123 } }
           ]
         }
         """

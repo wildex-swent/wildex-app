@@ -190,7 +190,7 @@ class ProfileScreenTest {
             name = "A$i",
             pictureURL = "url$i",
             description = "",
-            condition = { true },
+            progress = { true },
         )
       }
 

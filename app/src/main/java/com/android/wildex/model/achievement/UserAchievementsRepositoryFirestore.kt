@@ -53,7 +53,10 @@ class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     val ua = doc.toObject(UserAchievements::class.java) ?: throw IllegalArgumentException()
 
     val updated =
-        Achievements.ALL.mapNotNull { if (it.condition(userId)) it.achievementId else null }
+        Achievements.ALL.mapNotNull {
+          if (it.progress(userId).all { pair -> pair.first >= pair.second }) it.achievementId
+          else null
+        }
 
     if (updated.toSet() != ua.achievementsId.toSet()) {
       docRef.set(ua.copy(achievementsId = updated, achievementsCount = updated.size)).await()

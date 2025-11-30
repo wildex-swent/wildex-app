@@ -91,6 +91,8 @@ sealed interface PinDetails {
       val post: Post,
       val author: SimpleUser?,
       val likedByMe: Boolean,
+      val likeCount: Int,
+      val commentCount: Int,
       val animalName: String = "animal",
   ) : PinDetails
 

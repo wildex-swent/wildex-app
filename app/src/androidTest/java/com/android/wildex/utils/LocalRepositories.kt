@@ -485,22 +485,22 @@ object LocalRepositories {
 
     val storage = mutableMapOf<Id, Uri>()
 
-    override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL? {
+    override suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL {
       storage[userId] = imageUri
       return "imageUrl:$userId"
     }
 
-    override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL? {
+    override suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL {
       storage[postId] = imageUri
       return "imageUrl:$postId"
     }
 
-    override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL? {
+    override suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL {
       storage[reportId] = imageUri
       return "imageUrl:$reportId"
     }
 
-    override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL? {
+    override suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL {
       storage[animalId] = imageUri
       return "imageUrl:$animalId"
     }
@@ -555,9 +555,10 @@ object LocalRepositories {
     }
 
     override suspend fun getAnimalPicture(
+        context: Context,
         animalName: String,
         coroutineContext: CoroutineContext
-    ): URL = "imageUrl:$animalName"
+    ): Uri = Uri.parse("imageUrl:$animalName")
   }
 
   val postsRepository: PostsRepository = PostsRepositoryImpl()

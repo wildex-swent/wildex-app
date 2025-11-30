@@ -65,7 +65,7 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
     val result = repository.detectAnimal(context, mockUri)
 
     assertEquals(2, result.size)
-    assertTrue(result.all { it.confidence >= 0.5f })
+    assertTrue(result.all { it.confidence >= 0.7f })
     assertEquals("lion", result[0].animalType)
     assertEquals("prairie dog", result[1].animalType)
   }
@@ -87,7 +87,7 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
     assertEquals(3, result.size)
     result.forEach { detection ->
       assertNotNull(detection.animalType)
-      assertTrue(detection.confidence >= 0.5f)
+      assertTrue(detection.confidence >= 0.7f)
     }
     assertEquals("lion", result[0].animalType)
     assertEquals("wolf", result[1].animalType)
@@ -300,7 +300,7 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
                     "id2;mammalia;rodentia;sciuridae;cynomys;ludovicianus;prairie dog",
                     "id3;aves;;;;;bird"
                   ],
-                  "scores": [0.95, 0.6, 0.3]
+                  "scores": [0.95, 0.71, 0.3]
                 }
               }
             ]
@@ -321,7 +321,7 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
                     "id2;mammalia;carnivora;canidae;canis;lupus;wolf",
                     "id3;mammalia;proboscidea;elephantidae;loxodonta;africana;elephant"
                   ],
-                  "scores": [0.85, 0.75, 0.65]
+                  "scores": [0.85, 0.75, 0.99]
                 }
               }
             ]

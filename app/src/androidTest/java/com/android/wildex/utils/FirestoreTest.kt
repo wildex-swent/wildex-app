@@ -83,8 +83,6 @@ open class FirestoreTest(val collectionPath: String) {
           description = "Description 1",
           date = fromDate(2025, Calendar.SEPTEMBER, 1),
           animalId = "animal1",
-          likesCount = 10,
-          commentsCount = 5,
       )
 
   open val post2 =
@@ -97,8 +95,6 @@ open class FirestoreTest(val collectionPath: String) {
           description = "Description 2",
           date = fromDate(2035, Calendar.SEPTEMBER, 4),
           animalId = "animal2",
-          likesCount = 10,
-          commentsCount = 5,
       )
 
   open val post3 =
@@ -111,8 +107,6 @@ open class FirestoreTest(val collectionPath: String) {
           description = "Description 3",
           date = fromDate(2024, Calendar.SEPTEMBER, 8),
           animalId = "animal3",
-          likesCount = 10,
-          commentsCount = 5,
       )
 
   open val user1 =

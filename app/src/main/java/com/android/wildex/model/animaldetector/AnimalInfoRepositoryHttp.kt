@@ -161,9 +161,7 @@ class AnimalInfoRepositoryHttp(client: OkHttpClient) : AnimalInfoRepository {
                    ],
                    "prediction": "ddf59264-185a-4d35-b647-2785792bdf54;mammalia;carnivora;felidae;panthera;leo;lion",
                    "prediction_score": 0.9870538115501404,
-                   "prediction_source": "cla
-    contentResolver = Mockito.mock(ContentResolver::class.java)
-    Mockito.`when`(context.contentResolver).thenReturn(contentResolver)ssifier",
+                   "prediction_source": "classifier",
                    "model_version": "4.0.1a"
                  }
                ]
@@ -193,7 +191,7 @@ class AnimalInfoRepositoryHttp(client: OkHttpClient) : AnimalInfoRepository {
     return (0 until length).mapNotNull { i ->
       val className = classesArray[i].jsonPrimitive.content
       val score = scoresArray[i].jsonPrimitive.float
-      if (score < 0.5) null
+      if (score < 0.7) null
       else {
         val (taxonomy, animalType) = parseClassification(className)
         AnimalDetectResponse(

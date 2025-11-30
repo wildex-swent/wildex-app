@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,8 @@ object SearchBarTestTags {
   fun testTagForResult(userId: Id) = "result_$userId"
 
   fun testTagForResultUsername(userId: Id) = "result_username_$userId"
+
+  fun testTagForResultProfilePicture(userId: Id) = "result_profile_picture_$userId"
 }
 
 /**
@@ -74,6 +78,8 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUser
   var searchResults by remember { mutableStateOf(emptyList<User>()) }
 
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
+
+  val keyboardController = LocalSoftwareKeyboardController.current
 
   LaunchedEffect(textFieldState.text) {
     val query = textFieldState.text.toString()
@@ -115,7 +121,7 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUser
                       ),
               query = textFieldState.text.toString(),
               onQueryChange = { textFieldState.edit { replace(0, length, it) } },
-              onSearch = { expanded = false },
+              onSearch = { keyboardController?.hide() },
               expanded = expanded,
               onExpandedChange = { expanded = it },
               placeholder = { Text("Search users", style = typography.bodyMedium) },
@@ -125,7 +131,10 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUser
                 } else {
                   IconButton(
                       modifier = Modifier.testTag(SearchBarTestTags.LEADING_ICON),
-                      onClick = { expanded = false }) {
+                      onClick = {
+                        textFieldState.clearText()
+                        expanded = false
+                      }) {
                         Icon(Icons.Default.ChevronLeft, contentDescription = "Go Back")
                       }
                 }
@@ -159,9 +168,13 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUser
               },
               leadingContent = {
                 ClickableProfilePicture(
-                    modifier = Modifier.size(45.dp),
+                    modifier =
+                        Modifier.size(45.dp)
+                            .testTag(SearchBarTestTags.testTagForResultProfilePicture(user.userId)),
+                    profileId = user.userId,
                     profilePictureURL = user.profilePictureURL,
                     profileUserType = user.userType,
+                    onProfile = onResultClick,
                 )
               },
               colors = ListItemDefaults.colors(containerColor = Color.Transparent),

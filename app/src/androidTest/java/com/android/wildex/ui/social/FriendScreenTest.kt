@@ -927,10 +927,24 @@ class FriendScreenTest {
     Assert.assertEquals("user1", profileClicked)
     composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
     composeTestRule
+        .onNodeWithTag(
+            SearchBarTestTags.testTagForResultProfilePicture("user2"), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    Assert.assertEquals("user2", profileClicked)
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule
         .onNodeWithTag(SearchBarTestTags.testTagForResult("user4"), useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
     Assert.assertEquals("user4", profileClicked)
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
+    composeTestRule
+        .onNodeWithTag(
+            SearchBarTestTags.testTagForResultProfilePicture("user1"), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    Assert.assertEquals("user1", profileClicked)
   }
 
   @Test
@@ -958,5 +972,25 @@ class FriendScreenTest {
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.testTagForResult(currentUser.userId))
         .assertDoesNotExist()
+  }
+
+  @Test
+  fun leavingSearchViewClearsTextInput() {
+    composeTestRule.setContent {
+      FriendScreen(
+          friendScreenViewModel = friendScreenViewModel,
+          userId = "currentUserId",
+          onProfileClick = {},
+          onGoBack = {})
+    }
+    composeTestRule
+        .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
+        .performClick()
+        .performTextInput("testtest")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).assertTextEquals("testtest")
+    composeTestRule.onNodeWithTag(SearchBarTestTags.LEADING_ICON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
+        .assertTextEquals("Search users", "")
   }
 }

@@ -1,28 +1,32 @@
 package com.android.wildex.ui.map
 
-import androidx.compose.animation.core.animateFloatAsState
+import android.content.Context
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.android.wildex.ui.map.MapContentTestTags.getPinTag
+import com.android.wildex.R
 
 /**
- * Composable that displays a tab switcher for the map screen.
+ * Composable that displays a horizontal segmented tab switcher for the map screen.
  *
  * @param modifier Modifier to be applied to the tab switcher.
  * @param activeTab The currently active map tab.
@@ -35,58 +39,69 @@ fun MapTabSwitcher(
     activeTab: MapTab,
     availableTabs: List<MapTab>,
     onTabSelected: (MapTab) -> Unit,
+    isCurrentUser: Boolean = true,
 ) {
   val cs = MaterialTheme.colorScheme
-  val uiActive = colorsForMapTab(activeTab, cs)
-  var expanded by remember { mutableStateOf(false) }
-  val expansion by
-      animateFloatAsState(
-          targetValue = if (expanded) 1f else 0f,
-          animationSpec = tween(220),
-          label = "tab-expansion")
-  val otherTabs = availableTabs.filter { it != activeTab }
+  val containerShape = RoundedCornerShape(999.dp)
 
-  Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
-    if (expanded) {
-      Box(Modifier.matchParentSize().background(Color.Transparent).clickable { expanded = false })
-    }
+  Surface(
+      modifier =
+          modifier
+              .padding(horizontal = 16.dp, vertical = 8.dp)
+              .testTag(MapContentTestTags.MAIN_TAB_SWITCHER),
+      shape = containerShape,
+      color = cs.surface,
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      availableTabs.forEach { tab ->
+        val selected = tab == activeTab
 
-    Box(
-        modifier = Modifier.graphicsLayer { alpha = expansion },
-        contentAlignment = Alignment.TopCenter) {
-          otherTabs.forEachIndexed { index, tab ->
-            val tabUi = colorsForMapTab(tab, cs)
-            val tabIcon = getIconForMapTab(tab)
-            val baseOffset = 60.dp // distance to first circle
-            val step = 54.dp // distance between circles
-            val offset = (baseOffset + step * index) * expansion
+        val backgroundColor by
+            animateColorAsState(
+                targetValue = if (selected) cs.primary else cs.surface,
+                animationSpec = tween(durationMillis = 180),
+                label = "tab-bg-color",
+            )
 
-            IconButton(
-                onClick = {
-                  onTabSelected(tab)
-                  expanded = false
-                },
-                modifier =
-                    Modifier.offset(y = offset).size(32.dp).clip(CircleShape).background(tabUi.bg),
-            ) {
-              Icon(
-                  tabIcon,
-                  contentDescription = tab.name,
-                  tint = tabUi.fg,
-                  modifier = Modifier.testTag(getPinTag(tab)))
-            }
+        val contentColor by
+            animateColorAsState(
+                targetValue = if (selected) cs.onPrimary else cs.onBackground,
+                animationSpec = tween(durationMillis = 180),
+                label = "tab-content-color",
+            )
+
+        Box(
+            modifier =
+                Modifier.weight(1f)
+                    .heightIn(min = 40.dp)
+                    .clip(containerShape)
+                    .background(backgroundColor)
+                    .clickable(enabled = !selected) { onTabSelected(tab) }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .testTag(MapContentTestTags.getPinTag(tab)),
+            contentAlignment = Alignment.Center,
+        ) {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+          ) {
+            Icon(
+                imageVector = getIconForMapTab(tab),
+                contentDescription = tab.name,
+                tint = contentColor,
+            )
+            Text(
+                text = tab.toLabel(isCurrentUser, context = LocalContext.current),
+                color = contentColor,
+                style = MaterialTheme.typography.labelLarge,
+            )
           }
         }
-
-    val mainIcon = getIconForMapTab(activeTab)
-    IconButton(
-        onClick = { expanded = !expanded },
-        modifier =
-            Modifier.clip(CircleShape)
-                .background(uiActive.bg)
-                .testTag(MapContentTestTags.MAIN_TAB_SWITCHER)) {
-          Icon(mainIcon, contentDescription = activeTab.name, tint = uiActive.fg)
-        }
+      }
+    }
   }
 }
 
@@ -101,4 +116,19 @@ fun getIconForMapTab(tab: MapTab) =
       MapTab.Posts -> Icons.Default.Language
       MapTab.MyPosts -> Icons.Default.Person
       MapTab.Reports -> Icons.Default.Flag
+    }
+
+/**
+ * String labels instead of enum names.
+ *
+ * @param isCurrentUser does the viewed map belong to the curent user
+ * @return name of the tab
+ */
+private fun MapTab.toLabel(isCurrentUser: Boolean = true, context: Context): String =
+    when (this) {
+      MapTab.Posts -> context.getString(R.string.map_posts)
+      MapTab.MyPosts ->
+          if (isCurrentUser) context.getString(R.string.map_my_posts)
+          else context.getString(R.string.map_posts)
+      MapTab.Reports -> context.getString(R.string.map_reports)
     }

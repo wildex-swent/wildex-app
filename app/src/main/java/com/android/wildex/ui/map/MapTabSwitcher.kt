@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 
@@ -43,6 +44,7 @@ fun MapTabSwitcher(
 ) {
   val cs = MaterialTheme.colorScheme
   val containerShape = RoundedCornerShape(999.dp)
+  val context = LocalContext.current
 
   Surface(
       modifier =
@@ -73,9 +75,16 @@ fun MapTabSwitcher(
                 label = "tab-content-color",
             )
 
+        val tabModifier =
+            if (selected) {
+              Modifier.wrapContentWidth()
+            } else {
+              Modifier.weight(1f)
+            }
+
         Box(
             modifier =
-                Modifier.weight(1f)
+                tabModifier
                     .heightIn(min = 40.dp)
                     .clip(containerShape)
                     .background(backgroundColor)
@@ -94,9 +103,11 @@ fun MapTabSwitcher(
                 tint = contentColor,
             )
             Text(
-                text = tab.toLabel(isCurrentUser, context = LocalContext.current),
+                text = tab.toLabel(isCurrentUser, context),
                 color = contentColor,
                 style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = if (selected) TextOverflow.Clip else TextOverflow.Ellipsis,
             )
           }
         }

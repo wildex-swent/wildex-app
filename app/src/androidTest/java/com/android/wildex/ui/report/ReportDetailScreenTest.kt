@@ -517,23 +517,6 @@ class ReportDetailScreenTest {
     assert(confirmed)
   }
 
-  //  @Test
-  //  fun offlineScreenIsDisplayedWhenOfflineReportDetailScreen() {
-  //    composeRule.setContent {
-  //      CompositionLocalProvider(LocalConnectivityObserver provides false) {
-  //        ReportDetailsScreen(
-  //            reportId = "reportId1",
-  //            reportDetailsViewModel = reportDetailsViewModel,
-  //        )
-  //      }
-  //    }
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
-  //  }
-
   @Test
   fun commentInputIsDisabledWhenOffline() {
     composeRule.setContent {

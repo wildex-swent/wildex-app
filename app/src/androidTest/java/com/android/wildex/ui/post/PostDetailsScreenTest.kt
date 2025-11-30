@@ -359,23 +359,4 @@ class PostDetailsScreenTest {
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
   }
-
-  //  @Test
-  //  fun offlineScreenIsDisplayedWhenOfflinePostDetailsScreen() {
-  //    composeRule.setContent {
-  //      CompositionLocalProvider(LocalConnectivityObserver provides false) {
-  //        PostDetailsScreen(
-  //            postId = "post1",
-  //            postDetailsScreenViewModel = postDetailsViewModel,
-  //            onGoBack = {},
-  //            onProfile = {},
-  //        )
-  //      }
-  //    }
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
-  //    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
-  //  }
 }

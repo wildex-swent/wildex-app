@@ -120,6 +120,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_ProfileScreen_FromHome_CurrentUser_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToMyProfileScreenFromHome()
@@ -134,6 +135,7 @@ class NavigationTest : NavigationTestUtils() {
   fun navigation_PostDetails_AndGoBack() {
     val postId = "post_for_profile_nav"
     runBlocking {
+      RepositoryProvider.userFriendsRepository.initializeUserFriends(userId)
       val post = post0.copy(authorId = userId, postId = postId)
       RepositoryProvider.postRepository.addPost(post)
       val animal = animal0.copy(animalId = post.animalId)
@@ -172,6 +174,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_CollectionScreenFromMyProfile_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToMyProfileScreenFromHome()
@@ -203,6 +206,7 @@ class NavigationTest : NavigationTestUtils() {
       RepositoryProvider.userRepository.addUser(user)
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)
       RepositoryProvider.userAchievementsRepository.initializeUserAchievements(userId2)
+      RepositoryProvider.userFriendsRepository.initializeUserFriends(userId2)
       val post = post0.copy(authorId = userId2, postId = postId2, animalId = animal2)
       RepositoryProvider.postRepository.addPost(post)
       val animal = animal0.copy(animalId = animal2)
@@ -267,6 +271,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_ProfileScreen_FromCollection_CurrentUser_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToCollectionScreenFromBottomBar()
@@ -282,6 +287,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_SettingsScreen_FromMyProfile_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToMyProfileScreenFromHome()
@@ -297,6 +303,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_EditProfile_FromSettings_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToMyProfileScreenFromHome()
@@ -372,6 +379,7 @@ class NavigationTest : NavigationTestUtils() {
 
   @Test
   fun navigation_Profile_FromReport_AndGoBack() {
+    runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToReportScreenFromBottomBar()

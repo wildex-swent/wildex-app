@@ -30,7 +30,7 @@ const reportChannelId = "report_channel";
 exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
   {
     document: "posts/{postId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -59,7 +59,7 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
       const author = (
         await admin.firestore().collection("users").doc(post.authorId).get()
       ).data() as User;
-
+      
       const notifications: Notification[] = userFriends.friendsId.map(
         (friendId) => (
           {
@@ -72,7 +72,7 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
             title: `${author.username} shared a new post.`,
             body: post.description ? post.description : "",
             route: `post_details/${post.postId}`,
-            isRead: false,
+            read: false,
             date: admin.firestore.Timestamp.now(),
           }
         )
@@ -120,7 +120,7 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
 exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
   {
     document: "friendRequests/{requestId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -149,7 +149,7 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
         title: `${fromUser.username} sent you a friend request.`,
         body: "",
         route: `friend_screen/${requestData.receiverId}`,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 
@@ -189,7 +189,7 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
 exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
   {
     document: "friendRequests/{requestId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -231,7 +231,7 @@ exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
         title: `${toUser.username} accepted your friend request.`,
         body: "",
         route: `friend_screen/${requestData.senderId}`,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 
@@ -267,7 +267,7 @@ exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
 exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
   {
     document: "likes/{likeId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -307,7 +307,7 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
         title: `${fromUser.username} liked your post.`,
         body: "",
         route: `post_details/${postData.postId}`,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 
@@ -348,7 +348,7 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
 exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
   {
     document: "comments/{commentId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -393,7 +393,7 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
         title: `${fromUser.username} commented on your${bodySuffix}`,
         body: commentData.text,
         route: detailPath,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 
@@ -432,7 +432,7 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
 exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
   {
     document: "reports/{reportId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -472,7 +472,7 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
         title: `${assigneeUser.username} is assigned to your report.`,
         body: "",
         route: `report_details/${reportData.reportId}`,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 
@@ -509,7 +509,7 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
 exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
   {
     document: "reports/{reportId}",
-    region: "europe-west6",
+    region: "europe-west1",
   },
   async (event) => {
     try {
@@ -546,7 +546,7 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
         title: `${assigneeUser.username} resolved your report.`,
         body: "",
         route: `report_details/${reportData.reportId}`,
-        isRead: false,
+        read: false,
         date: admin.firestore.Timestamp.now(),
       };
 

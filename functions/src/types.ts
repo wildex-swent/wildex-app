@@ -20,7 +20,7 @@ export interface Notification {
   title: string;
   body: string;
   route: string;
-  isRead: boolean;
+  read: boolean;
   date: Timestamp;
 }
 

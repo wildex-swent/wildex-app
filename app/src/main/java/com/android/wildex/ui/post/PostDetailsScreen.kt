@@ -198,7 +198,7 @@ fun PostDetailsContent(
                 authorId = uiState.authorId,
                 authorProfilePictureURL = uiState.authorProfilePictureURL,
                 authorUserName = uiState.authorUsername,
-                authorUserType = uiState.currentUserUserType,
+                authorUserType = uiState.authorUserType,
                 animalName = uiState.animalName,
                 date = uiState.date,
                 onProfile = onProfile,

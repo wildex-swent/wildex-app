@@ -1,0 +1,84 @@
+name: "Android CI Setup"
+description: "Common setup for Android CI jobs (checkout, JDK, Gradle cache, secrets, permissions, optional AVD cache)"
+
+inputs:
+  use-avd-cache:
+    description: "Whether to configure AVD cache"
+    required: false
+    default: "false"
+  google-services:
+    description: "Base64-encoded google-services.json"
+    required: false
+  local-properties:
+    description: "Base64-encoded local.properties"
+    required: false
+  keystore:
+    description: "Base64-encoded keystore"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Enable KVM group perms
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+      shell: bash
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: "temurin"
+        java-version: "17"
+
+    - name: Gradle cache
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: AVD cache
+      if: ${{ inputs.use-avd-cache == 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: avd-34
+
+    - name: Decode secrets
+      env:
+        GOOGLE_SERVICES: ${{ inputs.google-services }}
+        LOCAL_PROPERTIES: ${{ inputs.local-properties }}
+        KEYSTORE: ${{ inputs.keystore }}
+      run: |
+        if [ -n "$GOOGLE_SERVICES" ]; then
+          echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
+        else
+          echo "::warning::GOOGLE_SERVICES secret is not set. google-services.json will not be created."
+        fi
+
+        if [ -n "$LOCAL_PROPERTIES" ]; then
+          echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
+        else
+          echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
+        fi
+
+        if [ -n "$KEYSTORE" ]; then
+          echo "$KEYSTORE" | base64 --decode > ./app/upload-keystore.jks
+        else
+          echo "::warning::KEYSTORE secret is not set. upload-keystore.jks will not be created."
+        fi
+      shell: bash
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+      shell: bash
+
+    - name: KTFMT Check
+      run: ./gradlew ktfmtCheck
+      shell: bash

@@ -4,6 +4,8 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
@@ -29,6 +31,8 @@ class ProfileScreenViewModelTest {
   private lateinit var achievementsRepository: UserAchievementsRepository
   private lateinit var postsRepository: PostsRepository
   private lateinit var updateUserAchievements: UpdateUserAchievementsUseCase
+  private lateinit var userAnimalsRepository: UserAnimalsRepository
+  private lateinit var userFriendsRepository: UserFriendsRepository
   private lateinit var viewModel: ProfileScreenViewModel
 
   private val u1 =
@@ -55,9 +59,13 @@ class ProfileScreenViewModelTest {
     achievementsRepository = mockk()
     postsRepository = mockk()
     updateUserAchievements = mockk()
+    userAnimalsRepository = mockk()
+    userFriendsRepository = mockk()
 
     coEvery { updateUserAchievements(any()) } returns Unit
     coEvery { postsRepository.getAllPostsByGivenAuthor(any()) } returns emptyList()
+    coEvery { userAnimalsRepository.getAnimalsCountOfUser("uid-1") } returns 3
+    coEvery { userFriendsRepository.getFriendsCountOfUser("uid-1") } returns 4
 
     viewModel =
         ProfileScreenViewModel(
@@ -76,6 +84,8 @@ class ProfileScreenViewModelTest {
     Assert.assertFalse(s.isUserOwner)
     Assert.assertFalse(s.isLoading)
     Assert.assertFalse(s.isRefreshing)
+    Assert.assertEquals(0, s.friendsCount)
+    Assert.assertEquals(0, s.animalCount)
     Assert.assertTrue(s.achievements.isEmpty())
     Assert.assertTrue(s.recentPins.isEmpty())
     Assert.assertNull(s.errorMsg)
@@ -102,6 +112,8 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(u1, s1.user)
       Assert.assertTrue(s1.isUserOwner)
       Assert.assertEquals(listOf(a1, a2), s1.achievements)
+      Assert.assertEquals(3, s1.animalCount)
+      Assert.assertEquals(4, s1.friendsCount)
       Assert.assertEquals(1, s1.recentPins.size)
       Assert.assertEquals(6.6, s1.recentPins[0].longitude(), 0.0)
       Assert.assertEquals(46.5, s1.recentPins[0].latitude(), 0.0)
@@ -123,6 +135,8 @@ class ProfileScreenViewModelTest {
       val s2 = viewModel.uiState.value
       Assert.assertEquals(u1, s2.user)
       Assert.assertFalse(s2.isUserOwner)
+      Assert.assertEquals(3, s2.animalCount)
+      Assert.assertEquals(4, s2.friendsCount)
       Assert.assertTrue(s2.achievements.isEmpty())
       Assert.assertTrue(s2.recentPins.isEmpty())
     }
@@ -206,6 +220,8 @@ class ProfileScreenViewModelTest {
       Assert.assertTrue(s.isError)
       Assert.assertFalse(s.isUserOwner)
       Assert.assertTrue(s.recentPins.isEmpty())
+      Assert.assertEquals(0, s.animalCount)
+      Assert.assertEquals(0, s.friendsCount)
 
       viewModel.clearErrorMsg()
       Assert.assertNull(viewModel.uiState.value.errorMsg)

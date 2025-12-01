@@ -94,6 +94,8 @@ object ProfileScreenTestTags {
   const val MAP_CTA = "ProfileScreenMapCTA"
   const val ACHIEVEMENTS_PREV = "ProfileScreenAchievementsPrev"
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
+  const val ANIMAL_COUNT = "ProfileScreenAnimalCount"
+  const val FRIENDS_COUNT = "ProfileScreenFriendsCount"
 }
 
 /** Profile Screen Composable */
@@ -160,6 +162,7 @@ fun ProfileScreen(
               achievements = uiState.achievements,
               onAchievements = onAchievements,
               animalCount = uiState.animalCount,
+              friendCount = uiState.friendsCount,
               recentPins = uiState.recentPins,
               onCollection = onCollection,
               onMap = onMap,
@@ -179,7 +182,8 @@ fun ProfileContent(
     user: User,
     ownerProfile: Boolean,
     achievements: List<Achievement> = emptyList(),
-    animalCount: Int = 17,
+    animalCount: Int = 0,
+    friendCount: Int = 0,
     recentPins: List<Point> = emptyList(),
     onAchievements: (Id) -> Unit,
     onCollection: (Id) -> Unit,
@@ -221,7 +225,7 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-          )
+              friendCount = friendCount)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -438,7 +442,10 @@ private fun ProfileStatCard(
             color = contentColor,
             style = typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1,
-        )
+            modifier =
+                Modifier.testTag(
+                    if (title == "Friends") ProfileScreenTestTags.FRIENDS_COUNT
+                    else ProfileScreenTestTags.ANIMAL_COUNT))
         Text(
             text = title,
             color = contentColor.copy(alpha = 0.95f),
@@ -456,7 +463,7 @@ fun ProfileAnimals(
     modifier: Modifier = Modifier,
     id: Id = "",
     onCollection: (Id) -> Unit = {},
-    animalCount: Int = 17,
+    animalCount: Int = 0,
 ) {
   val cs = colorScheme
   ProfileStatCard(
@@ -484,7 +491,7 @@ fun ProfileFriends(
     modifier: Modifier = Modifier,
     id: Id = "",
     onFriends: (Id) -> Unit = {},
-    friendCount: Int = 42,
+    friendCount: Int = 0,
 ) {
   val cs = colorScheme
   ProfileStatCard(

@@ -1,11 +1,13 @@
 package com.android.wildex.ui.profile
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -21,6 +23,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
@@ -70,6 +73,10 @@ class ProfileScreenTest {
   private lateinit var defaultAchievementsRepo: FakeAchievementsRepo
   private lateinit var defaultUpdateUseCase: UpdateUserAchievementsUseCase
   private lateinit var defaultViewModel: ProfileScreenViewModel
+  private val userRepository = LocalRepositories.userRepository
+  private val userAnimalsRepository = LocalRepositories.userAnimalsRepository
+  private val userFriendsRepository = LocalRepositories.userFriendsRepository
+  private val animalRepository = LocalRepositories.animalRepository
 
   @Before
   fun setup() {
@@ -78,12 +85,43 @@ class ProfileScreenTest {
     defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
     defaultViewModel =
         ProfileScreenViewModel(
-            userRepository = LocalRepositories.UserRepositoryImpl(),
+            userRepository = userRepository,
             achievementRepository = defaultAchievementsRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = defaultUpdateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "currentUserId-1",
         )
+    runBlocking {
+      userRepository.addUser(
+          User(
+              userId = "u-1",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      animalRepository.addAnimal(
+          Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
+      animalRepository.addAnimal(
+          Animal(animalId = "animal1", pictureURL = "", name = "", species = "", description = ""))
+      userAnimalsRepository.initializeUserAnimals("u-1")
+      userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal0")
+      userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal1")
+      userFriendsRepository.initializeUserFriends("u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend0", "u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend1", "u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend2", "u-1")
+      userAnimalsRepository.initializeUserAnimals("currentUserId-1")
+      userAnimalsRepository.addAnimalToUserAnimals("currentUserId-1", "animal0")
+      userFriendsRepository.initializeUserFriends("currentUserId-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("u-1", "currentUserId-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend0", "currentUserId-1")
+    }
   }
 
   @After
@@ -192,6 +230,8 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "someone-else",
         )
     composeRule.setContent {
@@ -219,6 +259,8 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "u-1",
         )
     var achievements = 0
@@ -257,6 +299,8 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "someone-else",
         )
     var requests = 0
@@ -285,7 +329,7 @@ class ProfileScreenTest {
   @Test
   fun profile_defaults_and_map_achievements_defaults() {
     composeRule.setContent {
-      androidx.compose.foundation.layout.Column {
+      Column {
         ProfileImageAndName()
         ProfileDescription()
         ProfileAchievements(ownerProfile = true)
@@ -369,6 +413,34 @@ class ProfileScreenTest {
   }
 
   @Test
+  fun friendsAndAnimalsStatsShowTheCorrectStats() {
+    val updateUseCase =
+        createTestUpdateAchievementsUseCase(LocalRepositories.userAchievementsRepository)
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepository,
+            achievementRepository = LocalRepositories.userAchievementsRepository,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
+            currentUserId = "someone-else",
+        )
+    composeRule.setContent {
+      ProfileScreen(
+          profileScreenViewModel = vm,
+          userUid = "u-1",
+      )
+    }
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.ANIMAL_COUNT, useUnmergedTree = true)
+        .assertTextEquals("2")
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.FRIENDS_COUNT, useUnmergedTree = true)
+        .assertTextEquals("3")
+  }
+
+  @Test
   fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
     val items = fakeAchievements(2)
     composeRule.setContent {
@@ -406,6 +478,8 @@ class ProfileScreenTest {
               achievementRepository = achRepo,
               postRepository = LocalRepositories.postsRepository,
               updateUserAchievements = updateUseCase,
+              userAnimalsRepository = userAnimalsRepository,
+              userFriendsRepository = userFriendsRepository,
               currentUserId = "currentUserId-1",
           )
 

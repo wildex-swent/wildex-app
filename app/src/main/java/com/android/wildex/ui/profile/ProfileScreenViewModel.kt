@@ -8,6 +8,8 @@ import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -28,7 +30,8 @@ data class ProfileUIState(
     val user: User = emptyUser,
     val isUserOwner: Boolean = false,
     val achievements: List<Achievement> = emptyList(),
-    val animalCount: Int = 17,
+    val animalCount: Int = 0,
+    val friendsCount: Int = 0,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
@@ -43,6 +46,10 @@ class ProfileScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val updateUserAchievements: UpdateUserAchievementsUseCase =
         UpdateUserAchievementsUseCase(),
+    private val userAnimalsRepository: UserAnimalsRepository =
+        RepositoryProvider.userAnimalsRepository,
+    private val userFriendsRepository: UserFriendsRepository =
+        RepositoryProvider.userFriendsRepository,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
 
@@ -88,6 +95,16 @@ class ProfileScreenViewModel(
       viewModelScope.launch {
         val achievements = fetchAchievements(userId)
         _uiState.value = _uiState.value.copy(achievements = achievements)
+      }
+
+      viewModelScope.launch {
+        val animalsCount = userAnimalsRepository.getAnimalsCountOfUser(userId)
+        _uiState.value = _uiState.value.copy(animalCount = animalsCount)
+      }
+
+      viewModelScope.launch {
+        val friendsCount = userFriendsRepository.getFriendsCountOfUser(userId)
+        _uiState.value = _uiState.value.copy(friendsCount = friendsCount)
       }
 
       viewModelScope.launch {

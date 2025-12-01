@@ -512,6 +512,7 @@ fun ProfileFriends(
   )
 }
 
+/** Remove friend button interactable element */
 @Composable
 fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
   Box(
@@ -540,6 +541,7 @@ fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
       }
 }
 
+/** Send friend request interactable element */
 @Composable
 fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
   Box(
@@ -568,6 +570,7 @@ fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
       }
 }
 
+/** Cancel sent request interactable element */
 @Composable
 fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
   Box(
@@ -591,6 +594,7 @@ fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
       }
 }
 
+/** Received friend request interactable element */
 @Composable
 fun ReceivedRequestInteractable(
     onAccept: () -> Unit = {},

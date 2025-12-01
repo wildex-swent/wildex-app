@@ -126,6 +126,11 @@ fun ProfileAchievements(
       modifier =
           Modifier.fillMaxWidth()
               .padding(horizontal = 16.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
               .testTag(ProfileScreenTestTags.ACHIEVEMENTS),
       shape = RoundedCornerShape(14.dp),
       colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {

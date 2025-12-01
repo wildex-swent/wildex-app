@@ -10,10 +10,6 @@ package com.android.wildex.ui.home
  * to details.
  */
 import android.widget.Toast
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -39,7 +35,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
@@ -57,11 +52,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,8 +80,6 @@ object HomeScreenTestTags {
   const val NO_POSTS = "HomeScreenEmpty"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
-
-  fun likeTag(postId: Id): String = testTagForPost(postId, "LikeCount")
 
   fun commentTag(postId: Id): String = testTagForPost(postId, "CommentCount")
 
@@ -199,8 +192,8 @@ fun PostsView(
 ) {
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.POSTS_LIST),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-      contentPadding = PaddingValues(vertical = 12.dp),
+      verticalArrangement = Arrangement.spacedBy(2.dp),
+      contentPadding = PaddingValues(vertical = 2.dp),
   ) {
     items(postStates.size) { index ->
       PostItem(
@@ -237,21 +230,12 @@ fun PostItem(
   var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
   var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
 
-  val heartScale by
-      animateFloatAsState(
-          targetValue = if (liked) 1.1f else 1f,
-          animationSpec = tween(140, easing = FastOutSlowInEasing),
-          label = "heartScale",
-      )
-
   Card(
       shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(width = 1.dp, color = colorScheme.onBackground.copy(alpha = 0.28f)),
-      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+      modifier = Modifier.fillMaxWidth(),
   ) {
-    // Header: avatar + title + date
+    // Header: avatar + title + date + location
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -265,48 +249,49 @@ fun PostItem(
       )
       Spacer(Modifier.width(10.dp))
       Column(Modifier.weight(1f)) {
+        Row {
+          Text(
+              text = "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}",
+              style = typography.titleMedium,
+              color = colorScheme.onBackground,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
+          Text(
+              text = animalName.replaceFirstChar { it.uppercase() },
+              style = typography.titleMedium,
+              color = colorScheme.primary,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
+        }
         Text(
             text =
-                "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}$animalName",
-            style = typography.titleSmall,
+                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    .format(post.date.toDate()),
+            style = typography.labelSmall,
             color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
+      }
+      if (post.location?.name?.isNotBlank() == true) {
         Row(
+            modifier = Modifier.testTag(HomeScreenTestTags.locationTag(post.postId)),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
         ) {
-          Text(
-              text =
-                  SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                      .format(post.date.toDate()),
-              style = typography.labelSmall,
-              color = colorScheme.onBackground,
+          Icon(
+              imageVector = Icons.Default.LocationOn,
+              contentDescription = "Location",
+              modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+              tint = colorScheme.onBackground,
           )
-          if (post.location?.name?.isNotBlank() == true) {
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(.4f).testTag(HomeScreenTestTags.locationTag(post.postId)),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-              Icon(
-                  imageVector = Icons.Default.LocationOn,
-                  contentDescription = "Location",
-                  modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-                  tint = colorScheme.onBackground,
-              )
-              Spacer(Modifier.width(2.dp))
-              Text(
-                  text = post.location.name,
-                  style = typography.labelMedium,
-                  color = colorScheme.onBackground,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-              )
-            }
-          }
+          Spacer(Modifier.width(2.dp))
+          Text(
+              text = post.location.name,
+              style = typography.labelMedium,
+              color = colorScheme.onBackground,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
         }
       }
     }
@@ -318,32 +303,11 @@ fun PostItem(
           contentDescription = "Post picture",
           modifier =
               Modifier.fillMaxWidth()
-                  .height(220.dp)
+                  .height(400.dp)
                   .clip(RoundedCornerShape(0.dp))
                   .testTag(HomeScreenTestTags.imageTag(post.postId)),
           contentScale = ContentScale.Crop,
       )
-      IconButton(
-          onClick = {
-            liked = !liked
-            likeCount = if (liked) likeCount + 1 else likeCount - 1
-            onPostLike(post.postId)
-          },
-          modifier =
-              Modifier.align(Alignment.TopStart)
-                  .testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
-      ) {
-        Icon(
-            imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Like button",
-            modifier =
-                Modifier.size(28.dp).graphicsLayer {
-                  scaleX = heartScale
-                  scaleY = heartScale
-                },
-            tint = if (liked) colorScheme.primary else colorScheme.onBackground,
-        )
-      }
     }
 
     // Actions: likes & comments & location
@@ -355,7 +319,7 @@ fun PostItem(
       // Likes
       Row(
           modifier =
-              Modifier.testTag(HomeScreenTestTags.likeTag(post.postId)).clickable {
+              Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
                 liked = !liked
                 likeCount = if (liked) likeCount + 1 else likeCount - 1
                 onPostLike(post.postId)
@@ -365,13 +329,14 @@ fun PostItem(
         Icon(
             imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Likes",
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(30.dp),
             tint = if (liked) colorScheme.primary else colorScheme.onBackground,
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = likeText(likeCount),
-            style = typography.bodyMedium,
+            text = "$likeCount",
+            style = typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
             color = colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -389,15 +354,16 @@ fun PostItem(
           verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.Comment,
+            imageVector = Icons.AutoMirrored.Outlined.Chat,
             contentDescription = "Comments",
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(25.dp),
             tint = colorScheme.onBackground,
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = commentText(commentCount),
-            style = typography.bodyMedium,
+            text = "$commentCount",
+            style = typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
             color = colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -406,11 +372,6 @@ fun PostItem(
     }
   }
 }
-
-/** Plural-friendly, single-line labels */
-private fun likeText(count: Int): String = if (count == 1) "1 like" else "$count likes"
-
-private fun commentText(count: Int): String = if (count == 1) "1 comment" else "$count comments"
 
 private fun String.startsWithVowel(): Boolean {
   val lower = this.lowercase()

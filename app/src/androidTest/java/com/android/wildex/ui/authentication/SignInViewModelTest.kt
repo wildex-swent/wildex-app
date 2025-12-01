@@ -17,6 +17,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
+import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.android.wildex.utils.FakeCredentialManager
@@ -64,6 +65,7 @@ class SignInViewModelTest {
   private lateinit var userAchievementsRepository: UserAchievementsRepository
   private lateinit var userFriendsRepository: UserFriendsRepository
   private lateinit var userSettingsRepository: UserSettingsRepository
+  private lateinit var userTokensRepository: UserTokensRepository
   private val fakeUserIdToken = "fakeUserIdToken"
   private val testDispatcher = StandardTestDispatcher()
 
@@ -82,13 +84,15 @@ class SignInViewModelTest {
     userAchievementsRepository = LocalRepositories.userAchievementsRepository
     userFriendsRepository = LocalRepositories.userFriendsRepository
     userSettingsRepository = LocalRepositories.userSettingsRepository
+    userTokensRepository = LocalRepositories.userTokensRepository
     val initializeUserUseCase =
         InitializeUserUseCase(
             userRepository,
             userSettingsRepository,
             userAnimalsRepository,
             userAchievementsRepository,
-            userFriendsRepository)
+            userFriendsRepository,
+            userTokensRepository)
     authRepository = mockk(relaxed = true)
     credentialManager = FakeCredentialManager.create("fakeToken")
     viewModel =
@@ -96,6 +100,7 @@ class SignInViewModelTest {
             authRepository,
             userRepository,
             userSettingsRepository,
+            userTokensRepository,
             initializeUserUseCase,
         )
   }
@@ -161,6 +166,8 @@ class SignInViewModelTest {
         userAchievementsRepository.initializeUserAchievements(user.userId)
         userSettingsRepository.initializeUserSettings(user.userId)
         userAnimalsRepository.initializeUserAnimals(user.userId)
+        userTokensRepository.initializeUserTokens(user.userId)
+        userFriendsRepository.initializeUserFriends(user.userId)
       }
 
       val fakeCredential =

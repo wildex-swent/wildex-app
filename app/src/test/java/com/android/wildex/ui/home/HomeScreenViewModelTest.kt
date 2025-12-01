@@ -10,8 +10,10 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
@@ -37,6 +39,7 @@ class HomeScreenViewModelTest {
   private lateinit var likeRepository: LikeRepository
   private lateinit var commentRepository: CommentRepository
   private lateinit var animalRepository: AnimalRepository
+  private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var viewModel: HomeScreenViewModel
 
   private val defaultUser: SimpleUser =
@@ -128,6 +131,7 @@ class HomeScreenViewModelTest {
     likeRepository = mockk()
     commentRepository = mockk()
     animalRepository = mockk()
+    userSettingsRepository = mockk()
     viewModel =
         HomeScreenViewModel(
             postsRepository,
@@ -135,8 +139,10 @@ class HomeScreenViewModelTest {
             likeRepository,
             commentRepository,
             animalRepository,
+            userSettingsRepository,
             "uid-1",
         )
+    coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
     coEvery { likeRepository.getLikeForPost("p1") } returns null
@@ -268,6 +274,7 @@ class HomeScreenViewModelTest {
               likeRepository,
               commentRepository,
               animalRepository,
+              userSettingsRepository,
               "")
       viewModel.refreshUIState()
       advanceUntilIdle()

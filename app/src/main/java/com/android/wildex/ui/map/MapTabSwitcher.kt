@@ -60,58 +60,78 @@ fun MapTabSwitcher(
     ) {
       availableTabs.forEach { tab ->
         val selected = tab == activeTab
-
-        val backgroundColor by
-            animateColorAsState(
-                targetValue = if (selected) cs.primary else cs.surface,
-                animationSpec = tween(durationMillis = 180),
-                label = "tab-bg-color",
-            )
-
-        val contentColor by
-            animateColorAsState(
-                targetValue = if (selected) cs.onPrimary else cs.onBackground,
-                animationSpec = tween(durationMillis = 180),
-                label = "tab-content-color",
-            )
-
-        val tabModifier =
-            if (selected) {
-              Modifier.wrapContentWidth()
-            } else {
-              Modifier.weight(1f)
-            }
-
-        Box(
-            modifier =
-                tabModifier
-                    .heightIn(min = 40.dp)
-                    .clip(containerShape)
-                    .background(backgroundColor)
-                    .clickable(enabled = !selected) { onTabSelected(tab) }
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .testTag(MapContentTestTags.getPinTag(tab)),
-            contentAlignment = Alignment.Center,
-        ) {
-          Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp),
-          ) {
-            Icon(
-                imageVector = getIconForMapTab(tab),
-                contentDescription = tab.name,
-                tint = contentColor,
-            )
-            Text(
-                text = tab.toLabel(isCurrentUser, context),
-                color = contentColor,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = if (selected) TextOverflow.Clip else TextOverflow.Ellipsis,
-            )
-          }
-        }
+        MapTabButton(
+            tab = tab,
+            selected = selected,
+            containerShape = containerShape,
+            isCurrentUser = isCurrentUser,
+            colorScheme = cs,
+            context = context,
+            onTabSelected = onTabSelected,
+        )
       }
+    }
+  }
+}
+
+@Composable
+private fun RowScope.MapTabButton(
+    tab: MapTab,
+    selected: Boolean,
+    containerShape: RoundedCornerShape,
+    isCurrentUser: Boolean,
+    colorScheme: androidx.compose.material3.ColorScheme,
+    context: Context,
+    onTabSelected: (MapTab) -> Unit,
+) {
+  val backgroundColor by
+      animateColorAsState(
+          targetValue = if (selected) colorScheme.primary else colorScheme.surface,
+          animationSpec = tween(durationMillis = 180),
+          label = "tab-bg-color",
+      )
+
+  val contentColor by
+      animateColorAsState(
+          targetValue = if (selected) colorScheme.onPrimary else colorScheme.onBackground,
+          animationSpec = tween(durationMillis = 180),
+          label = "tab-content-color",
+      )
+
+  val tabModifier =
+      if (selected) {
+        Modifier.wrapContentWidth()
+      } else {
+        Modifier.weight(1f)
+      }
+
+  Box(
+      modifier =
+          tabModifier
+              .heightIn(min = 40.dp)
+              .clip(containerShape)
+              .background(backgroundColor)
+              .clickable(enabled = !selected) { onTabSelected(tab) }
+              .padding(horizontal = 12.dp, vertical = 8.dp)
+              .testTag(MapContentTestTags.getPinTag(tab)),
+      contentAlignment = Alignment.Center,
+  ) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+      Icon(
+          imageVector = getIconForMapTab(tab),
+          contentDescription = tab.name,
+          tint = contentColor,
+      )
+      Text(
+          text = tab.toLabel(isCurrentUser, context),
+          color = contentColor,
+          style = MaterialTheme.typography.labelLarge,
+          maxLines = 1,
+          overflow = if (selected) TextOverflow.Clip else TextOverflow.Ellipsis,
+      )
     }
   }
 }

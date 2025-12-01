@@ -405,7 +405,7 @@ private fun ReportSelectionCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(16.dp).clip(CircleShape),
             )
-            // username, single line with ellipsis
+
             Text(
                 text =
                     details.assignee?.username ?: context.current.getString(R.string.map_unknown),

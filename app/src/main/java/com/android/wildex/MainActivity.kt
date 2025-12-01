@@ -26,7 +26,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.notification.NotificationChannelType
 import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.social.FileSearchDataStorage
@@ -66,10 +65,6 @@ object HttpClientProvider {
 
 object AppTheme {
   var appearanceMode by mutableStateOf(AppearanceMode.AUTOMATIC)
-}
-
-object AppConnectivity {
-  var isOnline by mutableStateOf(true)
 }
 
 class MainActivity : ComponentActivity() {
@@ -116,12 +111,6 @@ fun WildexApp(
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
   LaunchedEffect(Unit) {
     SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
-  }
-
-  val appContext = context.applicationContext
-  val connectivityObserver = remember { DefaultConnectivityObserver(appContext) }
-  LaunchedEffect(connectivityObserver) {
-    connectivityObserver.isOnline.collect { AppConnectivity.isOnline = it }
   }
 
   val signInViewModel: SignInViewModel = viewModel()

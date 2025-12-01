@@ -157,7 +157,8 @@ class PostDetailsScreenTest {
             authorId = commenter1.userId,
             text = "Amazing shot!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
     commentRepository.addComment(
         Comment(
             commentId = "comment2",
@@ -165,7 +166,8 @@ class PostDetailsScreenTest {
             authorId = commenter2.userId,
             text = "Love this!",
             date = Timestamp.now(),
-            tag = CommentTag.POST_COMMENT))
+            tag = CommentTag.POST_COMMENT,
+        ))
 
     val animal =
         Animal(

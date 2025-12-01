@@ -1,6 +1,8 @@
 package com.android.wildex.ui.report
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -11,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
@@ -512,6 +515,19 @@ class ReportDetailScreenTest {
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).performClick()
     assert(confirmed)
+  }
+
+  @Test
+  fun commentInputIsDisabledWhenOffline() {
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
+    }
+    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD).assertIsNotEnabled()
   }
 }
 

@@ -44,7 +44,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "Like 50 posts",
           name = "Social Butterfly",
-          progress = { userId -> listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 50)) },
+          progress = { userId ->
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 50))
+          },
       )
 
   /** Community Builder — awarded for writing at least 20 comments. */

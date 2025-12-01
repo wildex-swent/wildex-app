@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -260,27 +259,53 @@ fun MapScreen(
       // 3) tap to clear
       MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
 
-      // 4) tabs
-      MapTabSwitcher(
+      // 4) map top: tabs + back button
+      Row(
           modifier =
-              Modifier.align(Alignment.TopEnd)
-                  .padding(top = 110.dp, end = 8.dp)
-                  .testTag(MapContentTestTags.TAB_SWITCHER),
-          activeTab = uiState.activeTab,
-          availableTabs = uiState.availableTabs,
-          onTabSelected = { viewModel.onTabSelected(it, userId) },
-      )
-      // 5) recenter
-      RecenterFab(
-          modifier =
-              Modifier.align(Alignment.BottomEnd)
-                  .padding(16.dp)
-                  .testTag(MapContentTestTags.FAB_RECENTER),
-          isLocationGranted = isLocationGranted,
-          current = uiState.activeTab,
-          onRecenter = { viewModel.requestRecenter() },
-          onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
-      )
+              Modifier.align(Alignment.TopCenter)
+                  .fillMaxWidth()
+                  .padding(start = 16.dp, end = 16.dp),
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        val hasBackButton = !isCurrentUser
+
+        if (hasBackButton) {
+          BackButton(
+              modifier = Modifier.wrapContentWidth().testTag(MapContentTestTags.BACK_BUTTON),
+              onGoBack = onGoBack,
+          )
+        }
+
+        MapTabSwitcher(
+            modifier =
+                Modifier.weight(if (hasBackButton) 0.8f else 1f)
+                    .testTag(MapContentTestTags.TAB_SWITCHER),
+            activeTab = uiState.activeTab,
+            availableTabs = uiState.availableTabs,
+            onTabSelected = { viewModel.onTabSelected(it, userId) },
+            isCurrentUser = isCurrentUser)
+      }
+
+      // 5) map controls: refresh + recenter
+      Column(
+          modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+          horizontalAlignment = Alignment.End,
+      ) {
+        MapRefreshButton(
+            modifier = Modifier.testTag(MapContentTestTags.REFRESH),
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.refreshUIState(userId) },
+        )
+
+        RecenterFab(
+            modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
+            isLocationGranted = isLocationGranted,
+            onRecenter = { viewModel.requestRecenter() },
+            onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
+        )
+      }
+
       // 6) bottom card
       SelectionBottomCard(
           modifier =
@@ -298,18 +323,6 @@ fun MapScreen(
           isCurrentUser = isCurrentUser,
       )
 
-      // 7) back button
-      if (!isCurrentUser) {
-        BackButton(
-            modifier =
-                Modifier.padding(16.dp, vertical = 36.dp)
-                    .align(Alignment.TopStart)
-                    .testTag(MapContentTestTags.BACK_BUTTON),
-            onGoBack = onGoBack,
-            currentTab = uiState.activeTab,
-        )
-      }
-
       // I know it's a weird placement mais the idea is to have the error overlay above the refresh
       // button and to keep the map visible below
       if (uiState.isError) {
@@ -317,24 +330,15 @@ fun MapScreen(
             modifier =
                 Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
       }
-      // 8) refresh
-      MapRefreshButton(
-          modifier =
-              Modifier.align(Alignment.TopEnd)
-                  .padding(top = 56.dp, end = 8.dp)
-                  .testTag(MapContentTestTags.REFRESH),
-          isRefreshing = uiState.isRefreshing,
-          currentTab = uiState.activeTab,
-          onRefresh = { viewModel.refreshUIState(userId) },
-      )
-      // 9) loading overlay
+
+      // 7) loading overlay
       if (showLoading) {
         LoadingScreen(
             modifier =
                 Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
       }
 
-      // 10) camera recenter
+      // 8) camera recenter
       LaunchedEffect(render.recenterNonce) {
         if (render.recenterNonce != null) {
           val target = lastPosition
@@ -361,7 +365,6 @@ fun MapScreen(
  *
  * @param modifier Modifier to be applied to the FAB.
  * @param isLocationGranted Boolean indicating if location permission is granted.
- * @param current Current MapTab.
  * @param onRecenter Callback when recentering is requested.
  * @param onAskLocation Callback when location permission is requested.
  */
@@ -369,15 +372,19 @@ fun MapScreen(
 fun RecenterFab(
     modifier: Modifier,
     isLocationGranted: Boolean,
-    current: MapTab,
     onRecenter: () -> Unit,
     onAskLocation: () -> Unit,
 ) {
   val cs = colorScheme
-  val ui = colorsForMapTab(current, cs)
-
   FloatingActionButton(
       modifier = modifier,
+      elevation =
+          FloatingActionButtonDefaults.elevation(
+              defaultElevation = 0.dp,
+              pressedElevation = 0.dp,
+              focusedElevation = 0.dp,
+              hoveredElevation = 0.dp,
+          ),
       onClick = {
         if (isLocationGranted) {
           onRecenter()
@@ -386,7 +393,7 @@ fun RecenterFab(
         }
       },
       containerColor = cs.background,
-      contentColor = ui.bg,
+      contentColor = cs.onBackground,
   ) {
     if (isLocationGranted) {
       Icon(Icons.Default.LocationOn, contentDescription = "Recenter")
@@ -422,20 +429,16 @@ fun MapTapToClearSelection(mapView: MapView?, onDismiss: () -> Unit) {
  *
  * @param modifier Modifier to be applied to the button.
  * @param isRefreshing Boolean indicating if a refresh is in progress.
- * @param currentTab Current MapTab.
  * @param onRefresh Callback when the button is clicked.
  */
 @Composable
 fun MapRefreshButton(
     modifier: Modifier = Modifier,
     isRefreshing: Boolean,
-    currentTab: MapTab,
     onRefresh: () -> Unit,
 ) {
   val cs = colorScheme
-  val mapUi = colorsForMapTab(currentTab, cs)
 
-  // Rotation anim
   val rotation =
       if (isRefreshing) {
         val t = rememberInfiniteTransition(label = "refreshRotation")
@@ -448,17 +451,28 @@ fun MapRefreshButton(
             .value
       } else 0f
 
-  IconButton(
-      onClick = onRefresh,
-      enabled = !isRefreshing,
-      modifier = modifier.clip(CircleShape).background(mapUi.bg),
+  FloatingActionButton(
+      modifier = modifier,
+      elevation =
+          FloatingActionButtonDefaults.elevation(
+              defaultElevation = 0.dp,
+              pressedElevation = 0.dp,
+              focusedElevation = 0.dp,
+              hoveredElevation = 0.dp,
+          ),
+      onClick = {
+        if (!isRefreshing) {
+          onRefresh()
+        }
+      },
+      containerColor = cs.background,
+      contentColor = cs.onBackground,
   ) {
     Icon(
         imageVector = Icons.Default.Refresh,
         contentDescription = "Refresh",
-        tint = cs.background,
         modifier =
-            Modifier.size(26.dp)
+            Modifier.size(24.dp)
                 .graphicsLayer(rotationZ = rotation)
                 .testTag(MapContentTestTags.REFRESH_SPINNER),
     )
@@ -475,15 +489,14 @@ fun MapRefreshButton(
 fun BackButton(
     modifier: Modifier = Modifier,
     onGoBack: () -> Unit = {},
-    currentTab: MapTab,
 ) {
   val cs = colorScheme
-  val mapUi = colorsForMapTab(currentTab, cs)
 
   Box(modifier = modifier) {
     Row(
         modifier =
             Modifier.clickable(onClick = onGoBack)
+                .heightIn(min = 40.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(colorScheme.background)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
@@ -493,13 +506,12 @@ fun BackButton(
       Icon(
           imageVector = Icons.AutoMirrored.Filled.ArrowBack,
           contentDescription = "Back to Profile",
-          tint = mapUi.bg,
+          tint = cs.onBackground,
       )
-
       Text(
-          text = "Back",
-          style = MaterialTheme.typography.titleMedium,
-          color = mapUi.bg,
+          text = LocalContext.current.getString(R.string.map_back),
+          style = MaterialTheme.typography.titleSmall,
+          color = cs.onBackground,
       )
     }
   }

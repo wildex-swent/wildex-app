@@ -47,8 +47,8 @@ private const val RIPPLE_SPEED = 0.02f
 private const val PHOTO_SIZE = 256
 private const val BASE_CIRCLE = 100f
 private const val PADDING = 12f
-private const val BAR_W = 10f
-private const val BAR_H = 80f
+private const val BAR_W = 6f
+private const val BAR_H = 70f
 private const val BADGE_GAP = 30f
 private const val BADGE_RING_R = 12f
 private const val BADGE_STROKE = 3.2f
@@ -119,9 +119,8 @@ fun PinsOverlay(
 ) {
   val ctx = LocalContext.current
   val cs = MaterialTheme.colorScheme
-  val ui = colorsForMapTab(currentTab, cs)
   val fallbackUrl = ctx.getString(R.string.fallback_url)
-  val borderColor = ui.bg.toArgb()
+  val borderColor = cs.primary.toArgb()
 
   val annotationById = remember { mutableStateMapOf<Id, PointAnnotation>() }
   var manager by remember(mapView, currentTab) { mutableStateOf<PointAnnotationManager?>(null) }
@@ -644,26 +643,33 @@ internal fun composeOverlays(
   val circleBoxNoRipple = BASE_CIRCLE * scale
   val imgRadius = (circleBoxNoRipple / 2f) - PADDING * scale
   val bobMax = BOB_AMP_PX * scale
+  val rippleMax = 28f * scale
+  val ripplePadding = rippleMax + 4f * scale
   val badgeHeadroom = if (showExclamation) (BADGE_GAP * scale + bobMax) else 0f
-  val outW = base.width
-  val outH = (badgeHeadroom + base.height).toInt()
+  val outW = (base.width + ripplePadding * 2f).toInt()
+  val outH = (badgeHeadroom + base.height + ripplePadding).toInt()
+  if (globalAlpha <= 0f) {
+    return createBitmap(outW, outH).apply { eraseColor(Color.TRANSPARENT) }
+  }
   val out = createBitmap(outW, outH)
+  out.eraseColor(Color.TRANSPARENT)
   val c = Canvas(out)
   val p =
       Paint(Paint.ANTI_ALIAS_FLAG).apply {
         this.alpha = (globalAlpha.coerceIn(0f, 1f) * 255).toInt()
       }
-  c.drawBitmap(base, 0f, badgeHeadroom, p)
+  val baseOffsetX = ripplePadding
+  val baseOffsetY = badgeHeadroom + ripplePadding
+  c.drawBitmap(base, baseOffsetX, baseOffsetY, p)
   val cx = outW / 2f
-  val cy = badgeHeadroom + (circleBoxNoRipple / 2f)
+  val cy = baseOffsetY + (circleBoxNoRipple / 2f)
   rippleProgress?.let { prog ->
-    val rippleMax = 16f * scale
     repeat(3) { i ->
       val basePh = prog + (i / 3f)
       val phase = basePh - floor(basePh)
       val r = imgRadius + (rippleMax * phase)
       val fade = ((1f - phase) * 0.35f)
-      val sw = (4.5f * (1f - phase) + 1.2f) * scale
+      val sw = (4.5f * (1f - phase) + 2f) * scale
       p.style = Paint.Style.STROKE
       p.strokeWidth = sw
       p.color = borderColor

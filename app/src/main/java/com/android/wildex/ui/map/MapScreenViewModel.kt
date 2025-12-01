@@ -115,7 +115,7 @@ class MapScreenViewModel(
             isError = false,
             errorMsg = null,
             isLoading = false,
-        )
+            selected = null)
     viewModelScope.launch { updateUIState(userUid) }
   }
 

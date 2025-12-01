@@ -273,9 +273,7 @@ class MapScreenTest {
   fun mapRefreshButton_rotation_animates_whenRefreshing_advanceClock() {
     composeTestRule.mainClock.autoAdvance = false
     var refreshing by mutableStateOf(false)
-    compose {
-      MapRefreshButton(isRefreshing = refreshing, currentTab = MapTab.Posts, onRefresh = {})
-    }
+    compose { MapRefreshButton(isRefreshing = refreshing, onRefresh = {}) }
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
     composeTestRule.waitForIdle()
     composeTestRule.mainClock.advanceTimeBy(1200L)
@@ -318,7 +316,6 @@ class MapScreenTest {
       RecenterFab(
           modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
           isLocationGranted = false,
-          current = MapTab.Posts,
           onRecenter = {},
           onAskLocation = { asked = true },
       )
@@ -385,18 +382,18 @@ class MapScreenTest {
             likeCount = 0,
             commentCount = 0)
     setSelectionCard(selection = details, tab = MapTab.MyPosts)
-    nodeText("You saw an owl", substring = true).assertIsDisplayed()
+    nodeText("You saw an Owl", substring = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LOCATION).assertIsDisplayed()
     nodeText("Unknown").assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LIKE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Unlike", useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithContentDescription("Like", useUnmergedTree = true).assertExists()
   }
 
   @Test
   fun articleWithWord_branches() {
     assert(articleWithWord("") == "a")
-    assert(articleWithWord("owl") == "an owl")
-    assert(articleWithWord("fox") == "a fox")
+    assert(articleWithWord("owl") == "an")
+    assert(articleWithWord("fox") == "a")
   }
 
   @Test
@@ -424,7 +421,6 @@ class MapScreenTest {
       WildexTheme {
         BackButton(
             modifier = Modifier.testTag(MapContentTestTags.BACK_BUTTON),
-            currentTab = MapTab.Posts,
             onGoBack = { clicked = true },
         )
       }

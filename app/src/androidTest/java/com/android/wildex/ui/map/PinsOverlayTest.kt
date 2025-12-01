@@ -52,7 +52,7 @@ class PinsOverlayTest {
   }
 
   @Test
-  fun composeOverlays_noRipple_noExclamation_keepsSize() {
+  fun composeOverlays_noRipple_noExclamation_addsRipplePaddingButNoBadgeHeadroom() {
     val base =
         Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
     try {
@@ -64,9 +64,10 @@ class PinsOverlayTest {
               showExclamation = false,
               exclamationOffsetPx = 0f,
               borderColor = Color.BLACK,
-              scale = 1f)
-      assertEquals(128, out.width)
-      assertEquals(128, out.height)
+              scale = 1f,
+          )
+      assertEquals(192, out.width)
+      assertEquals(160, out.height)
     } finally {
       base.recycle()
     }
@@ -85,10 +86,11 @@ class PinsOverlayTest {
               showExclamation = false,
               exclamationOffsetPx = 0f,
               borderColor = Color.CYAN,
-              scale = 1.1f)
+              scale = 1.1f,
+          )
       assertNotNull(out)
-      assertEquals(base.width, out.width)
-      assertEquals(base.height, out.height)
+      assertTrue(out.width >= base.width)
+      assertTrue(out.height >= base.height)
     } finally {
       base.recycle()
     }
@@ -107,7 +109,8 @@ class PinsOverlayTest {
               showExclamation = false,
               exclamationOffsetPx = 0f,
               borderColor = Color.BLACK,
-              scale = 1f)
+              scale = 1f,
+          )
       val withExclHugeOffset =
           composeOverlays(
               base = base,
@@ -116,11 +119,13 @@ class PinsOverlayTest {
               showExclamation = true,
               exclamationOffsetPx = 10_000f,
               borderColor = Color.BLACK,
-              scale = 1f)
-      assertEquals(base.width, withExclHugeOffset.width)
+              scale = 1f,
+          )
+      assertEquals(noExcl.width, withExclHugeOffset.width)
       assertTrue(
           "height should increase to make room for badge",
-          withExclHugeOffset.height > noExcl.height)
+          withExclHugeOffset.height > noExcl.height,
+      )
     } finally {
       base.recycle()
     }
@@ -139,7 +144,8 @@ class PinsOverlayTest {
               showExclamation = true,
               exclamationOffsetPx = 100f,
               borderColor = Color.MAGENTA,
-              scale = 1f)
+              scale = 1f,
+          )
       val p1 = out.getPixel(0, 0)
       val p2 = out.getPixel(out.width / 2, out.height / 2)
       assertEquals(0, Color.alpha(p1))
@@ -227,7 +233,8 @@ class PinsOverlayTest {
                 drawable = zeroIntrinsicDrawable,
                 request = request,
                 dataSource = coil.decode.DataSource.MEMORY,
-                memoryCacheKey = null)
+                memoryCacheKey = null,
+            )
           }
         }
     try {
@@ -327,7 +334,7 @@ class PinsOverlayTest {
             "b" to mockPointAnnotation(),
         )
     val baseCache =
-        mutableMapOf<BaseKey, Bitmap>(
+        mutableMapOf(
             BaseKey("u", 0, 100) to Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
         )
     disposePointManager(

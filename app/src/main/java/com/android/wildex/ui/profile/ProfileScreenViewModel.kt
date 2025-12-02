@@ -27,7 +27,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-private val emptyUser = User("", "", "", "", "", "", UserType.REGULAR, Timestamp(0, 0), "")
+private val emptyUser =
+    User("", "Username", "Name", "Surname", "", "", UserType.REGULAR, Timestamp(0, 0), "Country")
 
 /** Represents the UI state of the Profile screen */
 data class ProfileUIState(
@@ -135,32 +136,26 @@ class ProfileScreenViewModel(
 
       viewModelScope.launch {
         val currentUserId = currentUserId!!
-        if (_uiState.value.isUserOwner) {
-          _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.IS_CURRENT_USER)
-          return@launch
-        }
-        val friendsIds = userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId }
-        if (friendsIds.contains(currentUserId)) {
-          _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.FRIEND)
-          return@launch
-        }
         val sentRequests =
             friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map {
               it.receiverId
             }
-        if (sentRequests.contains(_uiState.value.user.userId)) {
-          _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_SENT)
-          return@launch
-        }
+        val friendsIds = userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId }
         val receivedRequests =
             friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map {
               it.senderId
             }
-        if (receivedRequests.contains(_uiState.value.user.userId)) {
-          _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_RECEIVED)
-          return@launch
+        when {
+          _uiState.value.isUserOwner ->
+              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.IS_CURRENT_USER)
+          friendsIds.contains(currentUserId) ->
+              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.FRIEND)
+          sentRequests.contains(_uiState.value.user.userId) ->
+              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_SENT)
+          receivedRequests.contains(_uiState.value.user.userId) ->
+              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_RECEIVED)
+          else -> _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.NOT_FRIEND)
         }
-        _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.NOT_FRIEND)
       }
 
       viewModelScope.launch {

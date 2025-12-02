@@ -81,20 +81,6 @@ class ProfileScreenTest {
 
   @Before
   fun setup() {
-    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    defaultAchievementsRepo = FakeAchievementsRepo()
-    defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
-    defaultViewModel =
-        ProfileScreenViewModel(
-            userRepository = userRepository,
-            achievementRepository = defaultAchievementsRepo,
-            postRepository = LocalRepositories.postsRepository,
-            updateUserAchievements = defaultUpdateUseCase,
-            userAnimalsRepository = userAnimalsRepository,
-            userFriendsRepository = userFriendsRepository,
-            friendRequestRepository = friendRequestRepository,
-            currentUserId = "currentUserId-1",
-        )
     runBlocking {
       userRepository.addUser(
           User(
@@ -167,6 +153,21 @@ class ProfileScreenTest {
       userFriendsRepository.initializeUserFriends("currentUserId-1")
       userFriendsRepository.addFriendToUserFriendsOfUser("u-1", "currentUserId-1")
       userFriendsRepository.addFriendToUserFriendsOfUser("friend0", "currentUserId-1")
+
+      MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+      defaultAchievementsRepo = FakeAchievementsRepo()
+      defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
+      defaultViewModel =
+          ProfileScreenViewModel(
+              userRepository = userRepository,
+              achievementRepository = defaultAchievementsRepo,
+              postRepository = LocalRepositories.postsRepository,
+              updateUserAchievements = defaultUpdateUseCase,
+              userAnimalsRepository = userAnimalsRepository,
+              userFriendsRepository = userFriendsRepository,
+              friendRequestRepository = friendRequestRepository,
+              currentUserId = "currentUserId-1",
+          )
     }
   }
 
@@ -236,7 +237,7 @@ class ProfileScreenTest {
       ProfileContent(
           user = sampleUser,
           viewModel = defaultViewModel,
-          state = defaultViewModel.uiState.value,
+          state = defaultViewModel.uiState.value.copy(user = sampleUser),
           onAchievements = {},
           onCollection = { collection++ },
           onMap = {},
@@ -336,8 +337,7 @@ class ProfileScreenTest {
     composeRule.setContent {
       Column {
         ProfileImageAndName(
-            viewModel = defaultViewModel,
-            friendStatus = defaultViewModel.uiState.collectAsState().value.friendStatus)
+            viewModel = defaultViewModel, state = defaultViewModel.uiState.collectAsState().value)
         ProfileDescription()
         ProfileAchievements(ownerProfile = true)
         ProfileMap()
@@ -412,21 +412,9 @@ class ProfileScreenTest {
 
   @Test
   fun friendsAndAnimalsStatsShowTheCorrectStats() {
-    val updateUseCase =
-        createTestUpdateAchievementsUseCase(LocalRepositories.userAchievementsRepository)
-    val vm =
-        ProfileScreenViewModel(
-            userRepository = userRepository,
-            achievementRepository = LocalRepositories.userAchievementsRepository,
-            postRepository = LocalRepositories.postsRepository,
-            updateUserAchievements = updateUseCase,
-            userAnimalsRepository = userAnimalsRepository,
-            userFriendsRepository = userFriendsRepository,
-            currentUserId = "someone-else",
-        )
     composeRule.setContent {
       ProfileScreen(
-          profileScreenViewModel = vm,
+          profileScreenViewModel = defaultViewModel,
           userUid = "u-1",
       )
     }
@@ -440,7 +428,6 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
-    val items = fakeAchievements(2)
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
@@ -508,7 +495,9 @@ class ProfileScreenTest {
       ProfileContent(
           user = sampleUser.copy(userType = UserType.PROFESSIONAL),
           viewModel = defaultViewModel,
-          state = defaultViewModel.uiState.value,
+          state =
+              defaultViewModel.uiState.value.copy(
+                  user = sampleUser.copy(userType = UserType.PROFESSIONAL)),
           onAchievements = {},
           onCollection = {},
           onMap = {},

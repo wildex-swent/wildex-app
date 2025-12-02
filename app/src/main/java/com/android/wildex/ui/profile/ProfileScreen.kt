@@ -198,15 +198,7 @@ fun ProfileContent(
               .verticalScroll(rememberScrollState())
               .testTag(ProfileScreenTestTags.SCROLL)) {
         Spacer(Modifier.height(6.dp))
-        ProfileImageAndName(
-            name = user.name,
-            surname = user.surname,
-            username = user.username,
-            profilePicture = user.profilePictureURL,
-            country = user.country,
-            userType = user.userType,
-            viewModel = viewModel,
-            friendStatus = state.friendStatus)
+        ProfileImageAndName(viewModel = viewModel, state = state)
 
         Spacer(modifier = Modifier.height(10.dp))
         ProfileDescription(description = user.bio)
@@ -245,16 +237,14 @@ fun ProfileContent(
 
 /** Profile Image And Name Composable */
 @Composable
-fun ProfileImageAndName(
-    name: String = "Name",
-    surname: String = "Surname",
-    username: String = "Username",
-    profilePicture: String = "",
-    country: String = "Country",
-    userType: UserType = UserType.REGULAR,
-    viewModel: ProfileScreenViewModel,
-    friendStatus: FriendStatus
-) {
+fun ProfileImageAndName(viewModel: ProfileScreenViewModel, state: ProfileUIState) {
+  val name = state.user.name
+  val surname = state.user.surname
+  val username = state.user.username
+  val profilePicture = state.user.profilePictureURL
+  val country = state.user.country
+  val friendStatus = state.friendStatus
+  val userType = state.user.userType
   val cs = colorScheme
   Row(
       modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

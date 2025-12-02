@@ -120,6 +120,9 @@ class ProfileScreenViewModelTest {
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(pNoLoc, pWithLoc)
       coEvery { userFriendsRepository.getAllFriendsOfUser("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
       coEvery { friendRequestRepository.getAllFriendRequestsBySender("someone-else") } returns
           emptyList()
       coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("someone-else") } returns
@@ -170,6 +173,10 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
+      coEvery { userFriendsRepository.getAllFriendsOfUser("uid-1") } returns emptyList()
 
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
@@ -204,6 +211,10 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1)
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(p1)
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
+      coEvery { userFriendsRepository.getAllFriendsOfUser("uid-1") } returns emptyList()
       viewModel.refreshUIState("uid-1")
       advanceUntilIdle()
 
@@ -276,6 +287,10 @@ class ProfileScreenViewModelTest {
   fun refreshUIState_whenPostsRepositoryFails_setsErrorMsg_andKeepsUserAndAchievements() {
     mainDispatcherRule.runTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
+      coEvery { userFriendsRepository.getAllFriendsOfUser("uid-1") } returns emptyList()
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } throws
           RuntimeException("posts boom")
@@ -307,6 +322,9 @@ class ProfileScreenViewModelTest {
     mainDispatcherRule.runTest {
       // Friend case
       coEvery { userFriendsRepository.getAllFriendsOfUser("user_one_2") } returns listOf(u1)
+      coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
       viewModel.loadUIState("user_one_2")
       advanceUntilIdle()
 
@@ -317,6 +335,8 @@ class ProfileScreenViewModelTest {
       coEvery { userFriendsRepository.getAllFriendsOfUser("user_one_2") } returns emptyList()
       coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns
           listOf(FriendRequest("uid-1", "user_one_2"))
+      coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
+          emptyList()
       viewModel.loadUIState("user_one_2")
       advanceUntilIdle()
 

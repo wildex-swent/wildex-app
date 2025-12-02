@@ -16,6 +16,7 @@ import {
   User,
   UserFriends,
 } from "./types";
+import {BatchResponse} from "firebase-admin/messaging";
 
 admin.initializeApp();
 
@@ -42,24 +43,27 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
           .get()
       ).data() as UserFriends;
 
-      const friendTokens = (
-        await Promise.all(
-          userFriends.friendsId.map(async (friendId) => {
-            const tokenData = (
-              await admin.firestore()
-                .collection("userTokens")
-                .doc(friendId)
-                .get()
-            ).data() as FCMTokenData;
-            return tokenData ? tokenData.tokens : [];
-          })
-        )
-      ).flat();
+      // Map to track which tokens belong to which user
+      const friendTokenMap = new Map<string, string[]>();
 
+      await Promise.all(
+        userFriends.friendsId.map(async (friendId) => {
+          const tokenData = (
+            await admin.firestore()
+              .collection("userTokens")
+              .doc(friendId)
+              .get()
+          ).data() as FCMTokenData;
+
+          if (tokenData?.tokens?.length) {
+            friendTokenMap.set(friendId, tokenData.tokens);
+          }
+        })
+      );
       const author = (
         await admin.firestore().collection("users").doc(post.authorId).get()
       ).data() as User;
-      
+
       const notifications: Notification[] = userFriends.friendsId.map(
         (friendId) => (
           {
@@ -88,25 +92,35 @@ exports.sendPostNotifications = onDocumentCreatedWithAuthContext(
         )
       );
 
-      const messages = friendTokens.map((token) => ({
-        token,
-        android: {
-          notification: {
-            title: `${author.username} shared a new post.`,
-            body: post.description ? post.description : "",
-            clickAction: appAction,
-            channelId: postChannelId,
-            tag: `post_${post.postId}`,
-            image: post.pictureURL,
+      // Send notifications and clean up invalid tokens per user
+      const sendPromises: Promise<void>[] = [];
+      for (const [friendId, tokens] of friendTokenMap.entries()) {
+        const messages = tokens.map((token) => ({
+          token,
+          android: {
+            notification: {
+              title: `${author.username} shared a new post.`,
+              body: post.description ? post.description : "",
+              clickAction: appAction,
+              channelId: postChannelId,
+              tag: `post_${post.postId}`,
+              image: post.pictureURL,
+            },
           },
-        },
-        data: {
-          path: `post_details/${post.postId}`,
-          authorId: post.authorId,
-        },
-      }));
+          data: {
+            path: `post_details/${post.postId}`,
+            authorId: post.authorId,
+          },
+        }));
 
-      return admin.messaging().sendEach(messages);
+
+        sendPromises.push(
+          admin.messaging().sendEach(messages).then((response) =>
+            removeInvalidTokens(friendId, response, tokens)
+          )
+        );
+      }
+      return sendPromises;
     } catch (error) {
       logger.error(
         "Post Notifications : The following error has occured\n",
@@ -175,7 +189,9 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(requestData.receiverId, response, tokenData.tokens)
+      );
     } catch (error) {
       logger.error(
         "Friend Request Notifications : The following error has occured\n",
@@ -257,7 +273,9 @@ exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(requestData.senderId, response, tokenData.tokens)
+      );
     } catch (error) {
       return null;
     }
@@ -334,7 +352,9 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(postData.authorId, response, tokenData.tokens)
+      );
     } catch (error) {
       logger.error(
         "Like Notifications : The following error has occured\n",
@@ -420,7 +440,9 @@ exports.sendCommentNotifications = onDocumentCreatedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(parentData.authorId, response, tokenData.tokens)
+      );
     } catch (error) {
       logger.error("Comment Notifications error\n", error);
       return null;
@@ -499,7 +521,9 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(reportData.authorId, response, tokenData.tokens)
+      );
     } catch (error) {
       return null;
     }
@@ -572,7 +596,9 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
         },
       }));
 
-      return admin.messaging().sendEach(messages);
+      return admin.messaging().sendEach(messages).then((response) =>
+        removeInvalidTokens(reportData.authorId, response, tokenData.tokens)
+      );
     } catch (error) {
       logger.error(
         "Report Resolution Notifications : The following error has occured\n",
@@ -582,3 +608,65 @@ exports.sendReportResolutionNotifications = onDocumentDeletedWithAuthContext(
     return null;
   }
 );
+
+
+/**
+ * Removes invalid FCM tokens from a user's token array in Firestore.
+ * Call this after sending notifications to clean up tokens
+ * that are no longer valid.
+ *
+ * @param {string} userId - The user ID whose tokens to check
+ * @param {BatchResponse} sendResponse - The response from
+ * admin.messaging().sendEach()
+ * @param {string[]} tokensSent - The array of tokens
+ * that were sent notifications
+ */
+async function removeInvalidTokens(
+  userId: string,
+  sendResponse: BatchResponse,
+  tokensSent: string[]
+): Promise<void> {
+  try {
+    const invalidTokens: string[] = [];
+
+    // Check each response for invalid token errors
+    sendResponse.responses.forEach((response, index) => {
+      if (!response.success && response.error) {
+        const errorCode = response.error.code;
+
+        // These error codes indicate the token is permanently invalid
+        if (
+          errorCode === "messaging/registration-token-not-registered" ||
+          errorCode === "messaging/invalid-argument" ||
+          errorCode === "messaging/invalid-registration-token"
+        ) {
+          invalidTokens.push(tokensSent[index]);
+          logger.info(
+            `Invalid token detected for user ${userId}: ${errorCode}`
+          );
+        }
+      }
+    });
+
+    // Remove invalid tokens from Firestore if any were found
+    if (invalidTokens.length > 0) {
+      const tokenDocRef = admin
+        .firestore()
+        .collection("userTokens")
+        .doc(userId);
+
+      await tokenDocRef.update({
+        tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+      });
+
+      logger.info(
+        `Removed ${invalidTokens.length} invalid token(s) for user ${userId}`
+      );
+    }
+  } catch (error) {
+    logger.error(
+      `Error removing invalid tokens for user ${userId}:`,
+      error
+    );
+  }
+}

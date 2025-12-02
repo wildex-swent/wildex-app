@@ -91,8 +91,12 @@ fun NotificationScreen(
         else -> {
           NotificationView(
               notifications = uiState.notifications,
-              onNotificationClick = onNotificationClick,
               onProfileClick = onProfileClick,
+              onNotificationClick = onNotificationClick,
+              markAsRead = { notificationScreenViewModel.markAsRead(it) },
+              markAllAsRead = { notificationScreenViewModel.markAllAsRead() },
+              clearNotification = { notificationScreenViewModel.clearNotification(it) },
+              clearAllNotifications = { notificationScreenViewModel.clearAllNotifications() },
           )
         }
       }
@@ -109,11 +113,11 @@ fun NotificationView(
     markAsRead: (Id) -> Unit = {},
     markAllAsRead: () -> Unit = {},
     clearNotification: (Id) -> Unit = {},
-    clearAllNotifications: () -> Unit = {}
+    clearAllNotifications: () -> Unit = {},
 ) {
   Row(modifier = Modifier.fillMaxWidth()) {
-    TextButton(onClick = { markAllAsRead() }) { Text(text = "Mark all as read") }
-    TextButton(onClick = { clearAllNotifications() }) { Text(text = "Clear all") }
+    TextButton(onClick = { markAllAsRead() }, content = { Text(text = "Mark all as read") })
+    TextButton(onClick = { clearAllNotifications() }, content = { Text(text = "Clear all") })
   }
   LazyColumn(
       modifier = Modifier.fillMaxWidth(),
@@ -133,7 +137,7 @@ fun NotificationView(
       )
       HorizontalDivider(
           color = colorScheme.onSurface.copy(alpha = .6f),
-          modifier = Modifier.fillMaxWidth(.9f),
+          modifier = Modifier.fillMaxWidth(.95f),
       )
     }
   }
@@ -150,7 +154,7 @@ fun NotificationItem(
     onProfileClick: (Id) -> Unit = {},
     onNotificationClick: (String) -> Unit = {},
     markAsRead: (Id) -> Unit = {},
-    clearNotification: (Id) -> Unit = {}
+    clearNotification: (Id) -> Unit = {},
 ) {
   Row(
       modifier = Modifier.fillMaxWidth(),

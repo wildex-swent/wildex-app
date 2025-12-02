@@ -1,7 +1,6 @@
 package com.android.wildex.ui.achievement
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,7 +17,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -26,22 +24,19 @@ import androidx.compose.ui.unit.dp
  *
  * @param text The label text to display in the center of the divider.
  * @param color The color of the divider and text.
- * @param thickness The thickness of the divider lines.
- * @param padding The horizontal padding around the label text.
  */
 @Composable
-fun LabeledDivider(text: String, color: Color, thickness: Dp = 2.dp, padding: Dp = 8.dp) {
+fun LabeledDivider(text: String, color: Color) {
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    HorizontalDivider(modifier = Modifier.weight(1f).height(thickness), color = color)
+    HorizontalDivider(modifier = Modifier.weight(1f).height(2.dp), color = color)
     Text(
         text = text,
         color = color,
         style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        modifier = Modifier.padding(horizontal = padding),
+        modifier = Modifier.padding(horizontal = 8.dp),
     )
-    HorizontalDivider(modifier = Modifier.weight(4f).height(thickness), color = color)
+    HorizontalDivider(modifier = Modifier.weight(4f).height(2.dp), color = color)
   }
-  Spacer(modifier = Modifier.height(8.dp))
 }
 
 /**

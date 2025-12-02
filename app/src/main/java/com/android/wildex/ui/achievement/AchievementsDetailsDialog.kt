@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -29,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -78,28 +81,19 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
               verticalArrangement = Arrangement.spacedBy(8.dp),
           ) {
             val isUnlocked = achievement.progress.all { it.second >= it.third }
-            val text =
-                if (isUnlocked) stringResource(R.string.completed)
-                else stringResource(R.string.in_progress)
-            Row(
-                modifier =
-                    Modifier.clip(RoundedCornerShape(8.dp))
-                        .background(if (isUnlocked) colorScheme.primary else colorScheme.secondary)
-                        .padding(4.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .testTag(AchievementsScreenTestTags.DETAILS_STATUS),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-              Icon(
-                  imageVector = if (isUnlocked) Icons.Default.Check else Icons.Default.AccessTime,
-                  contentDescription = text,
-                  tint = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
+            if (isUnlocked) {
+              AchievementStatus(
+                  text = stringResource(R.string.completed),
+                  icon = Icons.Default.Check,
+                  contentColor = colorScheme.onPrimary,
+                  background = colorScheme.primary,
               )
-              Spacer(modifier = Modifier.width(4.dp))
-              Text(
-                  text = text,
-                  color = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
-                  style = typography.bodyMedium,
+            } else {
+              AchievementStatus(
+                  text = stringResource(R.string.in_progress),
+                  icon = Icons.Default.AccessTime,
+                  contentColor = colorScheme.onSecondary,
+                  background = colorScheme.secondary,
               )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -145,5 +139,35 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
                 }
           }
         }
+  }
+}
+
+@Composable
+private fun ColumnScope.AchievementStatus(
+    text: String,
+    icon: ImageVector,
+    background: Color,
+    contentColor: Color,
+) {
+  Row(
+      modifier =
+          Modifier.clip(RoundedCornerShape(8.dp))
+              .background(background)
+              .padding(4.dp)
+              .align(Alignment.CenterHorizontally)
+              .testTag(AchievementsScreenTestTags.DETAILS_STATUS),
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Icon(
+        imageVector = icon,
+        contentDescription = "Status",
+        tint = contentColor,
+    )
+    Spacer(modifier = Modifier.width(4.dp))
+    Text(
+        text = text,
+        color = contentColor,
+        style = typography.bodyMedium,
+    )
   }
 }

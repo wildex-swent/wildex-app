@@ -33,6 +33,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -50,7 +51,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -170,7 +170,7 @@ fun FriendScreenTopBar(onGoBack: () -> Unit = {}) {
       title = {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_title),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleLarge,
             modifier = Modifier.testTag(FriendScreenTestTags.SCREEN_TITLE))
       },
       navigationIcon = {
@@ -220,7 +220,7 @@ fun CurrentUserSelectionTab(selectedTab: String, onTabSelected: (String) -> Unit
                         onClick = { onTabSelected(tab) })) {
               Text(
                   text = tab,
-                  fontWeight = FontWeight.SemiBold,
+                  style = typography.titleMedium,
                   color =
                       if (tab == selectedTab) colorScheme.onBackground
                       else colorScheme.onBackground.copy(alpha = 0.5f),
@@ -255,7 +255,7 @@ fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
               .background(color = colorScheme.primary, shape = RoundedCornerShape(5.dp))) {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_send_request),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleMedium,
             color = colorScheme.background,
             modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
       }
@@ -276,11 +276,11 @@ fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
                   onClick = onUnfollow)
-              .background(color = colorScheme.surfaceVariant, shape = RoundedCornerShape(5.dp))) {
+              .background(color = colorScheme.onSurface, shape = RoundedCornerShape(5.dp))) {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onSurfaceVariant,
+            style = typography.titleMedium,
+            color = colorScheme.surface,
             modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
       }
 }
@@ -304,15 +304,15 @@ fun ReceivedRequestInteractable(
         onClick = onAccept,
         icon = Icons.Default.Check,
         contentDescription = "Accept Friend Request",
-        backgroundColor = Color.Blue,
+        backgroundColor = colorScheme.primary,
         iconColor = colorScheme.background,
         modifier = Modifier.weight(1f).testTag(testTagAccept))
     RequestButton(
         onClick = onDecline,
         icon = Icons.Default.Close,
         contentDescription = "Decline Friend Request",
-        backgroundColor = Color.Red,
-        iconColor = colorScheme.background,
+        backgroundColor = colorScheme.onSurface,
+        iconColor = colorScheme.surface,
         modifier = Modifier.weight(1f).testTag(testTagDecline))
   }
 }
@@ -331,8 +331,8 @@ fun CurrentUserSentRequestInteractable(onCancel: () -> Unit = {}, testTag: Strin
       onClick = onCancel,
       icon = Icons.Default.Close,
       contentDescription = "Cancel Friend Request",
-      backgroundColor = Color(red = 0xD8, green = 0xD3, blue = 0xD3),
-      iconColor = colorScheme.onBackground,
+      backgroundColor = colorScheme.onSurface,
+      iconColor = colorScheme.surface,
       modifier = Modifier.height(30.dp).width(40.dp).testTag(testTag))
 }
 
@@ -353,12 +353,12 @@ fun OtherUserSentRequestInteractable(onCancel: () -> Unit = {}, testTag: String)
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
                   onClick = onCancel)
-              .background(color = colorScheme.surfaceVariant, shape = RoundedCornerShape(5.dp))) {
+              .background(color = colorScheme.onSurface, shape = RoundedCornerShape(5.dp))) {
         Text(
             text =
                 LocalContext.current.getString(R.string.friend_screen_pending_request_other_user),
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onSurfaceVariant,
+            style = typography.titleMedium,
+            color = colorScheme.surface,
             modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
       }
 }
@@ -448,14 +448,14 @@ fun FriendRequestSuggestionTemplate(
               Text(
                   text = user.username,
                   maxLines = 1,
-                  fontWeight = FontWeight.SemiBold,
+                  style = typography.titleMedium,
                   fontSize = 16.sp,
               )
               if (subtext.isNotEmpty()) {
                 Spacer(modifier = Modifier.weight(0.4f))
                 Text(
                     text = subtext,
-                    fontWeight = FontWeight.SemiBold,
+                    style = typography.titleMedium,
                     fontSize = 10.sp,
                 )
               }
@@ -511,7 +511,7 @@ fun NoFriends(text: String) {
             modifier = Modifier.size(70.dp))
         Text(
             text = text,
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleMedium,
             textAlign = TextAlign.Center,
             fontSize = 12.sp,
             modifier =
@@ -538,7 +538,7 @@ fun NoSuggestions() {
             modifier = Modifier.size(60.dp))
         Text(
             text = LocalContext.current.getString(R.string.no_suggestions),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleMedium,
             textAlign = TextAlign.Center,
             fontSize = 12.sp,
             modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
@@ -566,13 +566,13 @@ fun FriendsTabContent(
     item {
       Text(
           text = LocalContext.current.getString(R.string.friends_section),
-          fontWeight = FontWeight.SemiBold,
+          style = typography.titleMedium,
           fontSize = 12.sp,
           color = colorScheme.onBackground,
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 12.dp, bottom = 4.dp))
+                  .padding(top = 16.dp, bottom = 6.dp))
     }
     if (friends.isEmpty()) {
       item { NoFriends(LocalContext.current.getString(R.string.no_friends_current_user)) }
@@ -591,13 +591,13 @@ fun FriendsTabContent(
       HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
       Text(
           text = LocalContext.current.getString(R.string.suggestions_section),
-          fontWeight = FontWeight.SemiBold,
+          style = typography.titleMedium,
           fontSize = 12.sp,
           color = colorScheme.onBackground,
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 12.dp, bottom = 4.dp))
+                  .padding(top = 16.dp, bottom = 6.dp))
     }
     if (suggestions.isEmpty()) {
       item { NoSuggestions() }
@@ -633,7 +633,7 @@ fun NoSentRequests() {
             modifier = Modifier.size(60.dp))
         Text(
             text = LocalContext.current.getString(R.string.no_sent_requests),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleMedium,
             textAlign = TextAlign.Center,
             fontSize = 12.sp,
             modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
@@ -659,7 +659,7 @@ fun NoReceivedRequests() {
             modifier = Modifier.size(60.dp))
         Text(
             text = LocalContext.current.getString(R.string.no_received_requests),
-            fontWeight = FontWeight.SemiBold,
+            style = typography.titleMedium,
             textAlign = TextAlign.Center,
             fontSize = 12.sp,
             modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
@@ -689,13 +689,13 @@ fun RequestsTabContent(
     item {
       Text(
           text = LocalContext.current.getString(R.string.received_requests_section),
-          fontWeight = FontWeight.SemiBold,
+          style = typography.titleMedium,
           fontSize = 12.sp,
           color = colorScheme.onBackground,
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 12.dp, bottom = 4.dp))
+                  .padding(top = 16.dp, bottom = 6.dp))
     }
     if (receivedRequests.isEmpty()) {
       item { NoReceivedRequests() }
@@ -714,13 +714,13 @@ fun RequestsTabContent(
       HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), thickness = 1.dp)
       Text(
           text = LocalContext.current.getString(R.string.sent_requests_section),
-          fontWeight = FontWeight.SemiBold,
+          style = typography.titleMedium,
           fontSize = 12.sp,
           color = colorScheme.onBackground,
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 12.dp, bottom = 4.dp))
+                  .padding(top = 16.dp, bottom = 6.dp))
     }
     if (sentRequests.isEmpty()) {
       item { NoSentRequests() }
@@ -783,7 +783,7 @@ fun OtherUserFriendScreenContent(
     item {
       Text(
           text = LocalContext.current.getString(R.string.friends_section),
-          fontWeight = FontWeight.SemiBold,
+          style = typography.titleMedium,
           fontSize = 12.sp,
           color = colorScheme.onBackground,
           modifier =

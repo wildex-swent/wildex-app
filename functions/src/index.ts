@@ -157,7 +157,7 @@ exports.sendFriendRequestNotifications = onDocumentCreatedWithAuthContext(
       ).data() as User;
 
       const notification: Notification = {
-        notificationId: admin.firestore().collection("notifications").doc().id,
+        notificationId: requestData.receiverId + "_" + requestData.senderId,
         targetId: requestData.receiverId,
         authorId: requestData.senderId,
         title: `${fromUser.username} sent you a friend request.`,
@@ -319,7 +319,7 @@ exports.sendLikeNotifications = onDocumentCreatedWithAuthContext(
       ).data() as User;
 
       const notification: Notification = {
-        notificationId: admin.firestore().collection("notifications").doc().id,
+        notificationId: likeData.userId + "_" + likeData.postId,
         targetId: postData.authorId,
         authorId: likeData.userId,
         title: `${fromUser.username} liked your post.`,
@@ -488,7 +488,7 @@ exports.sendReportAssignmentNotifications = onDocumentUpdatedWithAuthContext(
       ).data() as User;
 
       const notification: Notification = {
-        notificationId: admin.firestore().collection("notifications").doc().id,
+        notificationId: reportData.assigneeId! + "_" + reportData.reportId,
         targetId: reportData.authorId,
         authorId: reportData.assigneeId,
         title: `${assigneeUser.username} is assigned to your report.`,

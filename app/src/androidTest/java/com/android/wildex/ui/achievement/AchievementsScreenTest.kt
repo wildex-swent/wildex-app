@@ -165,7 +165,12 @@ class AchievementsScreenTest {
 
     composeTestRule
         .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-        .assertExists()
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENTS_PROGRESS_CARD)
+        .performScrollTo()
+        .assertIsDisplayed()
 
     unlockedAchievement.forEach { achievement ->
       composeTestRule
@@ -330,6 +335,18 @@ class AchievementsScreenTest {
           .assertIsDisplayed()
           .performClick()
     }
+  }
+
+  @Test
+  fun emptyAchievements_displayPlaceholder() {
+    userAchievementsRepository.unlocked = emptyList()
+    userAchievementsRepository.all = achievements
+
+    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER)
+        .assertIsDisplayed()
   }
 
   private fun assertAchievementDetailIsDisplayed() {

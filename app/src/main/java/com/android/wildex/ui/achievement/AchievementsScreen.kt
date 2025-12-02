@@ -72,6 +72,7 @@ object AchievementsScreenTestTags {
   const val DETAILS_STATUS = "achievement_details_status"
   const val DETAILS_CLOSE_BUTTON = "achievement_details_close_button"
   const val ACHIEVEMENTS_PROGRESS_CARD = "achievements_progress_card"
+  const val ACHIEVEMENTS_PLACEHOLDER = "achievements_placeholder"
 
   // Achievement item
   fun getTagForAchievement(achievementId: Id, isUnlocked: Boolean) =
@@ -147,7 +148,10 @@ fun AchievementsScreen(
           if (uiState.unlocked.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
               Column(
-                  modifier = Modifier.fillMaxWidth(.3f).padding(vertical = 32.dp),
+                  modifier =
+                      Modifier.fillMaxWidth(.3f)
+                          .padding(vertical = 32.dp)
+                          .testTag(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER),
                   horizontalAlignment = Alignment.CenterHorizontally,
                   verticalArrangement = Arrangement.spacedBy(24.dp),
               ) {

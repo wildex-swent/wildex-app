@@ -33,8 +33,9 @@ data class SubmitReportUiState(
     val imageUri: Uri? = null,
     val description: String = "",
     val location: Location? = null,
+    val hasPickedLocation: Boolean = false,
     val isSubmitting: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
 )
 
 /**
@@ -47,7 +48,7 @@ data class SubmitReportUiState(
 class SubmitReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
-    private val currentUserId: Id = Firebase.auth.uid ?: ""
+    private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SubmitReportUiState())
   val uiState: StateFlow<SubmitReportUiState> = _uiState.asStateFlow()
@@ -64,6 +65,20 @@ class SubmitReportScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Called when the user picks a location from the LocationPickerScreen. */
+  fun onLocationPicked(picked: Location) {
+    _uiState.value =
+        _uiState.value.copy(
+            location =
+                Location(
+                    latitude = picked.latitude,
+                    longitude = picked.longitude,
+                    name = picked.name,
+                ),
+            hasPickedLocation = true,
+        )
+  }
+
   @SuppressLint("MissingPermission")
   fun fetchUserLocation(locationClient: FusedLocationProviderClient) {
     viewModelScope.launch {
@@ -73,7 +88,12 @@ class SubmitReportScreenViewModel(
               if (loc != null) {
                 _uiState.value =
                     _uiState.value.copy(
-                        location = Location(latitude = loc.latitude, longitude = loc.longitude))
+                        location =
+                            Location(
+                                latitude = loc.latitude,
+                                longitude = loc.longitude,
+                                name = _uiState.value.location?.name!!,
+                            ))
               } else {
                 setError("Unable to fetch current location.")
               }
@@ -126,7 +146,8 @@ class SubmitReportScreenViewModel(
                 date = Timestamp(Date()),
                 description = currentState.description,
                 authorId = authorId,
-                assigneeId = null)
+                assigneeId = null,
+            )
 
         reportRepository.addReport(report)
 

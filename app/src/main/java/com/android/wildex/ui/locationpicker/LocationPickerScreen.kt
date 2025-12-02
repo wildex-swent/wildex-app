@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,7 +27,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardColors
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,8 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -187,17 +185,7 @@ fun LocationPickerScreen(
     }
   }
 
-  Scaffold(
-      topBar = {
-        LocationPickerTopBar(
-            modifier = Modifier.testTag(LocationPickerTestTags.SEARCH_BAR),
-            query = uiState.searchQuery,
-            onQueryChange = { viewModel.onSearchQueryChanged(it) },
-            onBack = onBack,
-            onSearch = { query -> viewModel.onSearchSubmitted(query) },
-        )
-      },
-  ) { inner ->
+  Scaffold { inner ->
     Box(
         modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
     ) {
@@ -215,6 +203,19 @@ fun LocationPickerScreen(
                   latitude = uiState.center.latitude,
                   longitude = uiState.center.longitude,
               ),
+      )
+
+      // Top row: back button + rounded search bar
+      LocationPickerTopBar(
+          modifier =
+              Modifier.align(Alignment.TopCenter)
+                  .fillMaxWidth()
+                  .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                  .testTag(LocationPickerTestTags.SEARCH_BAR),
+          query = uiState.searchQuery,
+          onQueryChange = { viewModel.onSearchQueryChanged(it) },
+          onBack = onBack,
+          onSearch = { query -> viewModel.onSearchSubmitted(query) },
       )
 
       // Tap to pick a point
@@ -237,7 +238,11 @@ fun LocationPickerScreen(
         SuggestionsDropdown(
             suggestions = uiState.suggestions,
             onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).fillMaxWidth(0.95f),
+            modifier =
+                Modifier.align(Alignment.TopCenter)
+                    // push below the search row so they don't overlap
+                    .padding(top = 72.dp)
+                    .fillMaxWidth(0.95f),
         )
       }
 
@@ -289,7 +294,6 @@ fun LocationPickerScreen(
 
 /* ---------- Top bar: back + search + suggestions ---------- */
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationPickerTopBar(
     modifier: Modifier = Modifier,
@@ -301,76 +305,67 @@ private fun LocationPickerTopBar(
   val focusManager = LocalFocusManager.current
   val focusRequester = remember { FocusRequester() }
 
-  TopAppBar(
+  Row(
       modifier = modifier,
-      colors =
-          TopAppBarDefaults.topAppBarColors(
-              containerColor = colorScheme.background,
-              scrolledContainerColor = colorScheme.background,
-              navigationIconContentColor = colorScheme.onBackground,
-              titleContentColor = colorScheme.onBackground,
-          ),
-      title = {
-        Box(modifier = Modifier.fillMaxWidth().padding(end = 8.dp)) {
-          TextField(
-              value = query,
-              onValueChange = onQueryChange,
-              modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-              placeholder = { Text("Search address") },
-              singleLine = true,
-              colors =
-                  TextFieldDefaults.colors(
-                      focusedContainerColor = colorScheme.background,
-                      unfocusedContainerColor = colorScheme.background,
-                      disabledContainerColor = colorScheme.background,
-                      cursorColor = colorScheme.primary,
-                      focusedIndicatorColor = colorScheme.background,
-                      unfocusedIndicatorColor = colorScheme.background,
-                      disabledIndicatorColor = colorScheme.background,
-                  ),
-              trailingIcon = {
-                IconButton(
-                    onClick = {
-                      val trimmed = query.trim()
-                      if (trimmed.isEmpty()) {
-                        focusRequester.requestFocus()
-                      } else {
-                        onSearch(trimmed)
-                        focusManager.clearFocus()
-                      }
-                    },
-                ) {
-                  Icon(
-                      Icons.Default.Search,
-                      contentDescription = "Search",
-                      tint = colorScheme.primary,
-                      modifier = Modifier.size(28.dp),
-                  )
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    IconButton(onClick = onBack) {
+      Icon(
+          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+          contentDescription = "Back",
+      )
+    }
+
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier.weight(1f).padding(start = 8.dp).focusRequester(focusRequester),
+        placeholder = { Text("Search address") },
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp),
+        colors =
+            TextFieldDefaults.colors(
+                focusedContainerColor = colorScheme.surface,
+                unfocusedContainerColor = colorScheme.surface,
+                disabledContainerColor = colorScheme.surface,
+                cursorColor = colorScheme.primary,
+                focusedIndicatorColor = colorScheme.surface,
+                unfocusedIndicatorColor = colorScheme.surface,
+                disabledIndicatorColor = colorScheme.surface,
+            ),
+        trailingIcon = {
+          IconButton(
+              onClick = {
+                val trimmed = query.trim()
+                if (trimmed.isEmpty()) {
+                  focusRequester.requestFocus()
+                } else {
+                  onSearch(trimmed)
+                  focusManager.clearFocus()
                 }
               },
-              keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-              keyboardActions =
-                  KeyboardActions(
-                      onSearch = {
-                        val q = query.trim()
-                        if (q.isNotEmpty()) {
-                          onSearch(q)
-                          focusManager.clearFocus()
-                        }
-                      },
-                  ),
-          )
-        }
-      },
-      navigationIcon = {
-        IconButton(onClick = onBack) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
-          )
-        }
-      },
-  )
+          ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = "Search",
+                tint = colorScheme.primary,
+                modifier = Modifier.size(28.dp),
+            )
+          }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions =
+            KeyboardActions(
+                onSearch = {
+                  val q = query.trim()
+                  if (q.isNotEmpty()) {
+                    onSearch(q)
+                    focusManager.clearFocus()
+                  }
+                },
+            ),
+    )
+  }
 }
 
 @Composable
@@ -391,7 +386,7 @@ private fun SuggestionsDropdown(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     ) {
       suggestions.forEachIndexed { index, feature ->
-        androidx.compose.foundation.layout.Row(
+        Row(
             modifier =
                 Modifier.fillMaxWidth()
                     .clickable { onSuggestionClick(feature) }

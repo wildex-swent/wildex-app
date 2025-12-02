@@ -1,11 +1,13 @@
 package com.android.wildex.ui.profile
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -21,6 +23,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.android.wildex.BuildConfig
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserType
@@ -70,20 +73,102 @@ class ProfileScreenTest {
   private lateinit var defaultAchievementsRepo: FakeAchievementsRepo
   private lateinit var defaultUpdateUseCase: UpdateUserAchievementsUseCase
   private lateinit var defaultViewModel: ProfileScreenViewModel
+  private val userRepository = LocalRepositories.userRepository
+  private val userAnimalsRepository = LocalRepositories.userAnimalsRepository
+  private val userFriendsRepository = LocalRepositories.userFriendsRepository
+  private val animalRepository = LocalRepositories.animalRepository
+  private val friendRequestRepository = LocalRepositories.friendRequestRepository
 
   @Before
   fun setup() {
-    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
-    defaultAchievementsRepo = FakeAchievementsRepo()
-    defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
-    defaultViewModel =
-        ProfileScreenViewModel(
-            userRepository = LocalRepositories.UserRepositoryImpl(),
-            achievementRepository = defaultAchievementsRepo,
-            postRepository = LocalRepositories.postsRepository,
-            updateUserAchievements = defaultUpdateUseCase,
-            currentUserId = "currentUserId-1",
-        )
+    runBlocking {
+      userRepository.addUser(
+          User(
+              userId = "u-1",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      userRepository.addUser(
+          User(
+              userId = "currentUserId-1",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      userRepository.addUser(
+          User(
+              userId = "friend0",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      userRepository.addUser(
+          User(
+              userId = "friend1",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      userRepository.addUser(
+          User(
+              userId = "friend2",
+              username = "user1",
+              name = "User",
+              surname = "One",
+              bio = "",
+              profilePictureURL = "",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = ""))
+      animalRepository.addAnimal(
+          Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
+      animalRepository.addAnimal(
+          Animal(animalId = "animal1", pictureURL = "", name = "", species = "", description = ""))
+      userAnimalsRepository.initializeUserAnimals("u-1")
+      userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal0")
+      userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal1")
+      userFriendsRepository.initializeUserFriends("u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend0", "u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend1", "u-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend2", "u-1")
+      userAnimalsRepository.initializeUserAnimals("currentUserId-1")
+      userAnimalsRepository.addAnimalToUserAnimals("currentUserId-1", "animal0")
+      userFriendsRepository.initializeUserFriends("currentUserId-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("u-1", "currentUserId-1")
+      userFriendsRepository.addFriendToUserFriendsOfUser("friend0", "currentUserId-1")
+
+      MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
+      defaultAchievementsRepo = FakeAchievementsRepo()
+      defaultUpdateUseCase = createTestUpdateAchievementsUseCase(defaultAchievementsRepo)
+      defaultViewModel =
+          ProfileScreenViewModel(
+              userRepository = userRepository,
+              achievementRepository = defaultAchievementsRepo,
+              postRepository = LocalRepositories.postsRepository,
+              updateUserAchievements = defaultUpdateUseCase,
+              userAnimalsRepository = userAnimalsRepository,
+              userFriendsRepository = userFriendsRepository,
+              friendRequestRepository = friendRequestRepository,
+              currentUserId = "currentUserId-1",
+          )
+    }
   }
 
   @After
@@ -151,12 +236,12 @@ class ProfileScreenTest {
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
-          ownerProfile = false,
+          viewModel = defaultViewModel,
+          state = defaultViewModel.uiState.value.copy(user = sampleUser),
           onAchievements = {},
           onCollection = { collection++ },
           onMap = {},
           onFriends = { friends++ },
-          onFriendRequest = {},
       )
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Jane Doe")
@@ -192,13 +277,14 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "someone-else",
         )
     composeRule.setContent {
       ProfileScreen(
           profileScreenViewModel = vm,
           userUid = "u-1",
-          onFriendRequest = {},
       )
     }
     advanceUntilIdle()
@@ -219,6 +305,8 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "u-1",
         )
     var achievements = 0
@@ -245,48 +333,11 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun profileScreen_not_owner_shows_friend_request_and_passes_id() = runTest {
-    val user = sampleUser
-    val userRepo = mockk<UserRepositoryFirestore>()
-    coEvery { userRepo.getUser("u-1") } returns user
-    val achRepo = FakeAchievementsRepo(emptyList())
-    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
-    val vm =
-        ProfileScreenViewModel(
-            userRepository = userRepo,
-            achievementRepository = achRepo,
-            postRepository = LocalRepositories.postsRepository,
-            updateUserAchievements = updateUseCase,
-            currentUserId = "someone-else",
-        )
-    var requests = 0
-    var lastId = ""
-    composeRule.setContent {
-      ProfileScreen(
-          profileScreenViewModel = vm,
-          userUid = "u-1",
-          onFriendRequest = {
-            requests++
-            lastId = it
-          },
-      )
-    }
-    advanceUntilIdle()
-    composeRule.waitForIdle()
-    composeRule.onAllNodesWithTag(ProfileScreenTestTags.SETTINGS).assertCountEquals(0)
-    composeRule.scrollToTagWithinScroll(ProfileScreenTestTags.FRIEND_REQUEST)
-    val req = composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST)
-    req.performClick()
-    req.performClick()
-    Assert.assertEquals(2, requests)
-    Assert.assertEquals("u-1", lastId)
-  }
-
-  @Test
   fun profile_defaults_and_map_achievements_defaults() {
     composeRule.setContent {
-      androidx.compose.foundation.layout.Column {
-        ProfileImageAndName()
+      Column {
+        ProfileImageAndName(
+            viewModel = defaultViewModel, state = defaultViewModel.uiState.collectAsState().value)
         ProfileDescription()
         ProfileAchievements(ownerProfile = true)
         ProfileMap()
@@ -301,15 +352,6 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA).assertExists().performClick()
     composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertExists()
     composeRule.onNodeWithTag(ProfileScreenTestTags.MAP_CTA).assertExists().performClick()
-  }
-
-  @Test
-  fun profileFriendRequest_default_button_enabled_and_text() {
-    composeRule.setContent { ProfileFriendRequest() }
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).assertExists().assertIsEnabled()
-    composeRule.onNodeWithText("Send Friend Request").assertExists()
-    composeRule.onNodeWithTag(ProfileScreenTestTags.FRIEND_REQUEST).performClick()
-    composeRule.onNodeWithText("Cancel Friend Request").assertExists()
   }
 
   @Test
@@ -369,18 +411,32 @@ class ProfileScreenTest {
   }
 
   @Test
+  fun friendsAndAnimalsStatsShowTheCorrectStats() {
+    composeRule.setContent {
+      ProfileScreen(
+          profileScreenViewModel = defaultViewModel,
+          userUid = "u-1",
+      )
+    }
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.ANIMAL_COUNT, useUnmergedTree = true)
+        .assertTextEquals("2")
+    composeRule
+        .onNodeWithTag(ProfileScreenTestTags.FRIENDS_COUNT, useUnmergedTree = true)
+        .assertTextEquals("3")
+  }
+
+  @Test
   fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
-    val items = fakeAchievements(2)
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
-          ownerProfile = false,
-          achievements = items,
+          viewModel = defaultViewModel,
+          state = defaultViewModel.uiState.value,
           onAchievements = {},
           onCollection = {},
           onMap = {},
           onFriends = {},
-          onFriendRequest = {},
       )
     }
     composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
@@ -406,6 +462,8 @@ class ProfileScreenTest {
               achievementRepository = achRepo,
               postRepository = LocalRepositories.postsRepository,
               updateUserAchievements = updateUseCase,
+              userAnimalsRepository = userAnimalsRepository,
+              userFriendsRepository = userFriendsRepository,
               currentUserId = "currentUserId-1",
           )
 
@@ -436,12 +494,14 @@ class ProfileScreenTest {
     composeRule.setContent {
       ProfileContent(
           user = sampleUser.copy(userType = UserType.PROFESSIONAL),
-          ownerProfile = false,
+          viewModel = defaultViewModel,
+          state =
+              defaultViewModel.uiState.value.copy(
+                  user = sampleUser.copy(userType = UserType.PROFESSIONAL)),
           onAchievements = {},
           onCollection = {},
           onMap = {},
           onFriends = {},
-          onFriendRequest = {},
       )
     }
     composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()
@@ -463,5 +523,116 @@ class ProfileScreenTest {
       )
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
+  }
+
+  @Test
+  fun noInteractableAppearWhenCurrentUser() {
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "currentUserId-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun currentUserCanSendRequestWhenNotFriend() {
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun currentUserCanAcceptReceivedRequest() {
+    runBlocking { friendRequestRepository.initializeFriendRequest("u-1", "currentUserId-1") }
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun currentUserCanDeclineReceivedRequest() {
+    runBlocking { friendRequestRepository.initializeFriendRequest("u-1", "currentUserId-1") }
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun currentUserCanCancelSentRequest() {
+    runBlocking { friendRequestRepository.initializeFriendRequest("currentUserId-1", "u-1") }
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsDisplayed()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun currentUserCanUnfollowUser() {
+    runBlocking { userFriendsRepository.addFriendToUserFriendsOfUser("currentUserId-1", "u-1") }
+    composeRule.setContent {
+      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).performClick()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
   }
 }

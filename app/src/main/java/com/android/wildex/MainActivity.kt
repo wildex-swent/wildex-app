@@ -44,6 +44,7 @@ import com.android.wildex.ui.navigation.BottomNavigationMenu
 import com.android.wildex.ui.navigation.NavigationActions
 import com.android.wildex.ui.navigation.Screen
 import com.android.wildex.ui.navigation.Tab
+import com.android.wildex.ui.notification.NotificationScreen
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
@@ -163,6 +164,19 @@ fun WildexApp(
 
     // Submit Form
     submitFormComposable(navigationActions)
+
+    // Notifications
+    notificationsComposable(navigationActions)
+  }
+}
+
+private fun NavGraphBuilder.notificationsComposable(navigationActions: NavigationActions) {
+  composable(Screen.Notifications.route) {
+    NotificationScreen(
+        onGoBack = { navigationActions.goBack() },
+        onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onNotificationClick = { navigationActions.navigateTo(Screen.fromString(it)) },
+    )
   }
 }
 
@@ -211,7 +225,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -378,6 +393,7 @@ private fun NavGraphBuilder.homeComposable(
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
     )
   }
 }

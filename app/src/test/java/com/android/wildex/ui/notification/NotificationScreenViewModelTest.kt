@@ -40,7 +40,7 @@ class NotificationScreenViewModelTest {
           notificationId = "n1",
           targetId = "t1",
           authorId = sampleAuthor.userId,
-          isRead = false,
+          read = false,
           title = "Titre test",
           body = "Corps test",
           route = "route/test",
@@ -87,7 +87,7 @@ class NotificationScreenViewModelTest {
         Assert.assertEquals(sampleNotification.notificationId, ui.notificationId)
         Assert.assertEquals(sampleNotification.title, ui.notificationTitle)
         Assert.assertEquals(sampleNotification.body, ui.notificationDescription)
-        Assert.assertEquals(sampleAuthor.username, ui.simpleUser.username)
+        Assert.assertEquals(sampleAuthor.username, ui.author.username)
 
         coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         coVerify(exactly = 1) { userRepository.getSimpleUser(sampleAuthor.userId) }

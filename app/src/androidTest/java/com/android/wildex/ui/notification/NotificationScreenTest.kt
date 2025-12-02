@@ -1,6 +1,5 @@
 package com.android.wildex.ui.notification
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -33,7 +32,7 @@ class NotificationScreenTest {
       listOf(
           NotificationUIState(
               notificationId = "1",
-              simpleUser =
+              author =
                   SimpleUser(
                       userId = "user1",
                       username = "Jean",
@@ -45,7 +44,7 @@ class NotificationScreenTest {
           ),
           NotificationUIState(
               notificationId = "2",
-              simpleUser =
+              author =
                   SimpleUser(
                       userId = "user2",
                       username = "Bob",
@@ -57,7 +56,7 @@ class NotificationScreenTest {
           ),
           NotificationUIState(
               notificationId = "3",
-              simpleUser =
+              author =
                   SimpleUser(
                       userId = "user3",
                       username = "Alice",
@@ -75,8 +74,7 @@ class NotificationScreenTest {
       MaterialTheme(colorScheme = lightColorScheme()) {
         NotificationView(
             notifications = sampleNotifications,
-            pd = PaddingValues(0.dp),
-            onNotificationClick = { _, _ -> },
+            onNotificationClick = {},
             onProfileClick = {},
         )
       }
@@ -136,7 +134,7 @@ class NotificationScreenTest {
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
-    composeRule.runOnIdle { /* ensure callback executed */}
+    composeRule.runOnIdle { /* ensure callback executed */ }
     Assert.assertEquals(1, back)
   }
 
@@ -163,8 +161,7 @@ class NotificationScreenTest {
             notificationTitle = longTitle,
             notificationDescription = longDesc,
             onProfileClick = {},
-            onNotificationClick = { _, _ -> },
-            cs = MaterialTheme.colorScheme,
+            onNotificationClick = {},
         )
       }
     }
@@ -189,7 +186,7 @@ class NotificationScreenTest {
       vm: NotificationScreenViewModel,
       samples: List<NotificationUIState>
   ) {
-    NotificationView(notifications = samples, pd = PaddingValues(0.dp))
+    NotificationView(notifications = samples)
   }
 
   @Test
@@ -263,8 +260,8 @@ class NotificationScreenTest {
           Notification(
               notificationId = it.notificationId,
               targetId = "target_${it.notificationId}",
-              authorId = it.simpleUser.userId,
-              isRead = false,
+              authorId = it.author.userId,
+              read = false,
               title = it.notificationTitle,
               body = it.notificationDescription,
               route = it.notificationRoute,

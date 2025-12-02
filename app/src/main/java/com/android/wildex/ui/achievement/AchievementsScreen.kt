@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
@@ -32,9 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.semantics
@@ -138,6 +142,23 @@ fun AchievementsScreen(
                   color = colorScheme.onBackground,
               )
               Spacer(modifier = Modifier.height(8.dp))
+            }
+          }
+          if (uiState.unlocked.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+              Column(
+                  modifier = Modifier.fillMaxWidth(.3f).padding(vertical = 32.dp),
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  verticalArrangement = Arrangement.spacedBy(24.dp),
+              ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.binoculars_icon),
+                    contentDescription = "Binoculars",
+                    tint = colorScheme.primary.copy(alpha = .8f),
+                )
+
+                Text(stringResource(R.string.no_discoveries), color = colorScheme.primary)
+              }
             }
           }
           items(uiState.unlocked) { achievement ->

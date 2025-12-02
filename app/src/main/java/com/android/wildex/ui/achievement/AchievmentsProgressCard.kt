@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -111,7 +112,7 @@ fun AchievementsProgressCard(progression: Pair<Int, Int>) {
         color = lightColor,
         trackColor = trackColor,
         progress = progress,
-        modifier = Modifier.fillMaxWidth().height(12.dp),
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(.18f),
     )
 
     Spacer(modifier = Modifier.height(12.dp))

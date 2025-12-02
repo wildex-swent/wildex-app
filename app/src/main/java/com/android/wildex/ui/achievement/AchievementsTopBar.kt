@@ -6,7 +6,6 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +30,6 @@ fun AchievementsTopBar(onGoBack: () -> Unit) {
             modifier = Modifier.testTag(AchievementsScreenTestTags.TITLE),
             text = context.getString(R.string.achievements),
             style = typography.titleLarge,
-            color = colorScheme.primary,
             textAlign = TextAlign.Center,
         )
       },
@@ -43,7 +41,6 @@ fun AchievementsTopBar(onGoBack: () -> Unit) {
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = context.getString(R.string.back),
-              tint = colorScheme.primary,
           )
         }
       },

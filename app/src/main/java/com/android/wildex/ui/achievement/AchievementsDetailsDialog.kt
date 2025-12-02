@@ -132,7 +132,7 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
                         color = colorScheme.primary,
                         trackColor = colorScheme.onSurface,
                         progress = it.second.toFloat() / it.third,
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                        modifier = Modifier.fillMaxWidth().height(8.dp),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                   }

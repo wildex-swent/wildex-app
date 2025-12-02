@@ -38,6 +38,7 @@ class SettingsScreenTest {
   private val reportsRepository = LocalRepositories.reportRepository
   private val commentsRepository = LocalRepositories.commentRepository
   private val likesRepository = LocalRepositories.likeRepository
+  private val notificationRepository = LocalRepositories.notificationRepository
 
   private val authRepository = FakeAuthRepository()
 
@@ -85,7 +86,7 @@ class SettingsScreenTest {
                     likeRepository = likesRepository,
                     commentRepository = commentsRepository,
                     reportRepository = reportsRepository,
-                ),
+                    notificationRepository = notificationRepository),
         )
   }
 

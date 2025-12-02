@@ -3,6 +3,7 @@ package com.android.wildex.usecase.user
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepository
+import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -39,6 +40,7 @@ class DeleteUserUseCaseTest {
   private lateinit var likeRepository: LikeRepository
   private lateinit var commentRepository: CommentRepository
   private lateinit var authRepository: AuthRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var useCase: DeleteUserUseCase
 
   private val userId = "userId"
@@ -57,6 +59,7 @@ class DeleteUserUseCaseTest {
     likeRepository = mockk()
     commentRepository = mockk()
     authRepository = mockk()
+    notificationRepository = mockk()
 
     useCase =
         DeleteUserUseCase(
@@ -72,6 +75,7 @@ class DeleteUserUseCaseTest {
             commentRepository,
             authRepository,
             userTokensRepository,
+            notificationRepository,
         )
   }
 
@@ -120,6 +124,8 @@ class DeleteUserUseCaseTest {
       coEvery { likeRepository.deleteLikesByUser(userId) } just Runs
       coEvery { commentRepository.deleteCommentsByUser(userId) } just Runs
       coEvery { userTokensRepository.deleteUserTokens(userId) } just Runs
+      coEvery { notificationRepository.deleteAllNotificationsByUser(userId) } just Runs
+      coEvery { notificationRepository.deleteAllNotificationsForUser(userId) } just Runs
       coEvery { authRepository.deleteUserAuth() } returns Result.success(Unit)
 
       try {

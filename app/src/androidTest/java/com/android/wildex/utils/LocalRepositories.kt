@@ -12,6 +12,8 @@ import com.android.wildex.model.animaldetector.Taxonomy
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.location.GeocodingRepository
+import com.android.wildex.model.notification.Notification
+import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.Comment
@@ -567,7 +569,7 @@ object LocalRepositories {
     override suspend fun getAnimalPicture(
         context: Context,
         animalName: String,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
     ): Uri = Uri.parse("imageUrl:$animalName")
   }
 
@@ -618,6 +620,27 @@ object LocalRepositories {
     }
   }
 
+  open class NotificationRepositoryImpl() : NotificationRepository, ClearableRepository {
+    val listOfNotifications = mutableListOf<Notification>()
+
+    override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
+        listOfNotifications
+
+    override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+    override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+    override suspend fun deleteNotification(notificationId: Id) {}
+
+    override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+    override suspend fun deleteAllNotificationsByUser(userId: Id) {}
+
+    override fun clear() {
+      listOfNotifications.clear()
+    }
+  }
+
   val postsRepository: PostsRepository = PostsRepositoryImpl()
   val likeRepository: LikeRepository = LikeRepositoryImpl()
   val userRepository: UserRepository = UserRepositoryImpl()
@@ -634,6 +657,7 @@ object LocalRepositories {
   val friendRequestRepository: FriendRequestRepository = FriendRequestRepositoryImpl()
   val geocodingRepository: GeocodingRepository = GeocodingRepositoryImpl()
   val userTokensRepository: UserTokensRepository = UserTokensRepositoryImpl()
+  val notificationRepository: NotificationRepository = NotificationRepositoryImpl()
 
   fun clearAll() {
     (postsRepository as ClearableRepository).clear()
@@ -650,6 +674,7 @@ object LocalRepositories {
     (friendRequestRepository as ClearableRepository).clear()
     (geocodingRepository as? ClearableRepository)?.clear()
     (userTokensRepository as ClearableRepository).clear()
+    (notificationRepository as ClearableRepository).clear()
   }
 
   fun clearUserAnimalsAndAnimals() {

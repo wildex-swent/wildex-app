@@ -3,6 +3,7 @@ package com.android.wildex.ui.settings
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepository
+import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -45,6 +46,7 @@ class SettingsScreenViewModelTest {
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
   private lateinit var commentRepository: CommentRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var authRepository: AuthRepository
   private lateinit var viewModel: SettingsScreenViewModel
 
@@ -90,6 +92,7 @@ class SettingsScreenViewModelTest {
     likeRepository = mockk()
     commentRepository = mockk()
     authRepository = mockk()
+    notificationRepository = mockk()
 
     viewModel =
         SettingsScreenViewModel(
@@ -111,7 +114,9 @@ class SettingsScreenViewModelTest {
                     likeRepository,
                     commentRepository,
                     authRepository,
-                    userTokensRepository),
+                    userTokensRepository,
+                    notificationRepository,
+                ),
         )
 
     coEvery { userRepository.getUser("currentUserId") } returns u1

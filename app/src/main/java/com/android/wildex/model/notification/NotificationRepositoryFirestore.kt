@@ -53,6 +53,12 @@ class NotificationRepositoryFirestore(db: FirebaseFirestore) : NotificationRepos
     }
   }
 
+  override suspend fun deleteAllNotificationsByUser(userId: Id) {
+    collection.whereEqualTo(AUTHOR_ID, userId).get().await().documents.forEach {
+      it.reference.delete().await()
+    }
+  }
+
   private fun documentToNotification(document: DocumentSnapshot): Notification {
     val notificationId = document.id
     val targetId = document.getString(TARGET_ID) ?: throwMissingFieldException(TARGET_ID)

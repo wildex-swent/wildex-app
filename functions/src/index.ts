@@ -219,19 +219,6 @@ exports.sendFriendAcceptedNotifications = onDocumentDeletedWithAuthContext(
           .get()
       ).data() as FCMTokenData;
 
-      const userFriends = (
-        await admin
-          .firestore()
-          .collection("userFriends")
-          .doc(requestData.senderId)
-          .get()
-      ).data() as UserFriends;
-
-      if (!userFriends.friendsId.includes(requestData.receiverId)) {
-        return null;
-      }
-
-
       const toUser = (
         await admin
           .firestore()

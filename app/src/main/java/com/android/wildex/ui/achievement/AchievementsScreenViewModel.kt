@@ -4,9 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
-import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.ProgressInfo
 import com.android.wildex.model.utils.URL
@@ -14,15 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-/** Default user used when no user data is available. */
-private val defaultUser: SimpleUser =
-    SimpleUser(
-        userId = "defaultUserId",
-        username = "defaultUsername",
-        profilePictureURL = "",
-        userType = UserType.REGULAR,
-    )
 
 /**
  * UI state for the Achievements screen.
@@ -40,7 +28,6 @@ data class AchievementsUIState(
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
-    val user: SimpleUser = defaultUser,
 )
 
 data class AchievementUIState(
@@ -59,7 +46,6 @@ data class AchievementUIState(
 class AchievementsScreenViewModel(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AchievementsUIState(isLoading = true))
   val uiState: StateFlow<AchievementsUIState> = _uiState.asStateFlow()
@@ -73,7 +59,6 @@ class AchievementsScreenViewModel(
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch {
       try {
-        val user = userRepository.getSimpleUser(userId)
         val allAchievements = userAchievementsRepository.getAllAchievements()
         val unlockedAchievements = userAchievementsRepository.getAllAchievementsByUser(userId)
         val lockedAchievements = allAchievements.filter { it !in unlockedAchievements }
@@ -104,7 +89,6 @@ class AchievementsScreenViewModel(
                 isLoading = false,
                 isError = false,
                 errorMsg = null,
-                user = user,
                 overallProgress = progress,
             )
       } catch (e: Exception) {

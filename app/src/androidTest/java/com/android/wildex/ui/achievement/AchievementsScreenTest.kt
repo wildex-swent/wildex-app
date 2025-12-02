@@ -1,29 +1,37 @@
 package com.android.wildex.ui.achievement
 
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.AppTheme
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class fireAchievementsScreenTest {
+class AchievementsScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var userAchievementsRepository: FakeUserAchievementsRepository
-  private lateinit var userRepository: UserRepository
-  private lateinit var currentUserId: String
   private lateinit var viewModel: AchievementsScreenViewModel
 
   private val postMaster =
@@ -32,6 +40,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
+          progress = { listOf(Triple("Posts", 12, 10)) },
       )
 
   private val communityBuilder =
@@ -40,6 +49,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
+          progress = { listOf(Triple("Comments", 20, 20)) },
       )
 
   private val firstPost =
@@ -48,6 +58,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
+          progress = { listOf(Triple("Posts", 12, 1)) },
       )
 
   private val conversationalist =
@@ -56,6 +67,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
+          progress = { listOf(Triple("Comments", 20, 50)) },
       )
 
   private val mockAchievement1 =
@@ -64,6 +76,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "This is a mock achievement for testing purposes",
           name = "Mock Achievement",
+          progress = { listOf(Triple("Mock", 0, 1)) },
       )
 
   private val mockAchievement2 =
@@ -72,20 +85,7 @@ class fireAchievementsScreenTest {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
-      )
-
-  private val currentUser =
-      User(
-          userId = "currentUserId",
-          username = "currentUsername",
-          name = "John",
-          surname = "Doe",
-          bio = "This is a bio",
-          profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "France",
+          progress = { listOf(Triple("Mock", 0, 1)) },
       )
 
   private val unlockedAchievement = listOf(postMaster, communityBuilder, firstPost)
@@ -122,14 +122,8 @@ class fireAchievementsScreenTest {
   fun setup() {
     runBlocking {
       userAchievementsRepository = FakeUserAchievementsRepository()
-      userRepository = LocalRepositories.userRepository
-      userRepository.addUser(currentUser)
-      currentUserId = "currentUserId"
       viewModel =
-          AchievementsScreenViewModel(
-              userAchievementsRepository = userAchievementsRepository,
-              userRepository = userRepository,
-          )
+          AchievementsScreenViewModel(userAchievementsRepository = userAchievementsRepository)
     }
   }
 
@@ -137,189 +131,215 @@ class fireAchievementsScreenTest {
   fun tearDown() {
     LocalRepositories.clearAll()
   }
-  /*
+
+  @Test
+  fun noArgument_callCheck() {
+    composeTestRule.setContent { AchievementsScreen() }
+  }
+
   @Test
   fun loadingScreen_shownWhileFetchingAchievements() {
-    runBlocking {
-      val fetchSignal = CompletableDeferred<Unit>()
-      userAchievementsRepository.fetchSignal = fetchSignal
-      userAchievementsRepository.unlocked = unlockedAchievement
-      userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState(currentUserId)
+    val fetchSignal = CompletableDeferred<Unit>()
+    userAchievementsRepository.fetchSignal = fetchSignal
+    userAchievementsRepository.unlocked = unlockedAchievement
+    userAchievementsRepository.all = achievements
 
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
-      }
+    viewModel.loadUIState("")
 
+    AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+    composeTestRule.setContent {
+      val config = LocalConfiguration.current
+      config.uiMode =
+          Configuration.UI_MODE_NIGHT_YES or
+              (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
+      AchievementsScreen(viewModel = viewModel)
+    }
+
+    composeTestRule
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    fetchSignal.complete(Unit)
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
+        .assertExists()
+
+    unlockedAchievement.forEach { achievement ->
       composeTestRule
-          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .onNodeWithTag(
+              AchievementsScreenTestTags.getTagForAchievement(achievement.achievementId, true),
+              useUnmergedTree = true,
+          )
+          .performScrollTo()
           .assertIsDisplayed()
+      composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
+    }
 
-      fetchSignal.complete(Unit)
-      composeTestRule.waitForIdle()
-
+    lockedAchievement.forEach { achievement ->
       composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-          .assertExists()
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
-          .assertExists()
-
-      unlockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-        composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
-      }
-
-      lockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-        composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
-      }
+          .onNodeWithTag(
+              AchievementsScreenTestTags.getTagForAchievement(achievement.achievementId, false),
+              useUnmergedTree = true,
+          )
+          .performScrollTo()
+          .assertIsDisplayed()
+      composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
     }
   }
 
   @Test
-  fun unlockedAndLocked_sectionsDisplayAchievements() {
-    runBlocking {
-      userAchievementsRepository.unlocked = unlockedAchievement
-      userAchievementsRepository.all = achievements
+  fun loadingFailed_shownWhenError() {
+    userAchievementsRepository.shouldThrowOnFetch = true
+    userAchievementsRepository.unlocked = unlockedAchievement
+    userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState(currentUserId)
-
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
-      }
-      composeTestRule.waitForIdle()
-
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-          .assertExists()
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
-          .assertExists()
-
-      unlockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-        composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
-      }
-
-      lockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-        composeTestRule.onNodeWithText(achievement.name, useUnmergedTree = true).assertIsDisplayed()
-      }
+    viewModel.loadUIState("")
+    composeTestRule.setContent {
+      val config = LocalConfiguration.current
+      config.uiMode =
+          Configuration.UI_MODE_NIGHT_YES or
+              (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
+      AchievementsScreen(viewModel = viewModel)
     }
+    composeTestRule
+        .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 
   @Test
   fun backButton_invokesCallback() {
-    runBlocking {
-      var backClicked = false
-      userAchievementsRepository.unlocked = emptyList()
-      userAchievementsRepository.all = emptyList()
-
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true }, userId = "")
-      }
-      composeTestRule.waitForIdle()
-
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
-          .performClick()
-      assert(backClicked)
+    var backClicked = false
+    userAchievementsRepository.unlocked = emptyList()
+    userAchievementsRepository.all = emptyList()
+    AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+    composeTestRule.setContent {
+      val config = LocalConfiguration.current
+      config.uiMode =
+          Configuration.UI_MODE_NIGHT_NO or
+              (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
+      AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true })
     }
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
+        .performClick()
+    assertTrue(backClicked)
   }
 
   @Test
   fun achievementOpacity_matchesLockedState() {
-    runBlocking {
-      userAchievementsRepository.unlocked = unlockedAchievement
-      userAchievementsRepository.all = achievements
 
-      viewModel.loadUIState(currentUserId)
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
-      }
-      composeTestRule.waitForIdle()
+    userAchievementsRepository.unlocked = unlockedAchievement
+    userAchievementsRepository.all = achievements
+    AppTheme.appearanceMode = AppearanceMode.LIGHT
+    viewModel.loadUIState("")
+    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
+    composeTestRule.waitForIdle()
 
-      unlockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-      }
-      lockedAchievement.forEach { achievement ->
-        composeTestRule
-            .onNodeWithTag(AchievementsScreenTestTags.LOCKED_SECTION, useUnmergedTree = true)
-            .performScrollToNode(hasText(achievement.name))
-      }
-
-      val nodes =
+    unlockedAchievement.forEach { achievement ->
+      composeTestRule
+      val alpha =
           composeTestRule
-              .onAllNodesWithTag(
-                  AchievementsScreenTestTags.ACHIEVEMENT_IMAGE,
+              .onNodeWithTag(
+                  AchievementsScreenTestTags.getTagForAchievement(achievement.achievementId, true),
                   useUnmergedTree = true,
               )
-              .fetchSemanticsNodes()
-
-      val unlockedNode =
-          nodes.firstOrNull {
-            it.config.getOrNull(AchievementIdKey) == unlockedAchievement[0].achievementId
-          } ?: error("Unlocked achievement node not found in semantics")
-      val unlockedAlpha = unlockedNode.config.getOrNull(AchievementAlphaKey)
-      check(unlockedAlpha == 1f) { "Expected unlocked alpha 1f but was $unlockedAlpha" }
-
-      val lockedNode =
-          nodes.firstOrNull {
-            it.config.getOrNull(AchievementIdKey) == lockedAchievement[0].achievementId
-          } ?: error("Locked achievement node not found in semantics")
-      val lockedAlpha = lockedNode.config.getOrNull(AchievementAlphaKey)
-      check(lockedAlpha == 0.3f) { "Expected locked alpha 0.3f but was $lockedAlpha" }
+              .performScrollTo()
+              .assertIsDisplayed()
+              .fetchSemanticsNode()
+              .config
+              .getOrNull(AchievementAlphaKey)
+      assertEquals(1f, alpha)
+    }
+    lockedAchievement.forEach { achievement ->
+      val alpha =
+          composeTestRule
+              .onNodeWithTag(
+                  AchievementsScreenTestTags.getTagForAchievement(achievement.achievementId, false),
+                  useUnmergedTree = true,
+              )
+              .performScrollTo()
+              .assertIsDisplayed()
+              .fetchSemanticsNode()
+              .config
+              .getOrNull(AchievementAlphaKey)
+      assertEquals(0.5f, alpha)
     }
   }
 
   @Test
-  fun topAppBar_and_labeledDivider_showCorrectText() {
-    runBlocking {
-      userAchievementsRepository.unlocked = emptyList()
-      userAchievementsRepository.all = emptyList()
+  fun topBar_displaysCorrectly_AndBackButtonWorks() {
+    userAchievementsRepository.unlocked = emptyList()
+    userAchievementsRepository.all = emptyList()
+    var back = 0
+    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = { ++back }) }
+    composeTestRule.waitForIdle()
 
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
-      }
-      composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.TOP_APP_BAR, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.BACK_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
 
-      composeTestRule
-          .onNodeWithTag(AchievementsScreenTestTags.TOP_APP_BAR, useUnmergedTree = true)
-          .assertIsDisplayed()
-
-      val ctx = ApplicationProvider.getApplicationContext<Context>()
-      val unlockedLabel = ctx.getString(com.android.wildex.R.string.unlocked_achievements)
-      val toDiscover = ctx.getString(com.android.wildex.R.string.to_discover)
-      composeTestRule.onNodeWithText(unlockedLabel, useUnmergedTree = true).assertIsDisplayed()
-      composeTestRule.onNodeWithText(toDiscover, useUnmergedTree = true).assertIsDisplayed()
-    }
+    assertEquals(1, back)
   }
 
   @Test
   fun clickingAchievementOpensDetailsDialog() {
-    runBlocking {
-      userAchievementsRepository.unlocked = unlockedAchievement
+    userAchievementsRepository.unlocked = unlockedAchievement
+    userAchievementsRepository.all = achievements
+    AppTheme.appearanceMode = AppearanceMode.DARK
+    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
 
-      composeTestRule.setContent {
-        AchievementsScreen(viewModel = viewModel, onGoBack = {}, userId = currentUserId)
-      }
+    unlockedAchievement.forEach {
       composeTestRule
-          .onAllNodesWithTag(AchievementsScreenTestTags.ACHIEVEMENT_IMAGE, useUnmergedTree = true)[
-              0]
+          .onNodeWithTag(
+              AchievementsScreenTestTags.getTagForAchievement(it.achievementId, true),
+              useUnmergedTree = true,
+          )
+          .performScrollTo()
           .performClick()
-      composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_DIALOG).assertIsDisplayed()
+      composeTestRule.waitForIdle()
+      assertAchievementDetailIsDisplayed()
+      composeTestRule
+          .onNodeWithTag(AchievementsScreenTestTags.DETAILS_CLOSE_BUTTON, useUnmergedTree = true)
+          .assertIsDisplayed()
+          .performClick()
     }
-  }*/
+    lockedAchievement.forEach {
+      composeTestRule
+          .onNodeWithTag(
+              AchievementsScreenTestTags.getTagForAchievement(it.achievementId, false),
+              useUnmergedTree = true,
+          )
+          .performScrollTo()
+          .performClick()
+      composeTestRule.waitForIdle()
+      assertAchievementDetailIsDisplayed()
+      composeTestRule
+          .onNodeWithTag(AchievementsScreenTestTags.DETAILS_CLOSE_BUTTON, useUnmergedTree = true)
+          .assertIsDisplayed()
+          .performClick()
+    }
+  }
+
+  private fun assertAchievementDetailIsDisplayed() {
+    composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_IMAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_NAME).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_STATUS).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AchievementsScreenTestTags.DETAILS_DESCRIPTION)
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_PROGRESS).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AchievementsScreenTestTags.DETAILS_DIALOG).assertIsDisplayed()
+  }
 }

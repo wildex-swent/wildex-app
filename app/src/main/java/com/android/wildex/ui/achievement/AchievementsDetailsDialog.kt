@@ -51,99 +51,99 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
                 .shadow(8.dp, RoundedCornerShape(16.dp), ambientColor = colorScheme.onSurface)
                 .clip(RoundedCornerShape(16.dp))
                 .background(colorScheme.surface)
-                .testTag(AchievementsScreenTestTags.DETAILS_DIALOG)
-    ) {
-      Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
-        AsyncImage(
-            model = achievement.pictureURL,
-            contentDescription = achievement.name,
-            modifier =
-                Modifier.align(Alignment.Center).testTag(AchievementsScreenTestTags.DETAILS_IMAGE),
-        )
-        IconButton(
-            onClick = onClose,
-            modifier =
-                Modifier.align(Alignment.TopEnd)
-                    .testTag(AchievementsScreenTestTags.DETAILS_CLOSE_BUTTON),
-        ) {
-          Icon(
-              imageVector = Icons.Default.Close,
-              contentDescription = "Close",
-              tint = colorScheme.surface,
-          )
-        }
-      }
-      Column(
-          modifier = Modifier.fillMaxWidth().padding(18.dp),
-          verticalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        val isUnlocked = achievement.progress.all { it.second >= it.third }
-        val text =
-            if (isUnlocked) stringResource(R.string.completed)
-            else stringResource(R.string.in_progress)
-        Row(
-            modifier =
-                Modifier.clip(RoundedCornerShape(8.dp))
-                    .background(if (isUnlocked) colorScheme.primary else colorScheme.secondary)
-                    .padding(4.dp)
-                    .align(Alignment.CenterHorizontally)
-                    .testTag(AchievementsScreenTestTags.DETAILS_STATUS),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Icon(
-              imageVector = if (isUnlocked) Icons.Default.Check else Icons.Default.AccessTime,
-              contentDescription = text,
-              tint = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
-          )
-          Spacer(modifier = Modifier.width(4.dp))
-          Text(
-              text = text,
-              color = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
-              style = typography.bodyMedium,
-          )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = achievement.name,
-            style = typography.titleLarge,
-            modifier = Modifier.testTag(AchievementsScreenTestTags.DETAILS_NAME),
-        )
-        Text(
-            text = achievement.description,
-            style = typography.bodyLarge,
-            modifier = Modifier.testTag(AchievementsScreenTestTags.DETAILS_DESCRIPTION),
-        )
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
-            thickness = .5.dp,
-            color = colorScheme.onSurface,
-        )
-        Text(text = stringResource(R.string.progress), style = typography.titleMedium)
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().testTag(AchievementsScreenTestTags.DETAILS_PROGRESS)
-        ) {
-          items(achievement.progress) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                .testTag(AchievementsScreenTestTags.DETAILS_DIALOG)) {
+          Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
+            AsyncImage(
+                model = achievement.pictureURL,
+                contentDescription = achievement.name,
+                modifier =
+                    Modifier.align(Alignment.Center)
+                        .testTag(AchievementsScreenTestTags.DETAILS_IMAGE),
+            )
+            IconButton(
+                onClick = onClose,
+                modifier =
+                    Modifier.align(Alignment.TopEnd)
+                        .testTag(AchievementsScreenTestTags.DETAILS_CLOSE_BUTTON),
             ) {
-              Text(it.first, style = typography.bodyMedium)
+              Icon(
+                  imageVector = Icons.Default.Close,
+                  contentDescription = "Close",
+                  tint = colorScheme.surface,
+              )
+            }
+          }
+          Column(
+              modifier = Modifier.fillMaxWidth().padding(18.dp),
+              verticalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            val isUnlocked = achievement.progress.all { it.second >= it.third }
+            val text =
+                if (isUnlocked) stringResource(R.string.completed)
+                else stringResource(R.string.in_progress)
+            Row(
+                modifier =
+                    Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(if (isUnlocked) colorScheme.primary else colorScheme.secondary)
+                        .padding(4.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .testTag(AchievementsScreenTestTags.DETAILS_STATUS),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Icon(
+                  imageVector = if (isUnlocked) Icons.Default.Check else Icons.Default.AccessTime,
+                  contentDescription = text,
+                  tint = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
+              )
+              Spacer(modifier = Modifier.width(4.dp))
               Text(
-                  stringResource(R.string.achieved_expected, it.second, it.third),
+                  text = text,
+                  color = if (isUnlocked) colorScheme.onPrimary else colorScheme.onSecondary,
                   style = typography.bodyMedium,
               )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            ProgressBar(
-                color = colorScheme.primary,
-                trackColor = colorScheme.onSurface,
-                progress = it.second.toFloat() / it.third,
-                modifier = Modifier.fillMaxWidth().height(6.dp),
+            Text(
+                text = achievement.name,
+                style = typography.titleLarge,
+                modifier = Modifier.testTag(AchievementsScreenTestTags.DETAILS_NAME),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = achievement.description,
+                style = typography.bodyLarge,
+                modifier = Modifier.testTag(AchievementsScreenTestTags.DETAILS_DESCRIPTION),
+            )
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
+                thickness = .5.dp,
+                color = colorScheme.onSurface,
+            )
+            Text(text = stringResource(R.string.progress), style = typography.titleMedium)
+            LazyColumn(
+                modifier =
+                    Modifier.fillMaxWidth().testTag(AchievementsScreenTestTags.DETAILS_PROGRESS)) {
+                  items(achievement.progress) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                      Text(it.first, style = typography.bodyMedium)
+                      Text(
+                          stringResource(R.string.achieved_expected, it.second, it.third),
+                          style = typography.bodyMedium,
+                      )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ProgressBar(
+                        color = colorScheme.primary,
+                        trackColor = colorScheme.onSurface,
+                        progress = it.second.toFloat() / it.third,
+                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                  }
+                }
           }
         }
-      }
-    }
   }
 }

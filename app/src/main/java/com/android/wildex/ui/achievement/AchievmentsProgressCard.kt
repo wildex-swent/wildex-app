@@ -40,7 +40,8 @@ import com.android.wildex.model.user.AppearanceMode
  */
 @Composable
 fun AchievementsProgressCard(progression: Pair<Int, Int>) {
-  val progress = (progression.first.toFloat() / progression.second)
+  val progress =
+      if (progression.second <= 0) 1f else (progression.first.toFloat() / progression.second)
 
   val lightColor =
       when (AppTheme.appearanceMode) {
@@ -76,8 +77,7 @@ fun AchievementsProgressCard(progression: Pair<Int, Int>) {
                               ),
                           start = Offset.Zero,
                           end = Offset.Infinite,
-                      )
-              )
+                      ))
               .padding(horizontal = 20.dp, vertical = 24.dp)
               .testTag(AchievementsScreenTestTags.ACHIEVEMENTS_PROGRESS_CARD),
       verticalArrangement = Arrangement.SpaceEvenly,
@@ -126,8 +126,7 @@ fun AchievementsProgressCard(progression: Pair<Int, Int>) {
                         R.string.achieved_expected,
                         progression.first,
                         progression.second,
-                    )
-                )
+                    ))
                 .append(")")
                 .toString(),
         style = typography.bodyLarge,

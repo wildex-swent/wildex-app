@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -71,17 +72,16 @@ object AchievementsScreenTestTags {
   // Achievement item
   fun getTagForAchievement(achievementId: Id, isUnlocked: Boolean) =
       "achievement_${achievementId}_${if (isUnlocked) "unlocked" else "locked"}"
+
   fun getNameTagForAchievement(achievementId: Id, isUnlocked: Boolean, name: String) =
       "${getTagForAchievement(achievementId, isUnlocked)}_${name}"
+
   fun getImageTagForAchievement(achievementId: Id, isUnlocked: Boolean) =
       "${getTagForAchievement(achievementId, isUnlocked)}_icon"
 }
 
 val AchievementAlphaKey = SemanticsPropertyKey<Float>("AchievementAlpha")
 var SemanticsPropertyReceiver.achievementAlpha by AchievementAlphaKey
-
-val AchievementIdKey = SemanticsPropertyKey<String>("AchievementId")
-var SemanticsPropertyReceiver.achievementId by AchievementIdKey
 
 /**
  * Screen displaying the user's achievements.
@@ -190,8 +190,11 @@ fun AchievementItem(
     isUnlocked: Boolean,
     onAchievementClick: () -> Unit,
 ) {
+  val alpha = if (isUnlocked) 1f else 0.5f
   val modifier =
       Modifier.testTag(AchievementsScreenTestTags.getTagForAchievement(achievement.id, isUnlocked))
+          .graphicsLayer { this.alpha = alpha }
+          .semantics { achievementAlpha = alpha }
   Surface(
       tonalElevation = 8.dp,
       shape = RoundedCornerShape(10.dp),
@@ -211,18 +214,12 @@ fun AchievementItem(
           modifier =
               Modifier.fillMaxSize(.7f)
                   .clip(CircleShape)
-                  .semantics {
-                    achievementAlpha = if (isUnlocked) 1f else 0.3f
-                    achievementId = achievement.id
-                  }
                   .testTag(
                       AchievementsScreenTestTags.getImageTagForAchievement(
                           achievement.id,
                           isUnlocked,
-                      )
-                  ),
+                      )),
           contentScale = ContentScale.Fit,
-          alpha = if (isUnlocked) 1f else 0.3f,
       )
       Text(
           text = achievement.name,
@@ -236,8 +233,7 @@ fun AchievementItem(
                           achievement.id,
                           isUnlocked,
                           achievement.name,
-                      )
-                  ),
+                      )),
           maxLines = 2,
           minLines = 2,
           overflow = TextOverflow.Ellipsis,

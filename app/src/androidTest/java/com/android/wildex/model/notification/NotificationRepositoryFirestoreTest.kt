@@ -23,7 +23,7 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
           notificationId = "notification1",
           targetId = "target1",
           authorId = "author1",
-          isRead = false,
+          read = false,
           title = "title1",
           body = "body1",
           route = "route1",
@@ -35,7 +35,7 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
           notificationId = "notification2",
           targetId = "target2",
           authorId = "author2",
-          isRead = false,
+          read = false,
           title = "title2",
           body = "body2",
           route = "route2",
@@ -47,7 +47,7 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
           notificationId = "notification3",
           targetId = "target1",
           authorId = "author3",
-          isRead = true,
+          read = true,
           title = "title3",
           body = "body3",
           route = "route3",
@@ -202,7 +202,7 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
             .await()
             .toNotification()
 
-    assert(updatedNotification.isRead)
+    assert(updatedNotification.read)
   }
 
   @Test(expected = IllegalArgumentException::class)
@@ -235,9 +235,9 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
             .await()
             .toNotification()
 
-    assertTrue(updatedNotification1.isRead)
-    assertFalse(updatedNotification2.isRead)
-    assertTrue(updatedNotification3.isRead)
+    assertTrue(updatedNotification1.read)
+    assertFalse(updatedNotification2.read)
+    assertTrue(updatedNotification3.read)
   }
 
   @Test

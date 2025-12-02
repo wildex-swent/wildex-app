@@ -1,6 +1,5 @@
 package com.android.wildex.ui.notification
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
@@ -24,11 +23,11 @@ data class NotificationScreenUIState(
 )
 
 data class NotificationUIState(
-    val notificationId: String = "",
-    val simpleUser: SimpleUser,
-    val notificationRoute: String = "",
-    val notificationTitle: String = "",
-    val notificationDescription: String = ""
+    val notificationId: Stringg,
+    val notificationRoute: String,
+    val notificationTitle: String,
+    val notificationDescription: String,
+    val author: SimpleUser
 )
 
 class NotificationScreenViewModel(
@@ -59,7 +58,7 @@ class NotificationScreenViewModel(
               isError = false,
           )
     } catch (e: Exception) {
-      handleException("Error loading notifications", e)
+      setErrorMsg("Error loading notifications : ${e.localizedMessage}" )
       _uiState.value = _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
     }
   }
@@ -67,13 +66,13 @@ class NotificationScreenViewModel(
   private suspend fun fetchNotifications(): List<NotificationUIState> {
     val notif = notificationRepository.getAllNotificationsForUser(currentUserId)
     val notificationUIStates: List<NotificationUIState> =
-        notif.map { n ->
+        notif.map {
           NotificationUIState(
-              notificationId = n.notificationId,
-              simpleUser = userRepository.getSimpleUser(n.authorId),
-              notificationRoute = n.route,
-              notificationTitle = n.title,
-              notificationDescription = n.body,
+              notificationId = it.notificationId,
+              notificationRoute = it.route,
+              notificationTitle = it.title,
+              notificationDescription = it.body,
+              author = userRepository.getSimpleUser(it.authorId),
           )
         }
     return notificationUIStates
@@ -90,11 +89,5 @@ class NotificationScreenViewModel(
 
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
-  }
-
-  private fun handleException(message: String, e: Exception) {
-    Log.e("NotificationScreenViewModel", message, e)
-    setErrorMsg("$message: ${e.message}")
-    _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
   }
 }

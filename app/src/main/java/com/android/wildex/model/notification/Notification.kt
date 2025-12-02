@@ -8,7 +8,7 @@ data class Notification(
     val notificationId: Id,
     val targetId: Id,
     val authorId: Id,
-    val isRead: Boolean,
+    val read: Boolean,
     val title: String,
     val body: String,
     val route: String,

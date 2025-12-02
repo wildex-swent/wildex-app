@@ -21,7 +21,7 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
       title = {
         Text(
             text = "Back to Homepage",
-            color = colorScheme.primary,
+            color = colorScheme.onBackground,
             style = typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -34,7 +34,7 @@ fun PostDetailsTopBar(onGoBack: () -> Unit) {
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                   contentDescription = "Back to Homepage",
-                  tint = colorScheme.primary,
+                  tint = colorScheme.onBackground,
               )
             }
       },

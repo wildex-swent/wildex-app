@@ -3,6 +3,7 @@ package com.android.wildex.ui.utils.offline
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -17,7 +18,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.*
+import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.user.AppearanceMode
 
 object OfflineScreenTestTags {
   const val ANIMATION = "offline_screen_animation"
@@ -37,7 +40,11 @@ fun OfflineScreen(
     innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
   val context = LocalContext.current
-  val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.kitty_cat_error))
+  val composition by
+      rememberLottieComposition(
+          if (AppTheme.appearanceMode == AppearanceMode.LIGHT)
+              LottieCompositionSpec.RawRes(R.raw.kitty_cat_error_dark)
+          else LottieCompositionSpec.RawRes(R.raw.kitty_cat_error_light))
   val progress by
       animateLottieCompositionAsState(
           composition = composition,
@@ -46,7 +53,10 @@ fun OfflineScreen(
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
-      modifier = Modifier.padding(innerPadding).testTag(OfflineScreenTestTags.OFFLINE_SCREEN)) {
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .testTag(OfflineScreenTestTags.OFFLINE_SCREEN)) {
         Text(
             text = context.getString(R.string.offline_title),
             style = typography.headlineMedium,

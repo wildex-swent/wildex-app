@@ -3,8 +3,6 @@ package com.android.wildex.ui.theme
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
-import android.view.Window
-import android.view.WindowInsets
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -17,46 +15,43 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowInsetsControllerCompat
 import com.android.wildex.model.user.AppearanceMode
 
 private val DarkColorScheme =
     darkColorScheme(
-        primary = LightGreen,
-        secondary = LightBrown,
-        tertiary = LightDarkRed,
-        background = DarkBackground,
-        onPrimary = DarkBackground,
-        onSecondary = DarkBackground,
-        onTertiary = DarkBackground,
-        onBackground = DarkonBackground,
-        surface = DarkSurface,
-        surfaceVariant = DarkSurfaceVariant,
-        onSurface = DarkonSurface,
-        onSurfaceVariant = DarkonSurfaceVariant,
+        primary = WildexLightGreen,
+        secondary = White,
+        tertiary = White,
+        background = WildexBlack,
+        onPrimary = WildexBlack,
+        onSecondary = WildexBlack,
+        onTertiary = WildexBlack,
+        onBackground = White,
+        surface = WildexBlack,
+        onSurface = White,
+        surfaceVariant = WildexBlack,
+        onSurfaceVariant = White,
         error = DarkErrorRed,
-        onError = Black,
-        primaryContainer = DarkPrimaryContainer,
-        onPrimaryContainer = DarkOnPrimaryContainer,
+        onError = WildexBlack,
     )
 
 private val LightColorScheme =
     lightColorScheme(
-        primary = Green,
-        secondary = Brown,
-        tertiary = DarkRed,
+        primary = WildexDarkGreen,
+        secondary = WildexBlack,
+        tertiary = WildexBlack,
         background = White,
         onPrimary = White,
         onSecondary = White,
         onTertiary = White,
-        onBackground = Black,
-        surface = LightSurface,
-        surfaceVariant = LightSurfaceVariant,
-        onSurface = Black,
-        onSurfaceVariant = LightOnSurfaceVariant,
+        onBackground = WildexBlack,
+        surface = White,
+        onSurface = WildexBlack,
+        surfaceVariant = White,
+        onSurfaceVariant = WildexBlack,
         error = ErrorRed,
         onError = White,
-        primaryContainer = LightPrimaryContainer,
-        onPrimaryContainer = LightOnPrimaryContainer,
     )
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -85,11 +80,16 @@ fun WildexTheme(
   val view = LocalView.current
   if (!view.isInEditMode) {
     SideEffect {
-      val window = (view.context as? Activity)?.window
-      if (window != null && view.isAttachedToWindow) {
-        // Set Status bar color to match the theme
-        setStatusBarColor(window, Green.toArgb())
-      }
+      val window = (view.context as? Activity)?.window ?: return@SideEffect
+
+      val bgColor = colorScheme.background.toArgb()
+      window.statusBarColor = bgColor
+      window.navigationBarColor = bgColor
+
+      val insetsController = WindowInsetsControllerCompat(window, view)
+      val lightIcons = !isDarkTheme
+      insetsController.isAppearanceLightStatusBars = lightIcons
+      insetsController.isAppearanceLightNavigationBars = lightIcons
     }
   }
   val configuration = LocalConfiguration.current
@@ -102,15 +102,4 @@ fun WildexTheme(
       }
 
   MaterialTheme(colorScheme = colorScheme, typography = typography, content = content)
-}
-
-fun setStatusBarColor(window: Window, color: Int) {
-  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) { // Android 15+
-    window.decorView.setOnApplyWindowInsetsListener { view, insets ->
-      val statusBarInsets = insets.getInsets(WindowInsets.Type.statusBars())
-      view.setBackgroundColor(color)
-      view.setPadding(0, statusBarInsets.top, 0, 0)
-      insets
-    }
-  }
 }

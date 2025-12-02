@@ -148,7 +148,7 @@ fun CollectionTopBar(
               modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
               text = LocalContext.current.getString(R.string.collection),
               style = typography.titleLarge,
-              color = colorScheme.primary,
+              color = colorScheme.onBackground,
               textAlign = TextAlign.Center)
         }
       },

@@ -21,7 +21,7 @@ fun ProfessionalBadge(modifier: Modifier = Modifier) {
     Icon(
         imageVector = Icons.Filled.Pets,
         contentDescription = "Professional badge",
-        tint = colorScheme.tertiary,
+        tint = colorScheme.primary,
         modifier = Modifier.fillMaxSize())
     Icon(
         imageVector = Icons.Rounded.Add,

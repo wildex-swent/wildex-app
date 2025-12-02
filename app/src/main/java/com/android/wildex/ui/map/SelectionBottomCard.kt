@@ -1,5 +1,7 @@
 package com.android.wildex.ui.map
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,11 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -24,6 +28,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.android.wildex.R
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -54,22 +59,18 @@ fun SelectionBottomCard(
     isCurrentUser: Boolean,
 ) {
   if (selection == null) return
-  val cs = MaterialTheme.colorScheme
-  val ui = colorsForMapTab(activeTab, cs)
-
+  val cs = colorScheme
   Surface(
       modifier = modifier.widthIn(min = 320.dp).wrapContentHeight(),
       shape = RoundedCornerShape(22.dp),
-      tonalElevation = 10.dp,
-      color = ui.bg,
-      contentColor = ui.fg,
+      color = cs.background,
+      contentColor = cs.onBackground,
   ) {
     Box {
       when (selection) {
         is PinDetails.PostDetails -> {
           PostSelectionCard(
               details = selection,
-              ui = ui,
               onPost = onPost,
               onToggleLike = onToggleLike,
               activeTab = activeTab,
@@ -80,7 +81,6 @@ fun SelectionBottomCard(
         is PinDetails.ReportDetails -> {
           ReportSelectionCard(
               details = selection,
-              ui = ui,
               onReport = onReport,
               onProfile = onProfile,
           )
@@ -93,7 +93,7 @@ fun SelectionBottomCard(
                   .padding(6.dp)
                   .testTag(MapContentTestTags.SELECTION_CLOSE),
       ) {
-        Icon(Icons.Filled.Close, contentDescription = "Close", tint = ui.fg)
+        Icon(Icons.Filled.Close, contentDescription = "Close", tint = cs.onBackground)
       }
     }
   }
@@ -120,10 +120,9 @@ private fun PreviewImage(data: Any?, tag: String, desc: String) {
  * Composable that displays a location row with an icon and name.
  *
  * @param name The name of the location.
- * @param ui The UI colors for the map tab.
  */
 @Composable
-private fun LocationRow(name: String, ui: MapUiColors) {
+private fun LocationRow(name: String) {
   Row(
       modifier = Modifier.testTag(MapContentTestTags.SELECTION_LOCATION),
       verticalAlignment = Alignment.CenterVertically,
@@ -132,12 +131,12 @@ private fun LocationRow(name: String, ui: MapUiColors) {
     Icon(
         Icons.Filled.LocationOn,
         contentDescription = "Location",
-        tint = ui.fg,
-        modifier = Modifier.size(18.dp),
+        tint = colorScheme.onBackground,
+        modifier = Modifier.size(16.dp),
     )
     Text(
-        text = name.ifEmpty { "Unknown" },
-        style = typography.bodyMedium,
+        text = name.ifEmpty { LocalContext.current.getString(R.string.map_unknown) },
+        style = typography.bodySmall,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -152,11 +151,11 @@ private fun LocationRow(name: String, ui: MapUiColors) {
  * @param size The size of the icon.
  */
 @Composable
-private fun OpenButton(onClick: () -> Unit, ui: MapUiColors, size: Int) {
+private fun OpenButton(onClick: () -> Unit, ui: Color, size: Int) {
   IconButton(
       onClick = onClick,
       modifier = Modifier.size(34.dp).testTag(MapContentTestTags.SELECTION_OPEN_BUTTON),
-      colors = IconButtonDefaults.iconButtonColors(contentColor = ui.fg),
+      colors = IconButtonDefaults.iconButtonColors(contentColor = ui),
   ) {
     Icon(
         Icons.AutoMirrored.Filled.OpenInNew,
@@ -196,7 +195,6 @@ private fun SelectionRow(
  * Composable that displays a post selection card with details and actions.
  *
  * @param details The post details to be displayed.
- * @param ui The UI colors for the map tab.
  * @param onPost Callback invoked when the post is to be opened.
  * @param onToggleLike Callback invoked when the like button is toggled.
  * @param activeTab The currently active map tab.
@@ -205,13 +203,14 @@ private fun SelectionRow(
 @Composable
 private fun PostSelectionCard(
     details: PinDetails.PostDetails,
-    ui: MapUiColors,
     onPost: (Id) -> Unit,
     onToggleLike: (Id) -> Unit,
     activeTab: MapTab = MapTab.Posts,
     isCurrentUser: Boolean,
     onProfile: (Id) -> Unit = {},
 ) {
+  val cs = colorScheme
+  val context = LocalContext.current
   SelectionRow(
       left = {
         PreviewImage(details.post.pictureURL, MapContentTestTags.SELECTION_POST_IMAGE, "Post image")
@@ -224,19 +223,29 @@ private fun PostSelectionCard(
         profileUserType = details.author?.userType ?: UserType.REGULAR,
         onProfile = onProfile,
     )
-
+    val text = buildAnnotatedString {
+      val isOwn = activeTab == MapTab.MyPosts && isCurrentUser
+      val animalName = details.animalName
+      val article = articleWithWord(animalName)
+      val animal = animalName.trim().replaceFirstChar { it.uppercase() }
+      val prefix =
+          if (isOwn) {
+            "${context.getString(R.string.map_you_saw)} "
+          } else {
+            "${details.author?.username ?: "${context.getString(R.string.map_someone)} "} ${context.getString(R.string.map_saw)} "
+          }
+      append(prefix)
+      append("$article ")
+      withStyle(SpanStyle(color = cs.primary, fontWeight = FontWeight.SemiBold)) { append(animal) }
+    }
     Text(
-        text =
-            if (activeTab == MapTab.MyPosts && isCurrentUser)
-                "You saw ${articleWithWord(details.animalName)}"
-            else
-                "${details.author?.username ?: "Someone"} saw ${articleWithWord(details.animalName)}",
+        text = text,
         style = typography.titleMedium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
 
-    LocationRow(details.post.location?.name ?: "", ui)
+    LocationRow(details.post.location?.name ?: "")
     Spacer(Modifier.height(2.dp))
 
     Row(
@@ -244,23 +253,31 @@ private fun PostSelectionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
+      val activeColor = if (details.likedByMe) cs.primary else cs.onBackground
+
       Row(
+          modifier =
+              Modifier.height(34.dp)
+                  .border(width = 1.dp, color = activeColor, shape = RoundedCornerShape(50))
+                  .padding(horizontal = 10.dp),
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(6.dp),
       ) {
-        IconButton(
-            onClick = { onToggleLike(details.post.postId) },
-            modifier = Modifier.size(34.dp).testTag(MapContentTestTags.SELECTION_LIKE_BUTTON),
-            colors = IconButtonDefaults.iconButtonColors(contentColor = ui.fg),
-        ) {
-          if (details.likedByMe) Icon(Icons.Filled.Favorite, contentDescription = "Unlike")
-          else Icon(Icons.Filled.FavoriteBorder, contentDescription = "Like")
-        }
+        Icon(
+            imageVector =
+                if (details.likedByMe) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+            contentDescription = "Like",
+            tint = activeColor,
+            modifier =
+                Modifier.size(20.dp).testTag(MapContentTestTags.SELECTION_LIKE_BUTTON).clickable {
+                  onToggleLike(details.post.postId)
+                },
+        )
 
         Text(
-            text = details.post.likesCount.toString(),
+            text = details.likeCount.toString(),
             style = typography.bodySmall,
-            color = ui.fg,
+            color = activeColor,
         )
       }
 
@@ -271,20 +288,20 @@ private fun PostSelectionCard(
         Icon(
             Icons.Filled.ChatBubbleOutline,
             contentDescription = "Comments",
-            tint = ui.fg,
+            tint = cs.onBackground,
             modifier = Modifier.size(28.dp).testTag(MapContentTestTags.SELECTION_COMMENT_ICON),
         )
 
         Text(
-            text = details.post.commentsCount.toString(),
+            text = details.commentCount.toString(),
             style = typography.bodySmall,
-            color = ui.fg,
+            color = cs.onBackground,
         )
       }
 
       OpenButton(
           onClick = { onPost(details.post.postId) },
-          ui = ui,
+          ui = cs.onBackground,
           size = 28,
       )
     }
@@ -295,16 +312,16 @@ private fun PostSelectionCard(
  * Composable that displays a report selection card with details and actions.
  *
  * @param details The report details to be displayed.
- * @param ui The UI colors for the map tab.
  * @param onReport Callback invoked when the report is to be opened.
  */
 @Composable
 private fun ReportSelectionCard(
     details: PinDetails.ReportDetails,
-    ui: MapUiColors,
     onReport: (Id) -> Unit,
     onProfile: (Id) -> Unit = {},
 ) {
+  val cs = colorScheme
+  val context = LocalContext
   SelectionRow(
       left = {
         PreviewImage(
@@ -326,8 +343,9 @@ private fun ReportSelectionCard(
     Text(
         text =
             buildAnnotatedString {
-              withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                append("${details.author?.username ?: "Someone"} reported:")
+              withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = cs.primary)) {
+                append(
+                    "${details.author?.username ?: context.current.getString(R.string.map_someone)} ${context.current.getString(R.string.map_reported)}")
               }
               append(" ${details.report.description}")
             },
@@ -338,7 +356,7 @@ private fun ReportSelectionCard(
         modifier = Modifier.fillMaxWidth().testTag(MapContentTestTags.SELECTION_REPORT_DESCRIPTION),
     )
 
-    LocationRow(details.report.location.name, ui)
+    LocationRow(details.report.location.name)
 
     Row(
         modifier = Modifier.fillMaxWidth().testTag(MapContentTestTags.REPORT_ASSIGNED_ROW),
@@ -346,8 +364,9 @@ private fun ReportSelectionCard(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       val assigned = !details.report.assigneeId.isNullOrBlank() && details.assignee != null
-      val bg = if (assigned) ui.fg.copy(alpha = 0.08f) else ui.fg.copy(alpha = 0.12f)
-      val fg = ui.fg
+      val bg =
+          if (assigned) cs.onBackground.copy(alpha = 0.08f) else cs.onBackground.copy(alpha = 0.12f)
+      val fg = cs.background
 
       Surface(
           shape = RoundedCornerShape(percent = 40),
@@ -357,11 +376,12 @@ private fun ReportSelectionCard(
       ) {
         if (!assigned) {
           Text(
-              text = "Not assigned :(",
+              text = context.current.getString(R.string.map_not_assigned),
               modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
               style = typography.bodySmall,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
+              color = cs.onBackground,
           )
         } else {
           Row(
@@ -369,7 +389,12 @@ private fun ReportSelectionCard(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(6.dp),
           ) {
-            Text(text = "Assigned to", style = typography.bodySmall, maxLines = 1)
+            Text(
+                text = context.current.getString(R.string.map_assigned_to),
+                style = typography.bodySmall,
+                maxLines = 1,
+                color = cs.onBackground,
+            )
             // tiny inline avatar
             AsyncImage(
                 model =
@@ -380,10 +405,13 @@ private fun ReportSelectionCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(16.dp).clip(CircleShape),
             )
-            // username, single line with ellipsis
+
             Text(
-                text = details.assignee?.username ?: "Unknown",
+                text =
+                    details.assignee?.username ?: context.current.getString(R.string.map_unknown),
                 style = typography.bodySmall,
+                color = cs.primary,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -394,7 +422,7 @@ private fun ReportSelectionCard(
 
       OpenButton(
           onClick = { onReport(details.report.reportId) },
-          ui = ui,
+          ui = cs.onBackground,
           size = 26,
       )
     }
@@ -411,5 +439,5 @@ fun articleWithWord(word: String): String {
   if (word.isBlank()) return "a"
   val first = word.trim().first().lowercaseChar()
   val article = if (first in listOf('a', 'e', 'i', 'o', 'u')) "an" else "a"
-  return "$article ${word.lowercase()}"
+  return article
 }

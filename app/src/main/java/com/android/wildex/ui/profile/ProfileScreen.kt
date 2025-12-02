@@ -6,9 +6,11 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,12 +27,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,15 +70,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.R
-import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.social.FriendStatus
 import com.android.wildex.ui.utils.badges.ProfessionalBadge
-import com.mapbox.geojson.Point
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -93,6 +96,13 @@ object ProfileScreenTestTags {
   const val MAP_CTA = "ProfileScreenMapCTA"
   const val ACHIEVEMENTS_PREV = "ProfileScreenAchievementsPrev"
   const val ACHIEVEMENTS_NEXT = "ProfileScreenAchievementsNext"
+  const val ANIMAL_COUNT = "ProfileScreenAnimalCount"
+  const val FRIENDS_COUNT = "ProfileScreenFriendsCount"
+  const val FOLLOW_BUTTON = "ProfileScreenFollowButton"
+  const val UNFOLLOW_BUTTON = "ProfileScreenUnfollowButton"
+  const val CANCEL_REQUEST_BUTTON = "ProfileScreenCancelRequestButton"
+  const val ACCEPT_REQUEST_BUTTON = "ProfileScreenAcceptRequestButton"
+  const val DECLINE_REQUEST_BUTTON = "ProfileScreenDeclineRequestButton"
 }
 
 /** Profile Screen Composable */
@@ -107,7 +117,6 @@ fun ProfileScreen(
     onAchievements: (Id) -> Unit = {},
     onFriends: (Id) -> Unit = {},
     onMap: (Id) -> Unit = {},
-    onFriendRequest: (Id) -> Unit = {},
 ) {
   val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -155,15 +164,12 @@ fun ProfileScreen(
 
           ProfileContent(
               user = uiState.user,
-              ownerProfile = uiState.isUserOwner,
-              achievements = uiState.achievements,
+              viewModel = profileScreenViewModel,
+              state = uiState,
               onAchievements = onAchievements,
-              animalCount = uiState.animalCount,
-              recentPins = uiState.recentPins,
               onCollection = onCollection,
               onMap = onMap,
               onFriends = onFriends,
-              onFriendRequest = onFriendRequest,
               showMap = showMap,
           )
         }
@@ -176,15 +182,12 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     user: User,
-    ownerProfile: Boolean,
-    achievements: List<Achievement> = emptyList(),
-    animalCount: Int = 17,
-    recentPins: List<Point> = emptyList(),
+    viewModel: ProfileScreenViewModel,
+    state: ProfileUIState,
     onAchievements: (Id) -> Unit,
     onCollection: (Id) -> Unit,
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
-    onFriendRequest: (Id) -> Unit,
     showMap: Boolean = true,
 ) {
   val id = user.userId
@@ -195,14 +198,7 @@ fun ProfileContent(
               .verticalScroll(rememberScrollState())
               .testTag(ProfileScreenTestTags.SCROLL)) {
         Spacer(Modifier.height(6.dp))
-        ProfileImageAndName(
-            name = user.name,
-            surname = user.surname,
-            username = user.username,
-            profilePicture = user.profilePictureURL,
-            country = user.country,
-            userType = user.userType,
-        )
+        ProfileImageAndName(viewModel = viewModel, state = state)
 
         Spacer(modifier = Modifier.height(10.dp))
         ProfileDescription(description = user.bio)
@@ -213,32 +209,27 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onCollection = onCollection,
-              animalCount = animalCount,
+              animalCount = state.animalCount,
           )
           Spacer(modifier = Modifier.width(12.dp))
           ProfileFriends(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-          )
+              friendCount = state.friendsCount)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
         ProfileAchievements(
             id = id,
             onAchievements = onAchievements,
-            ownerProfile = ownerProfile,
-            listAchievement = achievements,
+            ownerProfile = state.isUserOwner,
+            listAchievement = state.achievements,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
         if (showMap) {
-          ProfileMap(id = id, onMap = onMap, pins = recentPins)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        if (!ownerProfile) {
-          ProfileFriendRequest(id = id, onFriendRequest = onFriendRequest)
+          ProfileMap(id = id, onMap = onMap, pins = state.recentPins)
         }
         Spacer(Modifier.height(12.dp))
       }
@@ -246,14 +237,14 @@ fun ProfileContent(
 
 /** Profile Image And Name Composable */
 @Composable
-fun ProfileImageAndName(
-    name: String = "Name",
-    surname: String = "Surname",
-    username: String = "Username",
-    profilePicture: String = "",
-    country: String = "Country",
-    userType: UserType = UserType.REGULAR,
-) {
+fun ProfileImageAndName(viewModel: ProfileScreenViewModel, state: ProfileUIState) {
+  val name = state.user.name
+  val surname = state.user.surname
+  val username = state.user.username
+  val profilePicture = state.user.profilePictureURL
+  val country = state.user.country
+  val friendStatus = state.friendStatus
+  val userType = state.user.userType
   val cs = colorScheme
   Row(
       modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -305,33 +296,36 @@ fun ProfileImageAndName(
           modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_USERNAME),
           text = username,
           style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-          color = cs.onBackground.copy(alpha = 0.85f),
+          color = cs.primary,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
       )
       Spacer(modifier = Modifier.height(8.dp))
-      Row(
-          verticalAlignment = Alignment.CenterVertically,
-          modifier =
-              Modifier.clip(RoundedCornerShape(20.dp))
-                  .background(cs.secondary)
-                  .padding(horizontal = 10.dp, vertical = 6.dp),
-      ) {
-        Icon(
-            imageVector = Icons.Filled.Place,
-            contentDescription = "Country Icon",
-            tint = cs.onSecondary,
-            modifier = Modifier.size(16.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_COUNTRY),
-            text = country,
-            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = cs.onSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+      Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.clip(RoundedCornerShape(20.dp))
+                    .background(cs.onBackground)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+        ) {
+          Icon(
+              imageVector = Icons.Filled.Place,
+              contentDescription = "Country Icon",
+              tint = cs.background,
+              modifier = Modifier.size(16.dp),
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+              modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_COUNTRY),
+              text = country,
+              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+              color = cs.background,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
+        }
+        ProfileFriendInteractable(viewModel, friendStatus, Modifier.weight(1f))
       }
     }
   }
@@ -346,6 +340,11 @@ fun ProfileDescription(description: String = "Bio:...") {
           Modifier.padding(horizontal = 16.dp)
               .fillMaxWidth()
               .defaultMinSize(minHeight = 94.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
               .testTag(ProfileScreenTestTags.PROFILE_DESCRIPTION),
       shape = RoundedCornerShape(14.dp),
       colors = CardDefaults.elevatedCardColors(containerColor = cs.background),
@@ -355,13 +354,13 @@ fun ProfileDescription(description: String = "Bio:...") {
         Icon(
             Icons.Filled.Info,
             contentDescription = "Bio",
-            tint = cs.secondary,
+            tint = cs.onBackground,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
         Text(
             "Bio",
-            color = cs.secondary,
+            color = cs.onBackground,
             style = typography.labelLarge,
         )
       }
@@ -432,7 +431,10 @@ private fun ProfileStatCard(
             color = contentColor,
             style = typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1,
-        )
+            modifier =
+                Modifier.testTag(
+                    if (title == "Friends") ProfileScreenTestTags.FRIENDS_COUNT
+                    else ProfileScreenTestTags.ANIMAL_COUNT))
         Text(
             text = title,
             color = contentColor.copy(alpha = 0.95f),
@@ -450,18 +452,18 @@ fun ProfileAnimals(
     modifier: Modifier = Modifier,
     id: Id = "",
     onCollection: (Id) -> Unit = {},
-    animalCount: Int = 17,
+    animalCount: Int = 0,
 ) {
   val cs = colorScheme
   ProfileStatCard(
       modifier = modifier,
       containerColor = cs.primary,
-      contentColor = cs.onPrimary,
+      contentColor = cs.background,
       icon = {
         Icon(
             imageVector = Icons.Filled.Pets,
             contentDescription = "Animals Icon",
-            tint = cs.onPrimary,
+            tint = cs.background,
             modifier = Modifier.size(32.dp),
         )
       },
@@ -478,18 +480,18 @@ fun ProfileFriends(
     modifier: Modifier = Modifier,
     id: Id = "",
     onFriends: (Id) -> Unit = {},
-    friendCount: Int = 42,
+    friendCount: Int = 0,
 ) {
   val cs = colorScheme
   ProfileStatCard(
       modifier = modifier,
-      containerColor = cs.tertiary,
-      contentColor = cs.onTertiary,
+      containerColor = cs.primary,
+      contentColor = cs.background,
       icon = {
         Icon(
             imageVector = Icons.Filled.Person,
             contentDescription = "Friends Icon",
-            tint = cs.onTertiary,
+            tint = cs.background,
             modifier = Modifier.size(32.dp),
         )
       },
@@ -500,37 +502,167 @@ fun ProfileFriends(
   )
 }
 
+/** Remove friend button interactable element */
+@Composable
+fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
+  Box(
+      modifier =
+          Modifier.testTag(testTag)
+              .clickable(
+                  interactionSource = remember { MutableInteractionSource() },
+                  indication = null,
+                  onClick = onUnfollow)
+              .background(color = colorScheme.onSurface, shape = RoundedCornerShape(20.dp))) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
+              Icon(
+                  imageVector = Icons.Filled.DeleteForever,
+                  contentDescription = "Delete friend icon",
+                  tint = colorScheme.surface,
+                  modifier = Modifier.size(16.dp),
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                  text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
+                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                  color = colorScheme.surface)
+            }
+      }
+}
+
+/** Send friend request interactable element */
+@Composable
+fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
+  Box(
+      modifier =
+          Modifier.testTag(testTag)
+              .clickable(
+                  interactionSource = remember { MutableInteractionSource() },
+                  indication = null,
+                  onClick = onFollow)
+              .background(color = colorScheme.primary, shape = RoundedCornerShape(20.dp))) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
+              Icon(
+                  imageVector = Icons.Filled.Add,
+                  contentDescription = "Send friend request icon",
+                  tint = colorScheme.background,
+                  modifier = Modifier.size(16.dp),
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                  text = LocalContext.current.getString(R.string.friend_screen_send_request),
+                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                  color = colorScheme.background)
+            }
+      }
+}
+
+/** Cancel sent request interactable element */
+@Composable
+fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
+  Box(
+      modifier =
+          Modifier.testTag(testTag)
+              .clickable(
+                  interactionSource = remember { MutableInteractionSource() },
+                  indication = null,
+                  onClick = onCancel)
+              .background(color = colorScheme.onSurface, shape = RoundedCornerShape(20.dp))) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+              Text(
+                  text =
+                      LocalContext.current.getString(
+                          R.string.friend_screen_pending_request_other_user),
+                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                  color = colorScheme.surface)
+            }
+      }
+}
+
+/** Received friend request interactable element */
+@Composable
+fun ReceivedRequestInteractable(
+    onAccept: () -> Unit = {},
+    onDecline: () -> Unit = {},
+    testTagAccept: String,
+    testTagDecline: String
+) {
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+    Box(
+        modifier =
+            Modifier.testTag(testTagAccept)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onAccept)
+                .background(color = colorScheme.primary, shape = RoundedCornerShape(50.dp))) {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = "Accept friend request icon",
+                    tint = colorScheme.background,
+                    modifier = Modifier.size(16.dp),
+                )
+              }
+        }
+    Spacer(modifier = Modifier.width(20.dp))
+    Box(
+        modifier =
+            Modifier.testTag(testTagDecline)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDecline)
+                .background(color = colorScheme.onSurface, shape = RoundedCornerShape(50.dp))) {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "Decline friend request icon",
+                    tint = colorScheme.surface,
+                    modifier = Modifier.size(16.dp),
+                )
+              }
+        }
+  }
+}
+
 /** Friend Request Button Composable For now, not connected to the backend. */
 @Composable
-fun ProfileFriendRequest(id: Id = "", onFriendRequest: (Id) -> Unit = {}) {
-  val cs = colorScheme
-  val context = LocalContext.current
-  var requestSent by remember { mutableStateOf(false) }
-
-  Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-    Button(
-        modifier =
-            Modifier.height(48.dp)
-                .width(190.dp)
-                .align(Alignment.Center)
-                .testTag(ProfileScreenTestTags.FRIEND_REQUEST),
-        onClick = {
-          requestSent = !requestSent
-          onFriendRequest(id)
-        },
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = if (!requestSent) cs.secondary else cs.tertiary,
-                contentColor = cs.onSecondary,
-            ),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-      Text(
-          text =
-              if (requestSent) context.getString(R.string.cancel_friend_request)
-              else context.getString(R.string.send_friend_request),
-          style = typography.labelLarge,
-      )
+fun ProfileFriendInteractable(
+    viewModel: ProfileScreenViewModel,
+    friendStatus: FriendStatus,
+    modifier: Modifier
+) {
+  Box(modifier = modifier, contentAlignment = Alignment.CenterEnd) {
+    when (friendStatus) {
+      FriendStatus.FRIEND ->
+          UnfollowButton(
+              onUnfollow = { viewModel.unfollowUser() },
+              testTag = ProfileScreenTestTags.UNFOLLOW_BUTTON)
+      FriendStatus.NOT_FRIEND ->
+          FollowButton(
+              onFollow = { viewModel.sendRequestToUser() },
+              testTag = ProfileScreenTestTags.FOLLOW_BUTTON)
+      FriendStatus.PENDING_RECEIVED ->
+          ReceivedRequestInteractable(
+              onAccept = { viewModel.acceptReceivedRequest() },
+              onDecline = { viewModel.declineReceivedRequest() },
+              testTagAccept = ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON,
+              testTagDecline = ProfileScreenTestTags.DECLINE_REQUEST_BUTTON)
+      FriendStatus.PENDING_SENT ->
+          SentRequestInteractable(
+              onCancel = { viewModel.cancelSentRequestToUser() },
+              testTag = ProfileScreenTestTags.CANCEL_REQUEST_BUTTON)
+      FriendStatus.IS_CURRENT_USER -> Unit
     }
   }
 }

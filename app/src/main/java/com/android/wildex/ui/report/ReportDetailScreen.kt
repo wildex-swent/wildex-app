@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
@@ -66,6 +69,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object ReportDetailsScreenTestTags {
   const val SCREEN = "report_details_screen"
@@ -111,14 +115,11 @@ fun ReportDetailsScreen(
     onGoBack: () -> Unit = {},
     onProfile: (Id) -> Unit = {},
 ) {
-  val uiState by reportDetailsViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val focusManager = LocalFocusManager.current
-
-  var showCompletionDialog by remember { mutableStateOf(false) }
-  var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
-  var showNavigationSheet by remember { mutableStateOf(false) }
-  var pendingAction by remember { mutableStateOf<ReportActionToConfirm?>(null) }
+  val uiState by reportDetailsViewModel.uiState.collectAsState()
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   // Initial load
   LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }
@@ -130,6 +131,49 @@ fun ReportDetailsScreen(
       reportDetailsViewModel.clearErrorMsg()
     }
   }
+
+  Scaffold(
+      modifier = Modifier.testTag(ReportDetailsScreenTestTags.SCREEN),
+      topBar = { ReportDetailsTopBar(onGoBack = onGoBack) },
+      bottomBar = {
+        ReportCommentInput(
+            user = uiState.currentUser,
+            onProfile = onProfile,
+            onSend = { text -> reportDetailsViewModel.addComment(text) },
+            isOnline = isOnline,
+        )
+      },
+  ) { innerPadding ->
+    if (isOnline) {
+      ReportDetailsScreenContent(
+          innerPadding = innerPadding,
+          uiState = uiState,
+          reportDetailsViewModel = reportDetailsViewModel,
+          onProfile = onProfile,
+          reportId = reportId,
+          onGoBack = onGoBack,
+      )
+    } else {
+      OfflineScreen(innerPadding = innerPadding)
+    }
+  }
+}
+
+@Composable
+fun ReportDetailsScreenContent(
+    innerPadding: PaddingValues,
+    uiState: ReportDetailsUIState,
+    reportDetailsViewModel: ReportDetailsScreenViewModel,
+    onProfile: (Id) -> Unit,
+    reportId: Id,
+    onGoBack: () -> Unit,
+) {
+  val pullState = rememberPullToRefreshState()
+  val focusManager = LocalFocusManager.current
+  var showCompletionDialog by remember { mutableStateOf(false) }
+  var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
+  var pendingAction by remember { mutableStateOf<ReportActionToConfirm?>(null) }
+  var showNavigationSheet by remember { mutableStateOf(false) }
 
   // events -> popup
   LaunchedEffect(Unit) {
@@ -174,47 +218,33 @@ fun ReportDetailsScreen(
     )
   }
 
-  Scaffold(
-      modifier = Modifier.testTag(ReportDetailsScreenTestTags.SCREEN),
-      topBar = { ReportDetailsTopBar(onGoBack = onGoBack) },
-      bottomBar = {
-        ReportCommentInput(
-            user = uiState.currentUser,
-            onProfile = onProfile,
-            onSend = { text -> reportDetailsViewModel.addComment(text) },
-        )
+  PullToRefreshBox(
+      state = pullState,
+      isRefreshing = uiState.isRefreshing,
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
+              .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
+      onRefresh = {
+        if (!showCompletionDialog) {
+          reportDetailsViewModel.refreshReportDetails(reportId)
+        }
       },
-  ) { innerPadding ->
-    val pullState = rememberPullToRefreshState()
-
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier =
-            Modifier.fillMaxSize()
-                .padding(innerPadding)
-                .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
-                .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
-        onRefresh = {
-          if (!showCompletionDialog) {
-            reportDetailsViewModel.refreshReportDetails(reportId)
-          }
-        },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        else ->
-            ReportDetailsContent(
-                uiState = uiState,
-                onProfile = onProfile,
-                onCancel = { pendingAction = ReportActionToConfirm.CANCEL },
-                onSelfAssign = { pendingAction = ReportActionToConfirm.SELF_ASSIGN },
-                onResolve = { pendingAction = ReportActionToConfirm.RESOLVE },
-                onUnSelfAssign = { pendingAction = ReportActionToConfirm.UNSELFASSIGN },
-                onLocationClick = { showNavigationSheet = true },
-            )
-      }
+  ) {
+    when {
+      uiState.isError -> LoadingFail()
+      uiState.isLoading -> LoadingScreen()
+      else ->
+          ReportDetailsContent(
+              uiState = uiState,
+              onProfile = onProfile,
+              onCancel = { pendingAction = ReportActionToConfirm.CANCEL },
+              onSelfAssign = { pendingAction = ReportActionToConfirm.SELF_ASSIGN },
+              onResolve = { pendingAction = ReportActionToConfirm.RESOLVE },
+              onUnSelfAssign = { pendingAction = ReportActionToConfirm.UNSELFASSIGN },
+              onLocationClick = { showNavigationSheet = true },
+          )
     }
   }
 }
@@ -480,7 +510,7 @@ private fun ReportInfoBar(
           Spacer(Modifier.height(2.dp))
           Text(
               text = date,
-              color = colorScheme.tertiary,
+              color = colorScheme.onBackground,
               style = typography.labelMedium,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
@@ -514,7 +544,7 @@ private fun LocationTagButton(
   Surface(
       shape = RoundedCornerShape(32.dp),
       color = colorScheme.background,
-      border = BorderStroke(1.dp, colorScheme.primary),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       tonalElevation = 0.dp,
       modifier =
           Modifier.testTag(ReportDetailsScreenTestTags.INFO_LOCATION_PILL).widthIn(max = 140.dp),
@@ -528,13 +558,13 @@ private fun LocationTagButton(
       Icon(
           imageVector = Icons.Filled.LocationOn,
           contentDescription = "Location",
-          tint = colorScheme.primary,
+          tint = colorScheme.onBackground,
           modifier = Modifier.size(18.dp),
       )
       Text(
           text = location,
           style = typography.labelMedium,
-          color = colorScheme.primary,
+          color = colorScheme.onBackground,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
       )
@@ -556,7 +586,7 @@ private fun ReportAssigneeDetailsCard(
   Card(
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(width = 1.dp, color = colorScheme.primary),
+      border = BorderStroke(width = 1.dp, color = colorScheme.onBackground),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
       modifier =
           Modifier.fillMaxWidth()
@@ -610,7 +640,7 @@ private fun ReportCommentRow(
               .testTag(ReportDetailsScreenTestTags.COMMENT_CARD),
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-      border = BorderStroke(1.dp, colorScheme.primary),
+      border = BorderStroke(1.dp, colorScheme.onBackground),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
   ) {
     Row(
@@ -671,6 +701,7 @@ private fun ReportCommentInput(
     user: SimpleUser,
     onProfile: (Id) -> Unit = {},
     onSend: (String) -> Unit = {},
+    isOnline: Boolean,
 ) {
   Box(
       modifier =
@@ -703,6 +734,7 @@ private fun ReportCommentInput(
           modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
           shape = RoundedCornerShape(32.dp),
           singleLine = true,
+          enabled = isOnline,
           trailingIcon = {
             IconButton(
                 onClick = {
@@ -716,7 +748,7 @@ private fun ReportCommentInput(
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.Send,
                   contentDescription = "Send comment",
-                  tint = colorScheme.primary,
+                  tint = colorScheme.onBackground,
               )
             }
           },

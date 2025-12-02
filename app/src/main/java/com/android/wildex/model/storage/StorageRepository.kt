@@ -18,7 +18,7 @@ interface StorageRepository {
    * @param imageUri The local URI of the profile picture to be uploaded.
    * @return The download URL of the uploaded profile picture, or null if the upload fails.
    */
-  suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL?
+  suspend fun uploadUserProfilePicture(userId: Id, imageUri: Uri): URL
 
   /**
    * Uploads an image associated with a post to the storage.
@@ -27,7 +27,7 @@ interface StorageRepository {
    * @param imageUri The local URI of the post image to be uploaded.
    * @return The download URL of the uploaded post image, or null if the upload fails.
    */
-  suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL?
+  suspend fun uploadPostImage(postId: Id, imageUri: Uri): URL
 
   /**
    * Uploads an image associated with a report to the storage.
@@ -36,7 +36,7 @@ interface StorageRepository {
    * @param imageUri The local URI of the report image to be uploaded.
    * @return The download URL of the uploaded report image, or null if the upload fails.
    */
-  suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL?
+  suspend fun uploadReportImage(reportId: Id, imageUri: Uri): URL
 
   /**
    * Uploads an image associated with an animal to the storage.
@@ -45,7 +45,7 @@ interface StorageRepository {
    * @param imageUri The local URI of the animal picture to be uploaded.
    * @return The download URL of the uploaded animal picture, or null if the upload fails.
    */
-  suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL?
+  suspend fun uploadAnimalPicture(animalId: Id, imageUri: Uri): URL
 
   /**
    * Deletes a user's profile picture from the storage.

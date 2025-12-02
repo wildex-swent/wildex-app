@@ -2,6 +2,7 @@ package com.android.wildex.ui.report
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -11,6 +12,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
+import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Before
@@ -62,11 +65,8 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
-
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).performClick()
   }
 
@@ -77,11 +77,8 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
-
     val text = "There’s an injured fox near the river"
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD)
@@ -101,11 +98,8 @@ class SubmitReportFormScreenTest {
               ),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
-
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON)
         .assertIsEnabled()
@@ -121,11 +115,8 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(isSubmitting = true),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
-
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
     composeTestRule.onNodeWithText("Submitting…").assertIsDisplayed()
   }
@@ -137,11 +128,8 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(imageUri = null),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
-
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.CAMERA_ICON, useUnmergedTree = true)
@@ -152,19 +140,35 @@ class SubmitReportFormScreenTest {
   @Test
   fun shows_selected_image_when_uri_is_provided() {
     val uri = Uri.parse("content://test/image.jpg")
-
     composeTestRule.setContent {
       SubmitReportFormScreen(
           uiState = SubmitReportUiState(imageUri = uri),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-      )
+          onSubmitClick = onSubmitClick)
     }
 
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.SELECTED_IMAGE, useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun offlineScreenIsDisplayedWhenOfflineSubmitReportFormScreen() {
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        SubmitReportFormScreen(
+            uiState = SubmitReportUiState(),
+            onCameraClick = onCameraClick,
+            onDescriptionChange = onDescriptionChange,
+            onSubmitClick = onSubmitClick)
+      }
+    }
+
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 }

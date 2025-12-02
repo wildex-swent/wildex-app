@@ -104,8 +104,6 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
       val date = doc.getTimestamp("date") ?: throwMissingFieldException("date")
       val animalId = doc.getString("animalId") ?: throwMissingFieldException("animalId")
       val description = doc.getString("description") ?: ""
-      val likesCount = doc.getLong("likesCount")?.toInt() ?: 0
-      val commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0
 
       Post(
           postId = postId,
@@ -115,8 +113,6 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
           description = description,
           date = date,
           animalId = animalId,
-          likesCount = likesCount,
-          commentsCount = commentsCount,
       )
     } catch (e: Exception) {
       Log.e("PostsRepositoryFirestore", "Error converting document to Post", e)

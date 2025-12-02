@@ -97,13 +97,13 @@ fun AnimalInformationScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to Collection",
-                            tint = colorScheme.primary,
+                            tint = colorScheme.onBackground,
                         )
 
                         Text(
                             text = "Back",
                             style = typography.labelMedium,
-                            color = colorScheme.primary,
+                            color = colorScheme.onBackground,
                         )
                       }
                 }
@@ -130,15 +130,15 @@ fun AnimalInformationScreen(
                           .padding(16.dp)) {
                     Text(
                         text = uiState.name.ifEmpty { "Animal Name" },
-                        color = colorScheme.secondary,
                         style = typography.titleLarge,
+                        color = colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 10.dp),
                     )
 
                     Text(
                         text = uiState.species.ifEmpty { "Animal Species" },
-                        color = colorScheme.primary,
                         style = typography.titleMedium,
+                        color = colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 10.dp))
 
                     Text(

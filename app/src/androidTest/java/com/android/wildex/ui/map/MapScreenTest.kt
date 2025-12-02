@@ -74,10 +74,7 @@ class MapScreenTest {
           location = Location(46.5197, 6.6323, "Lausanne"),
           description = "A nice post",
           date = Timestamp.now(),
-          animalId = "fox",
-          likesCount = 3,
-          commentsCount = 1,
-      )
+          animalId = "fox")
   private val report1 =
       Report(
           reportId = "r1",
@@ -100,6 +97,7 @@ class MapScreenTest {
 
   private val userRepository = LocalRepositories.userRepository
   private val likeRepository = LocalRepositories.likeRepository
+  private val commentRepository = LocalRepositories.commentRepository
   private val reportRepository = LocalRepositories.reportRepository
   private val postsRepository = LocalRepositories.postsRepository
   private val animalRepository = LocalRepositories.animalRepository
@@ -121,6 +119,7 @@ class MapScreenTest {
             postRepository = postsRepository,
             userRepository = userRepository,
             likeRepository = likeRepository,
+            commentRepository = commentRepository,
             reportRepository = reportRepository,
             animalRepository = animalRepository,
             currentUserId = currentUserId,
@@ -197,11 +196,11 @@ class MapScreenTest {
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin }?.id)
     viewModel.onPinSelected(postPinId)
     composeTestRule.waitForIdle()
-    val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
+    val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
     requireNotNull(before)
     node(MapContentTestTags.SELECTION_LIKE_BUTTON).assertIsDisplayed().performClick()
     composeTestRule.waitForIdle()
-    val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.post?.likesCount
+    val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
     requireNotNull(after)
     assert(before != after)
     node(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
@@ -274,9 +273,7 @@ class MapScreenTest {
   fun mapRefreshButton_rotation_animates_whenRefreshing_advanceClock() {
     composeTestRule.mainClock.autoAdvance = false
     var refreshing by mutableStateOf(false)
-    compose {
-      MapRefreshButton(isRefreshing = refreshing, currentTab = MapTab.Posts, onRefresh = {})
-    }
+    compose { MapRefreshButton(isRefreshing = refreshing, onRefresh = {}) }
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
     composeTestRule.waitForIdle()
     composeTestRule.mainClock.advanceTimeBy(1200L)
@@ -319,7 +316,6 @@ class MapScreenTest {
       RecenterFab(
           modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
           isLocationGranted = false,
-          current = MapTab.Posts,
           onRecenter = {},
           onAskLocation = { asked = true },
       )
@@ -333,7 +329,13 @@ class MapScreenTest {
     var opened: Id? = null
     var liked: Id? = null
     val details =
-        PinDetails.PostDetails(post = post1, author = null, likedByMe = false, animalName = "fox")
+        PinDetails.PostDetails(
+            post = post1,
+            author = null,
+            likedByMe = false,
+            animalName = "fox",
+            likeCount = 0,
+            commentCount = 0)
     setSelectionCard(
         selection = details,
         tab = MapTab.Posts,
@@ -377,20 +379,21 @@ class MapScreenTest {
                 SimpleUser(user1.userId, user1.username, user1.profilePictureURL, user1.userType),
             likedByMe = true,
             animalName = "owl",
-        )
+            likeCount = 0,
+            commentCount = 0)
     setSelectionCard(selection = details, tab = MapTab.MyPosts)
-    nodeText("You saw an owl", substring = true).assertIsDisplayed()
+    nodeText("You saw an Owl", substring = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LOCATION).assertIsDisplayed()
     nodeText("Unknown").assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LIKE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Unlike", useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithContentDescription("Like", useUnmergedTree = true).assertExists()
   }
 
   @Test
   fun articleWithWord_branches() {
     assert(articleWithWord("") == "a")
-    assert(articleWithWord("owl") == "an owl")
-    assert(articleWithWord("fox") == "a fox")
+    assert(articleWithWord("owl") == "an")
+    assert(articleWithWord("fox") == "a")
   }
 
   @Test
@@ -418,7 +421,6 @@ class MapScreenTest {
       WildexTheme {
         BackButton(
             modifier = Modifier.testTag(MapContentTestTags.BACK_BUTTON),
-            currentTab = MapTab.Posts,
             onGoBack = { clicked = true },
         )
       }

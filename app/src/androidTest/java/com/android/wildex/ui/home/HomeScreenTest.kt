@@ -14,11 +14,15 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.CommentTag
+import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.post.Comment
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -36,7 +40,9 @@ class HomeScreenTest {
   private val postRepository = LocalRepositories.postsRepository
   private val userRepository = LocalRepositories.userRepository
   private val likeRepository = LocalRepositories.likeRepository
+  private val commentRepository = LocalRepositories.commentRepository
   private val animalRepository = LocalRepositories.animalRepository
+  private val userSettingsRepository = LocalRepositories.userSettingsRepository
 
   private val fullPost =
       Post(
@@ -48,8 +54,6 @@ class HomeScreenTest {
           description = "Description 1",
           date = Timestamp.now(),
           animalId = "a1",
-          likesCount = 10,
-          commentsCount = 5,
       )
 
   private lateinit var homeScreenVM: HomeScreenViewModel
@@ -61,7 +65,9 @@ class HomeScreenTest {
             postRepository,
             userRepository,
             likeRepository,
+            commentRepository,
             animalRepository,
+            userSettingsRepository,
             "currentUserId-1",
         )
     userRepository.addUser(
@@ -90,6 +96,8 @@ class HomeScreenTest {
             creationDate = Timestamp.now(),
             country = "Testland",
         ))
+    userSettingsRepository.initializeUserSettings("currentUserId-1")
+    userSettingsRepository.initializeUserSettings("poster0")
     animalRepository.addAnimal(
         Animal(
             animalId = "a1",
@@ -164,7 +172,7 @@ class HomeScreenTest {
         .onNodeWithTag(HomeScreenTestTags.authorPictureTag("currentUserId-1"))
         .assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag("currentUserId-1"))
+        .onNodeWithTag(HomeScreenTestTags.likeButtonTag("currentUserId-1"))
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag("currentUserId-1"))
@@ -199,42 +207,42 @@ class HomeScreenTest {
     scrollToPost(fullPost.postId)
     assertFullPostIsDisplayed(fullPost.postId)
     composeTestRule
-        .onNodeWithText("testuser saw an ant", useUnmergedTree = true)
+        .onNodeWithText("Ant", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
     scrollToPost(fullPost2.postId)
     assertFullPostIsDisplayed(fullPost2.postId)
     composeTestRule
-        .onNodeWithText("testuser saw an eagle", useUnmergedTree = true)
+        .onNodeWithText("Eagle", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
     scrollToPost(fullPost3.postId)
     assertFullPostIsDisplayed(fullPost3.postId)
     composeTestRule
-        .onNodeWithText("testuser saw an iguana", useUnmergedTree = true)
+        .onNodeWithText("Iguana", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
     scrollToPost(fullPost4.postId)
     assertFullPostIsDisplayed(fullPost4.postId)
     composeTestRule
-        .onNodeWithText("testuser saw an orca", useUnmergedTree = true)
+        .onNodeWithText("Orca", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
     scrollToPost(fullPost5.postId)
     assertFullPostIsDisplayed(fullPost5.postId)
     composeTestRule
-        .onNodeWithText("testuser saw an unicorn", useUnmergedTree = true)
+        .onNodeWithText("Unicorn", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
     scrollToPost(fullPost6.postId)
     assertFullPostIsDisplayed(fullPost6.postId)
     composeTestRule
-        .onNodeWithText("testuser saw a dolphin", useUnmergedTree = true)
+        .onNodeWithText("Dolphin", useUnmergedTree = true)
         .performScrollTo()
         .assertIsDisplayed()
 
@@ -313,23 +321,6 @@ class HomeScreenTest {
       val like = likeRepository.getLikeForPost(fullPost.postId)
       assert(like == null)
     }
-
-    composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
-        .performClick()
-    composeTestRule.waitForIdle()
-    runBlocking {
-      val like = likeRepository.getLikeForPost(fullPost.postId)
-      assert(like != null)
-    }
-    composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(fullPost.postId), useUnmergedTree = true)
-        .performClick()
-    composeTestRule.waitForIdle()
-    runBlocking {
-      val like = likeRepository.getLikeForPost(fullPost.postId)
-      assert(like == null)
-    }
   }
 
   @Test
@@ -377,9 +368,31 @@ class HomeScreenTest {
 
   @Test
   fun likeAndCommentCountsAreDisplayedCorrectly() {
-    val postWithCounts = fullPost.copy(postId = "counts", likesCount = 42, commentsCount = 7)
-    val postWithCount = fullPost.copy(postId = "count", likesCount = 1, commentsCount = 1)
+    val postWithCounts = fullPost.copy(postId = "counts")
+    val postWithCount = fullPost.copy(postId = "count")
     runBlocking {
+      (1..42).forEach { likeRepository.addLike(Like("like${it}", "counts", "currentUserId-1")) }
+      likeRepository.addLike(Like("like1", "count", "currentUserId-1"))
+      (1..7).forEach {
+        commentRepository.addComment(
+            Comment(
+                "comment$it",
+                "counts",
+                "currentUserId-1",
+                "",
+                Timestamp.now(),
+                CommentTag.POST_COMMENT,
+            ))
+      }
+      commentRepository.addComment(
+          Comment(
+              "comment1",
+              "count",
+              "currentUserId-1",
+              "",
+              Timestamp.now(),
+              CommentTag.POST_COMMENT,
+          ))
       postRepository.addPost(postWithCounts)
       postRepository.addPost(postWithCount)
       homeScreenVM.refreshUIState()
@@ -389,23 +402,25 @@ class HomeScreenTest {
     // Scroll to first post and assert
     scrollToPost(postWithCounts.postId)
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCounts.postId), useUnmergedTree = true)
+        .onNodeWithTag(
+            HomeScreenTestTags.likeButtonTag(postWithCounts.postId), useUnmergedTree = true)
         .assertIsDisplayed()
         .onChildren()
-        .assertAny(hasText("42 likes"))
+        .assertAny(hasText("42"))
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postWithCounts.postId), useUnmergedTree = true)
         .assertIsDisplayed()
         .onChildren()
-        .assertAny(hasText("7 comments"))
+        .assertAny(hasText("7"))
 
     // Scroll to second post and assert
     scrollToPost(postWithCount.postId)
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(postWithCount.postId), useUnmergedTree = true)
+        .onNodeWithTag(
+            HomeScreenTestTags.likeButtonTag(postWithCount.postId), useUnmergedTree = true)
         .assertIsDisplayed()
         .onChildren()
-        .assertAny(hasText("1 like"))
+        .assertAny(hasText("1"))
     composeTestRule
         .onNodeWithTag(
             HomeScreenTestTags.commentTag(postWithCount.postId),
@@ -413,7 +428,7 @@ class HomeScreenTest {
         )
         .assertIsDisplayed()
         .onChildren()
-        .assertAny(hasText("1 comment"))
+        .assertAny(hasText("1"))
   }
 
   @Test
@@ -432,7 +447,9 @@ class HomeScreenTest {
               delayedPostsRepo,
               LocalRepositories.userRepository,
               LocalRepositories.likeRepository,
+              LocalRepositories.commentRepository,
               LocalRepositories.animalRepository,
+              LocalRepositories.userSettingsRepository,
               "currentUserId-1",
           )
       vm.loadUIState()
@@ -463,9 +480,6 @@ class HomeScreenTest {
         .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(postId), useUnmergedTree = true)
-        .assertIsDisplayed()
-    composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
@@ -482,9 +496,6 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
-        .assertIsNotDisplayed()
-    composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.likeTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)

@@ -8,14 +8,17 @@ package com.android.wildex.ui.home
  */
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.wildex.AppTheme
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
@@ -50,7 +53,9 @@ private val defaultUser: SimpleUser =
         userId = "defaultUserId",
         username = "defaultUsername",
         profilePictureURL = "",
-        userType = UserType.REGULAR)
+        userType = UserType.REGULAR,
+    )
+
 /**
  * Combines post data with associated metadata for display.
  *
@@ -64,6 +69,8 @@ data class PostState(
     val isLiked: Boolean,
     val author: SimpleUser,
     val animalName: String,
+    val likeCount: Int,
+    val commentsCount: Int,
 )
 
 /**
@@ -83,7 +90,10 @@ class HomeScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
+    private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
+    private val userSettingsRepository: UserSettingsRepository =
+        RepositoryProvider.userSettingsRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
@@ -101,6 +111,7 @@ class HomeScreenViewModel(
    */
   private suspend fun updateUIState() {
     try {
+      AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val postStates = fetchPosts()
       val user = userRepository.getSimpleUser(currentUserId)
       _uiState.value =
@@ -140,12 +151,16 @@ class HomeScreenViewModel(
               val author = userRepository.getSimpleUser(post.authorId)
               val isLiked = likeRepository.getLikeForPost(post.postId) != null
               val animalName = animalRepository.getAnimal(post.animalId).name
+              val likeCount = likeRepository.getLikesForPost(post.postId).size
+              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
 
               PostState(
                   post = post,
                   author = author,
                   isLiked = isLiked,
                   animalName = animalName,
+                  likeCount = likeCount,
+                  commentsCount = commentCount,
               )
             } catch (_: Exception) {
               null

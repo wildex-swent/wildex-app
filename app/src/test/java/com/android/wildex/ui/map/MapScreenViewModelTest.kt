@@ -4,6 +4,7 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
@@ -34,6 +35,7 @@ class MapScreenViewModelTest {
   private lateinit var postsRepository: PostsRepository
   private lateinit var reportRepository: ReportRepository
   private lateinit var likeRepository: LikeRepository
+  private lateinit var commentRepository: CommentRepository
   private lateinit var animalRepository: AnimalRepository
   private lateinit var viewModel: MapScreenViewModel
 
@@ -42,9 +44,9 @@ class MapScreenViewModelTest {
   private val lausanne = Location(46.5197, 6.6323, "Lausanne")
 
   private val post1 =
-      Post("p1", "user-a", "https://example.com/p1.jpg", lausanne, "first", now, "a1", 0, 0)
+      Post("p1", "user-a", "https://example.com/p1.jpg", lausanne, "first", now, "a1")
   private val post2 =
-      Post("p2", loggedInUserId, "https://example.com/p2.jpg", lausanne, "second", now, "a2", 1, 0)
+      Post("p2", loggedInUserId, "https://example.com/p2.jpg", lausanne, "second", now, "a2")
   private val report1 = Report("r1", "url", lausanne, now, "injured", "author", "assignee")
   private val report2 =
       Report(
@@ -77,6 +79,7 @@ class MapScreenViewModelTest {
     postsRepository = mockk()
     reportRepository = mockk()
     likeRepository = mockk(relaxed = true)
+    commentRepository = mockk(relaxed = true)
     animalRepository = mockk(relaxed = true)
     viewModel =
         MapScreenViewModel(
@@ -84,6 +87,7 @@ class MapScreenViewModelTest {
             postRepository = postsRepository,
             reportRepository = reportRepository,
             likeRepository = likeRepository,
+            commentRepository = commentRepository,
             animalRepository = animalRepository,
             currentUserId = loggedInUserId,
         )
@@ -144,6 +148,8 @@ class MapScreenViewModelTest {
         coEvery { postsRepository.getAllPosts() } returns listOf(post1)
         coEvery { postsRepository.getPost("p1") } returns post1
         coEvery { likeRepository.getLikeForPost(any()) } returns null
+        coEvery { likeRepository.getLikesForPost("p1") } returns emptyList()
+        coEvery { commentRepository.getAllCommentsByPost("p1") } returns emptyList()
         coEvery { reportRepository.getAllReports() } returns listOf(report1)
         coEvery { reportRepository.getReport("r1") } returns report1
 
@@ -169,16 +175,18 @@ class MapScreenViewModelTest {
         coEvery { userRepository.getSimpleUser(any()) } returns
             SimpleUser("x", "y", "url", userType = UserType.REGULAR)
         coEvery { likeRepository.getLikeForPost("p1") } returns null
+        coEvery { likeRepository.getLikesForPost("p1") } returns emptyList()
+        coEvery { commentRepository.getAllCommentsByPost("p1") } returns emptyList()
         coEvery { likeRepository.getNewLikeId() } returns "like-1"
 
         viewModel.loadUIState(loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
         viewModel.toggleLike("p1")
         advanceUntilIdle()
-        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
         Assert.assertEquals(before + 1, after)
         coVerify { likeRepository.addLike(any()) }
       }
@@ -260,6 +268,8 @@ class MapScreenViewModelTest {
 
         coEvery { postsRepository.getPost("p1") } returns post1
         coEvery { likeRepository.getLikeForPost("p1") } returns null
+        coEvery { likeRepository.getLikesForPost("p1") } returns emptyList()
+        coEvery { commentRepository.getAllCommentsByPost("p1") } returns emptyList()
         coEvery { animalRepository.getAnimal(any()) } throws RuntimeException("nope")
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
@@ -268,10 +278,10 @@ class MapScreenViewModelTest {
 
         coEvery { likeRepository.getNewLikeId() } returns "like-99"
         coEvery { likeRepository.addLike(any()) } throws RuntimeException("net")
-        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
         viewModel.toggleLike("p1")
         advanceUntilIdle()
-        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount
+        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
         Assert.assertEquals(before, after)
         Assert.assertTrue(
             viewModel.uiState.value.errorMsg?.contains("Could not update like") == true)
@@ -281,6 +291,7 @@ class MapScreenViewModelTest {
                 postRepository = postsRepository,
                 reportRepository = reportRepository,
                 likeRepository = likeRepository,
+                commentRepository = commentRepository,
                 animalRepository = animalRepository,
                 currentUserId = "",
             )
@@ -302,7 +313,10 @@ class MapScreenViewModelTest {
         coEvery { postsRepository.getPost("p1") } returns post1
         coEvery { userRepository.getSimpleUser(any()) } returns
             SimpleUser("x", "y", "url", userType = UserType.REGULAR)
-        coEvery { likeRepository.getLikeForPost("p1") } returns Like("lk1", "p1", loggedInUserId)
+        val like = Like("lk1", "p1", loggedInUserId)
+        coEvery { likeRepository.getLikeForPost("p1") } returns like
+        coEvery { likeRepository.getLikesForPost("p1") } returns listOf(like)
+        coEvery { commentRepository.getAllCommentsByPost("p1") } returns emptyList()
         coEvery { likeRepository.deleteLike("lk1") } returns Unit
 
         viewModel.loadUIState(loggedInUserId)
@@ -312,7 +326,9 @@ class MapScreenViewModelTest {
         viewModel.toggleLike("p1")
         advanceUntilIdle()
         Assert.assertEquals(
-            0, (viewModel.uiState.value.selected as PinDetails.PostDetails).post.likesCount)
+            0,
+            (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount,
+        )
         coEvery { likeRepository.getLikeForPost("p2") } returns null
         coEvery { likeRepository.getNewLikeId() } returns "like-X"
         coEvery { likeRepository.addLike(any()) } throws RuntimeException("boom")

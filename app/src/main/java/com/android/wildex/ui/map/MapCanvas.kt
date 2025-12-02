@@ -1,9 +1,7 @@
 package com.android.wildex.ui.map
 
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.android.wildex.model.utils.Location
 import com.mapbox.common.toValue
 import com.mapbox.maps.MapView
@@ -11,17 +9,6 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
-
-/**
- * UI colors for the map tab/card.
- *
- * @param bg Background color.
- * @param fg Content color.
- */
-data class MapUiColors(
-    val bg: Color, // background color
-    val fg: Color, // content color
-)
 
 /**
  * Composable that displays a Mapbox map with specified settings.
@@ -46,7 +33,7 @@ fun MapCanvas(
     indicatorListener: OnIndicatorPositionChangedListener,
     centerCoordinates: Location,
 ) {
-  MapboxMap(modifier = modifier) {
+  MapboxMap(modifier = modifier, compass = {}, scaleBar = {}) {
     MapEffect(isDark, showUserLocation, styleUri, styleImportId, centerCoordinates) { mv ->
       mapViewRef(mv)
       val mapboxMap = mv.mapboxMap
@@ -71,17 +58,3 @@ fun MapCanvas(
     }
   }
 }
-
-/**
- * Returns the UI colors for the specified map tab based on the provided color scheme.
- *
- * @param tab The map tab for which to get the colors.
- * @param cs The color scheme to use for determining the colors.
- * @return The UI colors for the specified map tab.
- */
-fun colorsForMapTab(tab: MapTab, cs: ColorScheme): MapUiColors =
-    when (tab) {
-      MapTab.Posts -> MapUiColors(cs.primary, cs.onPrimary)
-      MapTab.MyPosts -> MapUiColors(cs.secondary, cs.onSecondary)
-      MapTab.Reports -> MapUiColors(cs.tertiary, cs.onTertiary)
-    }

@@ -45,13 +45,6 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
-data class NotificationItemData(
-    val notificationContentId: Id = "",
-    val notificationTitle: String = "DEFAULT TITLE",
-    val notificationDescription: String = "DEFAULT DESCRIPTION",
-    val onNotificationClick: (Id, String) -> Unit = { _, _ -> }
-)
-
 object NotificationScreenTestTags {
   const val GO_BACK = "notification_screen_go_back"
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
@@ -63,6 +56,14 @@ object NotificationScreenTestTags {
     return "ProfilePicture_$profileId"
   }
 }
+
+data class NotificationItemData(
+    val notificationContentId: Id = "",
+    val notificationRoute: String = "",
+    val notificationTitle: String = "DEFAULT TITLE",
+    val notificationDescription: String = "DEFAULT DESCRIPTION",
+    val onNotificationClick: (Id, String) -> Unit = { _, _ -> }
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,15 +128,16 @@ fun NotificationView(
     items(notifications.size) { index ->
       val notification = notifications[index]
       NotificationItem(
-          simpleUser = notification.simpleUser,
-          onProfileClick = onProfileClick,
           notificationItemData =
               NotificationItemData(
                   notificationContentId = notification.notificationId,
+                  notificationRoute = notification.notificationRoute,
                   notificationTitle = notification.notificationTitle,
                   notificationDescription = notification.notificationDescription,
                   onNotificationClick = onNotificationClick,
               ),
+          simpleUser = notification.simpleUser,
+          onProfileClick = onProfileClick,
           cs = cs,
       )
     }
@@ -145,9 +147,9 @@ fun NotificationView(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationItem(
+    notificationItemData: NotificationItemData,
     simpleUser: SimpleUser,
     onProfileClick: (Id) -> Unit = {},
-    notificationItemData: NotificationItemData = NotificationItemData(),
     cs: ColorScheme,
 ) {
   Box(
@@ -186,7 +188,7 @@ fun NotificationItem(
               onClick = {
                 notificationItemData.onNotificationClick(
                     notificationItemData.notificationContentId,
-                    notificationItemData.notificationDescription)
+                    notificationItemData.notificationRoute)
               },
               modifier =
                   Modifier.size(48.dp)

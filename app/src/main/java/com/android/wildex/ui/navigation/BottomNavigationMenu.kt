@@ -1,7 +1,6 @@
 package com.android.wildex.ui.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -42,15 +41,12 @@ private val tabs = listOf(Tab.Home, Tab.Map, Tab.Camera, Tab.Collection, Tab.Rep
 @Composable
 fun BottomNavigationMenu(selectedTab: Tab, onTabSelected: (Tab) -> Unit = {}) {
   val cs = MaterialTheme.colorScheme
-  val shape = RoundedCornerShape(24.dp)
 
   NavigationBar(
       modifier =
-          Modifier.padding(horizontal = 12.dp, vertical = 8.dp) // lift it slightly from edges
+          Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
               .fillMaxWidth()
-              .height(64.dp)
-              .clip(shape)
-              .border(width = 1.dp, color = cs.primary.copy(alpha = 0.5f), shape = shape)
+              .height(50.dp)
               .background(cs.background)
               .testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
       containerColor = cs.background,
@@ -66,8 +62,8 @@ fun BottomNavigationMenu(selectedTab: Tab, onTabSelected: (Tab) -> Unit = {}) {
                   .testTag(NavigationTestTags.getTabTestTag(tab)),
           colors =
               NavigationBarItemDefaults.colors(
-                  selectedIconColor = cs.secondary,
-                  unselectedIconColor = cs.primary,
+                  selectedIconColor = cs.primary,
+                  unselectedIconColor = cs.onBackground,
                   indicatorColor = cs.background,
               ),
       )

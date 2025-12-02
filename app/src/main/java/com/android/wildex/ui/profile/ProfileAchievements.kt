@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,39 +73,43 @@ fun ProfileAchievements(
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .border(
+                    1.dp,
+                    cs.onBackground.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(14.dp),
+                )
                 .testTag(ProfileScreenTestTags.ACHIEVEMENTS),
         shape = RoundedCornerShape(14.dp),
-    ) {
-      Column(
-          modifier = Modifier.padding(12.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        if (ownerProfile) {
-          Button(
-              onClick = { onAchievements(id) },
-              colors =
-                  ButtonDefaults.buttonColors(
-                      containerColor = cs.background,
-                      contentColor = cs.onBackground,
-                  ),
-              modifier =
-                  Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+        colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
+          Column(
+              modifier = Modifier.padding(12.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
           ) {
             Text(
-                text = LocalContext.current.getString(R.string.view_achievements),
-                style = typography.titleSmall,
+                text = LocalContext.current.getString(R.string.no_achievements),
+                color = cs.onBackground,
+                style = typography.titleMedium,
             )
+            Spacer(Modifier.height(8.dp))
+            if (ownerProfile) {
+              Button(
+                  onClick = { onAchievements(id) },
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = cs.onBackground,
+                          contentColor = cs.background,
+                      ),
+                  modifier =
+                      Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+              ) {
+                Text(
+                    text = LocalContext.current.getString(R.string.view_achievements),
+                    style = typography.titleSmall,
+                )
+              }
+            }
           }
         }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_achievements),
-            color = cs.onBackground,
-            style = typography.titleMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-      }
-    }
     return
   }
 
@@ -121,98 +126,105 @@ fun ProfileAchievements(
       modifier =
           Modifier.fillMaxWidth()
               .padding(horizontal = 16.dp)
+              .border(
+                  1.dp,
+                  cs.onBackground.copy(alpha = 0.08f),
+                  shape = RoundedCornerShape(14.dp),
+              )
               .testTag(ProfileScreenTestTags.ACHIEVEMENTS),
       shape = RoundedCornerShape(14.dp),
-  ) {
-    Column(
-        modifier =
-            Modifier.border(1.dp, cs.background, shape = RoundedCornerShape(14.dp))
-                .padding(12.dp)) {
-          if (ownerProfile) {
-            Button(
-                onClick = { onAchievements(id) },
-                modifier = Modifier.align(Alignment.End),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = cs.background,
-                        contentColor = cs.onBackground,
-                    ),
-            ) {
-              Text(
-                  text = LocalContext.current.getString(R.string.view_achievements),
-                  style = typography.titleSmall,
-              )
-            }
-          }
-
-          Spacer(Modifier.height(8.dp))
-
-          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            ArrowButton(
-                isLeft = true,
-                tint = cs.secondary,
-                onClick = {
-                  navDirection = -1
-                  startIndex = wrap(startIndex - 1)
-                },
-                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV),
-            )
-
-            Spacer(Modifier.width(6.dp))
-
-            AnimatedContent(
-                targetState = visible,
-                transitionSpec = {
-                  val duration = 220
-                  if (navDirection >= 0) {
-                    (slideInHorizontally(
-                        animationSpec = tween(duration, easing = FastOutSlowInEasing),
-                        initialOffsetX = { it / 2 },
-                    ) + fadeIn(tween(duration))) togetherWith
-                        (slideOutHorizontally(
-                            animationSpec = tween(duration, easing = FastOutSlowInEasing),
-                            targetOffsetX = { -it / 2 },
-                        ) + fadeOut(tween(duration)))
-                  } else {
-                    (slideInHorizontally(
-                        animationSpec = tween(duration, easing = FastOutSlowInEasing),
-                        initialOffsetX = { -it / 2 },
-                    ) + fadeIn(tween(duration))) togetherWith
-                        (slideOutHorizontally(
-                            animationSpec = tween(duration, easing = FastOutSlowInEasing),
-                            targetOffsetX = { it / 2 },
-                        ) + fadeOut(tween(duration)))
-                  }
-                },
-                modifier = Modifier.weight(1f).height(124.dp),
-            ) { trio ->
+      colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
+        Column(
+            modifier =
+                Modifier.border(1.dp, cs.background, shape = RoundedCornerShape(14.dp))
+                    .padding(12.dp)) {
               Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(8.dp),
                   verticalAlignment = Alignment.CenterVertically,
-              ) {
-                trio.forEach { a ->
-                  Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    AchievementChip(a)
+                  modifier = Modifier.fillMaxWidth()) {
+                    ArrowButton(
+                        isLeft = true,
+                        tint = cs.onBackground,
+                        onClick = {
+                          navDirection = -1
+                          startIndex = wrap(startIndex - 1)
+                        },
+                        modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_PREV),
+                    )
+
+                    Spacer(Modifier.width(6.dp))
+
+                    AnimatedContent(
+                        targetState = visible,
+                        transitionSpec = {
+                          val duration = 220
+                          if (navDirection >= 0) {
+                            (slideInHorizontally(
+                                animationSpec = tween(duration, easing = FastOutSlowInEasing),
+                                initialOffsetX = { it / 2 },
+                            ) + fadeIn(tween(duration))) togetherWith
+                                (slideOutHorizontally(
+                                    animationSpec = tween(duration, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { -it / 2 },
+                                ) + fadeOut(tween(duration)))
+                          } else {
+                            (slideInHorizontally(
+                                animationSpec = tween(duration, easing = FastOutSlowInEasing),
+                                initialOffsetX = { -it / 2 },
+                            ) + fadeIn(tween(duration))) togetherWith
+                                (slideOutHorizontally(
+                                    animationSpec = tween(duration, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { it / 2 },
+                                ) + fadeOut(tween(duration)))
+                          }
+                        },
+                        modifier = Modifier.weight(1f).height(124.dp),
+                    ) { trio ->
+                      Row(
+                          modifier = Modifier.fillMaxWidth(),
+                          horizontalArrangement = Arrangement.spacedBy(8.dp),
+                          verticalAlignment = Alignment.CenterVertically,
+                      ) {
+                        trio.forEach { a ->
+                          Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            AchievementChip(a)
+                          }
+                        }
+                      }
+                    }
+
+                    Spacer(Modifier.width(6.dp))
+
+                    ArrowButton(
+                        isLeft = false,
+                        tint = cs.onBackground,
+                        onClick = {
+                          navDirection = +1
+                          startIndex = wrap(startIndex + 1)
+                        },
+                        modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT),
+                    )
                   }
+
+              Spacer(Modifier.height(8.dp))
+
+              if (ownerProfile) {
+                Button(
+                    onClick = { onAchievements(id) },
+                    modifier = Modifier.align(Alignment.Start),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = cs.onBackground,
+                            contentColor = cs.background,
+                        ),
+                ) {
+                  Text(
+                      text = LocalContext.current.getString(R.string.view_achievements),
+                      style = typography.titleSmall,
+                  )
                 }
               }
             }
-
-            Spacer(Modifier.width(6.dp))
-
-            ArrowButton(
-                isLeft = false,
-                tint = cs.secondary,
-                onClick = {
-                  navDirection = +1
-                  startIndex = wrap(startIndex + 1)
-                },
-                modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_NEXT),
-            )
-          }
-        }
-  }
+      }
 }
 
 @Composable

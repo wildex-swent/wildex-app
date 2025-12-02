@@ -50,8 +50,6 @@ class PostDetailsScreenViewModelTest {
           description = "Saw this beautiful tiger during my trip!",
           date = Timestamp.now(),
           animalId = "Tiger",
-          likesCount = 0,
-          commentsCount = 4,
       )
   private val testAnimal = Animal("Tiger", "", "Tiger", "Feline", "")
   private val testPostSimpleAuthor =
@@ -60,7 +58,8 @@ class PostDetailsScreenViewModelTest {
           username = "tiger_lover",
           profilePictureURL =
               "https://vectorportal.com/storage/d5YN3OWWLMAJMqMZZJsITZT6bUniD0mbd2HGVNkB.jpg",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   private val testCommentsAuthor =
       SimpleUser(
@@ -68,7 +67,8 @@ class PostDetailsScreenViewModelTest {
           username = "joe34",
           profilePictureURL =
               "https://vectorportal.com/storage/KIygRdXXMVXBs09f42hJ4VWOYVZIX9WdhOJP7Rf4.jpg",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   private val testComments =
       listOf(
@@ -78,28 +78,32 @@ class PostDetailsScreenViewModelTest {
               authorId = "commentAuthor1",
               text = "Great post!",
               date = Timestamp.now(),
-              tag = CommentTag.POST_COMMENT),
+              tag = CommentTag.POST_COMMENT,
+          ),
           Comment(
               commentId = "comment2",
               parentId = "post1",
               authorId = "commentAuthor1",
               text = "Thanks for sharing!",
               date = Timestamp.now(),
-              tag = CommentTag.POST_COMMENT),
+              tag = CommentTag.POST_COMMENT,
+          ),
           Comment(
               commentId = "comment3",
               parentId = "post1",
               authorId = "commentAuthor1",
               text = "It's beautiful!",
               date = Timestamp.now(),
-              tag = CommentTag.POST_COMMENT),
+              tag = CommentTag.POST_COMMENT,
+          ),
           Comment(
               commentId = "comment4",
               parentId = "post1",
               authorId = "commentAuthor1",
               text = "Would love to see it in person.",
               date = Timestamp.now(),
-              tag = CommentTag.POST_COMMENT),
+              tag = CommentTag.POST_COMMENT,
+          ),
       )
 
   @Before
@@ -124,6 +128,7 @@ class PostDetailsScreenViewModelTest {
     coEvery { userRepository.getSimpleUser("currentUserId-1") } returns
         SimpleUser("currentUserId-1", "me", "url", userType = UserType.REGULAR)
     coEvery { commentRepository.getAllCommentsByPost("post1") } returns testComments
+    coEvery { likeRepository.getLikesForPost("post1") } returns emptyList()
     coEvery { postsRepository.editPost(any(), any()) } just Runs
     coEvery { likeRepository.getNewLikeId() } returns "like1"
     coEvery { likeRepository.addLike(any()) } just Runs
@@ -174,7 +179,6 @@ class PostDetailsScreenViewModelTest {
         viewModel.addLike()
         advanceUntilIdle()
 
-        coVerify { postsRepository.editPost("post1", any()) }
         coVerify { likeRepository.addLike(any()) }
       }
 
@@ -190,7 +194,6 @@ class PostDetailsScreenViewModelTest {
         viewModel.removeLike()
         advanceUntilIdle()
 
-        coVerify { postsRepository.editPost("post1", any()) }
         coVerify { likeRepository.deleteLike("like1") }
       }
 
@@ -205,7 +208,6 @@ class PostDetailsScreenViewModelTest {
         viewModel.addComment("Nice!")
         advanceUntilIdle()
 
-        coVerify { postsRepository.editPost("post1", any()) }
         coVerify { commentRepository.addComment(any()) }
       }
 
@@ -271,20 +273,6 @@ class PostDetailsScreenViewModelTest {
       }
 
   @Test
-  fun addLike_sets_error_on_exception_for_post_handling() =
-      mainDispatcherRule.runTest {
-        viewModel.loadPostDetails("post1")
-        coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
-
-        viewModel.addLike()
-        advanceUntilIdle()
-
-        val errorMsg = viewModel.uiState.value.errorMsg
-        assertNotNull(errorMsg)
-        assertTrue(errorMsg!!.contains("fail"))
-      }
-
-  @Test
   fun removeLike_sets_error_on_exception_for_like_handling() =
       mainDispatcherRule.runTest {
         coEvery { likeRepository.deleteLike(any()) } throws Exception("fail")
@@ -302,47 +290,12 @@ class PostDetailsScreenViewModelTest {
       }
 
   @Test
-  fun removeLike_sets_error_on_exception_for_post_handling() =
-      mainDispatcherRule.runTest {
-        coEvery { likeRepository.deleteLike(any()) } just Runs
-        coEvery { likeRepository.getLikeForPost(any()) } returns
-            Like("like1", "post1", "currentUserId-1")
-        coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
-        viewModel.loadPostDetails("post1")
-        advanceUntilIdle()
-
-        viewModel.removeLike()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.errorMsg)
-        assertTrue(state.errorMsg!!.contains("fail"))
-      }
-
-  @Test
   fun addComment_sets_error_on_exception_for_comment_handling() =
       mainDispatcherRule.runTest {
         viewModel.loadPostDetails("post1")
         advanceUntilIdle()
         coEvery { commentRepository.getNewCommentId() } returns "commentNew"
         coEvery { commentRepository.addComment(any()) } throws Exception("fail")
-
-        viewModel.addComment("comment text")
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.errorMsg)
-        assertTrue(state.errorMsg!!.contains("fail"))
-      }
-
-  @Test
-  fun addComment_sets_error_on_exception_for_post_handling() =
-      mainDispatcherRule.runTest {
-        viewModel.loadPostDetails("post1")
-        advanceUntilIdle()
-        coEvery { commentRepository.getNewCommentId() } returns "commentNew"
-        coEvery { commentRepository.addComment(any()) } just Runs
-        coEvery { postsRepository.editPost(any(), any()) } throws Exception("fail")
 
         viewModel.addComment("comment text")
         advanceUntilIdle()

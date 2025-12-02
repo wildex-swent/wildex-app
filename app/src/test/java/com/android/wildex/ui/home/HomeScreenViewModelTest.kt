@@ -3,12 +3,17 @@ package com.android.wildex.ui.home
 
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.social.Comment
+import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
+import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
@@ -32,7 +37,9 @@ class HomeScreenViewModelTest {
   private lateinit var postsRepository: PostsRepository
   private lateinit var userRepository: UserRepository
   private lateinit var likeRepository: LikeRepository
+  private lateinit var commentRepository: CommentRepository
   private lateinit var animalRepository: AnimalRepository
+  private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var viewModel: HomeScreenViewModel
 
   private val defaultUser: SimpleUser =
@@ -40,7 +47,8 @@ class HomeScreenViewModelTest {
           userId = "defaultUserId",
           username = "defaultUsername",
           profilePictureURL = "",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   private val p1 =
       Post(
@@ -51,8 +59,6 @@ class HomeScreenViewModelTest {
           description = "d1",
           date = Timestamp(Calendar.getInstance().time),
           animalId = "a1",
-          likesCount = 1,
-          commentsCount = 0,
       )
 
   private val p2 =
@@ -64,8 +70,6 @@ class HomeScreenViewModelTest {
           description = "d2",
           date = Timestamp(Calendar.getInstance().time),
           animalId = "a2",
-          likesCount = 2,
-          commentsCount = 1,
       )
 
   private val u1 =
@@ -73,7 +77,8 @@ class HomeScreenViewModelTest {
           userId = "uid-1",
           username = "user_one",
           profilePictureURL = "u",
-          userType = UserType.REGULAR)
+          userType = UserType.REGULAR,
+      )
 
   private val author1 = SimpleUser("author1", "author_one", "url1", userType = UserType.REGULAR)
   private val author2 = SimpleUser("author2", "author_two", "url2", userType = UserType.REGULAR)
@@ -81,6 +86,25 @@ class HomeScreenViewModelTest {
   private val like1 = Like(likeId = "like1", postId = "p1", userId = "author-2")
 
   private val like2 = Like(likeId = "like2", postId = "p2", userId = "author-1")
+
+  private val comment1 =
+      Comment(
+          commentId = "comment1",
+          parentId = "p1",
+          authorId = "author2",
+          text = "text1",
+          date = Timestamp(Calendar.getInstance().time),
+          tag = CommentTag.POST_COMMENT,
+      )
+  private val comment2 =
+      Comment(
+          commentId = "comment2",
+          parentId = "p2",
+          authorId = "author1",
+          text = "text2",
+          date = Timestamp(Calendar.getInstance().time),
+          tag = CommentTag.POST_COMMENT,
+      )
 
   private val animal1 =
       Animal(
@@ -105,19 +129,28 @@ class HomeScreenViewModelTest {
     postsRepository = mockk()
     userRepository = mockk()
     likeRepository = mockk()
+    commentRepository = mockk()
     animalRepository = mockk()
+    userSettingsRepository = mockk()
     viewModel =
         HomeScreenViewModel(
             postsRepository,
             userRepository,
             likeRepository,
+            commentRepository,
             animalRepository,
+            userSettingsRepository,
             "uid-1",
         )
+    coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
     coEvery { likeRepository.getLikeForPost("p1") } returns null
     coEvery { likeRepository.getLikeForPost("p2") } returns null
+    coEvery { likeRepository.getLikesForPost("p1") } returns listOf(like1)
+    coEvery { likeRepository.getLikesForPost("p2") } returns listOf(like2)
+    coEvery { commentRepository.getAllCommentsByPost("p1") } returns listOf(comment1)
+    coEvery { commentRepository.getAllCommentsByPost("p2") } returns listOf(comment2)
     coEvery { animalRepository.getAnimal("a1") } returns animal1
     coEvery { animalRepository.getAnimal("a2") } returns animal2
   }
@@ -148,8 +181,20 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val expectedStates =
           listOf(
-              PostState(p1, isLiked = true, author = author1, animalName = animal1.name),
-              PostState(p2, isLiked = false, author = author2, animalName = animal2.name),
+              PostState(
+                  p1,
+                  isLiked = true,
+                  author = author1,
+                  animalName = animal1.name,
+                  likeCount = 1,
+                  commentsCount = 1),
+              PostState(
+                  p2,
+                  isLiked = false,
+                  author = author2,
+                  animalName = animal2.name,
+                  likeCount = 1,
+                  commentsCount = 1),
           )
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
@@ -175,8 +220,20 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val expectedStates =
           listOf(
-              PostState(p1, isLiked = true, author = author1, animalName = animal1.name),
-              PostState(p2, isLiked = false, author = author2, animalName = animal2.name),
+              PostState(
+                  p1,
+                  isLiked = true,
+                  author = author1,
+                  animalName = animal1.name,
+                  likeCount = 1,
+                  commentsCount = 1),
+              PostState(
+                  p2,
+                  isLiked = false,
+                  author = author2,
+                  animalName = animal2.name,
+                  likeCount = 1,
+                  commentsCount = 1),
           )
       val updatedState = viewModel.uiState.value
       Assert.assertEquals(expectedStates, updatedState.postStates)
@@ -211,7 +268,14 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
 
       viewModel =
-          HomeScreenViewModel(postsRepository, userRepository, likeRepository, animalRepository, "")
+          HomeScreenViewModel(
+              postsRepository,
+              userRepository,
+              likeRepository,
+              commentRepository,
+              animalRepository,
+              userSettingsRepository,
+              "")
       viewModel.refreshUIState()
       advanceUntilIdle()
 
@@ -267,7 +331,13 @@ class HomeScreenViewModelTest {
       val s = viewModel.uiState.value
       val expectedStates =
           listOf(
-              PostState(p2, isLiked = true, author = author2, animalName = animal2.name),
+              PostState(
+                  p2,
+                  isLiked = true,
+                  author = author2,
+                  animalName = animal2.name,
+                  likeCount = 1,
+                  commentsCount = 1),
           )
       Assert.assertEquals(expectedStates, s.postStates)
       Assert.assertEquals(u2, s.currentUser)
@@ -326,8 +396,16 @@ class HomeScreenViewModelTest {
       Assert.assertFalse(s.isLoading)
       Assert.assertNull(s.errorMsg)
       Assert.assertEquals(
-          listOf(PostState(p1, isLiked = false, author = author1, animalName = animal1.name)),
-          s.postStates)
+          listOf(
+              PostState(
+                  p1,
+                  isLiked = false,
+                  author = author1,
+                  animalName = animal1.name,
+                  likeCount = 1,
+                  commentsCount = 1)),
+          s.postStates,
+      )
     }
   }
 

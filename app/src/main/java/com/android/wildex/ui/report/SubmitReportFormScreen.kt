@@ -25,15 +25,21 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tags for the Submit Report Form Screen components. */
 object SubmitReportFormScreenTestTags {
@@ -54,7 +60,6 @@ object SubmitReportFormScreenTestTags {
  * @param onCameraClick Callback invoked when the camera button is clicked.
  * @param onDescriptionChange Callback invoked when the description text changes.
  * @param onSubmitClick Callback invoked when the submit button is clicked.
- * @param context The context of the current state of the application.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,10 +67,43 @@ fun SubmitReportFormScreen(
     uiState: SubmitReportUiState,
     onCameraClick: () -> Unit,
     onDescriptionChange: (String) -> Unit,
-    onSubmitClick: () -> Unit,
-    context: Context,
+    onSubmitClick: () -> Unit
 ) {
+  val context = LocalContext.current
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
+  if (isOnline) {
+    SubmitReportFormScreenContent(
+        context = context,
+        onCameraClick = onCameraClick,
+        uiState = uiState,
+        onDescriptionChange = onDescriptionChange,
+        onSubmitClick = onSubmitClick,
+    )
+  } else {
+    OfflineScreen()
+  }
+}
+
+/**
+ * Content of the Submit Report Form Screen.
+ *
+ * @param context The context of the current state of the application.
+ * @param onCameraClick Callback invoked when the camera button is clicked.
+ * @param uiState The current UI state of the submit report form.
+ * @param onDescriptionChange Callback invoked when the description text changes.
+ * @param onSubmitClick Callback invoked when the submit button is clicked.
+ */
+@Composable
+fun SubmitReportFormScreenContent(
+    context: Context,
+    onCameraClick: () -> Unit,
+    uiState: SubmitReportUiState,
+    onDescriptionChange: (String) -> Unit,
+    onSubmitClick: () -> Unit,
+) {
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
@@ -75,7 +113,7 @@ fun SubmitReportFormScreen(
         Text(
             text = context.getString(R.string.submit_rescue_alert),
             style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colorScheme.primary,
+            color = colorScheme.onBackground,
         )
 
         Spacer(modifier = Modifier.height(64.dp))
@@ -98,7 +136,7 @@ fun SubmitReportFormScreen(
             )
           } else {
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
+                colors = CardDefaults.cardColors(colorScheme.surfaceContainer),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -124,7 +162,7 @@ fun SubmitReportFormScreen(
               Text(
                   text = context.getString(R.string.description),
                   style = typography.bodyMedium,
-              )
+                  color = colorScheme.onBackground)
             },
             modifier =
                 Modifier.fillMaxWidth(0.9f)
@@ -140,7 +178,7 @@ fun SubmitReportFormScreen(
                 !uiState.isSubmitting &&
                     uiState.imageUri != null &&
                     uiState.description.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.onBackground),
             shape = RoundedCornerShape(6.dp),
             modifier = Modifier.testTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON),
         ) {
@@ -148,7 +186,7 @@ fun SubmitReportFormScreen(
               text =
                   if (uiState.isSubmitting) context.getString(R.string.submitting)
                   else context.getString(R.string.submitted),
-              color = Color.White,
+              color = colorScheme.background,
               style = typography.bodyMedium,
               modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
           )

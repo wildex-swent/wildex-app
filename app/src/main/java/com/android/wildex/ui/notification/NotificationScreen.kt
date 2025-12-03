@@ -57,6 +57,14 @@ object NotificationScreenTestTags {
   }
 }
 
+data class NotificationItemData(
+    val notificationContentId: Id = "",
+    val notificationRoute: String = "",
+    val notificationTitle: String = "DEFAULT TITLE",
+    val notificationDescription: String = "DEFAULT DESCRIPTION",
+    val onNotificationClick: (Id, String) -> Unit = { _, _ -> }
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
@@ -120,12 +128,15 @@ fun NotificationView(
     items(notifications.size) { index ->
       val notification = notifications[index]
       NotificationItem(
-          notificationContentId = notification.notificationId,
+          notificationItemData =
+              NotificationItemData(
+                  notificationContentId = notification.notificationId,
+                  notificationRoute = notification.notificationRoute,
+                  notificationTitle = notification.notificationTitle,
+                  notificationDescription = notification.notificationDescription,
+                  onNotificationClick = onNotificationClick,
+              ),
           simpleUser = notification.simpleUser,
-          notificationRoute = notification.notificationRoute,
-          notificationTitle = notification.notificationTitle,
-          notificationDescription = notification.notificationDescription,
-          onNotificationClick = onNotificationClick,
           onProfileClick = onProfileClick,
           cs = cs,
       )
@@ -136,13 +147,9 @@ fun NotificationView(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationItem(
-    notificationContentId: Id = "",
-    notificationRoute: String = "",
+    notificationItemData: NotificationItemData,
     simpleUser: SimpleUser,
-    notificationTitle: String = "DEFAULT TITLE",
-    notificationDescription: String = "DEFAULT DESCRIPTION",
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
     cs: ColorScheme,
 ) {
   Box(
@@ -163,14 +170,14 @@ fun NotificationItem(
           )
           Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
             Text(
-                text = notificationTitle,
+                text = notificationItemData.notificationTitle,
                 color = cs.onBackground,
                 style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = notificationDescription,
+                text = notificationItemData.notificationDescription,
                 color = cs.onBackground,
                 style = typography.bodyMedium,
                 maxLines = 1,
@@ -178,12 +185,16 @@ fun NotificationItem(
             )
           }
           IconButton(
-              onClick = { onNotificationClick(notificationContentId, notificationRoute) },
+              onClick = {
+                notificationItemData.onNotificationClick(
+                    notificationItemData.notificationContentId,
+                    notificationItemData.notificationRoute)
+              },
               modifier =
                   Modifier.size(48.dp)
                       .testTag(
                           NotificationScreenTestTags.testTagForNotification(
-                              notificationContentId))) {
+                              notificationItemData.notificationContentId))) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Open notification",

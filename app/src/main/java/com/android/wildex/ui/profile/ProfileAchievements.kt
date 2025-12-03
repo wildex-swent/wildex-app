@@ -264,7 +264,6 @@ private fun ArrowButton(
 ) {
   val interaction = remember { MutableInteractionSource() }
   val pressed by interaction.collectIsPressedAsState()
-  val context = LocalContext.current
   val scale by
       animateFloatAsState(
           targetValue = if (pressed) 0.94f else 1f,

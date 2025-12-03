@@ -2,14 +2,11 @@
     <string name="default_web_client_id">55923703889-g4po1sphfo9peea096muat5e44rr5l90.apps.googleusercontent.com</string>
 
     <!-- Main Activity -->
-    <string name="null_user_uid">User UID is null</string>
-    <string name="null_post_uid">Post UID is null</string>
 
     <!-- Home screen -->
     <string name="app_name">Wildex</string>
 
     <!-- Placeholder screen -->
-    <string name="not_implemented">Coming soon …</string>
 
     <!-- Loading Failed screen -->
     <string name="fail_loading">Loading failed. Please try again.</string>
@@ -17,14 +14,10 @@
     <!-- SignIn screen -->
     <string name="sign_in">Sign in with Google</string>
     <string name="cancel_sign_in">Sign-in cancelled</string>
-    <string name="welcome">Welcome to Wildex!</string>
     <string name="collection">My Collection</string>
 
     <!-- Profile screen -->
     <string name="profile">My Profile</string>
-    <string name="user_profile">User Profile</string>
-    <string name="prev_arrow">Prev</string>
-    <string name="next_arrow">Next</string>
     <string name="view_map">View in full screen →</string>
     <string name="default_description">No bio yet.</string>
     <string name="send_friend_request">Send Friend Request</string>

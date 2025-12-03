@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -62,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
@@ -230,145 +233,216 @@ fun PostItem(
   var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
   var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
 
+  val onToggleLike: () -> Unit = {
+    liked = !liked
+    likeCount = if (liked) likeCount + 1 else likeCount - 1
+    onPostLike(post.postId)
+  }
+
   Card(
       shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
       modifier = Modifier.fillMaxWidth(),
   ) {
     // Header: avatar + title + date + location
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      ClickableProfilePicture(
-          modifier = Modifier.size(40.dp).testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
-          profileId = author.userId,
-          profilePictureURL = author.profilePictureURL,
-          profileUserType = author.userType,
-          onProfile = onProfilePictureClick,
-      )
-      Spacer(Modifier.width(10.dp))
-      Column(Modifier.weight(1f)) {
-        Row {
-          Text(
-              text = "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}",
-              style = typography.titleMedium,
-              color = colorScheme.onBackground,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
-          )
-          Text(
-              text = animalName.replaceFirstChar { it.uppercase() },
-              style = typography.titleMedium,
-              color = colorScheme.primary,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
-          )
-        }
-        Text(
-            text =
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    .format(post.date.toDate()),
-            style = typography.labelSmall,
-            color = colorScheme.onBackground,
-        )
-      }
-      if (post.location?.name?.isNotBlank() == true) {
-        Row(
-            modifier = Modifier.testTag(HomeScreenTestTags.locationTag(post.postId)),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Icon(
-              imageVector = Icons.Default.LocationOn,
-              contentDescription = "Location",
-              modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-              tint = colorScheme.onBackground,
-          )
-          Spacer(Modifier.width(2.dp))
-          Text(
-              text = post.location.name,
-              style = typography.labelMedium,
-              color = colorScheme.onBackground,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
-          )
-        }
-      }
-    }
+    PostHeader(
+        post = post,
+        author = author,
+        animalName = animalName,
+        colorScheme = colorScheme,
+        onProfilePictureClick = onProfilePictureClick)
 
     // Image
-    Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick(post.postId) }) {
-      AsyncImage(
-          model = post.pictureURL,
-          contentDescription = "Post picture",
-          modifier =
-              Modifier.fillMaxWidth()
-                  .height(400.dp)
-                  .clip(RoundedCornerShape(0.dp))
-                  .testTag(HomeScreenTestTags.imageTag(post.postId)),
-          contentScale = ContentScale.Crop,
+    PostImage(post = post, onPostClick = { onPostClick(post.postId) })
+
+    // Actions: likes & comments & location
+    PostActions(
+        post = post,
+        liked = liked,
+        likeCount = likeCount,
+        commentCount = commentCount,
+        colorScheme = colorScheme,
+        onToggleLike = onToggleLike,
+        onPostClick = { onPostClick(post.postId) },
+    )
+  }
+}
+
+/**
+ * Displays a post's header.
+ *
+ * @param post The post whose header is to be displayed.
+ * @param author The author of the post.
+ * @param animalName The name of the animal appearing on the post.
+ * @param colorScheme The colorscheme to follow.
+ * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's
+ *   author.
+ */
+@Composable
+private fun PostHeader(
+    post: Post,
+    author: SimpleUser,
+    animalName: String,
+    colorScheme: ColorScheme,
+    onProfilePictureClick: (Id) -> Unit,
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    ClickableProfilePicture(
+        modifier = Modifier.size(40.dp).testTag(HomeScreenTestTags.authorPictureTag(post.postId)),
+        profileId = author.userId,
+        profilePictureURL = author.profilePictureURL,
+        profileUserType = author.userType,
+        onProfile = onProfilePictureClick,
+    )
+    Spacer(Modifier.width(10.dp))
+    Column(Modifier.weight(1f)) {
+      Row {
+        Text(
+            text = "${author.username} saw ${if (animalName.startsWithVowel()) "an " else "a "}",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = animalName.replaceFirstChar { it.uppercase() },
+            style = typography.titleMedium,
+            color = colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
+      Text(
+          text =
+              SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(post.date.toDate()),
+          style = typography.labelSmall,
+          color = colorScheme.onBackground,
+      )
+    }
+    if (post.location?.name?.isNotBlank() == true) {
+      Row(
+          modifier = Modifier.testTag(HomeScreenTestTags.locationTag(post.postId)),
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "Location",
+            modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+            tint = colorScheme.onBackground,
+        )
+        Spacer(Modifier.width(2.dp))
+        Text(
+            text = post.location.name,
+            style = typography.labelMedium,
+            color = colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Displays a post's image.
+ *
+ * @param post The post whose image is to be displayed.
+ * @param onPostClick The action when the user clicks on the post, to see its details.
+ */
+@Composable
+private fun PostImage(post: Post, onPostClick: () -> Unit) {
+  Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick() }) {
+    AsyncImage(
+        model = post.pictureURL,
+        contentDescription = "Post picture",
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(400.dp)
+                .clip(RoundedCornerShape(0.dp))
+                .testTag(HomeScreenTestTags.imageTag(post.postId)),
+        contentScale = ContentScale.Crop,
+    )
+  }
+}
+
+/**
+ * Displays a post's actions.
+ *
+ * @param post The post whose actions are to be displayed.
+ * @param liked True if the post is liked by the user, false otherwise.
+ * @param likeCount the number of likes the post has.
+ * @param colorScheme The colorscheme to follow.
+ * @param onToggleLike The action when the user clicks on the heart, to like it.
+ * @param onPostClick The action when the user clicks on the post, to see its details.
+ */
+@Composable
+private fun PostActions(
+    post: Post,
+    liked: Boolean,
+    likeCount: Int,
+    commentCount: Int,
+    colorScheme: ColorScheme,
+    onToggleLike: () -> Unit,
+    onPostClick: () -> Unit,
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween,
+  ) {
+    // Likes
+    Row(
+        modifier =
+            Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
+              onToggleLike()
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Icon(
+          imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+          contentDescription = "Likes",
+          modifier = Modifier.size(30.dp),
+          tint = if (liked) colorScheme.primary else colorScheme.onBackground,
+      )
+      Spacer(Modifier.width(6.dp))
+      Text(
+          text = "$likeCount",
+          style = typography.bodyLarge,
+          fontWeight = FontWeight.SemiBold,
+          color = colorScheme.onBackground,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
       )
     }
 
-    // Actions: likes & comments & location
+    Spacer(Modifier.width(15.dp))
+
+    // Comments
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier =
+            Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
+              onPostClick()
+            },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-      // Likes
-      Row(
-          modifier =
-              Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
-                liked = !liked
-                likeCount = if (liked) likeCount + 1 else likeCount - 1
-                onPostLike(post.postId)
-              },
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Icon(
-            imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Likes",
-            modifier = Modifier.size(30.dp),
-            tint = if (liked) colorScheme.primary else colorScheme.onBackground,
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = "$likeCount",
-            style = typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-      }
-
-      Spacer(Modifier.width(15.dp))
-
-      // Comments
-      Row(
-          modifier =
-              Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
-                onPostClick(post.postId)
-              },
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.Chat,
-            contentDescription = "Comments",
-            modifier = Modifier.size(25.dp),
-            tint = colorScheme.onBackground,
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text = "$commentCount",
-            style = typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-      }
+      Icon(
+          imageVector = Icons.AutoMirrored.Outlined.Chat,
+          contentDescription = "Comments",
+          modifier = Modifier.size(25.dp),
+          tint = colorScheme.onBackground,
+      )
+      Spacer(Modifier.width(6.dp))
+      Text(
+          text = "$commentCount",
+          style = typography.bodyLarge,
+          fontWeight = FontWeight.SemiBold,
+          color = colorScheme.onBackground,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+      )
     }
   }
 }

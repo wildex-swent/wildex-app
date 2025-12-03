@@ -83,7 +83,6 @@ fun SubmitReportScreen(
           locationClient = locationClient,
           context = context,
           onSubmitted = onSubmitted,
-          onGoBack = onGoBack,
           innerPadding = innerPadding,
       )
     } else {
@@ -100,7 +99,6 @@ fun SubmitReportScreenContent(
     locationClient: FusedLocationProviderClient,
     context: Context,
     onSubmitted: () -> Unit,
-    onGoBack: () -> Unit,
     innerPadding: PaddingValues,
 ) {
   var showCamera by remember { mutableStateOf(false) }
@@ -120,18 +118,12 @@ fun SubmitReportScreenContent(
       }
 
   // Fetch location when permission is granted
-  LaunchedEffect(hasLocationPermission, locationRequested) {
-    if (hasLocationPermission && locationRequested) {
-      viewModel.fetchUserLocation(locationClient)
-    } else if (!hasLocationPermission && locationRequested) {
-      Toast.makeText(
-              context,
-              "Location permission is required to submit a report",
-              Toast.LENGTH_SHORT,
-          )
-          .show()
-    }
-  }
+  fetchLocation(
+      hasLocationPermission = hasLocationPermission,
+      locationRequested = locationRequested,
+      viewModel = viewModel,
+      locationClient = locationClient,
+      context = context)
 
   Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
     when {
@@ -172,11 +164,39 @@ fun SubmitReportScreenContent(
                 viewModel.fetchUserLocation(locationClient)
                 viewModel.submitReport(onSubmitted)
               }
-            },
-            context = context,
-            onGoBack = onGoBack,
-        )
+            })
       }
+    }
+  }
+}
+
+/**
+ * Screen displaying the Submit Report Screen.
+ *
+ * @param hasLocationPermission True if there's access to the location, false otherwise.
+ * @param locationRequested True if the location is requested, false otherwise.
+ * @param viewModel The viewmodel of the screen.
+ * @param locationClient The location of the client.
+ * @param context The context.
+ */
+@Composable
+private fun fetchLocation(
+    hasLocationPermission: Boolean,
+    locationRequested: Boolean,
+    viewModel: SubmitReportScreenViewModel,
+    locationClient: FusedLocationProviderClient,
+    context: Context
+) {
+  LaunchedEffect(hasLocationPermission, locationRequested) {
+    if (hasLocationPermission && locationRequested) {
+      viewModel.fetchUserLocation(locationClient)
+    } else if (!hasLocationPermission && locationRequested) {
+      Toast.makeText(
+              context,
+              "Location permission is required to submit a report",
+              Toast.LENGTH_SHORT,
+          )
+          .show()
     }
   }
 }

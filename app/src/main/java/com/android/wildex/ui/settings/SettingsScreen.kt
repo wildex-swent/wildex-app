@@ -1,6 +1,5 @@
 package com.android.wildex.ui.settings
 
-import android.graphics.drawable.Icon
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
@@ -61,8 +60,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -119,8 +118,8 @@ fun SettingsScreen(
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
+  val screenWidth = LocalWindowInfo.current.containerSize.width.dp
   var showDeletionValidation by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { settingsScreenViewModel.loadUIState() }
@@ -360,7 +359,7 @@ fun SettingsScreenTopBar(onGoBack: () -> Unit) {
             modifier = Modifier.testTag(SettingsScreenTestTags.GO_BACK_BUTTON),
         ) {
           Icon(
-              imageVector = Icons.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = "Go Back",
               tint = colorScheme.onBackground,
           )
@@ -460,7 +459,7 @@ fun EditProfileOption(
         modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON),
     ) {
       Icon(
-          imageVector = Icons.Filled.ArrowForward,
+          imageVector = Icons.AutoMirrored.Filled.ArrowForward,
           contentDescription = "Edit Profile Navigate Icon",
           tint = colorScheme.onBackground,
       )
@@ -656,16 +655,29 @@ fun AppearanceModeOption(
                     if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
                 modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
             )
+
             Spacer(modifier = Modifier.width(2.dp))
-            Text(
-                text = option,
-                color =
-                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-                style = typography.bodySmall.copy(fontSize = 9.sp),
-            )
+            AppearanceModeOptionText(option, index, selectedIndex)
           }
         }
       }
     }
   }
+}
+
+/**
+ * Displays the text for the appearance mode option.
+ *
+ * @param option The name of the option.
+ * @param index The index of the option.
+ * @param selectedIndex The selected index.
+ */
+@Composable
+private fun AppearanceModeOptionText(option: String, index: Int, selectedIndex: Int) {
+  Spacer(modifier = Modifier.width(2.dp))
+  Text(
+      text = option,
+      color = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+      style = typography.bodySmall.copy(fontSize = 9.sp),
+  )
 }

@@ -65,10 +65,7 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).performClick()
   }
@@ -80,10 +77,7 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
     val text = "There’s an injured fox near the river"
     composeTestRule
@@ -104,10 +98,7 @@ class SubmitReportFormScreenTest {
               ),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
     composeTestRule
         .onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON)
@@ -124,10 +115,7 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(isSubmitting = true),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
     composeTestRule.onNodeWithText("Submitting…").assertIsDisplayed()
@@ -140,10 +128,7 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(imageUri = null),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).assertIsDisplayed()
     composeTestRule
@@ -160,10 +145,7 @@ class SubmitReportFormScreenTest {
           uiState = SubmitReportUiState(imageUri = uri),
           onCameraClick = onCameraClick,
           onDescriptionChange = onDescriptionChange,
-          onSubmitClick = onSubmitClick,
-          context = context,
-          onGoBack = onGoBack,
-      )
+          onSubmitClick = onSubmitClick)
     }
 
     composeTestRule
@@ -179,10 +161,7 @@ class SubmitReportFormScreenTest {
             uiState = SubmitReportUiState(),
             onCameraClick = onCameraClick,
             onDescriptionChange = onDescriptionChange,
-            onSubmitClick = onSubmitClick,
-            context = context,
-            onGoBack = onGoBack,
-        )
+            onSubmitClick = onSubmitClick)
       }
     }
 

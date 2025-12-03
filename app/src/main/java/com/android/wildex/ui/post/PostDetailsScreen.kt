@@ -205,32 +205,10 @@ fun PostDetailsContent(
             )
 
             // DESCRIPTION – clean card with subtle border
-            if (uiState.description.isNotBlank()) {
-              Card(
-                  modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                  shape = RoundedCornerShape(32.dp),
-                  colors = CardDefaults.cardColors(containerColor = colorScheme.background),
-                  border = BorderStroke(1.dp, colorScheme.onBackground),
-                  elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-              ) {
-                Text(
-                    text = uiState.description,
-                    color = colorScheme.onBackground,
-                    modifier = Modifier.padding(14.dp),
-                    style = typography.bodyMedium,
-                )
-              }
-            }
+            PostDescription(uiState)
+
             // COMMENTS HEADER
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-              Text(
-                  text =
-                      if (uiState.commentsUI.size == 1) "1 Comment"
-                      else "${uiState.commentsUI.size} Comments",
-                  style = typography.titleSmall,
-                  color = colorScheme.onBackground,
-              )
-            }
+            PostCommentsHeader(uiState)
           }
         }
       }
@@ -243,6 +221,39 @@ fun PostDetailsContent(
       // Spacer so the last comment clears the bottom input
       item { Spacer(Modifier.height(96.dp)) }
     }
+  }
+}
+
+@Composable
+private fun PostDescription(uiState: PostDetailsUIState) {
+  if (uiState.description.isNotBlank()) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(32.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+        border = BorderStroke(1.dp, colorScheme.onBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+      Text(
+          text = uiState.description,
+          color = colorScheme.onBackground,
+          modifier = Modifier.padding(14.dp),
+          style = typography.bodyMedium,
+      )
+    }
+  }
+}
+
+@Composable
+private fun PostCommentsHeader(uiState: PostDetailsUIState) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+    Text(
+        text =
+            if (uiState.commentsUI.size == 1) "1 Comment"
+            else "${uiState.commentsUI.size} Comments",
+        style = typography.titleSmall,
+        color = colorScheme.onBackground,
+    )
   }
 }
 

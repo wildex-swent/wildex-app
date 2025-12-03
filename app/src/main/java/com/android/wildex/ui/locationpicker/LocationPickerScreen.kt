@@ -222,7 +222,7 @@ fun LocationPickerScreen(
                   .fillMaxWidth()
                   .padding(horizontal = 16.dp, vertical = 16.dp),
       ) {
-        // Top row: back button + rounded search bar
+        // Top row: back button + search bar
         LocationPickerTopBar(
             modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
             query = uiState.searchQuery,
@@ -240,7 +240,8 @@ fun LocationPickerScreen(
               suggestions = uiState.suggestions,
               query = uiState.searchQuery,
               onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
-              modifier = Modifier.padding(top = 8.dp, start = 56.dp))
+              modifier = Modifier.padding(top = 8.dp, start = 56.dp),
+          )
         }
       }
 
@@ -346,7 +347,9 @@ private fun LocationPickerTopBar(
                 .padding(start = 8.dp)
                 .focusRequester(focusRequester)
                 .testTag(LocationPickerTestTags.SEARCH_FIELD),
-        placeholder = { Text("Search city, address or place") },
+        placeholder = {
+          Text(text = "Search city, address or place", overflow = TextOverflow.Ellipsis)
+        },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
         enabled = !isLoading,
@@ -386,9 +389,10 @@ private fun LocationPickerTopBar(
               IconButton(
                   onClick = { onUseCurrentLocationName() },
                   modifier = Modifier.testTag(LocationPickerTestTags.GPS_BUTTON),
-                  enabled = isLocationGranted) {
-                    IconLocation(isLocationGranted)
-                  }
+                  enabled = isLocationGranted,
+              ) {
+                IconLocation(isLocationGranted)
+              }
 
               IconButton(
                   onClick = {

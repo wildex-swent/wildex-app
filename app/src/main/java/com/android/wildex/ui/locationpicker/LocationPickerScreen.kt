@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
@@ -52,9 +53,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,6 +98,11 @@ object LocationPickerTestTags {
   const val CONFIRM_DIALOG = "LocationPicker/ConfirmDialog"
   const val CONFIRM_YES = "LocationPicker/ConfirmYes"
   const val CONFIRM_NO = "LocationPicker/ConfirmNo"
+  const val BACK_BUTTON = "LocationPicker/BackButton"
+  const val SEARCH_FIELD = "LocationPicker/SearchField"
+  const val CLEAR_BUTTON = "LocationPicker/ClearButton"
+  const val GPS_BUTTON = "LocationPicker/GpsButton"
+  const val SEARCH_BUTTON = "LocationPicker/SearchButton"
 }
 
 /**
@@ -146,7 +157,7 @@ fun LocationPickerScreen(
   }
 
   LaunchedEffect(lastPosition, isLocationGranted) {
-    if (lastPosition != null && isLocationGranted) {
+    if (lastPosition != null && isLocationGranted && !uiState.hasCenteredOnUserLocation) {
       viewModel.onUserLocationAvailable(
           latitude = lastPosition!!.latitude(),
           longitude = lastPosition!!.longitude(),
@@ -205,18 +216,32 @@ fun LocationPickerScreen(
               ),
       )
 
-      // Top row: back button + rounded search bar
-      LocationPickerTopBar(
+      Column(
           modifier =
               Modifier.align(Alignment.TopCenter)
                   .fillMaxWidth()
-                  .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                  .testTag(LocationPickerTestTags.SEARCH_BAR),
-          query = uiState.searchQuery,
-          onQueryChange = { viewModel.onSearchQueryChanged(it) },
-          onBack = onBack,
-          onSearch = { query -> viewModel.onSearchSubmitted(query) },
-      )
+                  .padding(horizontal = 16.dp, vertical = 16.dp),
+      ) {
+        // Top row: back button + rounded search bar
+        LocationPickerTopBar(
+            modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
+            query = uiState.searchQuery,
+            isSearching = uiState.isSearching,
+            isLoading = uiState.isLoading,
+            onQueryChange = { viewModel.onSearchQueryChanged(it) },
+            onBack = onBack,
+            onSearch = { query -> viewModel.onSearchSubmitted(query) },
+            onUseCurrentLocationName = { viewModel.useCurrentLocationNameAsQuery() },
+        )
+
+        if (uiState.suggestions.isNotEmpty()) {
+          SuggestionsDropdown(
+              suggestions = uiState.suggestions,
+              query = uiState.searchQuery,
+              onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
+              modifier = Modifier.padding(top = 8.dp, start = 56.dp))
+        }
+      }
 
       // Tap to pick a point
       LocationPickerTapListener(
@@ -233,18 +258,6 @@ fun LocationPickerScreen(
           selectedLat = uiState.selected?.latitude,
           selectedLon = uiState.selected?.longitude,
       )
-
-      if (uiState.suggestions.isNotEmpty()) {
-        SuggestionsDropdown(
-            suggestions = uiState.suggestions,
-            onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
-            modifier =
-                Modifier.align(Alignment.TopCenter)
-                    // push below the search row so they don't overlap
-                    .padding(top = 72.dp)
-                    .fillMaxWidth(0.95f),
-        )
-      }
 
       // Recenter
       LocationPickerRecenterFab(
@@ -298,18 +311,25 @@ fun LocationPickerScreen(
 private fun LocationPickerTopBar(
     modifier: Modifier = Modifier,
     query: String,
+    isSearching: Boolean,
+    isLoading: Boolean,
     onQueryChange: (String) -> Unit,
     onBack: () -> Unit,
     onSearch: (String) -> Unit,
+    onUseCurrentLocationName: () -> Unit,
 ) {
   val focusManager = LocalFocusManager.current
   val focusRequester = remember { FocusRequester() }
+  val isBusy = isSearching || isLoading
 
   Row(
       modifier = modifier,
       verticalAlignment = Alignment.CenterVertically,
   ) {
-    IconButton(onClick = onBack) {
+    IconButton(
+        onClick = onBack,
+        modifier = Modifier.testTag(LocationPickerTestTags.BACK_BUTTON),
+    ) {
       Icon(
           imageVector = Icons.AutoMirrored.Filled.ArrowBack,
           contentDescription = "Back",
@@ -319,10 +339,15 @@ private fun LocationPickerTopBar(
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = Modifier.weight(1f).padding(start = 8.dp).focusRequester(focusRequester),
-        placeholder = { Text("Search address") },
+        modifier =
+            Modifier.weight(1f)
+                .padding(start = 8.dp)
+                .focusRequester(focusRequester)
+                .testTag(LocationPickerTestTags.SEARCH_FIELD),
+        placeholder = { Text("Search city, address or place") },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
+        enabled = !isLoading,
         colors =
             TextFieldDefaults.colors(
                 focusedContainerColor = colorScheme.surface,
@@ -334,23 +359,58 @@ private fun LocationPickerTopBar(
                 disabledIndicatorColor = colorScheme.surface,
             ),
         trailingIcon = {
-          IconButton(
-              onClick = {
-                val trimmed = query.trim()
-                if (trimmed.isEmpty()) {
-                  focusRequester.requestFocus()
-                } else {
-                  onSearch(trimmed)
-                  focusManager.clearFocus()
-                }
-              },
-          ) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = "Search",
-                tint = colorScheme.primary,
-                modifier = Modifier.size(28.dp),
+          if (isBusy) {
+            androidx.compose.material3.CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(20.dp),
             )
+          } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              if (query.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                      onQueryChange("")
+                      focusRequester.requestFocus()
+                    },
+                    modifier = Modifier.testTag(LocationPickerTestTags.CLEAR_BUTTON),
+                ) {
+                  Icon(
+                      imageVector = Icons.Default.Clear,
+                      contentDescription = "Clear search",
+                  )
+                }
+              }
+
+              IconButton(
+                  onClick = { onUseCurrentLocationName() },
+                  modifier = Modifier.testTag(LocationPickerTestTags.GPS_BUTTON),
+              ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Use current location name",
+                )
+              }
+
+              IconButton(
+                  onClick = {
+                    val trimmed = query.trim()
+                    if (trimmed.isEmpty()) {
+                      focusRequester.requestFocus()
+                    } else {
+                      onSearch(trimmed)
+                      focusManager.clearFocus()
+                    }
+                  },
+                  modifier = Modifier.testTag(LocationPickerTestTags.SEARCH_BUTTON),
+              ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = colorScheme.primary,
+                    modifier = Modifier.size(28.dp),
+                )
+              }
+            }
           }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -371,9 +431,13 @@ private fun LocationPickerTopBar(
 @Composable
 private fun SuggestionsDropdown(
     suggestions: List<Location>,
+    query: String,
     onSuggestionClick: (Location) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+  val focusManager = LocalFocusManager.current
+  val queryLower = query.trim().lowercase()
+
   Card(
       modifier = modifier,
       shape = RoundedCornerShape(16.dp),
@@ -389,7 +453,10 @@ private fun SuggestionsDropdown(
         Row(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clickable { onSuggestionClick(feature) }
+                    .clickable {
+                      focusManager.clearFocus()
+                      onSuggestionClick(feature)
+                    }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -400,13 +467,36 @@ private fun SuggestionsDropdown(
               modifier = Modifier.size(18.dp),
           )
 
+          val name = feature.name
+          val annotated =
+              if (queryLower.isNotEmpty()) {
+                val nameLower = name.lowercase()
+                val start = nameLower.indexOf(queryLower)
+                if (start >= 0) {
+                  val end = start + queryLower.length
+                  buildAnnotatedString {
+                    append(name.substring(0, start))
+                    withStyle(
+                        SpanStyle(fontWeight = FontWeight.SemiBold, color = colorScheme.primary)) {
+                          append(name.substring(start, end))
+                        }
+                    append(name.substring(end))
+                  }
+                } else {
+                  AnnotatedString(name)
+                }
+              } else {
+                AnnotatedString(name)
+              }
+
           Box(
               modifier = Modifier.padding(start = 8.dp),
           ) {
             Text(
-                text = feature.name,
+                text = annotated,
                 color = colorScheme.onSurface,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
           }
         }
@@ -443,7 +533,7 @@ private fun LocationPickerRecenterFab(
         }
       },
       containerColor = cs.background,
-      contentColor = cs.primary,
+      contentColor = cs.onBackground,
   ) {
     if (isLocationGranted) {
       Icon(

@@ -106,6 +106,17 @@ class SubmitReportFormScreenTest {
   fun submit_button_is_enabled_and_triggers_callback() {
     fakeObserver.setOnline(true)
     composeTestRule.setContent {
+      SubmitReportFormScreen(
+          uiState =
+              SubmitReportUiState(
+                  isSubmitting = false,
+                  description = "some description",
+                  hasPickedLocation = true,
+                  imageUri = Uri.parse("content://test/image.jpg"),
+              ),
+          onCameraClick = onCameraClick,
+          onDescriptionChange = onDescriptionChange,
+          onSubmitClick = onSubmitClick)
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         SubmitReportFormScreen(
             uiState =

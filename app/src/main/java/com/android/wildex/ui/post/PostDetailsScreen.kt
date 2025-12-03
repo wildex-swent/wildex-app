@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -59,7 +55,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
@@ -70,6 +65,8 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags.testTagForProfilePicture
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLike
 import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object PostDetailsScreenTestTags {
@@ -171,7 +168,13 @@ fun PostDetailsContent(
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
       // HERO IMAGE with soft gradient top and bottom
-      item { PostPicture(uiState.pictureURL) }
+      item {
+        PostPicture(
+            pictureURL = uiState.pictureURL,
+            likedByCurrentUser = uiState.likedByCurrentUser,
+            onLike = { postDetailsScreenViewModel.addLike() },
+        )
+      }
 
       // CONTENT SHEET (rounded top), contains info + description + "Comments" header
       item {
@@ -258,14 +261,17 @@ private fun PostCommentsHeader(uiState: PostDetailsUIState) {
 }
 
 @Composable
-private fun PostPicture(pictureURL: URL) {
+private fun PostPicture(
+    pictureURL: URL = "",
+    likedByCurrentUser: Boolean = false,
+    onLike: () -> Unit = {},
+) {
   Box(Modifier.fillMaxWidth()) {
-    AsyncImage(
-        model = pictureURL,
-        contentDescription = "Post picture",
-        contentScale = ContentScale.FillWidth,
-        modifier = Modifier.fillMaxSize(),
-    )
+    ImageWithDoubleTapLike(
+        pictureURL = pictureURL,
+        likedByCurrentUser = likedByCurrentUser,
+        onLike = onLike,
+        modifier = Modifier.fillMaxWidth())
     // top black gradient overlay
     Box(
         modifier =
@@ -398,26 +404,13 @@ fun LocationSpeciesLikeBar(
       }
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth(.33f),
-    ) {
-      Icon(
-          imageVector =
-              if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-          contentDescription = "Like status",
-          tint = if (likedByCurrentUser) colorScheme.primary else colorScheme.onBackground,
-          modifier =
-              Modifier.size(iconSize).clickable {
-                if (!likedByCurrentUser) onLike() else onUnlike()
-              },
-      )
-      Text(
-          text = likesCount.toString(),
-          color = colorScheme.onBackground,
-          style = textStyle,
-      )
-    }
+    AnimatedLikeButton(
+        likedByCurrentUser = likedByCurrentUser,
+        likesCount = likesCount,
+        onToggleLike = { if (!likedByCurrentUser) onLike() else onUnlike() },
+        iconSize = iconSize,
+        textStyle = textStyle,
+    )
   }
 }
 

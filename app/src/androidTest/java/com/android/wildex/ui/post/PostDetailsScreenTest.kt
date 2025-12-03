@@ -3,13 +3,18 @@ package com.android.wildex.ui.post
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
@@ -264,7 +269,9 @@ class PostDetailsScreenTest {
     }
     composeRule.waitForIdle()
     // Comments displayed
+    composeRule.scrollToTextWithinScroll("Amazing shot!")
     composeRule.onNodeWithText("Amazing shot!").assertIsDisplayed()
+    composeRule.scrollToTextWithinScroll("Love this!")
     composeRule.onNodeWithText("Love this!").assertIsDisplayed()
     // Add comment
     val commentText = "Great post!"
@@ -295,6 +302,8 @@ class PostDetailsScreenTest {
         .performClick()
     Assert.assertEquals("poster1", profileClicked)
     // Click comment authors profile picture
+    composeRule.scrollToTagWithinScroll(
+        PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
     composeRule
         .onNodeWithTag(
             PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
@@ -359,4 +368,12 @@ class PostDetailsScreenTest {
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
   }
+}
+
+private fun ComposeContentTestRule.scrollToTagWithinScroll(tag: String) {
+  onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasTestTag(tag))
+}
+
+private fun ComposeContentTestRule.scrollToTextWithinScroll(text: String) {
+  onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText(text))
 }

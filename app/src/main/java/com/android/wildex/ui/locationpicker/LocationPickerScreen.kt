@@ -226,6 +226,7 @@ fun LocationPickerScreen(
         LocationPickerTopBar(
             modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
             query = uiState.searchQuery,
+            isLocationGranted = isLocationGranted,
             isSearching = uiState.isSearching,
             isLoading = uiState.isLoading,
             onQueryChange = { viewModel.onSearchQueryChanged(it) },
@@ -311,6 +312,7 @@ fun LocationPickerScreen(
 private fun LocationPickerTopBar(
     modifier: Modifier = Modifier,
     query: String,
+    isLocationGranted: Boolean,
     isSearching: Boolean,
     isLoading: Boolean,
     onQueryChange: (String) -> Unit,
@@ -384,12 +386,9 @@ private fun LocationPickerTopBar(
               IconButton(
                   onClick = { onUseCurrentLocationName() },
                   modifier = Modifier.testTag(LocationPickerTestTags.GPS_BUTTON),
-              ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Use current location name",
-                )
-              }
+                  enabled = isLocationGranted) {
+                    IconLocation(isLocationGranted)
+                  }
 
               IconButton(
                   onClick = {
@@ -535,17 +534,7 @@ private fun LocationPickerRecenterFab(
       containerColor = cs.background,
       contentColor = cs.onBackground,
   ) {
-    if (isLocationGranted) {
-      Icon(
-          imageVector = Icons.Default.LocationOn,
-          contentDescription = "Recenter on my location",
-      )
-    } else {
-      Icon(
-          imageVector = Icons.Default.LocationOff,
-          contentDescription = "Enable location",
-      )
-    }
+    IconLocation(isLocationGranted)
   }
 }
 
@@ -667,4 +656,19 @@ private fun loadVectorAsBitmap(
   d.setBounds(0, 0, sizePx, sizePx)
   d.draw(canvas)
   return bmp
+}
+
+@Composable
+private fun IconLocation(isLocationGranted: Boolean) {
+  if (isLocationGranted) {
+    Icon(
+        imageVector = Icons.Default.LocationOn,
+        contentDescription = "Recenter on my location",
+    )
+  } else {
+    Icon(
+        imageVector = Icons.Default.LocationOff,
+        contentDescription = "Enable location",
+    )
+  }
 }

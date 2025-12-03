@@ -1,11 +1,13 @@
 package com.android.wildex.ui.navigation
 
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -30,6 +32,9 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromEditProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
@@ -97,6 +102,9 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToHomeScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.checkBottomNavigationIsDisplayed()
   }
 
@@ -123,6 +131,9 @@ class NavigationTest : NavigationTestUtils() {
     runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId)
@@ -177,6 +188,9 @@ class NavigationTest : NavigationTestUtils() {
     runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId)
@@ -290,6 +304,9 @@ class NavigationTest : NavigationTestUtils() {
     runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId)
@@ -306,6 +323,9 @@ class NavigationTest : NavigationTestUtils() {
     runBlocking { RepositoryProvider.userFriendsRepository.initializeUserFriends(userId) }
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId)

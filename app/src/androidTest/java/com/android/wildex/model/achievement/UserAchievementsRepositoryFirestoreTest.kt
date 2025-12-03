@@ -65,6 +65,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun canRetrieveUserAchievements() = runTest {
     repository.initializeUserAchievements(testUserId)
 
+    val testAnimalId = "testAnimal"
+    FirebaseEmulator.firestore
+        .collection("animals")
+        .document(testAnimalId)
+        .set(mapOf("name" to "unknown"))
+        .await()
+
     RepositoryProvider.postRepository.addPost(
         Post(
             postId = "post1",
@@ -73,7 +80,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             location = null,
             description = "",
             date = Timestamp.now(),
-            animalId = ""))
+            animalId = testAnimalId))
 
     repository.updateUserAchievements(testUserId)
 
@@ -89,6 +96,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun canRetrieveAchievementsCount() = runTest {
     repository.initializeUserAchievements(testUserId)
 
+    val testAnimalId = "testAnimal"
+    FirebaseEmulator.firestore
+        .collection("animals")
+        .document(testAnimalId)
+        .set(mapOf("name" to "unknown"))
+        .await()
+
     RepositoryProvider.postRepository.addPost(
         Post(
             postId = "post1",
@@ -97,7 +111,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
             location = null,
             description = "",
             date = Timestamp.now(),
-            animalId = ""))
+            animalId = testAnimalId))
 
     repository.updateUserAchievements(testUserId)
 
@@ -110,6 +124,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
       runTest(timeout = 3.minutes) {
         repository.initializeUserAchievements(testUserId)
 
+        val testAnimalId = "testAnimal"
+        FirebaseEmulator.firestore
+            .collection("animals")
+            .document(testAnimalId)
+            .set(mapOf("name" to "unknown"))
+            .await()
+
         RepositoryProvider.postRepository.addPost(
             Post(
                 postId = "post1",
@@ -118,7 +139,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
                 location = null,
                 description = "",
                 date = Timestamp.now(),
-                animalId = ""))
+                animalId = testAnimalId))
 
         repository.updateUserAchievements(testUserId)
 

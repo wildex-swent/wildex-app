@@ -1,6 +1,7 @@
 package com.android.wildex.model.achievement
 
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -28,6 +29,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Before
   override fun setUp() {
     super.setUp()
+
     runBlocking {
       RepositoryProvider.userRepository.addUser(
           User(
@@ -66,11 +68,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(testUserId)
 
     val testAnimalId = "testAnimal"
-    FirebaseEmulator.firestore
-        .collection("animals")
-        .document(testAnimalId)
-        .set(mapOf("name" to "unknown"))
-        .await()
+    RepositoryProvider.animalRepository.addAnimal(
+        Animal(
+            animalId = testAnimalId,
+            name = "unknown",
+            pictureURL = "",
+            species = "",
+            description = ""))
 
     RepositoryProvider.postRepository.addPost(
         Post(
@@ -97,11 +101,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     repository.initializeUserAchievements(testUserId)
 
     val testAnimalId = "testAnimal"
-    FirebaseEmulator.firestore
-        .collection("animals")
-        .document(testAnimalId)
-        .set(mapOf("name" to "unknown"))
-        .await()
+    RepositoryProvider.animalRepository.addAnimal(
+        Animal(
+            animalId = testAnimalId,
+            name = "unknown",
+            pictureURL = "",
+            species = "",
+            description = ""))
 
     RepositoryProvider.postRepository.addPost(
         Post(
@@ -125,11 +131,13 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
         repository.initializeUserAchievements(testUserId)
 
         val testAnimalId = "testAnimal"
-        FirebaseEmulator.firestore
-            .collection("animals")
-            .document(testAnimalId)
-            .set(mapOf("name" to "unknown"))
-            .await()
+        RepositoryProvider.animalRepository.addAnimal(
+            Animal(
+                animalId = testAnimalId,
+                name = "unknown",
+                pictureURL = "",
+                species = "",
+                description = ""))
 
         RepositoryProvider.postRepository.addPost(
             Post(
@@ -160,9 +168,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Test
   fun updateUserAchievementsWhenUserNotFoundThrowsException() = runTest {
     val userId = "nonExistentUser"
-
     val exception = runCatching { repository.updateUserAchievements(userId) }.exceptionOrNull()
-
     assertTrue(exception is IllegalArgumentException)
   }
 
@@ -206,14 +212,12 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   fun testMalformedUserAchievementDocument() = runTest {
     val userId = "testEmptyListUser"
 
-    // create an empty invalid document (so .exists() is true but no valid fields)
     FirebaseEmulator.firestore
         .collection(USER_ACHIEVEMENTS_COLLECTION_PATH)
         .document(userId)
         .set(mapOf<Int, Any>())
         .await()
 
-    // call the method to this will trigger the `?: emptyList()` branch
     val achievements = repository.getAllAchievementsByUser(userId)
 
     assertTrue(achievements.isEmpty())
@@ -228,7 +232,6 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
       repository.deleteUserAchievements(user1.userId)
     } catch (e: IllegalArgumentException) {
       exceptionThrown = true
-
       assertEquals("A userAchievements with userId '${user1.userId}' does not exist.", e.message)
     }
 

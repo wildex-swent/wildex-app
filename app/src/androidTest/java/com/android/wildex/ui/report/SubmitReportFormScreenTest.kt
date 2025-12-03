@@ -94,6 +94,7 @@ class SubmitReportFormScreenTest {
               SubmitReportUiState(
                   isSubmitting = false,
                   description = "some description",
+                  hasPickedLocation = true,
                   imageUri = Uri.parse("content://test/image.jpg"),
               ),
           onCameraClick = onCameraClick,

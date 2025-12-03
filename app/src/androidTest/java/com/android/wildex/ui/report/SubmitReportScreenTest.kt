@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,6 +84,9 @@ class SubmitReportScreenTest {
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
 
     viewModel.updateDescription("some description")
+    composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
+
+    viewModel.onLocationPicked(Location(0.0, 0.0, "Paris"))
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
 
     viewModel.updateImage(Uri.parse("content://sample/image.jpg"))

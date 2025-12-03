@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme.typography
@@ -51,7 +51,7 @@ fun LabeledDivider(text: String, color: Color) {
 fun ProgressBar(color: Color, trackColor: Color, progress: Float, modifier: Modifier = Modifier) {
   LinearProgressIndicator(
       progress = { progress },
-      modifier = modifier.clip(RoundedCornerShape(6.dp)),
+      modifier = modifier.clip(CircleShape),
       color = color,
       trackColor = trackColor,
       strokeCap = StrokeCap.Butt,

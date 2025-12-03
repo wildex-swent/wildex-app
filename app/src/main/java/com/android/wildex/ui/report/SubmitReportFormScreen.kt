@@ -62,8 +62,6 @@ object SubmitReportFormScreenTestTags {
  * @param onCameraClick Callback invoked when the camera button is clicked.
  * @param onDescriptionChange Callback invoked when the description text changes.
  * @param onSubmitClick Callback invoked when the submit button is clicked.
- * @param context The context of the current state of the application.
- * @param onGoBack Callback invoked when the user wants to go back to the previous screen.
  * @param onPickLocation Callback invoked when the location is picked,
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,8 +71,6 @@ fun SubmitReportFormScreen(
     onCameraClick: () -> Unit,
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
-    context: Context,
-    onGoBack: () -> Unit,
     onPickLocation: () -> Unit = {},
 ) {
   val context = LocalContext.current

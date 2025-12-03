@@ -198,17 +198,17 @@ class LikeRepositoryFirestoreTest : FirestoreTest(LIKE_COLLECTION_PATH) {
 
   @Test
   fun canDeleteAllLikesOfPost() = runTest {
-      repository.addLike(like1)
-      repository.addLike(like2)
-      repository.addLike(like3)
+    repository.addLike(like1)
+    repository.addLike(like2)
+    repository.addLike(like3)
 
-      repository.deleteAllLikesOfPost(like1.postId)
+    repository.deleteAllLikesOfPost(like1.postId)
 
-      val remainingLikes = repository.getLikesForPost(like1.postId)
-      assertEquals(0, remainingLikes.size)
+    val remainingLikes = repository.getLikesForPost(like1.postId)
+    assertEquals(0, remainingLikes.size)
 
-      val likesFromOtherPosts = repository.getLikesForPost(like2.postId)
-      assertEquals(1, likesFromOtherPosts.size)
-      assertEquals(like2, likesFromOtherPosts.first())
+    val likesFromOtherPosts = repository.getLikesForPost(like2.postId)
+    assertEquals(1, likesFromOtherPosts.size)
+    assertEquals(like2, likesFromOtherPosts.first())
   }
 }

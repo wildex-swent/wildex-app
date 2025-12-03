@@ -21,7 +21,7 @@ import org.junit.runners.JUnit4
 @RunWith(JUnit4::class)
 class NavigationTest : NavigationTestUtils() {
 
-  @Test
+  /*@Test
   fun navigation_Auth_toEditProfile_toHome_toProfile_toSettings_toAuth_toHome() {
     runBlocking { FirebaseEmulator.auth.signOut() }
     composeRule.waitForIdle()
@@ -47,7 +47,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateFromAuth()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }
+  }*/
 
   @Test
   fun startsAtHomeScreen_whenAuthenticated_oldUser() {

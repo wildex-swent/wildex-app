@@ -92,7 +92,7 @@ class SubmitReportScreenViewModel(
                             Location(
                                 latitude = loc.latitude,
                                 longitude = loc.longitude,
-                                name = _uiState.value.location?.name!!,
+                                name = _uiState.value.location?.name ?: "Unknown",
                             ))
               } else {
                 setError("Unable to fetch current location.")

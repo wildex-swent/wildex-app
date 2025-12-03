@@ -29,7 +29,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2583/2583343.png",
           description = "Reach 10 posts",
           name = "Post Master",
-          condition = { userId -> postRepository.getAllPostsByGivenAuthor(userId).size >= 10 },
+          progress = { userId ->
+            listOf(Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 10))
+          },
       )
 
   /**
@@ -42,7 +44,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616408.png",
           description = "Like 50 posts",
           name = "Social Butterfly",
-          condition = { userId -> likeRepository.getAllLikesByUser(userId).size >= 50 },
+          progress = { userId ->
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 50))
+          },
       )
 
   /** Community Builder — awarded for writing at least 20 comments. */
@@ -52,7 +56,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
           description = "Write 20 comments",
           name = "Community Builder",
-          condition = { userId -> commentRepository.getCommentsByUser(userId).size >= 20 },
+          progress = { userId ->
+            listOf(Triple("Comments", commentRepository.getCommentsByUser(userId).size, 20))
+          },
       )
 
   /** Influencer — awarded for receiving a total of 1000 likes across all posts. */
@@ -62,10 +68,8 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4339/4339544.png",
           description = "Get 1000 likes across all your posts",
           name = "Influencer",
-          condition = { userId ->
-            postRepository.getAllPostsByGivenAuthor(userId).sumOf {
-              likeRepository.getLikesForPost(it.postId).size
-            } >= 1000
+          progress = { userId ->
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 1000))
           },
       )
 
@@ -76,7 +80,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/1828/1828961.png",
           description = "Create your first post",
           name = "First Post",
-          condition = { userId -> postRepository.getAllPostsByGivenAuthor(userId).isNotEmpty() },
+          progress = { userId ->
+            listOf(Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 1))
+          },
       )
 
   /** Rising Star — awarded for a post that reaches at least 100 likes. */
@@ -86,10 +92,8 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/616/616490.png",
           description = "Get 100 likes on a single post",
           name = "Rising Star",
-          condition = { userId ->
-            postRepository.getAllPostsByGivenAuthor(userId).any {
-              likeRepository.getLikesForPost(it.postId).size >= 100
-            }
+          progress = { userId ->
+            listOf(Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 100))
           },
       )
 
@@ -100,7 +104,9 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/2462/2462719.png",
           description = "Write 50 comments overall",
           name = "Conversationalist",
-          condition = { userId -> commentRepository.getCommentsByUser(userId).size >= 50 },
+          progress = { userId ->
+            listOf(Triple("Comments", commentRepository.getCommentsByUser(userId).size, 50))
+          },
       )
 
   /**
@@ -115,11 +121,12 @@ object Achievements {
           pictureURL = "https://cdn-icons-png.flaticon.com/512/4144/4144723.png",
           description = "Be active across Wildex: post, like, and comment regularly",
           name = "Engaged Creator",
-          condition = { userId ->
-            val postsOk = postRepository.getAllPostsByGivenAuthor(userId).size >= 5
-            val likesOk = likeRepository.getAllLikesByUser(userId).size >= 10
-            val commentsOk = commentRepository.getCommentsByUser(userId).size >= 10
-            postsOk && likesOk && commentsOk
+          progress = { userId ->
+            listOf(
+                Triple("Posts", postRepository.getAllPostsByGivenAuthor(userId).size, 5),
+                Triple("Likes", likeRepository.getAllLikesByUser(userId).size, 10),
+                Triple("Comments", commentRepository.getCommentsByUser(userId).size, 10),
+            )
           },
       )
 

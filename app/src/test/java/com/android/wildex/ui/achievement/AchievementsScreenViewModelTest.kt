@@ -2,17 +2,8 @@ package com.android.wildex.ui.achievement
 
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
-import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserRepository
-import com.android.wildex.model.user.UserType
-import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertNull
-import junit.framework.TestCase.assertTrue
 import kotlin.collections.listOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,12 +13,15 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AchievementsScreenViewModelTest {
-  private lateinit var userRepository: UserRepository
   private lateinit var userAchievementsRepository: UserAchievementsRepository
   private lateinit var currentUserId: String
 
@@ -81,53 +75,6 @@ class AchievementsScreenViewModelTest {
           description = "This is another mock achievement for testing purposes",
           name = "Mock Achievement 2",
       )
-
-  private val u1 =
-      User(
-          userId = "currentUserId",
-          username = "currentUsername",
-          name = "John",
-          surname = "Doe",
-          bio = "This is a bio",
-          profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "France",
-      )
-
-  private val u2 =
-      User(
-          userId = "otherUserId",
-          username = "otherUsername",
-          name = "Bob",
-          surname = "Smith",
-          bio = "This is my bob bio",
-          profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp.now(),
-          country = "France",
-      )
-
-  private val su1 =
-      SimpleUser(
-          userId = "currentUserId",
-          username = "currentUsername",
-          profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-          userType = UserType.REGULAR,
-      )
-
-  private val su2 =
-      SimpleUser(
-          userId = "otherUserId",
-          username = "otherUsername",
-          profilePictureURL =
-              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-          userType = UserType.REGULAR,
-      )
-
   private val dummyUnlocked = listOf(postMaster, communityBuilder, firstPost)
   private val dummyLocked = listOf(conversationalist, mockAchievement1, mockAchievement2)
   private val achievements = dummyUnlocked + dummyLocked
@@ -137,17 +84,7 @@ class AchievementsScreenViewModelTest {
     Dispatchers.setMain(testDispatcher)
     currentUserId = "currentUserId"
     userAchievementsRepository = mockk()
-    userRepository = mockk()
-    viewModel =
-        AchievementsScreenViewModel(
-            userAchievementsRepository = userAchievementsRepository,
-            userRepository = userRepository,
-            currentUserId = currentUserId,
-        )
-    coEvery { userRepository.getUser("currentUserId") } returns u1
-    coEvery { userRepository.getUser("otherUserId") } returns u2
-    coEvery { userRepository.getSimpleUser("currentUserId") } returns su1
-    coEvery { userRepository.getSimpleUser("otherUserId") } returns su2
+    viewModel = AchievementsScreenViewModel(userAchievementsRepository)
   }
 
   @After
@@ -178,8 +115,29 @@ class AchievementsScreenViewModelTest {
 
       val loadedState = viewModel.uiState.value
       assertFalse(loadedState.isLoading)
-      assertEquals(dummyUnlocked, loadedState.unlocked)
-      assertEquals(dummyLocked, loadedState.locked)
+      val unlockedAchievementUIStates =
+          dummyUnlocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+
+      val lockedAchievementUIStates =
+          dummyLocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+      assertEquals(unlockedAchievementUIStates, loadedState.unlocked)
+      assertEquals(lockedAchievementUIStates, loadedState.locked)
       assertFalse(loadedState.isError)
       assertNull(loadedState.errorMsg)
     }
@@ -201,8 +159,29 @@ class AchievementsScreenViewModelTest {
 
       val loadedState = viewModel.uiState.value
       assertFalse(loadedState.isLoading)
-      assertEquals(dummyUnlocked, loadedState.unlocked)
-      assertEquals(dummyLocked, loadedState.locked)
+      val unlockedAchievementUIStates =
+          dummyUnlocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+
+      val lockedAchievementUIStates =
+          dummyLocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+      assertEquals(unlockedAchievementUIStates, loadedState.unlocked)
+      assertEquals(lockedAchievementUIStates, loadedState.locked)
       assertFalse(loadedState.isError)
       assertNull(loadedState.errorMsg)
     }
@@ -236,8 +215,29 @@ class AchievementsScreenViewModelTest {
 
       val loadedState = viewModel.uiState.value
       assertFalse(loadedState.isLoading)
-      assertEquals(dummyUnlocked, loadedState.unlocked)
-      assertEquals(dummyLocked, loadedState.locked)
+      val unlockedAchievementUIStates =
+          dummyUnlocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+
+      val lockedAchievementUIStates =
+          dummyLocked.map { achievement ->
+            AchievementUIState(
+                id = achievement.achievementId,
+                name = achievement.name,
+                description = achievement.description,
+                pictureURL = achievement.pictureURL,
+                progress = achievement.progress(currentUserId),
+            )
+          }
+      assertEquals(unlockedAchievementUIStates, loadedState.unlocked)
+      assertEquals(lockedAchievementUIStates, loadedState.locked)
       assertFalse(loadedState.isError)
       assertNull(loadedState.errorMsg)
     }

@@ -68,6 +68,8 @@ class NotificationScreenTest {
           override suspend fun deleteNotification(notificationId: Id) {}
 
           override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
         }
     fakeUserRepo =
         object : UserRepository {

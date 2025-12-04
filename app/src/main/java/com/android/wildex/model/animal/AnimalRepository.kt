@@ -13,4 +13,7 @@ interface AnimalRepository {
 
   /** Adds a new Animal item to the repository. */
   suspend fun addAnimal(animal: Animal)
+
+  /** Deletes an Animal item from the repository. */
+  suspend fun deleteAnimal(animalId: Id)
 }

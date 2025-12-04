@@ -113,4 +113,12 @@ class AnimalRepositoryFirestoreTest : FirestoreTest(ANIMAL_COLLECTION_PATH) {
     val animals = repository.getAllAnimals()
     assertTrue(animals.isEmpty())
   }
+
+  @Test
+  fun canDeleteAnimalById() = runTest {
+    repository.addAnimal(animal1)
+    repository.deleteAnimal(animal1.animalId)
+    val animals = repository.getAllAnimals()
+    assertTrue(animals.isEmpty())
+  }
 }

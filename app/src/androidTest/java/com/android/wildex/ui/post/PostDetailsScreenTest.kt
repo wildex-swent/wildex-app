@@ -415,7 +415,7 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserIsAuthor_and_deletePopUp_works() {
+  fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserIsAuthor() {
     val vm =
         PostDetailsScreenViewModel(
             LocalRepositories.postsRepository,
@@ -456,10 +456,36 @@ class PostDetailsScreenTest {
 
     openSheet()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
+  }
 
-    openSheet()
+  @Test
+  fun deletePopUp_works() {
+    val vm =
+        PostDetailsScreenViewModel(
+            LocalRepositories.postsRepository,
+            LocalRepositories.userRepository,
+            LocalRepositories.commentRepository,
+            LocalRepositories.animalRepository,
+            LocalRepositories.likeRepository,
+            LocalRepositories.userAnimalsRepository,
+            "poster1")
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = vm,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
+
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_DELETE).performClick()
     composeRule.waitForIdle()
+
     composeRule.onNodeWithTag(PostDetailsScreenTestTags.DELETE_POST_DIALOG).assertIsDisplayed()
     composeRule
         .onNodeWithTag(PostDetailsScreenTestTags.DELETE_POST_DISMISS_BUTTON)

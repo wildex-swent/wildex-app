@@ -15,6 +15,7 @@ import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
@@ -27,10 +28,10 @@ class SubmitReportScreenTest {
   private lateinit var reportRepository: ReportRepository
   private lateinit var storageRepository: StorageRepository
   private lateinit var viewModel: SubmitReportScreenViewModel
-
   private lateinit var onSubmitted: () -> Unit
   private lateinit var onGoBack: () -> Unit
   private lateinit var fakeStateFlow: MutableStateFlow<SubmitReportUiState>
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private var submitClicked = false
   private var goBackClicked = false
 
@@ -52,8 +53,11 @@ class SubmitReportScreenTest {
 
   @Test
   fun displaysFormScreen_whenLaunched() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      }
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
@@ -66,8 +70,11 @@ class SubmitReportScreenTest {
 
   @Test
   fun clickingBackButton_calls_onNavigateBack() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      }
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.BACK_BUTTON).performClick()
@@ -76,8 +83,11 @@ class SubmitReportScreenTest {
 
   @Test
   fun submitButton_click_triggers_submitReport() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      }
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
@@ -91,9 +101,12 @@ class SubmitReportScreenTest {
 
   @Test
   fun showsSelectedImage_whenImageUriPresent() {
+    fakeObserver.setOnline(true)
     viewModel.updateImage(Uri.parse("content://sample/image.jpg"))
     composeTestRule.setContent {
-      SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
+      }
     }
 
     composeTestRule
@@ -103,8 +116,9 @@ class SubmitReportScreenTest {
 
   @Test
   fun offlineScreenIsDisplayedWhenOfflineSubmitReportScreen() {
+    fakeObserver.setOnline(false)
     composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         SubmitReportScreen(viewModel = viewModel, onSubmitted = onSubmitted, onGoBack = onGoBack)
       }
     }

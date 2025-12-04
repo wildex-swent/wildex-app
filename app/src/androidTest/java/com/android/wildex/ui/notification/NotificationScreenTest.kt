@@ -24,6 +24,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import org.junit.Assert
 import org.junit.Assert.assertFalse
@@ -37,6 +38,7 @@ class NotificationScreenTest {
   private lateinit var fakeNotifRepo: NotificationRepository
   private lateinit var domainNotifications: List<Notification>
   private lateinit var fakeUserRepo: UserRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   @Before
   fun setUp() {
@@ -154,6 +156,7 @@ class NotificationScreenTest {
 
   @Test
   fun goBack_triggersCallback() {
+    fakeObserver.setOnline(true)
     var back = 0
     val fakeNotifRepo =
         object : NotificationRepository {
@@ -199,11 +202,13 @@ class NotificationScreenTest {
         )
 
     composeRule.setContent {
-      NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+      }
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
-    composeRule.runOnIdle { /* ensure callback executed */}
+    composeRule.runOnIdle { /* ensure callback executed */ }
     Assert.assertEquals(1, back)
   }
 
@@ -333,6 +338,7 @@ class NotificationScreenTest {
 
   @Test
   fun notificationScreen_showsSampleNotificationsByDefault() {
+    fakeObserver.setOnline(true)
     val domainNotifications =
         sampleNotifications.map {
           Notification(
@@ -395,7 +401,9 @@ class NotificationScreenTest {
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
-        NotificationScreen(notificationScreenViewModel = vm)
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          NotificationScreen(notificationScreenViewModel = vm)
+        }
       }
     }
     composeRule.waitForIdle()
@@ -408,6 +416,7 @@ class NotificationScreenTest {
 
   @Test
   fun refreshDisabledWhenOfflineNotifications() {
+    fakeObserver.setOnline(false)
     val vm =
         NotificationScreenViewModel(
             notificationRepository = fakeNotifRepo,
@@ -416,7 +425,7 @@ class NotificationScreenTest {
         )
 
     composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         NotificationScreen(notificationScreenViewModel = vm)
       }
     }

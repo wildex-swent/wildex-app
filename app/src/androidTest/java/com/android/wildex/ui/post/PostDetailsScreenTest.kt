@@ -40,6 +40,7 @@ import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.utils.images.ImageWithDoubleTapLikeTestTags
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,7 +60,7 @@ class PostDetailsScreenTest {
   private val likeRepository: LikeRepository = LocalRepositories.likeRepository
   private val animalRepository: AnimalRepository = LocalRepositories.animalRepository
   private val userAnimalsRepository: UserAnimalsRepository = LocalRepositories.userAnimalsRepository
-
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var postDetailsViewModel: PostDetailsScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -222,14 +223,17 @@ class PostDetailsScreenTest {
 
   @Test
   fun postDetailsScreen_likeButton_addsLike_removesLike() {
+    fakeObserver.setOnline(true)
     runBlocking { postDetailsViewModel.loadPostDetails("post1") }
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
     // Like count before
@@ -248,14 +252,17 @@ class PostDetailsScreenTest {
 
   @Test
   fun postDetailsScreen_commentIsDisplayedAndCanBeAdded() {
+    fakeObserver.setOnline(true)
     runBlocking { postDetailsViewModel.loadPostDetails("post1") }
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
     // Comments displayed
@@ -275,15 +282,18 @@ class PostDetailsScreenTest {
 
   @Test
   fun postDetailsScreen_profilePictureClicks_triggerCallback() {
+    fakeObserver.setOnline(true)
     runBlocking { postDetailsViewModel.loadPostDetails("post1") }
     var profileClicked = ""
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = { profileClicked = it },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = { profileClicked = it },
+        )
+      }
     }
     composeRule.waitForIdle()
     // Click posters profile picture
@@ -296,19 +306,22 @@ class PostDetailsScreenTest {
         PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
     composeRule
         .onNodeWithTag(
-            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
+            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter")
+        )
         .performClick()
     Assert.assertEquals("commenter1", profileClicked)
     // Click current users profile picture in the comment input
     composeRule
         .onNodeWithTag(
-            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input"))
+            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input")
+        )
         .performClick()
     Assert.assertEquals("currentUserId-1", profileClicked)
   }
 
   @Test
   fun loadingScreen_showsWhileFetchingPosts() {
+    fakeObserver.setOnline(true)
     val fetchSignal = CompletableDeferred<Unit>()
     val delayedPostsRepo =
         object : LocalRepositories.PostsRepositoryImpl() {
@@ -338,7 +351,11 @@ class PostDetailsScreenTest {
               LocalRepositories.userAnimalsRepository,
               "currentUserId-1",
           )
-      composeRule.setContent { PostDetailsScreen("post1", vm) }
+      composeRule.setContent {
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          PostDetailsScreen("post1", vm)
+        }
+      }
       composeRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
@@ -352,7 +369,12 @@ class PostDetailsScreenTest {
 
   @Test
   fun failScreenShown_whenPostLookupFails() {
-    composeRule.setContent { PostDetailsScreen("bad", postDetailsViewModel) }
+    fakeObserver.setOnline(true)
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen("bad", postDetailsViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule
@@ -362,8 +384,9 @@ class PostDetailsScreenTest {
 
   @Test
   fun offlineScreenIsDisplayedWhenOfflinePostDetails() {
+    fakeObserver.setOnline(false)
     composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         PostDetailsScreen(
             postId = "post1",
             postDetailsScreenViewModel = postDetailsViewModel,

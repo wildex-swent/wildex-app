@@ -26,8 +26,8 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.ui.post.Comment
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -48,6 +48,7 @@ class HomeScreenTest {
   private val commentRepository = LocalRepositories.commentRepository
   private val animalRepository = LocalRepositories.animalRepository
   private val userSettingsRepository = LocalRepositories.userSettingsRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private val userFriendsRepository = LocalRepositories.userFriendsRepository
 
   private val fullPost =
@@ -89,7 +90,8 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        ))
+        )
+    )
     userRepository.addUser(
         User(
             userId = "poster0",
@@ -102,7 +104,8 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        ))
+        )
+    )
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
     animalRepository.addAnimal(
@@ -122,7 +125,8 @@ class HomeScreenTest {
             description = "animal2",
             pictureURL = "",
             species = "species2",
-        ))
+        )
+    )
     animalRepository.addAnimal(
         Animal(
             animalId = "a3",
@@ -130,7 +134,8 @@ class HomeScreenTest {
             description = "animal3",
             pictureURL = "",
             species = "species3",
-        ))
+        )
+    )
     animalRepository.addAnimal(
         Animal(
             animalId = "a4",
@@ -138,7 +143,8 @@ class HomeScreenTest {
             description = "animal4",
             pictureURL = "",
             species = "species4",
-        ))
+        )
+    )
     animalRepository.addAnimal(
         Animal(
             animalId = "a5",
@@ -146,7 +152,8 @@ class HomeScreenTest {
             description = "animal5",
             pictureURL = "",
             species = "species5",
-        ))
+        )
+    )
     animalRepository.addAnimal(
         Animal(
             animalId = "a6",
@@ -154,7 +161,8 @@ class HomeScreenTest {
             description = "animal6",
             pictureURL = "",
             species = "species6",
-        ))
+        )
+    )
   }
 
   @After
@@ -164,7 +172,12 @@ class HomeScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNoPost() {
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
@@ -188,6 +201,7 @@ class HomeScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenPosts() {
+    fakeObserver.setOnline(true)
     val fullPost2 = fullPost.copy(postId = "post2", animalId = "a2")
     val fullPost3 = fullPost.copy(postId = "post3", animalId = "a3")
     val fullPost4 = fullPost.copy(postId = "post4", animalId = "a4")
@@ -204,7 +218,11 @@ class HomeScreenTest {
       homeScreenVM.refreshUIState()
     }
 
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
@@ -260,6 +278,7 @@ class HomeScreenTest {
 
   @Test
   fun postWithoutLocation_doesNotShowLocation() {
+    fakeObserver.setOnline(true)
     val noLocationPost = fullPost.copy(location = null)
     val blankLocationPost = fullPost.copy(location = Location(0.0, 0.0, "   "))
     runBlocking {
@@ -267,7 +286,11 @@ class HomeScreenTest {
       postRepository.addPost(blankLocationPost)
     }
 
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
 
     composeTestRule
         .onNodeWithTag(
@@ -285,10 +308,13 @@ class HomeScreenTest {
 
   @Test
   fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var profileClicked = false
 
     composeTestRule.setContent {
-      HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = true })
+      }
     }
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).performClick()
@@ -297,9 +323,12 @@ class HomeScreenTest {
 
   @Test
   fun notificationBellClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var notificationClicked = false
     composeTestRule.setContent {
-      HomeScreen(homeScreenVM, onNotificationClick = { notificationClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM, onNotificationClick = { notificationClicked = true })
+      }
     }
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
     assert(notificationClicked)
@@ -307,11 +336,16 @@ class HomeScreenTest {
 
   @Test
   fun likeButtonAndLikeCountClick_togglesLikeToRepository() {
+    fakeObserver.setOnline(true)
     runBlocking {
       postRepository.addPost(fullPost)
       homeScreenVM.refreshUIState()
     }
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(fullPost.postId), useUnmergedTree = true)
         .performClick()
@@ -332,20 +366,23 @@ class HomeScreenTest {
 
   @Test
   fun postImageAndCommentCountClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var postClicked = false
     runBlocking {
       postRepository.addPost(fullPost)
       homeScreenVM.refreshUIState()
     }
     composeTestRule.setContent {
-      HomeScreen(
-          homeScreenVM,
-          onPostClick = { postId ->
-            if (postId == fullPost.postId) {
-              postClicked = true
-            }
-          },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(
+            homeScreenVM,
+            onPostClick = { postId ->
+              if (postId == fullPost.postId) {
+                postClicked = true
+              }
+            },
+        )
+      }
     }
 
     composeTestRule
@@ -364,10 +401,15 @@ class HomeScreenTest {
 
   @Test
   fun postGetsSkipped_whenAuthorLookupFails() {
+    fakeObserver.setOnline(true)
     val badPost = fullPost.copy(postId = "bad", authorId = "unknown-author")
     runBlocking { postRepository.addPost(badPost) }
 
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
     composeTestRule.waitForIdle()
 
     assertFullPostIsNotDisplayed("bad")
@@ -375,6 +417,7 @@ class HomeScreenTest {
 
   @Test
   fun likeAndCommentCountsAreDisplayedCorrectly() {
+    fakeObserver.setOnline(true)
     val postWithCounts = fullPost.copy(postId = "counts")
     val postWithCount = fullPost.copy(postId = "count")
     runBlocking {
@@ -389,7 +432,8 @@ class HomeScreenTest {
                 "",
                 Timestamp.now(),
                 CommentTag.POST_COMMENT,
-            ))
+            )
+        )
       }
       commentRepository.addComment(
           Comment(
@@ -399,18 +443,25 @@ class HomeScreenTest {
               "",
               Timestamp.now(),
               CommentTag.POST_COMMENT,
-          ))
+          )
+      )
       postRepository.addPost(postWithCounts)
       postRepository.addPost(postWithCount)
       homeScreenVM.refreshUIState()
     }
-    composeTestRule.setContent { HomeScreen(homeScreenVM) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
 
     // Scroll to first post and assert
     scrollToPost(postWithCounts.postId)
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.likeButtonTag(postWithCounts.postId), useUnmergedTree = true)
+            HomeScreenTestTags.likeButtonTag(postWithCounts.postId),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("42"))
@@ -424,7 +475,9 @@ class HomeScreenTest {
     scrollToPost(postWithCount.postId)
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.likeButtonTag(postWithCount.postId), useUnmergedTree = true)
+            HomeScreenTestTags.likeButtonTag(postWithCount.postId),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1"))
@@ -440,6 +493,7 @@ class HomeScreenTest {
 
   @Test
   fun loadingScreen_showsWhileFetchingPosts() {
+    fakeObserver.setOnline(true)
     val fetchSignal = CompletableDeferred<Unit>()
     val delayedPostsRepo =
         object : LocalRepositories.PostsRepositoryImpl() {
@@ -461,7 +515,9 @@ class HomeScreenTest {
               "currentUserId-1",
           )
       vm.loadUIState()
-      composeTestRule.setContent { HomeScreen(vm) }
+      composeTestRule.setContent {
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) { HomeScreen(vm) }
+      }
       composeTestRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
           .assertIsDisplayed()
@@ -475,6 +531,7 @@ class HomeScreenTest {
 
   @Test
   fun refreshDisabledWhenOfflineWithPostsHomeScreen() {
+    fakeObserver.setOnline(false)
     val fullPost2 = fullPost.copy(postId = "post2", animalId = "a2")
     val fullPost3 = fullPost.copy(postId = "post3", animalId = "a3")
 
@@ -486,7 +543,7 @@ class HomeScreenTest {
     }
 
     composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         HomeScreen(homeScreenVM)
       }
     }
@@ -498,8 +555,9 @@ class HomeScreenTest {
 
   @Test
   fun refreshDisabledWhenOfflineWithoutPostsHomeScreen() {
+    fakeObserver.setOnline(false)
     composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         HomeScreen(homeScreenVM)
       }
     }

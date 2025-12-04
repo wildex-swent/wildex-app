@@ -49,14 +49,13 @@ android {
     }
 
     release {
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
 
-    debug { isMinifyEnabled = false }
-
     debug {
+      isMinifyEnabled = false
       enableUnitTestCoverage = true
       enableAndroidTestCoverage = true
     }
@@ -72,11 +71,11 @@ android {
   composeOptions { kotlinCompilerExtensionVersion = "1.5.3" }
 
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
 
-  kotlinOptions { jvmTarget = "11" }
+  kotlinOptions { jvmTarget = "17" }
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -270,8 +269,7 @@ tasks.withType<Test> {
     junitXml.required.set(true)
     html.required.set(true)
   }
-
-  maxParallelForks = 1
+  maxParallelForks = Runtime.getRuntime().availableProcessors().div(2).coerceAtLeast(1)
   // Configure Jacoco for each tests
   configure<JacocoTaskExtension> {
     isIncludeNoLocationClasses = true

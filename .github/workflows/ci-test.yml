@@ -1,0 +1,225 @@
+name: Parallel CI - Test Runner
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  assemble-apk:
+    name: Assemble APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Common Android CI setup
+        uses: ./.github/actions/gradle-setup
+        with:
+          google-services: ${{ secrets.GOOGLE_SERVICES }}
+          local-properties: ${{ secrets.LOCAL_PROPERTIES }}
+          keystore: ${{ secrets.KEYSTORE }}
+
+      - name: Assemble APKs
+        run: ./gradlew assembleDebug assembleDebugAndroidTest --parallel --build-cache
+
+      - name: Upload app-debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
+
+      - name: Upload app-debug-androidTest APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-androidTest
+          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          retention-days: 1
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Common Android CI setup
+        uses: ./.github/actions/gradle-setup
+        with:
+          google-services: ${{ secrets.GOOGLE_SERVICES }}
+          local-properties: ${{ secrets.LOCAL_PROPERTIES }}
+          keystore: ${{ secrets.KEYSTORE }}
+
+      - name: Run unit tests (debug)
+        run: ./gradlew testDebugUnitTest --parallel --build-cache
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: app/build/outputs/unit_test_code_coverage/**/testDebugUnitTest.exec
+          retention-days: 1
+
+  android-tests:
+    name: Android tests (matrix)
+    runs-on: ubuntu-latest
+    needs:
+      - assemble-apk
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Common Android CI setup (with AVD cache)
+        uses: ./.github/actions/gradle-setup
+        with:
+          google-services: ${{ secrets.GOOGLE_SERVICES }}
+          local-properties: ${{ secrets.LOCAL_PROPERTIES }}
+          keystore: ${{ secrets.KEYSTORE }}
+
+      - name: Download app-debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-debug
+          path: apks/
+
+      - name: Download app-debug-androidTest APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-debug-androidTest
+          path: apks/
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34
+
+      - name: create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Start Firebase emulators
+        run: |
+          if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
+            echo "Starting Firebase emulators for instrumentation tests..."
+            firebase emulators:start --project demo-project &
+            echo "Firebase emulators started"
+          else
+            echo "Firebase emulators not configured, skipping emulator startup..."
+          fi
+
+      - name: Run Android tests (shard ${{ matrix.shard }})
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb devices
+
+            # Install pre-built APKs
+            adb install -r apks/app-debug.apk
+            adb install -r apks/app-debug-androidTest.apk
+
+            # Run instrumentation with sharding
+            adb shell am instrument -w -e numShards 3 -e shardIndex ${{ matrix.shard }} com.android.wildex.test/androidx.test.runner.AndroidJUnitRunner
+
+            # Pull coverage from app internal storage into the expected path
+            mkdir -p app/build/outputs/code_coverage/debugAndroidTest/connected/shard-${{ matrix.shard }}
+            adb exec-out run-as com.android.wildex cat files/coverage.ec > app/build/outputs/code_coverage/debugAndroidTest/connected/shard-${{ matrix.shard }}/coverage.ec
+
+      - name: Upload android test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-coverage-${{ matrix.shard }}
+          path: app/build/outputs/code_coverage/debugAndroidTest/connected/shard-${{ matrix.shard }}/coverage.ec
+          retention-days: 1
+
+  coverage-and-sonar:
+    name: JaCoCo & Sonar
+    runs-on: ubuntu-latest
+    needs:
+      - unit-tests
+      - android-tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Common Android CI setup
+        uses: ./.github/actions/gradle-setup
+        with:
+          google-services: ${{ secrets.GOOGLE_SERVICES }}
+          local-properties: ${{ secrets.LOCAL_PROPERTIES }}
+          keystore: ${{ secrets.KEYSTORE }}
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage/unit
+
+      - name: Download android test coverage (all shards)
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage/android
+
+      - name: Move coverage into expected build paths
+        run: |
+          mkdir -p app/build/outputs/unit_test_code_coverage/debugUnitTest
+          find coverage/unit -name "*.exec" -print -exec cp {} app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec \;
+
+          mkdir -p app/build/outputs/code_coverage/debugAndroidTest/connected
+          i=0
+          while IFS= read -r ec; do
+            dir="app/build/outputs/code_coverage/debugAndroidTest/connected/shard-$i"
+            mkdir -p "$dir"
+            cp "$ec" "$dir/coverage.ec"
+            i=$((i+1))
+          done < <(find coverage/android -name "*.ec" -print)
+        shell: bash
+
+      - name: Generate Coverage Report
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload report to SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar --parallel --build-cache

@@ -192,4 +192,18 @@ class LocationPickerScreenViewModelTest {
         assertTrue(event is LocationPickerEvent.Confirmed)
         assertEquals(loc, (event as LocationPickerEvent.Confirmed).location)
       }
+
+  @Test
+  fun useCurrentLocationNameAsQuery_setsErrorWhenReverseGeocodeFails() =
+      mainDispatcherRule.runTest {
+        viewModel.onLocationPermissionResult(true)
+        viewModel.onUserLocationAvailable(10.0, 20.0)
+        coEvery { geocodingRepository.reverseGeocode(10.0, 20.0) } returns null
+        viewModel.useCurrentLocationNameAsQuery()
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
+        assertTrue(state.isError)
+        assertEquals("Couldn't get your current location name", state.error)
+        assertEquals("", state.searchQuery)
+      }
 }

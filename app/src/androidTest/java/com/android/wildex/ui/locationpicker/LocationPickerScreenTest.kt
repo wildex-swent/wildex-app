@@ -3,12 +3,15 @@ package com.android.wildex.ui.locationpicker
 import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
@@ -180,5 +183,42 @@ class LocationPickerScreenTest {
     composeTestRule.waitForIdle()
     assert(pickedLocation != null)
     assert(pickedLocation?.name == "Paris Suggestion 0")
+  }
+
+  @Test
+  fun clickingSearchIcon_clearsFocusOnSearchField() {
+    composeTestRule.setContent {
+      LocationPickerScreen(
+          onBack = {},
+          onLocationPicked = {},
+          viewModel = vm,
+      )
+    }
+    val searchField =
+        composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD, useUnmergedTree = true)
+    val searchButton = composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_BUTTON)
+    searchField.performClick()
+    searchField.assertIsFocused()
+    searchField.performTextInput("Lausanne")
+    searchButton.performClick()
+    searchField.assertIsNotFocused()
+  }
+
+  @Test
+  fun imeSearchAction_clearsFocusOnSearchField() {
+    composeTestRule.setContent {
+      LocationPickerScreen(
+          onBack = {},
+          onLocationPicked = {},
+          viewModel = vm,
+      )
+    }
+    val searchField =
+        composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD, useUnmergedTree = true)
+    searchField.performClick()
+    searchField.assertIsFocused()
+    searchField.performTextInput("Lausanne")
+    searchField.performImeAction()
+    searchField.assertIsNotFocused()
   }
 }

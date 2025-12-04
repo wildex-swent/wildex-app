@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -98,9 +96,8 @@ fun ReportScreen(
 ) {
   val context = LocalContext.current
   val uiState by reportScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -131,8 +128,7 @@ fun ReportScreen(
           context = context,
           onProfileClick = onProfileClick,
           onReportClick = onReportClick,
-          onSubmitReportClick = onSubmitReportClick,
-          isOnline = isOnline)
+          onSubmitReportClick = onSubmitReportClick)
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -158,8 +154,7 @@ fun ReportScreenContent(
     context: Context,
     onProfileClick: (Id) -> Unit,
     onReportClick: (Id) -> Unit,
-    onSubmitReportClick: () -> Unit,
-    isOnline: Boolean
+    onSubmitReportClick: () -> Unit
 ) {
   val pullState = rememberPullToRefreshState()
 
@@ -167,10 +162,7 @@ fun ReportScreenContent(
     PullToRefreshBox(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
-        onRefresh = {
-          if (isOnline) reportScreenViewModel.refreshUIState()
-          else reportScreenViewModel.refreshOffline()
-        },
+        onRefresh = { reportScreenViewModel.refreshUIState() },
         modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)) {
           when {
             uiState.isError -> LoadingFail()

@@ -6,8 +6,6 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.test.espresso.action.ViewActions.swipeDown
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -17,11 +15,11 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,6 +28,7 @@ import org.junit.Test
 class ReportScreenTest {
   private val reportRepository: ReportRepository = LocalRepositories.reportRepository
   private val userRepository: UserRepository = LocalRepositories.userRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var reportScreenViewModel: ReportScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -117,11 +116,15 @@ class ReportScreenTest {
 
   @Test
   fun notificationBellClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var notificationClicked = false
     composeRule.setContent {
-      ReportScreen(
-          reportScreenViewModel = reportScreenViewModel,
-          onNotificationClick = { notificationClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onNotificationClick = { notificationClicked = true },
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -131,11 +134,15 @@ class ReportScreenTest {
 
   @Test
   fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var profilePictureClicked = false
     composeRule.setContent {
-      ReportScreen(
-          reportScreenViewModel = reportScreenViewModel,
-          onProfileClick = { profilePictureClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onProfileClick = { profilePictureClicked = true },
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -147,7 +154,12 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenReports() {
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    fakeObserver.setOnline(true)
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
@@ -178,13 +190,18 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNOReports() {
+    fakeObserver.setOnline(true)
     runBlocking {
       reportRepository.deleteReport("reportId1")
       reportRepository.deleteReport("reportId2")
       reportScreenViewModel.refreshUIState()
     }
 
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
@@ -197,6 +214,7 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenUserIsRegular() {
+    fakeObserver.setOnline(true)
     runBlocking {
       reportScreenViewModel =
           ReportScreenViewModel(
@@ -206,7 +224,11 @@ class ReportScreenTest {
       reportScreenViewModel.refreshUIState()
     }
 
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule
@@ -219,8 +241,9 @@ class ReportScreenTest {
 
   @Test
   fun offlineScreenIsDisplayedWhenOfflineReportScreen() {
+    fakeObserver.setOnline(false)
     composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         ReportScreen(reportScreenViewModel = reportScreenViewModel)
       }
     }
@@ -229,18 +252,5 @@ class ReportScreenTest {
     composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
     composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
-  }
-
-  @Test
-  fun refreshDisabledWhenOfflineReportScreen() {
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
-        ReportScreen(reportScreenViewModel = reportScreenViewModel)
-      }
-    }
-    composeRule.onNodeWithTag(ReportScreenTestTags.PULL_TO_REFRESH).performTouchInput {
-      swipeDown()
-    }
-    assertFalse(reportScreenViewModel.uiState.value.isRefreshing)
   }
 }

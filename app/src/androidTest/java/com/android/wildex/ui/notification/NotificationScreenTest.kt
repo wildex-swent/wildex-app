@@ -38,7 +38,8 @@ class NotificationScreenTest {
                       userId = "user1",
                       username = "Jean",
                       profilePictureURL = "",
-                      userType = UserType.REGULAR),
+                      userType = UserType.REGULAR,
+                  ),
               notificationRoute = "route/to/post/1",
               notificationTitle = "Jean has liked your post",
               notificationDescription = "3min ago",
@@ -50,7 +51,8 @@ class NotificationScreenTest {
                       userId = "user2",
                       username = "Bob",
                       profilePictureURL = "",
-                      userType = UserType.REGULAR),
+                      userType = UserType.REGULAR,
+                  ),
               notificationRoute = "route/to/post/2",
               notificationTitle = "Bob spotted a tiger",
               notificationDescription = "15min ago",
@@ -62,7 +64,8 @@ class NotificationScreenTest {
                       userId = "user3",
                       username = "Alice",
                       profilePictureURL = "",
-                      userType = UserType.REGULAR),
+                      userType = UserType.REGULAR,
+                  ),
               notificationRoute = "route/to/post/3",
               notificationTitle = "Alice commented on your post",
               notificationDescription = "Alice said: Wow, amazing!",
@@ -104,6 +107,8 @@ class NotificationScreenTest {
           override suspend fun deleteNotification(notificationId: Id) {}
 
           override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
         }
     val fakeUserRepo =
         object : UserRepository {
@@ -112,7 +117,8 @@ class NotificationScreenTest {
                   userId = userId,
                   username = "u",
                   profilePictureURL = "",
-                  userType = UserType.REGULAR)
+                  userType = UserType.REGULAR,
+              )
 
           override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
 
@@ -129,7 +135,8 @@ class NotificationScreenTest {
         NotificationScreenViewModel(
             notificationRepository = fakeNotifRepo,
             userRepository = fakeUserRepo,
-            currentUserId = "testUser")
+            currentUserId = "testUser",
+        )
 
     composeRule.setContent {
       NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
@@ -152,7 +159,8 @@ class NotificationScreenTest {
             userId = authorId,
             username = "Author",
             profilePictureURL = "",
-            userType = UserType.REGULAR)
+            userType = UserType.REGULAR,
+        )
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
@@ -190,7 +198,7 @@ class NotificationScreenTest {
   @Composable
   private fun TestScreenWithSamples(
       vm: NotificationScreenViewModel,
-      samples: List<NotificationUIState>
+      samples: List<NotificationUIState>,
   ) {
     NotificationView(notifications = samples, pd = PaddingValues(0.dp))
   }
@@ -209,6 +217,8 @@ class NotificationScreenTest {
           override suspend fun deleteNotification(notificationId: Id) {}
 
           override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
         }
     val fakeUserRepo =
         object : UserRepository {
@@ -217,7 +227,8 @@ class NotificationScreenTest {
                   userId = userId,
                   username = "u",
                   profilePictureURL = "",
-                  userType = UserType.REGULAR)
+                  userType = UserType.REGULAR,
+              )
 
           override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
 
@@ -233,7 +244,8 @@ class NotificationScreenTest {
         NotificationScreenViewModel(
             notificationRepository = fakeNotifRepo,
             userRepository = fakeUserRepo,
-            currentUserId = "testUser")
+            currentUserId = "testUser",
+        )
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
@@ -288,6 +300,8 @@ class NotificationScreenTest {
           override suspend fun deleteNotification(notificationId: Id) {}
 
           override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
         }
 
     val fakeUserRepo =
@@ -297,7 +311,8 @@ class NotificationScreenTest {
                 userId = userId,
                 username = "unknown",
                 profilePictureURL = "",
-                userType = UserType.REGULAR)
+                userType = UserType.REGULAR,
+            )
           }
 
           override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
@@ -315,7 +330,8 @@ class NotificationScreenTest {
         NotificationScreenViewModel(
             notificationRepository = fakeNotifRepo,
             userRepository = fakeUserRepo,
-            currentUserId = "anyUser")
+            currentUserId = "anyUser",
+        )
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {

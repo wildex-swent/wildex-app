@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.notification.NotificationChannelType
 import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.social.FileSearchDataStorage
@@ -53,6 +56,7 @@ import com.android.wildex.ui.report.SubmitReportScreen
 import com.android.wildex.ui.settings.SettingsScreen
 import com.android.wildex.ui.social.FriendScreen
 import com.android.wildex.ui.theme.WildexTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
@@ -80,6 +84,11 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+  }
+
   private fun createNotificationChannels() {
     NotificationChannelType.entries.forEach {
       val channel =
@@ -101,6 +110,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun WildexApp(
     context: Context = LocalContext.current,
@@ -116,6 +126,17 @@ fun WildexApp(
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
+
+  val currentIntent by rememberUpdatedState((context as ComponentActivity).intent)
+  LaunchedEffect(currentIntent) {
+    val extras = currentIntent.extras
+    if (currentUserId != null) {
+      extras?.getString("path")?.let { navigationActions.navigateTo(Screen.fromString(it)) }
+      extras?.getString("notificationId")?.let {
+        RepositoryProvider.notificationRepository.markNotificationAsRead(it)
+      }
+    }
+  }
 
   NavHost(navController = navController, startDestination = startDestination) {
 
@@ -233,7 +254,8 @@ private fun NavGraphBuilder.profileComposable(navigationActions: NavigationActio
           onAchievements = { navigationActions.navigateTo(Screen.Achievements(it)) },
           onMap = { navigationActions.navigateTo(Screen.Map(it)) },
           onSettings = { navigationActions.navigateTo(Screen.Settings) },
-          onFriends = { navigationActions.navigateTo(Screen.Social(it)) })
+          onFriends = { navigationActions.navigateTo(Screen.Social(it)) },
+      )
     }
   }
 }
@@ -245,7 +267,8 @@ private fun NavGraphBuilder.socialComposable(navigationActions: NavigationAction
       FriendScreen(
           userId = userId,
           onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
-          onGoBack = { navigationActions.goBack() })
+          onGoBack = { navigationActions.goBack() },
+      )
     }
   }
 }
@@ -362,7 +385,8 @@ private fun NavGraphBuilder.mapComposable(
           onReport = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
           isCurrentUser = currentUserId == userId,
           onGoBack = { navigationActions.goBack() },
-          onProfile = { navigationActions.navigateTo(Screen.Profile(it)) })
+          onProfile = { navigationActions.navigateTo(Screen.Profile(it)) },
+      )
     }
   }
 }

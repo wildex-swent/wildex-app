@@ -270,6 +270,19 @@ class NotificationRepositoryFirestoreTest : FirestoreTest(NOTIFICATION_COLLECTIO
             .isEmpty())
   }
 
+  @Test
+  fun testDeleteAllNotificationsByUser() = runTest {
+    repository.deleteAllNotificationsByUser("author1")
+    assertTrue(
+        FirebaseEmulator.firestore
+            .collection(NOTIFICATION_COLLECTION_PATH)
+            .whereEqualTo("authorId", "author1")
+            .get()
+            .await()
+            .documents
+            .isEmpty())
+  }
+
   private fun DocumentSnapshot.toNotification(): Notification {
     val notificationId = id
     val targetId = getString("targetId") ?: throwMissingFieldException("targetId")

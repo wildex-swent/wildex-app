@@ -17,6 +17,9 @@ interface NotificationRepository {
   /** Deletes a Notification item from the repository. */
   suspend fun deleteNotification(notificationId: Id)
 
-  /** Deletes all Notification items made by a specific user. */
+  /** Deletes all Notification items made for a specific user. */
   suspend fun deleteAllNotificationsForUser(userId: Id)
+
+  /** Deletes all Notification items made by a specific user. */
+  suspend fun deleteAllNotificationsByUser(userId: Id)
 }

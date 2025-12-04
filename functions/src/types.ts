@@ -122,3 +122,8 @@ export interface UserFriends {
   friendsCount: number;
 }
 
+export interface UserSettings {
+  userId: string;
+  enableNotifications: boolean;
+  appearanceMode: string;
+}

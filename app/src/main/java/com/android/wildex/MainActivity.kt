@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.notification.NotificationChannelType
 import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.social.FileSearchDataStorage
@@ -124,12 +126,15 @@ fun WildexApp(
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
   val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
-  var path by remember {
-    mutableStateOf((context as ComponentActivity).intent.getStringExtra("path"))
-  }
-  LaunchedEffect(path) {
+
+  val currentIntent by rememberUpdatedState((context as ComponentActivity).intent)
+  LaunchedEffect(currentIntent) {
+    val extras = currentIntent.extras
     if (currentUserId != null) {
-      path?.let { navigationActions.navigateTo(Screen.fromString(it)) }
+      extras?.getString("path")?.let { navigationActions.navigateTo(Screen.fromString(it)) }
+      extras?.getString("notificationId")?.let {
+        RepositoryProvider.notificationRepository.markNotificationAsRead(it)
+      }
     }
   }
 

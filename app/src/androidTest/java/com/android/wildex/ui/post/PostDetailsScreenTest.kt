@@ -383,6 +383,7 @@ class PostDetailsScreenTest {
   @Test
   fun offlineScreenIsDisplayedWhenOfflinePostDetails() {
     fakeObserver.setOnline(false)
+    runBlocking { postDetailsViewModel.loadPostDetails("post1") }
     composeRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         PostDetailsScreen(

@@ -180,126 +180,120 @@ fun LocationPickerScreen(
       onLocationPicked = onLocationPicked,
   )
 
-  Scaffold(
-      topBar = {
-        if (!isOnline) {
-          LocationPickerTopBar(context, onBack)
-        }
-      }) { inner ->
-        if (!isOnline) {
-          OfflineScreen(innerPadding = inner)
-          return@Scaffold
-        }
+  // If Offline, doesn't make sense to display the map
+  if (!isOnline) {
+    OfflineScreenPicker(context, onBack)
+    return
+  }
 
-        Box(
-            modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
-        ) {
-          // Map
-          MapCanvas(
-              modifier = Modifier.fillMaxSize().testTag(LocationPickerTestTags.MAP_CANVAS),
-              mapViewRef = { mv -> mapView = mv },
-              styleUri = styleUri,
-              styleImportId = standardImportId,
-              isDark = isDark,
-              showUserLocation = isLocationGranted,
-              indicatorListener = indicatorListener,
-              centerCoordinates =
-                  Location(
-                      latitude = uiState.center.latitude,
-                      longitude = uiState.center.longitude,
-                  ),
-          )
+  // Online
+  Scaffold { inner ->
+    Box(
+        modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
+    ) {
+      // Map
+      MapCanvas(
+          modifier = Modifier.fillMaxSize().testTag(LocationPickerTestTags.MAP_CANVAS),
+          mapViewRef = { mv -> mapView = mv },
+          styleUri = styleUri,
+          styleImportId = standardImportId,
+          isDark = isDark,
+          showUserLocation = isLocationGranted,
+          indicatorListener = indicatorListener,
+          centerCoordinates =
+              Location(
+                  latitude = uiState.center.latitude,
+                  longitude = uiState.center.longitude,
+              ),
+      )
 
-          Column(
-              modifier =
-                  Modifier.align(Alignment.TopCenter)
-                      .fillMaxWidth()
-                      .padding(horizontal = 16.dp, vertical = 16.dp),
-          ) {
-            // Top row: back button + search bar
-            LocationPickerTopBar(
-                modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
-                query = uiState.searchQuery,
-                isLocationGranted = isLocationGranted,
-                isSearching = uiState.isSearching,
-                isLoading = uiState.isLoading,
-                onQueryChange = { viewModel.onSearchQueryChanged(it) },
-                onBack = onBack,
-                onSearch = { query -> viewModel.onSearchSubmitted(query) },
-                onUseCurrentLocationName = { viewModel.useCurrentLocationNameAsQuery() },
-            )
+      Column(
+          modifier =
+              Modifier.align(Alignment.TopCenter)
+                  .fillMaxWidth()
+                  .padding(horizontal = 16.dp, vertical = 16.dp),
+      ) {
+        // Top row: back button + search bar
+        LocationPickerTopBar(
+            modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
+            query = uiState.searchQuery,
+            isLocationGranted = isLocationGranted,
+            isSearching = uiState.isSearching,
+            isLoading = uiState.isLoading,
+            onQueryChange = { viewModel.onSearchQueryChanged(it) },
+            onBack = onBack,
+            onSearch = { query -> viewModel.onSearchSubmitted(query) },
+            onUseCurrentLocationName = { viewModel.useCurrentLocationNameAsQuery() },
+        )
 
-            if (uiState.suggestions.isNotEmpty()) {
-              SuggestionsDropdown(
-                  suggestions = uiState.suggestions,
-                  query = uiState.searchQuery,
-                  onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
-                  modifier = Modifier.padding(top = 8.dp, start = 56.dp),
+        SuggestionsDropdown(
+            suggestions = uiState.suggestions,
+            query = uiState.searchQuery,
+            onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
+            modifier = Modifier.padding(top = 8.dp, start = 56.dp),
+        )
+      }
+
+      // Tap to pick a point
+      LocationPickerTapListener(
+          mapView = mapView,
+          onTap = { lat, lon ->
+            focusManager.clearFocus()
+            viewModel.onMapClicked(lat, lon)
+          },
+      )
+
+      // Marker at selected point
+      LocationPickerMarkerOverlay(
+          mapView = mapView,
+          selectedLat = uiState.selected?.latitude,
+          selectedLon = uiState.selected?.longitude,
+      )
+
+      // Recenter
+      LocationPickerRecenterFab(
+          modifier =
+              Modifier.align(Alignment.BottomEnd)
+                  .padding(16.dp)
+                  .testTag(LocationPickerTestTags.FAB_RECENTER),
+          isLocationGranted = isLocationGranted,
+          onRecenter = {
+            val mv = mapView ?: return@LocationPickerRecenterFab
+            val target = lastPosition
+            if (target != null) {
+              mv.mapboxMap.flyTo(
+                  CameraOptions.Builder().center(target).zoom(14.0).build(),
+                  mapAnimationOptions { duration(800L) },
+              )
+            } else {
+              val fallback = Point.fromLngLat(uiState.center.longitude, uiState.center.latitude)
+              mv.mapboxMap.flyTo(
+                  CameraOptions.Builder().center(fallback).zoom(12.0).build(),
+                  mapAnimationOptions { duration(800L) },
               )
             }
-          }
+          },
+          onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
+      )
 
-          // Tap to pick a point
-          LocationPickerTapListener(
-              mapView = mapView,
-              onTap = { lat, lon ->
-                focusManager.clearFocus()
-                viewModel.onMapClicked(lat, lon)
-              },
-          )
-
-          // Marker at selected point
-          LocationPickerMarkerOverlay(
-              mapView = mapView,
-              selectedLat = uiState.selected?.latitude,
-              selectedLon = uiState.selected?.longitude,
-          )
-
-          // Recenter
-          LocationPickerRecenterFab(
-              modifier =
-                  Modifier.align(Alignment.BottomEnd)
-                      .padding(16.dp)
-                      .testTag(LocationPickerTestTags.FAB_RECENTER),
-              isLocationGranted = isLocationGranted,
-              onRecenter = {
-                val mv = mapView ?: return@LocationPickerRecenterFab
-                val target = lastPosition
-                if (target != null) {
-                  mv.mapboxMap.flyTo(
-                      CameraOptions.Builder().center(target).zoom(14.0).build(),
-                      mapAnimationOptions { duration(800L) },
-                  )
-                } else {
-                  val fallback = Point.fromLngLat(uiState.center.longitude, uiState.center.latitude)
-                  mv.mapboxMap.flyTo(
-                      CameraOptions.Builder().center(fallback).zoom(12.0).build(),
-                      mapAnimationOptions { duration(800L) },
-                  )
-                }
-              },
-              onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
-          )
-
-          // Confirmation dialog
-          if (uiState.showConfirmDialog) {
-            LocationPickerConfirmDialog(
-                placeName = uiState.selected?.name.orEmpty(),
-                onConfirm = { viewModel.onConfirmDialogYes() },
-                onDismiss = { viewModel.onConfirmDialogNo() },
-            )
-          }
-
-          // Loading
-          if (uiState.isLoading) {
-            Box(
-                modifier =
-                    Modifier.align(Alignment.Center)
-                        .background(colorScheme.surface.copy(alpha = 0.7f)),
-            )
-          }
-        }
+      // Confirmation dialog
+      if (uiState.showConfirmDialog) {
+        LocationPickerConfirmDialog(
+            placeName = uiState.selected?.name.orEmpty(),
+            onConfirm = { viewModel.onConfirmDialogYes() },
+            onDismiss = { viewModel.onConfirmDialogNo() },
+        )
       }
+
+      // Loading
+      if (uiState.isLoading) {
+        Box(
+            modifier =
+                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)),
+        )
+      }
+    }
+  }
 }
 
 /* ---------- Side effects extracted from LocationPickerScreen ---------- */
@@ -524,6 +518,7 @@ private fun SuggestionsDropdown(
     onSuggestionClick: (Location) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+  if (suggestions.isEmpty()) return
   val focusManager = LocalFocusManager.current
   val queryLower = query.trim().lowercase()
 
@@ -720,19 +715,6 @@ private fun LocationPickerMarkerOverlay(
   }
 }
 
-private fun loadVectorAsBitmap(
-    context: Context,
-    resId: Int,
-    sizePx: Int = 96,
-): Bitmap {
-  val d = AppCompatResources.getDrawable(context, resId) ?: return createBitmap(1, 1)
-  val bmp = createBitmap(sizePx, sizePx)
-  val canvas = Canvas(bmp)
-  d.setBounds(0, 0, sizePx, sizePx)
-  d.draw(canvas)
-  return bmp
-}
-
 @Composable
 private fun IconLocation(isLocationGranted: Boolean) {
   if (isLocationGranted) {
@@ -746,6 +728,26 @@ private fun IconLocation(isLocationGranted: Boolean) {
         contentDescription = "Enable location",
     )
   }
+}
+
+@Composable
+private fun OfflineScreenPicker(context: Context, onBack: () -> Unit) {
+  Scaffold(topBar = { LocationPickerTopBar(context, onBack) }) { inner ->
+    OfflineScreen(innerPadding = inner)
+  }
+}
+
+private fun loadVectorAsBitmap(
+    context: Context,
+    resId: Int,
+    sizePx: Int = 96,
+): Bitmap {
+  val d = AppCompatResources.getDrawable(context, resId) ?: return createBitmap(1, 1)
+  val bmp = createBitmap(sizePx, sizePx)
+  val canvas = Canvas(bmp)
+  d.setBounds(0, 0, sizePx, sizePx)
+  d.draw(canvas)
+  return bmp
 }
 
 private fun buildHighlightedName(

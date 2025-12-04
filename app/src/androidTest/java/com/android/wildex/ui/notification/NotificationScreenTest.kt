@@ -208,7 +208,7 @@ class NotificationScreenTest {
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
-    composeRule.runOnIdle { /* ensure callback executed */ }
+    composeRule.runOnIdle { /* ensure callback executed */}
     Assert.assertEquals(1, back)
   }
 

@@ -100,8 +100,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          )
-      )
+          ))
       userRepository.addUser(
           User(
               userId = "currentUserId-1",
@@ -113,8 +112,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          )
-      )
+          ))
       userRepository.addUser(
           User(
               userId = "friend0",
@@ -126,8 +124,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          )
-      )
+          ))
       userRepository.addUser(
           User(
               userId = "friend1",
@@ -139,8 +136,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          )
-      )
+          ))
       userRepository.addUser(
           User(
               userId = "friend2",
@@ -152,14 +148,11 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          )
-      )
+          ))
       animalRepository.addAnimal(
-          Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = "")
-      )
+          Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
       animalRepository.addAnimal(
-          Animal(animalId = "animal1", pictureURL = "", name = "", species = "", description = "")
-      )
+          Animal(animalId = "animal1", pictureURL = "", name = "", species = "", description = ""))
       userAnimalsRepository.initializeUserAnimals("u-1")
       userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal0")
       userAnimalsRepository.addAnimalToUserAnimals("u-1", "animal1")
@@ -537,8 +530,7 @@ class ProfileScreenTest {
           viewModel = defaultViewModel,
           state =
               defaultViewModel.uiState.value.copy(
-                  user = sampleUser.copy(userType = UserType.PROFESSIONAL)
-              ),
+                  user = sampleUser.copy(userType = UserType.PROFESSIONAL)),
           onAchievements = {},
           onCollection = {},
           onMap = {},

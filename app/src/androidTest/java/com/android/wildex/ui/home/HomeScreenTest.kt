@@ -90,8 +90,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        )
-    )
+        ))
     userRepository.addUser(
         User(
             userId = "poster0",
@@ -104,8 +103,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        )
-    )
+        ))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
     animalRepository.addAnimal(
@@ -125,8 +123,7 @@ class HomeScreenTest {
             description = "animal2",
             pictureURL = "",
             species = "species2",
-        )
-    )
+        ))
     animalRepository.addAnimal(
         Animal(
             animalId = "a3",
@@ -134,8 +131,7 @@ class HomeScreenTest {
             description = "animal3",
             pictureURL = "",
             species = "species3",
-        )
-    )
+        ))
     animalRepository.addAnimal(
         Animal(
             animalId = "a4",
@@ -143,8 +139,7 @@ class HomeScreenTest {
             description = "animal4",
             pictureURL = "",
             species = "species4",
-        )
-    )
+        ))
     animalRepository.addAnimal(
         Animal(
             animalId = "a5",
@@ -152,8 +147,7 @@ class HomeScreenTest {
             description = "animal5",
             pictureURL = "",
             species = "species5",
-        )
-    )
+        ))
     animalRepository.addAnimal(
         Animal(
             animalId = "a6",
@@ -161,8 +155,7 @@ class HomeScreenTest {
             description = "animal6",
             pictureURL = "",
             species = "species6",
-        )
-    )
+        ))
   }
 
   @After
@@ -432,8 +425,7 @@ class HomeScreenTest {
                 "",
                 Timestamp.now(),
                 CommentTag.POST_COMMENT,
-            )
-        )
+            ))
       }
       commentRepository.addComment(
           Comment(
@@ -443,8 +435,7 @@ class HomeScreenTest {
               "",
               Timestamp.now(),
               CommentTag.POST_COMMENT,
-          )
-      )
+          ))
       postRepository.addPost(postWithCounts)
       postRepository.addPost(postWithCount)
       homeScreenVM.refreshUIState()

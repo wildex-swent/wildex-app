@@ -306,15 +306,13 @@ class PostDetailsScreenTest {
         PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
     composeRule
         .onNodeWithTag(
-            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter")
-        )
+            PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
         .performClick()
     Assert.assertEquals("commenter1", profileClicked)
     // Click current users profile picture in the comment input
     composeRule
         .onNodeWithTag(
-            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input")
-        )
+            PostDetailsScreenTestTags.testTagForProfilePicture("currentUserId-1", "comment_input"))
         .performClick()
     Assert.assertEquals("currentUserId-1", profileClicked)
   }

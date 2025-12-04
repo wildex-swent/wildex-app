@@ -243,13 +243,11 @@ class FriendScreenTest {
         .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(
-            FriendScreenTestTags.testTagForAcceptReceivedRequestButton(currentUser.userId)
-        )
+            FriendScreenTestTags.testTagForAcceptReceivedRequestButton(currentUser.userId))
         .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(
-            FriendScreenTestTags.testTagForDeclineReceivedRequestButton(currentUser.userId)
-        )
+            FriendScreenTestTags.testTagForDeclineReceivedRequestButton(currentUser.userId))
         .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForCancelSentRequestButton(currentUser.userId))
@@ -443,8 +441,7 @@ class FriendScreenTest {
         .onNodeWithTag(FriendScreenTestTags.NO_FRIENDS_TEXT)
         .assertIsDisplayed()
         .assertTextEquals(
-            "You don't have any friends yet. Look at our suggestions and discover new people!"
-        )
+            "You don't have any friends yet. Look at our suggestions and discover new people!")
   }
 
   @Test

@@ -472,9 +472,8 @@ class CameraScreenTestWithNoPermission {
           override val activityResultRegistry = activityResultRegistry
         }
     CompositionLocalProvider(
-        LocalActivityResultRegistryOwner provides activityResultRegistryOwner
-    ) {
-      content()
-    }
+        LocalActivityResultRegistryOwner provides activityResultRegistryOwner) {
+          content()
+        }
   }
 }

@@ -97,7 +97,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "currentUserId-1",
@@ -108,7 +109,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend0",
@@ -119,7 +121,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend1",
@@ -130,7 +133,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend2",
@@ -141,7 +145,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       animalRepository.addAnimal(
           Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
       animalRepository.addAnimal(
@@ -342,7 +347,9 @@ class ProfileScreenTest {
     composeRule.setContent {
       Column {
         ProfileImageAndName(
-            viewModel = defaultViewModel, state = defaultViewModel.uiState.collectAsState().value)
+            viewModel = defaultViewModel,
+            state = defaultViewModel.uiState.collectAsState().value,
+        )
         ProfileDescription()
         ProfileAchievements(ownerProfile = true)
         ProfileMap()
@@ -654,6 +661,8 @@ class ProfileScreenTest {
             achievementRepository = achRepo,
             postRepository = LocalRepositories.postsRepository,
             updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
             currentUserId = "u-1",
         )
     var achievements = 0

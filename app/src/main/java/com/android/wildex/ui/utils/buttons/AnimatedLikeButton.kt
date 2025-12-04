@@ -5,10 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -56,28 +53,24 @@ fun AnimatedLikeButton(
     }
   }
 
-  Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.widthIn(min = iconSize * 2)) {
-        Icon(
-            imageVector =
-                if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Like status",
-            tint = if (likedByCurrentUser) colorScheme.primary else colorScheme.onBackground,
-            modifier =
-                Modifier.size(iconSize)
-                    .graphicsLayer {
-                      scaleX = scale.value
-                      scaleY = scale.value
-                    }
-                    .clickable { onToggleLike() })
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Icon(
+        imageVector =
+            if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+        contentDescription = "Like status",
+        tint = if (likedByCurrentUser) colorScheme.primary else colorScheme.onBackground,
+        modifier =
+            Modifier.size(iconSize)
+                .graphicsLayer {
+                  scaleX = scale.value
+                  scaleY = scale.value
+                }
+                .clickable { onToggleLike() })
 
-        Spacer(Modifier.height(4.dp))
-
-        Text(
-            text = likesCount.toString(),
-            color = colorScheme.onBackground,
-            style = textStyle,
-        )
-      }
+    Text(
+        text = likesCount.toString(),
+        color = colorScheme.onBackground,
+        style = textStyle,
+    )
+  }
 }

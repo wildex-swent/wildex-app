@@ -463,7 +463,7 @@ class PostDetailsScreenTest {
     composeRule.scrollToTextWithinScroll("Amazing shot!")
     composeRule.onNodeWithText("Amazing shot!").performTouchInput { longClick() }
     composeRule
-        .onNodeWithTag(PostDetailsScreenTestTags.DELETE_COMMENT_BUTTON)
+        .onNodeWithTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON)
         .assertIsNotDisplayed()
   }
 
@@ -490,7 +490,7 @@ class PostDetailsScreenTest {
 
     composeRule.scrollToTextWithinScroll("Amazing shot!")
     composeRule.onNodeWithText("Amazing shot!").performTouchInput { longClick() }
-    composeRule.onNodeWithTag(PostDetailsScreenTestTags.DELETE_COMMENT_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON).assertIsDisplayed()
   }
 
   @Test
@@ -507,11 +507,53 @@ class PostDetailsScreenTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsNotDisplayed()
-    composeRule.onNodeWithTag(PostDetailsScreenTestTags.IMAGE_BOX).performTouchInput {
+    composeRule.onNodeWithTag(PostDetailsContentTestTags.IMAGE_BOX).performTouchInput {
       doubleClick()
     }
     composeRule.mainClock.advanceTimeByFrame()
     composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsDisplayed()
+  }
+
+  @Test
+  fun expandableText_works() {
+    runBlocking {
+      val longDescription = "Very long description ".repeat(500)
+      val longDescPost =
+          Post(
+              postId = "post2",
+              authorId = "poster1",
+              pictureURL = "https://upload.wikimedia.org/wikipedia/commons/5/56/Tiger.50.jpg",
+              location = Location(0.0, 0.0, "India"),
+              description = longDescription,
+              date = Timestamp.now(),
+              animalId = "tiger",
+          )
+      postRepository.addPost(longDescPost)
+
+      val vm =
+          PostDetailsScreenViewModel(
+              postRepository,
+              userRepository,
+              commentRepository,
+              animalRepository,
+              likeRepository,
+              userAnimalsRepository,
+              "currentUserId-1",
+          )
+
+      composeRule.setContent {
+        PostDetailsScreen(
+            postId = "post2",
+            postDetailsScreenViewModel = vm,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
+      composeRule.waitForIdle()
+      composeRule.scrollToTagWithinScroll(PostDetailsContentTestTags.DESCRIPTION_TEXT)
+      composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TEXT).assertIsDisplayed()
+      composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TOGGLE).assertIsDisplayed()
+    }
   }
 }
 

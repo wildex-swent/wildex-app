@@ -212,12 +212,9 @@
 
 
     <!-- Post details actions screen -->
-    <string name="post_details_actions">Post actions</string>
-    <string name="post_details_actions_location">Post location</string>
     <string name="post_details_actions_google_maps">Open in Google Maps</string>
     <string name="post_details_actions_copy">Copy location</string>
     <string name="post_details_actions_share">Share location</string>
-    <string name="post_details_actions_post">Post</string>
     <string name="post_details_actions_delete_post">Delete post</string>
 
 </resources>

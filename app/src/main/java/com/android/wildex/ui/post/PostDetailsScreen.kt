@@ -117,7 +117,6 @@ fun PostDetailsScreen(
           onGoBack = onGoBack,
           showActionSheet = showActionSheet,
           onDismissActionSheet = { showActionSheet = false },
-          isOnline = isOnline
       )
     } else {
       OfflineScreen(innerPadding = innerPadding)
@@ -135,7 +134,6 @@ fun PostDetailsScreenContent(
     onGoBack: () -> Unit,
     showActionSheet: Boolean = false,
     onDismissActionSheet: () -> Unit,
-    isOnline: Boolean
 ) {
   val context = LocalContext.current
   val pullState = rememberPullToRefreshState()
@@ -150,14 +148,11 @@ fun PostDetailsScreenContent(
     )
   }
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(innerPadding),
-        onRefresh = {
-            if (isOnline) postDetailsScreenViewModel.refreshPostDetails(postId)
-            else postDetailsScreenViewModel.refreshOffline()
-      },
+  PullToRefreshBox(
+      state = pullState,
+      isRefreshing = uiState.isRefreshing,
+      modifier = Modifier.padding(innerPadding).testTag(PostDetailsScreenTestTags.PULL_TO_REFRESH),
+      onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
   ) {
     when {
       uiState.isError -> LoadingFail()

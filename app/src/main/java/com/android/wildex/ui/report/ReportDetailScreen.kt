@@ -116,7 +116,7 @@ fun ReportDetailsScreen(
     onProfile: (Id) -> Unit = {},
 ) {
   val context = LocalContext.current
-    val uiState by reportDetailsViewModel.uiState.collectAsState()
+  val uiState by reportDetailsViewModel.uiState.collectAsState()
   val focusManager = LocalFocusManager.current
   val connectivityObserver = remember { DefaultConnectivityObserver(context) }
   val isOnlineObs by connectivityObserver.isOnline.collectAsState()
@@ -157,8 +157,7 @@ fun ReportDetailsScreen(
           reportDetailsViewModel = reportDetailsViewModel,
           onProfile = onProfile,
           reportId = reportId,
-          onGoBack = onGoBack
-      )
+          onGoBack = onGoBack)
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -224,34 +223,34 @@ fun ReportDetailsScreenContent(
     )
   }
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        modifier =
-            Modifier.fillMaxSize()
-                .padding(innerPadding)
-                .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
-                .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
-        onRefresh = {
-          if(!showCompletionDialog) reportDetailsViewModel.refreshReportDetails(reportId)
-        },
-    ) {
-        when {
-            uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        else ->
-            ReportDetailsContent(
-                uiState = uiState,
-                onProfile = onProfile,
-                onCancel = { pendingAction = ReportActionToConfirm.CANCEL },
-                onSelfAssign = { pendingAction = ReportActionToConfirm.SELF_ASSIGN },
-                onResolve = { pendingAction = ReportActionToConfirm.RESOLVE },
-                onUnSelfAssign = { pendingAction = ReportActionToConfirm.UNSELFASSIGN },
-                onLocationClick = { showNavigationSheet = true },
-            )
-      }
+  PullToRefreshBox(
+      state = pullState,
+      isRefreshing = uiState.isRefreshing,
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(innerPadding)
+              .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
+              .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
+      onRefresh = {
+        if (!showCompletionDialog) reportDetailsViewModel.refreshReportDetails(reportId)
+      },
+  ) {
+    when {
+      uiState.isError -> LoadingFail()
+      uiState.isLoading -> LoadingScreen()
+      else ->
+          ReportDetailsContent(
+              uiState = uiState,
+              onProfile = onProfile,
+              onCancel = { pendingAction = ReportActionToConfirm.CANCEL },
+              onSelfAssign = { pendingAction = ReportActionToConfirm.SELF_ASSIGN },
+              onResolve = { pendingAction = ReportActionToConfirm.RESOLVE },
+              onUnSelfAssign = { pendingAction = ReportActionToConfirm.UNSELFASSIGN },
+              onLocationClick = { showNavigationSheet = true },
+          )
     }
   }
+}
 
 /**
  * Handle events from the ViewModel that require showing dialogs.

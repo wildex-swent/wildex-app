@@ -1,7 +1,7 @@
 package com.android.wildex.ui.profile
 
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertCountEquals

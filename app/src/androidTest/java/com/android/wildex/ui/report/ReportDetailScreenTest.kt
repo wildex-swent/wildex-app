@@ -16,7 +16,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import com.android.wildex.model.LocalConnectivityObserver
-import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository

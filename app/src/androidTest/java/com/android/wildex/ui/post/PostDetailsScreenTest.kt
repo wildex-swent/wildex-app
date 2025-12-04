@@ -20,7 +20,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.test.espresso.action.ViewActions.swipeDown
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
@@ -39,6 +38,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.utils.images.ImageWithDoubleTapLikeTestTags
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -46,7 +46,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -362,7 +361,7 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun refreshDisabledWhenOfflinePostDetails() {
+  fun offlineScreenIsDisplayedWhenOfflinePostDetails() {
     composeRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides false) {
         PostDetailsScreen(
@@ -373,10 +372,11 @@ class PostDetailsScreenTest {
         )
       }
     }
-    composeRule.onNodeWithTag(PostDetailsScreenTestTags.PULL_TO_REFRESH).performTouchInput {
-      swipeDown()
-    }
-    assertFalse(postDetailsViewModel.uiState.value.isRefreshing)
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 
   @Test

@@ -134,41 +134,39 @@ fun FriendScreen(
           paddingValues ->
         val pullState = rememberPullToRefreshState()
 
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing && isOnline,
-        modifier =
-            Modifier.padding(paddingValues)
-                .fillMaxSize()
-                .testTag(FriendScreenTestTags.PULL_TO_REFRESH),
-        onRefresh = {
-          if (isOnline) friendScreenViewModel.refreshUIState(userId)
-          else friendScreenViewModel.refreshOffline()
-        }
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        else -> {
-          Column(modifier = Modifier.fillMaxSize()) {
-            if (uiState.isCurrentUser) {
-              CurrentUserFriendScreenContent(
-                  selectedTab,
-                  setSelectedTab,
-                  friendScreenViewModel,
-                  uiState,
-                  onProfileClick,
-                  userIndex,
-                  userId
-              )
-            } else {
-              OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = uiState.isRefreshing && isOnline,
+            modifier =
+                Modifier.padding(paddingValues)
+                    .fillMaxSize()
+                    .testTag(FriendScreenTestTags.PULL_TO_REFRESH),
+            onRefresh = {
+              if (isOnline) friendScreenViewModel.refreshUIState(userId)
+              else friendScreenViewModel.refreshOffline()
+            }) {
+              when {
+                uiState.isError -> LoadingFail()
+                uiState.isLoading -> LoadingScreen()
+                else -> {
+                  Column(modifier = Modifier.fillMaxSize()) {
+                    if (uiState.isCurrentUser) {
+                      CurrentUserFriendScreenContent(
+                          selectedTab,
+                          setSelectedTab,
+                          friendScreenViewModel,
+                          uiState,
+                          onProfileClick,
+                          userIndex,
+                          userId)
+                    } else {
+                      OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
+                    }
+                  }
+                }
+              }
             }
-          }
-        }
       }
-    }
-  }
 }
 
 /**

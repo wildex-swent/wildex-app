@@ -126,8 +126,7 @@ fun CollectionScreen(
  * Composable for the top app bar in the Collection Screen.
  *
  * @param isUserOwner Boolean indicating if the displayed collection belongs to the current user.
- * @param userProfilePictureURL URL of the user's profile picture, used when displaying the current
- *   user's collection.
+ * @param user user whose collection we are viewing
  * @param onGoBack Callback invoked when the go back button is clicked.
  * @param onProfileClick Callback invoked when the profile button is clicked.
  * @param onNotificationClick Callback invoked when the notification button is clicked.
@@ -196,7 +195,7 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
     val nbRows = ceil(animalsStates.size / 2.0).toInt()
-    val rowHeight = (screenHeight) / 4
+    val rowHeight = (screenHeight) / 12
     items(nbRows) { index ->
       val rowStartIndex = index * 2
       Row(
@@ -241,24 +240,26 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
             AsyncImage(
                 model = animalPictureURL,
                 contentDescription = animalName,
-                modifier = Modifier.fillMaxSize().weight(0.8f),
+                modifier = Modifier.fillMaxSize().weight(0.82f),
                 contentScale = ContentScale.Crop)
-
-            Text(
-                text = if (animalState.isUnlocked) animalName else "???",
-                color = colorScheme.background,
-                textAlign = TextAlign.Center,
-                style = typography.titleMedium,
+            Box(
                 modifier =
-                    Modifier.fillMaxWidth().weight(0.2f).background(color = colorScheme.primary),
-            )
+                    Modifier.fillMaxWidth().weight(0.18f).background(color = colorScheme.primary),
+                contentAlignment = Alignment.Center) {
+                  Text(
+                      text = if (animalState.isUnlocked) animalName else "???",
+                      color = colorScheme.background,
+                      textAlign = TextAlign.Center,
+                      style = typography.titleMedium,
+                      modifier = Modifier.fillMaxWidth())
+                }
           }
         }
     if (!animalState.isUnlocked) {
       Box(
           modifier =
               Modifier.matchParentSize()
-                  .background(color = colorScheme.onBackground.copy(alpha = 0.4f)),
+                  .background(color = colorScheme.background.copy(alpha = 0.4f)),
           contentAlignment = Alignment.Center) {
             Image(
                 painter = painterResource(id = R.drawable.lock),

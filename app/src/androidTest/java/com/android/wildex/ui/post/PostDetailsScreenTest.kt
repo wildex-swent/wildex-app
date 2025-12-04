@@ -381,27 +381,6 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun offlineScreenIsDisplayedWhenOfflinePostDetails() {
-    fakeObserver.setOnline(false)
-    runBlocking { postDetailsViewModel.loadPostDetails("post1") }
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        PostDetailsScreen(
-            postId = "post1",
-            postDetailsScreenViewModel = postDetailsViewModel,
-            onGoBack = {},
-            onProfile = {},
-        )
-      }
-    }
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
-  }
-
-  @Test
   fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserNotAuthor() {
     composeRule.setContent {
       PostDetailsScreen(

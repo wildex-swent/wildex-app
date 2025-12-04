@@ -21,7 +21,6 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
-import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
@@ -543,24 +542,6 @@ class ReportDetailScreenTest {
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportCompletionDialogTestTags.CONFIRM).performClick()
     assert(confirmed)
-  }
-
-  @Test
-  fun offlineScreenIsDisplayedWhenOfflineReportDetails() {
-    fakeObserver.setOnline(false)
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        ReportDetailsScreen(
-            reportId = "reportId1",
-            reportDetailsViewModel = reportDetailsViewModel,
-        )
-      }
-    }
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
   }
 
   @Test

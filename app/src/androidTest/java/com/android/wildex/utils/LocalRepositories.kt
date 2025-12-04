@@ -282,10 +282,6 @@ object LocalRepositories {
       listOfAnimals.add(animal)
     }
 
-    override suspend fun deleteAnimal(animalId: Id) {
-      listOfAnimals.removeIf { it.animalId == animalId }
-    }
-
     override fun clear() {
       listOfAnimals.clear()
     }

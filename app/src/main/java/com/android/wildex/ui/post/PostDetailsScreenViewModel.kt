@@ -312,7 +312,6 @@ class PostDetailsScreenViewModel(
         commentRepository.deleteAllCommentsOfPost(postId)
         likeRepository.deleteAllLikesOfPost(postId)
         userAnimalsRepository.deleteAnimalToUserAnimals(_uiState.value.authorId, animalId)
-        animalRepository.deleteAnimal(animalId)
       } catch (e: Exception) {
         handleException("Failed to delete post $postId", e)
       }

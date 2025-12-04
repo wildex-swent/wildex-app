@@ -40,15 +40,6 @@ class AnimalRepositoryFirestore(private val db: FirebaseFirestore) : AnimalRepos
     documentRef.set(animal).await()
   }
 
-  override suspend fun deleteAnimal(animalId: Id) {
-    val docRef = db.collection(ANIMAL_COLLECTION_PATH).document(animalId)
-    val doc = docRef.get().await()
-
-    require(doc.exists()) { "Animal with given Id not found" }
-
-    docRef.delete().await()
-  }
-
   private fun convertToAnimal(doc: DocumentSnapshot): Animal? {
     return try {
       val animalId = doc.id

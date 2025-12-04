@@ -49,4 +49,5 @@ class DefaultConnectivityObserver(
   }
 }
 
-val LocalConnectivityObserver = staticCompositionLocalOf { true }
+val LocalConnectivityObserver =
+    staticCompositionLocalOf<ConnectivityObserver> { error("ConnectivityObserver not provided") }

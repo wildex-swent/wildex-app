@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardColors
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -365,7 +366,7 @@ private fun LocationPickerTopBar(
             ),
         trailingIcon = {
           if (isBusy) {
-            androidx.compose.material3.CircularProgressIndicator(
+            CircularProgressIndicator(
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(20.dp),
             )

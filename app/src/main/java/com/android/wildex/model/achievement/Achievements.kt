@@ -25,6 +25,13 @@ object Achievements {
   // OTHERWISE SOME ACHIEVEMENTS MAY GET DROPPED UNINTENTIONALLY.
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Animal names used:
+  val DOG_NAME = "domestic dog"
+  val CAT_NAME = "domestic cat"
+  val BIRD_NAME = "bird"
+  val BUNNY_NAME = "bunny"
+  val CENTIPEDE_NAME = "centipede"
+
   /** First Post — awarded for creating the first post. */
   val firstPost =
       Achievement(
@@ -77,7 +84,7 @@ object Achievements {
                 Triple(
                     "Dogs",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic dog"
+                      animalRepository.getAnimal(it.animalId).name == DOG_NAME
                     },
                     5))
           },
@@ -96,7 +103,7 @@ object Achievements {
                 Triple(
                     "Cats",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic cat"
+                      animalRepository.getAnimal(it.animalId).name == CAT_NAME
                     },
                     5))
           },
@@ -115,7 +122,7 @@ object Achievements {
                 Triple(
                     "Centipedes",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "centipede"
+                      animalRepository.getAnimal(it.animalId).name == CENTIPEDE_NAME
                     },
                     1))
           },
@@ -221,13 +228,13 @@ object Achievements {
                 Triple(
                     "Birds",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bird"
+                      animalRepository.getAnimal(it.animalId).name == BIRD_NAME
                     },
                     5),
                 Triple(
                     "Bunnies",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     5))
           },
@@ -246,13 +253,13 @@ object Achievements {
                 Triple(
                     "Birds",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bird"
+                      animalRepository.getAnimal(it.animalId).name == BIRD_NAME
                     },
                     10),
                 Triple(
                     "Bunnies",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     10))
           },
@@ -271,13 +278,13 @@ object Achievements {
                 Triple(
                     "Birds",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bird"
+                      animalRepository.getAnimal(it.animalId).name == BIRD_NAME
                     },
                     15),
                 Triple(
                     "Bunnies",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     15))
           },
@@ -302,25 +309,25 @@ object Achievements {
                 Triple(
                     "Dog",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic dog"
+                      animalRepository.getAnimal(it.animalId).name == DOG_NAME
                     },
                     1),
                 Triple(
                     "Cat",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic cat"
+                      animalRepository.getAnimal(it.animalId).name == CAT_NAME
                     },
                     1),
                 Triple(
                     "Bird",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bird"
+                      animalRepository.getAnimal(it.animalId).name == BIRD_NAME
                     },
                     1),
                 Triple(
                     "Bunny",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     1))
           },
@@ -345,25 +352,25 @@ object Achievements {
                 Triple(
                     "Dogs",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic dog"
+                      animalRepository.getAnimal(it.animalId).name == DOG_NAME
                     },
                     5),
                 Triple(
                     "Cats",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic cat"
+                      animalRepository.getAnimal(it.animalId).name == CAT_NAME
                     },
                     5),
                 Triple(
                     "Birds",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bird"
+                      animalRepository.getAnimal(it.animalId).name == BIRD_NAME
                     },
                     5),
                 Triple(
                     "Bunnies",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     5))
           },
@@ -388,13 +395,13 @@ object Achievements {
                 Triple(
                     "Dogs",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic dog"
+                      animalRepository.getAnimal(it.animalId).name == DOG_NAME
                     },
                     10),
                 Triple(
                     "Cats",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "domestic cat"
+                      animalRepository.getAnimal(it.animalId).name == CAT_NAME
                     },
                     10),
                 Triple(
@@ -406,7 +413,7 @@ object Achievements {
                 Triple(
                     "Bunnies",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == "bunny"
+                      animalRepository.getAnimal(it.animalId).name == BUNNY_NAME
                     },
                     10))
           },

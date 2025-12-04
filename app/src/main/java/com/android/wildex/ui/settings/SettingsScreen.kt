@@ -142,7 +142,7 @@ fun SettingsScreen(
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
                   Modifier.padding(bottom = 16.dp)
-                      .padding(horizontal = screenWidth / 25)
+                      .padding(horizontal = screenWidth / 40)
                       .fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
@@ -162,7 +162,7 @@ fun SettingsScreen(
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
                   Modifier.padding(bottom = 16.dp)
-                      .padding(horizontal = screenWidth / 25)
+                      .padding(horizontal = screenWidth / 40)
                       .fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
@@ -276,8 +276,8 @@ fun SettingsContent(
       )
 
   LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-    val settingHeight = screenHeight / 12
-    val paddingHorizontal = screenWidth / 25
+    val settingHeight = screenHeight / 34
+    val paddingHorizontal = screenWidth / 55
     item {
       EditProfileOption(paddingHorizontal, settingHeight, onEditProfileClick)
       SettingsDivider()
@@ -566,7 +566,7 @@ fun UserStatusOption(
       icon = Icons.Outlined.Person,
       settingName = LocalContext.current.getString(R.string.user_status),
   ) {
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.9f))) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(5))) {
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
@@ -633,7 +633,7 @@ fun AppearanceModeOption(
     val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(1.8f))) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(4.6f))) {
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),

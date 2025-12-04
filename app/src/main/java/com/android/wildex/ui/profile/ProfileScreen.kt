@@ -70,7 +70,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -123,9 +122,8 @@ fun ProfileScreen(
 ) {
   val context = LocalContext.current
   val uiState by profileScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   var showMap by remember { mutableStateOf(true) }
 

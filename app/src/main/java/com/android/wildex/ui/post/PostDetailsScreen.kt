@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.DefaultConnectivityObserver
+import coil.compose.AsyncImage
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -74,9 +75,8 @@ fun PostDetailsScreen(
 ) {
   val context = LocalContext.current
   val uiState by postDetailsScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   var showActionSheet by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }

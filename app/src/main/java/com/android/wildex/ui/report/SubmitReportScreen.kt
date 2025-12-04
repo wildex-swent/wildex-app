@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.camera.CameraPermissionScreen
@@ -58,9 +57,8 @@ fun SubmitReportScreen(
 ) {
   val context = LocalContext.current
   val uiState by viewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -118,7 +116,7 @@ fun SubmitReportScreenContent(
       }
 
   // Fetch location when permission is granted
-  fetchLocation(
+  FetchLocation(
       hasLocationPermission = hasLocationPermission,
       locationRequested = locationRequested,
       viewModel = viewModel,
@@ -180,7 +178,7 @@ fun SubmitReportScreenContent(
  * @param context The context.
  */
 @Composable
-private fun fetchLocation(
+private fun FetchLocation(
     hasLocationPermission: Boolean,
     locationRequested: Boolean,
     viewModel: SubmitReportScreenViewModel,

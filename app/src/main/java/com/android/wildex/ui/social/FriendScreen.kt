@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataProvider
@@ -114,9 +113,8 @@ fun FriendScreen(
 ) {
   val context = LocalContext.current
   val uiState by friendScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   val (selectedTab, setSelectedTab) =
       remember { mutableStateOf(context.getString(R.string.friends_tab_title)) }

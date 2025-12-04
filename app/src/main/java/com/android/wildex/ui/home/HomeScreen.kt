@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.SimpleUser
@@ -119,9 +118,8 @@ fun HomeScreen(
   val postStates = uiState.postStates
 
   val context = LocalContext.current
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { homeScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {

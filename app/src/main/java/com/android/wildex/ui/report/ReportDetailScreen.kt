@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
@@ -117,15 +116,8 @@ fun ReportDetailsScreen(
 ) {
   val context = LocalContext.current
   val uiState by reportDetailsViewModel.uiState.collectAsState()
-  val focusManager = LocalFocusManager.current
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
-
-  var showCompletionDialog by remember { mutableStateOf(false) }
-  var completionType by remember { mutableStateOf<ReportCompletionType?>(null) }
-  var showNavigationSheet by remember { mutableStateOf(false) }
-  var pendingAction by remember { mutableStateOf<ReportActionToConfirm?>(null) }
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   // Initial load
   LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }

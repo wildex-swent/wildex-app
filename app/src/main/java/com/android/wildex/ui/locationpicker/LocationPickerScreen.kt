@@ -43,17 +43,21 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -73,9 +77,12 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.map.MapCanvas
+import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mapbox.geojson.Point
@@ -104,6 +111,7 @@ object LocationPickerTestTags {
   const val CLEAR_BUTTON = "LocationPicker/ClearButton"
   const val GPS_BUTTON = "LocationPicker/GpsButton"
   const val SEARCH_BUTTON = "LocationPicker/SearchButton"
+  const val TOP_APP_BAR_TEXT = "LocationPicker/TopBar"
 }
 
 /**
@@ -122,6 +130,11 @@ fun LocationPickerScreen(
 ) {
   val context = LocalContext.current
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+  // Offline detection
+  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
+  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
+  val isOnline = isOnlineObs && LocalConnectivityObserver.current
 
   val isDark =
       when (AppTheme.appearanceMode) {
@@ -157,16 +170,159 @@ fun LocationPickerScreen(
     OnIndicatorPositionChangedListener { p: Point -> lastPosition = p }
   }
 
+  LocationPickerEffects(
+      viewModel = viewModel,
+      uiState = uiState,
+      context = context,
+      isLocationGranted = isLocationGranted,
+      lastPosition = lastPosition,
+      mapView = mapView,
+      onLocationPicked = onLocationPicked,
+  )
+
+  Scaffold(
+      topBar = {
+        if (!isOnline) {
+          LocationPickerTopBar(context, onBack)
+        }
+      }) { inner ->
+        if (!isOnline) {
+          OfflineScreen(innerPadding = inner)
+          return@Scaffold
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
+        ) {
+          // Map
+          MapCanvas(
+              modifier = Modifier.fillMaxSize().testTag(LocationPickerTestTags.MAP_CANVAS),
+              mapViewRef = { mv -> mapView = mv },
+              styleUri = styleUri,
+              styleImportId = standardImportId,
+              isDark = isDark,
+              showUserLocation = isLocationGranted,
+              indicatorListener = indicatorListener,
+              centerCoordinates =
+                  Location(
+                      latitude = uiState.center.latitude,
+                      longitude = uiState.center.longitude,
+                  ),
+          )
+
+          Column(
+              modifier =
+                  Modifier.align(Alignment.TopCenter)
+                      .fillMaxWidth()
+                      .padding(horizontal = 16.dp, vertical = 16.dp),
+          ) {
+            // Top row: back button + search bar
+            LocationPickerTopBar(
+                modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
+                query = uiState.searchQuery,
+                isLocationGranted = isLocationGranted,
+                isSearching = uiState.isSearching,
+                isLoading = uiState.isLoading,
+                onQueryChange = { viewModel.onSearchQueryChanged(it) },
+                onBack = onBack,
+                onSearch = { query -> viewModel.onSearchSubmitted(query) },
+                onUseCurrentLocationName = { viewModel.useCurrentLocationNameAsQuery() },
+            )
+
+            if (uiState.suggestions.isNotEmpty()) {
+              SuggestionsDropdown(
+                  suggestions = uiState.suggestions,
+                  query = uiState.searchQuery,
+                  onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
+                  modifier = Modifier.padding(top = 8.dp, start = 56.dp),
+              )
+            }
+          }
+
+          // Tap to pick a point
+          LocationPickerTapListener(
+              mapView = mapView,
+              onTap = { lat, lon ->
+                focusManager.clearFocus()
+                viewModel.onMapClicked(lat, lon)
+              },
+          )
+
+          // Marker at selected point
+          LocationPickerMarkerOverlay(
+              mapView = mapView,
+              selectedLat = uiState.selected?.latitude,
+              selectedLon = uiState.selected?.longitude,
+          )
+
+          // Recenter
+          LocationPickerRecenterFab(
+              modifier =
+                  Modifier.align(Alignment.BottomEnd)
+                      .padding(16.dp)
+                      .testTag(LocationPickerTestTags.FAB_RECENTER),
+              isLocationGranted = isLocationGranted,
+              onRecenter = {
+                val mv = mapView ?: return@LocationPickerRecenterFab
+                val target = lastPosition
+                if (target != null) {
+                  mv.mapboxMap.flyTo(
+                      CameraOptions.Builder().center(target).zoom(14.0).build(),
+                      mapAnimationOptions { duration(800L) },
+                  )
+                } else {
+                  val fallback = Point.fromLngLat(uiState.center.longitude, uiState.center.latitude)
+                  mv.mapboxMap.flyTo(
+                      CameraOptions.Builder().center(fallback).zoom(12.0).build(),
+                      mapAnimationOptions { duration(800L) },
+                  )
+                }
+              },
+              onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
+          )
+
+          // Confirmation dialog
+          if (uiState.showConfirmDialog) {
+            LocationPickerConfirmDialog(
+                placeName = uiState.selected?.name.orEmpty(),
+                onConfirm = { viewModel.onConfirmDialogYes() },
+                onDismiss = { viewModel.onConfirmDialogNo() },
+            )
+          }
+
+          // Loading
+          if (uiState.isLoading) {
+            Box(
+                modifier =
+                    Modifier.align(Alignment.Center)
+                        .background(colorScheme.surface.copy(alpha = 0.7f)),
+            )
+          }
+        }
+      }
+}
+
+/* ---------- Side effects extracted from LocationPickerScreen ---------- */
+
+@Composable
+private fun LocationPickerEffects(
+    viewModel: LocationPickerViewModel,
+    uiState: LocationPickerUiState,
+    context: Context,
+    isLocationGranted: Boolean,
+    lastPosition: Point?,
+    mapView: MapView?,
+    onLocationPicked: (Location) -> Unit,
+) {
   LaunchedEffect(lastPosition, isLocationGranted) {
     if (lastPosition != null && isLocationGranted && !uiState.hasCenteredOnUserLocation) {
       viewModel.onUserLocationAvailable(
-          latitude = lastPosition!!.latitude(),
-          longitude = lastPosition!!.longitude(),
+          latitude = lastPosition.latitude(),
+          longitude = lastPosition.longitude(),
       )
     }
   }
 
-  // Listen to confirmed location
   LaunchedEffect(Unit) {
     viewModel.events.collect { event ->
       when (event) {
@@ -175,7 +331,6 @@ fun LocationPickerScreen(
     }
   }
 
-  // Toast for errors
   LaunchedEffect(uiState.error) {
     uiState.error?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -194,116 +349,6 @@ fun LocationPickerScreen(
           CameraOptions.Builder().center(center).zoom(17.5).pitch(60.0).bearing(40.0).build(),
           mapAnimationOptions { duration(800L) },
       )
-    }
-  }
-
-  Scaffold { inner ->
-    Box(
-        modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
-    ) {
-      // Map
-      MapCanvas(
-          modifier = Modifier.fillMaxSize().testTag(LocationPickerTestTags.MAP_CANVAS),
-          mapViewRef = { mv -> mapView = mv },
-          styleUri = styleUri,
-          styleImportId = standardImportId,
-          isDark = isDark,
-          showUserLocation = isLocationGranted,
-          indicatorListener = indicatorListener,
-          centerCoordinates =
-              Location(
-                  latitude = uiState.center.latitude,
-                  longitude = uiState.center.longitude,
-              ),
-      )
-
-      Column(
-          modifier =
-              Modifier.align(Alignment.TopCenter)
-                  .fillMaxWidth()
-                  .padding(horizontal = 16.dp, vertical = 16.dp),
-      ) {
-        // Top row: back button + search bar
-        LocationPickerTopBar(
-            modifier = Modifier.fillMaxWidth().testTag(LocationPickerTestTags.SEARCH_BAR),
-            query = uiState.searchQuery,
-            isLocationGranted = isLocationGranted,
-            isSearching = uiState.isSearching,
-            isLoading = uiState.isLoading,
-            onQueryChange = { viewModel.onSearchQueryChanged(it) },
-            onBack = onBack,
-            onSearch = { query -> viewModel.onSearchSubmitted(query) },
-            onUseCurrentLocationName = { viewModel.useCurrentLocationNameAsQuery() },
-        )
-
-        if (uiState.suggestions.isNotEmpty()) {
-          SuggestionsDropdown(
-              suggestions = uiState.suggestions,
-              query = uiState.searchQuery,
-              onSuggestionClick = { feature -> viewModel.onSuggestionClicked(feature) },
-              modifier = Modifier.padding(top = 8.dp, start = 56.dp),
-          )
-        }
-      }
-
-      // Tap to pick a point
-      LocationPickerTapListener(
-          mapView = mapView,
-          onTap = { lat, lon ->
-            focusManager.clearFocus()
-            viewModel.onMapClicked(lat, lon)
-          },
-      )
-
-      // Marker at selected point
-      LocationPickerMarkerOverlay(
-          mapView = mapView,
-          selectedLat = uiState.selected?.latitude,
-          selectedLon = uiState.selected?.longitude,
-      )
-
-      // Recenter
-      LocationPickerRecenterFab(
-          modifier =
-              Modifier.align(Alignment.BottomEnd)
-                  .padding(16.dp)
-                  .testTag(LocationPickerTestTags.FAB_RECENTER),
-          isLocationGranted = isLocationGranted,
-          onRecenter = {
-            val mv = mapView ?: return@LocationPickerRecenterFab
-            val target = lastPosition
-            if (target != null) {
-              mv.mapboxMap.flyTo(
-                  CameraOptions.Builder().center(target).zoom(14.0).build(),
-                  mapAnimationOptions { duration(800L) },
-              )
-            } else {
-              val fallback = Point.fromLngLat(uiState.center.longitude, uiState.center.latitude)
-              mv.mapboxMap.flyTo(
-                  CameraOptions.Builder().center(fallback).zoom(12.0).build(),
-                  mapAnimationOptions { duration(800L) },
-              )
-            }
-          },
-          onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
-      )
-
-      // Confirmation dialog
-      if (uiState.showConfirmDialog) {
-        LocationPickerConfirmDialog(
-            placeName = uiState.selected?.name.orEmpty(),
-            onConfirm = { viewModel.onConfirmDialogYes() },
-            onDismiss = { viewModel.onConfirmDialogNo() },
-        )
-      }
-
-      // Loading overlay
-      if (uiState.isLoading) {
-        Box(
-            modifier =
-                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)),
-        )
-      }
     }
   }
 }
@@ -325,6 +370,7 @@ private fun LocationPickerTopBar(
   val focusManager = LocalFocusManager.current
   val focusRequester = remember { FocusRequester() }
   val isBusy = isSearching || isLoading
+  val context = LocalContext.current
 
   Row(
       modifier = modifier,
@@ -349,7 +395,10 @@ private fun LocationPickerTopBar(
                 .focusRequester(focusRequester)
                 .testTag(LocationPickerTestTags.SEARCH_FIELD),
         placeholder = {
-          Text(text = "Search city, address or place", overflow = TextOverflow.Ellipsis)
+          Text(
+              text = context.getString(R.string.location_search_box),
+              overflow = TextOverflow.Ellipsis,
+          )
         },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
@@ -365,71 +414,107 @@ private fun LocationPickerTopBar(
                 disabledIndicatorColor = colorScheme.surface,
             ),
         trailingIcon = {
-          if (isBusy) {
-            CircularProgressIndicator(
-                strokeWidth = 2.dp,
-                modifier = Modifier.size(20.dp),
-            )
-          } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              if (query.isNotEmpty()) {
-                IconButton(
-                    onClick = {
-                      onQueryChange("")
-                      focusRequester.requestFocus()
-                    },
-                    modifier = Modifier.testTag(LocationPickerTestTags.CLEAR_BUTTON),
-                ) {
-                  Icon(
-                      imageVector = Icons.Default.Clear,
-                      contentDescription = "Clear search",
-                  )
-                }
-              }
-
-              IconButton(
-                  onClick = { onUseCurrentLocationName() },
-                  modifier = Modifier.testTag(LocationPickerTestTags.GPS_BUTTON),
-                  enabled = isLocationGranted,
-              ) {
-                IconLocation(isLocationGranted)
-              }
-
-              IconButton(
-                  onClick = {
-                    val trimmed = query.trim()
-                    if (trimmed.isEmpty()) {
-                      focusRequester.requestFocus()
-                    } else {
-                      onSearch(trimmed)
-                      focusManager.clearFocus()
-                    }
-                  },
-                  modifier = Modifier.testTag(LocationPickerTestTags.SEARCH_BUTTON),
-              ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = colorScheme.primary,
-                    modifier = Modifier.size(28.dp),
-                )
-              }
-            }
-          }
+          LocationPickerTrailingIcons(
+              query = query,
+              isBusy = isBusy,
+              isLocationGranted = isLocationGranted,
+              onQueryChange = onQueryChange,
+              onUseCurrentLocationName = onUseCurrentLocationName,
+              onSearch = onSearch,
+              focusRequester = focusRequester,
+              focusManager = focusManager,
+          )
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions =
-            KeyboardActions(
-                onSearch = {
-                  val q = query.trim()
-                  if (q.isNotEmpty()) {
-                    onSearch(q)
-                    focusManager.clearFocus()
-                  }
-                },
+            locationPickerKeyboardActions(
+                query = query,
+                onSearch = onSearch,
+                focusManager = focusManager,
             ),
     )
   }
+}
+
+@Composable
+private fun LocationPickerTrailingIcons(
+    query: String,
+    isBusy: Boolean,
+    isLocationGranted: Boolean,
+    onQueryChange: (String) -> Unit,
+    onUseCurrentLocationName: () -> Unit,
+    onSearch: (String) -> Unit,
+    focusRequester: FocusRequester,
+    focusManager: FocusManager,
+) {
+  if (isBusy) {
+    CircularProgressIndicator(
+        strokeWidth = 2.dp,
+        modifier = Modifier.size(20.dp),
+    )
+    return
+  }
+
+  Row(verticalAlignment = Alignment.CenterVertically) {
+    if (query.isNotEmpty()) {
+      IconButton(
+          onClick = {
+            onQueryChange("")
+            focusRequester.requestFocus()
+          },
+          modifier = Modifier.testTag(LocationPickerTestTags.CLEAR_BUTTON),
+      ) {
+        Icon(
+            imageVector = Icons.Default.Clear,
+            contentDescription = "Clear search",
+        )
+      }
+    }
+
+    IconButton(
+        onClick = { onUseCurrentLocationName() },
+        modifier = Modifier.testTag(LocationPickerTestTags.GPS_BUTTON),
+        enabled = isLocationGranted,
+    ) {
+      IconLocation(isLocationGranted)
+    }
+
+    IconButton(
+        onClick = {
+          val trimmed = query.trim()
+          if (trimmed.isEmpty()) {
+            focusRequester.requestFocus()
+          } else {
+            onSearch(trimmed)
+            focusManager.clearFocus()
+          }
+        },
+        modifier = Modifier.testTag(LocationPickerTestTags.SEARCH_BUTTON),
+    ) {
+      Icon(
+          Icons.Default.Search,
+          contentDescription = "Search",
+          tint = colorScheme.primary,
+          modifier = Modifier.size(28.dp),
+      )
+    }
+  }
+}
+
+private fun locationPickerKeyboardActions(
+    query: String,
+    onSearch: (String) -> Unit,
+    focusManager: FocusManager,
+): KeyboardActions {
+  return KeyboardActions(
+      onSearch = {
+        val q = query.trim()
+        if (q.isNotEmpty()) {
+          onSearch(q)
+          focusManager.clearFocus()
+        }
+      },
+  )
 }
 
 @Composable
@@ -471,27 +556,12 @@ private fun SuggestionsDropdown(
               modifier = Modifier.size(18.dp),
           )
 
-          val name = feature.name
           val annotated =
-              if (queryLower.isNotEmpty()) {
-                val nameLower = name.lowercase()
-                val start = nameLower.indexOf(queryLower)
-                if (start >= 0) {
-                  val end = start + queryLower.length
-                  buildAnnotatedString {
-                    append(name.substring(0, start))
-                    withStyle(
-                        SpanStyle(fontWeight = FontWeight.SemiBold, color = colorScheme.primary)) {
-                          append(name.substring(start, end))
-                        }
-                    append(name.substring(end))
-                  }
-                } else {
-                  AnnotatedString(name)
-                }
-              } else {
-                AnnotatedString(name)
-              }
+              buildHighlightedName(
+                  name = feature.name,
+                  queryLower = queryLower,
+                  highlightColor = colorScheme.primary,
+              )
 
           Box(
               modifier = Modifier.padding(start = 8.dp),
@@ -602,7 +672,7 @@ private fun LocationPickerConfirmDialog(
       },
       text = {
         Text(
-            text = "Is \"$placeName\" the location you want to pick?",
+            text = stringResource(R.string.location_picker_confirm_text, placeName),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -675,5 +745,31 @@ private fun IconLocation(isLocationGranted: Boolean) {
         imageVector = Icons.Default.LocationOff,
         contentDescription = "Enable location",
     )
+  }
+}
+
+private fun buildHighlightedName(
+    name: String,
+    queryLower: String,
+    highlightColor: Color,
+): AnnotatedString {
+  if (queryLower.isEmpty()) return AnnotatedString(name)
+
+  val nameLower = name.lowercase()
+  val start = nameLower.indexOf(queryLower)
+  if (start < 0) return AnnotatedString(name)
+
+  val end = start + queryLower.length
+  return buildAnnotatedString {
+    append(name.substring(0, start))
+    withStyle(
+        SpanStyle(
+            fontWeight = FontWeight.SemiBold,
+            color = highlightColor,
+        ),
+    ) {
+      append(name.substring(start, end))
+    }
+    append(name.substring(end))
   }
 }

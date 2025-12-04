@@ -217,4 +217,9 @@
     <string name="post_details_actions_share">Share location</string>
     <string name="post_details_actions_delete_post">Delete post</string>
 
+    <!-- Location Picker screen -->
+    <string name="location_search_box">Search city, address or place</string>
+    <string name="location_picker_confirm_text">Is "%1$s" the location you want to pick?</string>
+    <string name="location_picker_title">Pick Location</string>
+
 </resources>

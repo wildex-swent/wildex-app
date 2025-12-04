@@ -2,6 +2,7 @@ package com.android.wildex.ui.locationpicker
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.LocalRepositories
 import com.mapbox.common.MapboxOptions
@@ -220,5 +222,23 @@ class LocationPickerScreenTest {
     searchField.performTextInput("Lausanne")
     searchField.performImeAction()
     searchField.assertIsNotFocused()
+  }
+
+  @Test
+  fun offlineMode_showsOfflineScreen_andTopBarBackButton() {
+    var backClicked = false
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+        LocationPickerScreen(
+            onBack = { backClicked = true },
+            onLocationPicked = {},
+        )
+      }
+    }
+    composeTestRule.onNodeWithTag(LocationPickerTestTags.TOP_APP_BAR_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LocationPickerTestTags.BACK_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LocationPickerTestTags.BACK_BUTTON).performClick()
+    assert(backClicked)
+    composeTestRule.onNodeWithTag(LocationPickerTestTags.MAP_CANVAS).assertDoesNotExist()
   }
 }

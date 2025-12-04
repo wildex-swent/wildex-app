@@ -1,6 +1,5 @@
 package com.android.wildex.ui.report
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,7 +8,6 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -25,7 +23,6 @@ import org.junit.Test
 class SubmitReportScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
-  private lateinit var context: Context
   private lateinit var reportRepository: ReportRepository
   private lateinit var storageRepository: StorageRepository
   private lateinit var viewModel: SubmitReportScreenViewModel
@@ -38,7 +35,6 @@ class SubmitReportScreenTest {
 
   @Before
   fun setup() {
-    context = ApplicationProvider.getApplicationContext()
     reportRepository = LocalRepositories.reportRepository
     storageRepository = LocalRepositories.storageRepository
     viewModel =

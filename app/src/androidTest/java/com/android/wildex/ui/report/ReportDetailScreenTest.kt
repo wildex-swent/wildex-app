@@ -23,6 +23,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -521,21 +522,22 @@ class ReportDetailScreenTest {
     assert(confirmed)
   }
 
-  @Test
-  fun refreshDisabledWhenOfflineReportDetails() {
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
-        ReportDetailsScreen(
-            reportId = "reportId1",
-            reportDetailsViewModel = reportDetailsViewModel,
-        )
-      }
+    @Test
+    fun offlineScreenIsDisplayedWhenOfflineReportDetails() {
+        composeRule.setContent {
+            CompositionLocalProvider(LocalConnectivityObserver provides false) {
+                ReportDetailsScreen(
+                    reportId = "reportId1",
+                    reportDetailsViewModel = reportDetailsViewModel,
+                )
+            }
+        }
+        composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
+        composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
+        composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
+        composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
     }
-    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH).performTouchInput {
-      swipeDown()
-    }
-    assertFalse(reportDetailsViewModel.uiState.value.isRefreshing)
-  }
 
   @Test
   fun commentInputIsDisabledWhenOffline() {

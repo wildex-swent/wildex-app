@@ -2,6 +2,7 @@ package com.android.wildex.ui.post
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -34,6 +35,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLikeTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -508,6 +510,27 @@ class PostDetailsScreenTest {
     composeRule.scrollToTextWithinScroll("Amazing shot!")
     composeRule.onNodeWithText("Amazing shot!").performTouchInput { longClick() }
     composeRule.onNodeWithTag(PostDetailsScreenTestTags.DELETE_COMMENT_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun doubleTap_works() {
+    composeRule.mainClock.autoAdvance = false
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = postDetailsViewModel,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(PostDetailsScreenTestTags.IMAGE_BOX).performTouchInput {
+      doubleClick()
+    }
+    composeRule.mainClock.advanceTimeByFrame()
+    composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsDisplayed()
   }
 }
 

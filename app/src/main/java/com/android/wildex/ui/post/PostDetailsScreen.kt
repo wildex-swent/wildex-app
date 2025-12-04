@@ -85,6 +85,7 @@ object PostDetailsScreenTestTags {
   const val DELETE_POST_CONFIRM_BUTTON = "delete_post_confirm_button"
   const val DELETE_POST_DISMISS_BUTTON = "delete_post_dismiss_button"
   const val DELETE_COMMENT_BUTTON = "delete_comment_button"
+  const val IMAGE_BOX = "image_box"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -351,7 +352,7 @@ private fun PostPicture(
         pictureURL = pictureURL,
         likedByCurrentUser = likedByCurrentUser,
         onLike = onLike,
-        modifier = Modifier.fillMaxWidth())
+        modifier = Modifier.fillMaxWidth().testTag(PostDetailsScreenTestTags.IMAGE_BOX))
     // top black gradient overlay
     Box(
         modifier =

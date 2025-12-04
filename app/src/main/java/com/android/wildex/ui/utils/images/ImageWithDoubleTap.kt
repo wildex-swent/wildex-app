@@ -23,9 +23,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.model.utils.URL
+
+object ImageWithDoubleTapLikeTestTags {
+  const val HEART_ANIMATION = "heart_animation"
+}
 
 /**
  * A composable that displays an image with a heart overlay when double-tapped.
@@ -98,7 +103,10 @@ fun DoubleTapHeartOverlay(
     onAnimationEnd()
   }
 
-  Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+  Box(
+      modifier = modifier.fillMaxSize().testTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION),
+      contentAlignment = Alignment.Center,
+  ) {
     Icon(
         imageVector = Icons.Filled.Favorite,
         contentDescription = null,

@@ -393,6 +393,7 @@ class PostDetailsScreenTest {
 
     fun openSheet() {
       composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
+      composeRule.waitForIdle()
       composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
     }
 
@@ -436,6 +437,7 @@ class PostDetailsScreenTest {
 
     fun openSheet() {
       composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
+      composeRule.waitForIdle()
       composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
     }
 

@@ -511,7 +511,7 @@ fun Comment(
           Modifier.fillMaxWidth()
               .padding(horizontal = 16.dp, vertical = 6.dp)
               .combinedClickable(
-                  onClick = {}, // TODO: no other actions yet
+                  onClick = {},
                   onLongClick = { if (canDelete) showMenu = true },
               ),
       shape = RoundedCornerShape(32.dp),

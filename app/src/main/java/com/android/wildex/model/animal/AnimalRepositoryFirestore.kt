@@ -44,9 +44,7 @@ class AnimalRepositoryFirestore(private val db: FirebaseFirestore) : AnimalRepos
     val docRef = db.collection(ANIMAL_COLLECTION_PATH).document(animalId)
     val doc = docRef.get().await()
 
-    if (!doc.exists()) {
-      throw IllegalArgumentException("Animal with given Id not found")
-    }
+    require(doc.exists()) { "Animal with given Id not found" }
 
     docRef.delete().await()
   }

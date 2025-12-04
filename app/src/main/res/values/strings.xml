@@ -203,4 +203,21 @@
     <string name="offline_message">This is not a bug… it\'s a purr-formance issue :O</string>
     <string name="no_discoveries">No discoveries yet, start exploring!</string>
 
+    <!-- Post details screen -->
+    <string name="post_details_delete_post">Delete post</string>
+    <string name="post_details_delete_post_confirmation">Are you sure you want to delete this post?</string>
+    <string name="post_details_final_delete_post">Delete</string>
+    <string name="post_details_cancel_delete_post">Cancel</string>
+    <string name="post_details_delete_comment">Delete comment</string>
+
+
+    <!-- Post details actions screen -->
+    <string name="post_details_actions">Post actions</string>
+    <string name="post_details_actions_location">Post location</string>
+    <string name="post_details_actions_google_maps">Open in Google Maps</string>
+    <string name="post_details_actions_copy">Copy location</string>
+    <string name="post_details_actions_share">Share location</string>
+    <string name="post_details_actions_post">Post</string>
+    <string name="post_details_actions_delete_post">Delete post</string>
+
 </resources>

@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +24,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -55,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.wildex.R
 import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
@@ -75,6 +81,10 @@ object PostDetailsScreenTestTags {
   }
 
   const val BACK_BUTTON = "backButton"
+  const val DELETE_POST_DIALOG = "delete_post_dialog"
+  const val DELETE_POST_CONFIRM_BUTTON = "delete_post_confirm_button"
+  const val DELETE_POST_DISMISS_BUTTON = "delete_post_dismiss_button"
+  const val DELETE_COMMENT_BUTTON = "delete_comment_button"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,6 +100,7 @@ fun PostDetailsScreen(
   val connectivityObserver = remember { DefaultConnectivityObserver(context) }
   val isOnlineObs by connectivityObserver.isOnline.collectAsState()
   val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  var showActionSheet by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
 
@@ -102,7 +113,12 @@ fun PostDetailsScreen(
 
   Scaffold(
       modifier = Modifier.testTag(NavigationTestTags.POST_DETAILS_SCREEN),
-      topBar = { PostDetailsTopBar(onGoBack = onGoBack) },
+      topBar = {
+        PostDetailsTopBar(
+            onGoBack = onGoBack,
+            onOpenActions = { showActionSheet = true },
+        )
+      },
       bottomBar = {
         // Pinned comment input – content scrolls behind it
         CommentInput(
@@ -121,6 +137,9 @@ fun PostDetailsScreen(
           postDetailsScreenViewModel = postDetailsScreenViewModel,
           postId = postId,
           onProfile = onProfile,
+          onGoBack = onGoBack,
+          showActionSheet = showActionSheet,
+          onDismissActionSheet = { showActionSheet = false },
       )
     } else {
       OfflineScreen(innerPadding = innerPadding)
@@ -135,8 +154,21 @@ fun PostDetailsScreenContent(
     postDetailsScreenViewModel: PostDetailsScreenViewModel,
     postId: Id,
     onProfile: (Id) -> Unit,
+    onGoBack: () -> Unit,
+    showActionSheet: Boolean = false,
+    onDismissActionSheet: () -> Unit,
 ) {
+  val context = LocalContext.current
   val pullState = rememberPullToRefreshState()
+  var showDeletionValidation by remember { mutableStateOf(false) }
+
+  if (showActionSheet) {
+    PostDetailsActions(
+        onDeletePressed = { showDeletionValidation = true },
+        onDismissRequest = onDismissActionSheet,
+        isAuthor = (uiState.currentUserId == uiState.authorId),
+    )
+  }
 
   PullToRefreshBox(
       state = pullState,
@@ -147,11 +179,55 @@ fun PostDetailsScreenContent(
     when {
       uiState.isError -> LoadingFail()
       uiState.isLoading -> LoadingScreen()
-      else ->
-          PostDetailsContent(
-              uiState = uiState,
-              postDetailsScreenViewModel = postDetailsScreenViewModel,
-              onProfile = onProfile)
+      else -> {
+        PostDetailsContent(
+            uiState = uiState,
+            postDetailsScreenViewModel = postDetailsScreenViewModel,
+            onProfile = onProfile)
+        if (showDeletionValidation) {
+          AlertDialog(
+              onDismissRequest = { showDeletionValidation = false },
+              title = {
+                Text(
+                    text = context.getString(R.string.post_details_delete_post),
+                    style = typography.titleLarge)
+              },
+              text = {
+                Text(
+                    text = context.getString(R.string.post_details_delete_post_confirmation),
+                    style = typography.bodyMedium)
+              },
+              modifier = Modifier.testTag(PostDetailsScreenTestTags.DELETE_POST_DIALOG),
+              confirmButton = {
+                TextButton(
+                    modifier =
+                        Modifier.testTag(PostDetailsScreenTestTags.DELETE_POST_CONFIRM_BUTTON),
+                    onClick = {
+                      showDeletionValidation = false
+                      postDetailsScreenViewModel.removePost(postId)
+                      onGoBack()
+                    },
+                ) {
+                  Text(
+                      text = context.getString(R.string.post_details_final_delete_post),
+                      color = colorScheme.error,
+                      style = typography.bodyMedium)
+                }
+              },
+              dismissButton = {
+                TextButton(
+                    modifier =
+                        Modifier.testTag(PostDetailsScreenTestTags.DELETE_POST_DISMISS_BUTTON),
+                    onClick = { showDeletionValidation = false },
+                ) {
+                  Text(
+                      text = context.getString(R.string.post_details_cancel_delete_post),
+                      style = typography.bodyMedium)
+                }
+              },
+          )
+        }
+      }
     }
   }
 }
@@ -218,7 +294,11 @@ fun PostDetailsContent(
 
       // COMMENTS LIST – full-width, airy rows
       items(uiState.commentsUI) { commentUI ->
-        Comment(commentUI = commentUI, onProfile = onProfile)
+        Comment(
+            commentUI = commentUI,
+            onProfile = onProfile,
+            onDelete = { postDetailsScreenViewModel.removeComment(commentUI.commentId) },
+            canDelete = (uiState.currentUserId == commentUI.authorId))
       }
 
       // Spacer so the last comment clears the bottom input
@@ -419,9 +499,20 @@ fun LocationSpeciesLikeBar(
 fun Comment(
     commentUI: CommentWithAuthorUI,
     onProfile: (Id) -> Unit = {},
+    onDelete: () -> Unit = {},
+    canDelete: Boolean = false,
 ) {
+  val context = LocalContext.current
+  var showMenu by remember { mutableStateOf(false) }
+
   Card(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 16.dp, vertical = 6.dp)
+              .combinedClickable(
+                  onClick = {}, // TODO: no other actions yet
+                  onLongClick = { if (canDelete) showMenu = true },
+              ),
       shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.background),
       border = BorderStroke(1.dp, colorScheme.onBackground),
@@ -447,7 +538,7 @@ fun Comment(
               text = commentUI.authorUserName,
               style = typography.labelLarge,
               color = colorScheme.onBackground,
-          )
+              modifier = Modifier.weight(1f))
           Spacer(modifier = Modifier.width(8.dp))
           Text(
               text = commentUI.date,
@@ -463,6 +554,26 @@ fun Comment(
         )
       }
     }
+
+    DropdownMenu(
+        expanded = showMenu,
+        onDismissRequest = { showMenu = false },
+        modifier = Modifier.testTag(PostDetailsScreenTestTags.DELETE_COMMENT_BUTTON)) {
+          if (canDelete) {
+            DropdownMenuItem(
+                text = {
+                  Text(
+                      text = context.getString(R.string.post_details_delete_comment),
+                      style = typography.bodyMedium,
+                      color = colorScheme.error,
+                  )
+                },
+                onClick = {
+                  onDelete()
+                  showMenu = false
+                })
+          }
+        }
   }
 }
 

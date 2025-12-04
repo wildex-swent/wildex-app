@@ -10,6 +10,7 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
@@ -39,6 +40,7 @@ class PostDetailsScreenViewModelTest {
   private lateinit var commentRepository: CommentRepository
   private lateinit var likeRepository: LikeRepository
   private lateinit var animalRepository: AnimalRepository
+  private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var viewModel: PostDetailsScreenViewModel
 
   private val testPost =
@@ -113,6 +115,7 @@ class PostDetailsScreenViewModelTest {
     commentRepository = mockk()
     likeRepository = mockk()
     animalRepository = mockk()
+    userAnimalsRepository = mockk()
     viewModel =
         PostDetailsScreenViewModel(
             postRepository = postsRepository,
@@ -120,6 +123,7 @@ class PostDetailsScreenViewModelTest {
             commentRepository = commentRepository,
             likeRepository = likeRepository,
             animalRepository = animalRepository,
+            userAnimalsRepository = userAnimalsRepository,
             currentUserId = "currentUserId-1",
         )
     coEvery { postsRepository.getPost("post1") } returns testPost
@@ -209,6 +213,24 @@ class PostDetailsScreenViewModelTest {
         advanceUntilIdle()
 
         coVerify { commentRepository.addComment(any()) }
+      }
+
+  @Test
+  fun removeComment_calls_repositories_and_updates_state() =
+      mainDispatcherRule.runTest {
+        coEvery { commentRepository.deleteComment(any()) } just Runs
+
+        viewModel.loadPostDetails("post1")
+
+        viewModel.removeComment("comment1")
+        advanceUntilIdle()
+
+        coVerify { commentRepository.deleteComment(any()) }
+
+        val state = viewModel.uiState.value
+        assertEquals(3, state.commentsUI.size)
+        assertEquals(3, state.commentsCount)
+        assertTrue(state.commentsUI.none { it.commentId == "comment1" })
       }
 
   @Test
@@ -325,5 +347,27 @@ class PostDetailsScreenViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
         assertFalse(viewModel.uiState.value.isRefreshing)
         assertNull(viewModel.uiState.value.errorMsg)
+      }
+
+  @Test
+  fun removePost_calls_repositories_and_updates_state() =
+      mainDispatcherRule.runTest {
+        coEvery { postsRepository.deletePost("post1") } just Runs
+        coEvery { commentRepository.deleteAllCommentsOfPost("post1") } just Runs
+        coEvery { likeRepository.deleteAllLikesOfPost("post1") } just Runs
+        coEvery { userAnimalsRepository.deleteAnimalToUserAnimals("poster1", "Tiger") } just Runs
+        coEvery { animalRepository.deleteAnimal("Tiger") } just Runs
+
+        viewModel.loadPostDetails("post1")
+        advanceUntilIdle()
+
+        viewModel.removePost("post1")
+        advanceUntilIdle()
+
+        coVerify { postsRepository.deletePost("post1") }
+        coVerify { commentRepository.deleteAllCommentsOfPost("post1") }
+        coVerify { likeRepository.deleteAllLikesOfPost("post1") }
+        coVerify { userAnimalsRepository.deleteAnimalToUserAnimals("poster1", "Tiger") }
+        coVerify { animalRepository.deleteAnimal("Tiger") }
       }
 }

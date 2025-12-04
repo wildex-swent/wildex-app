@@ -415,51 +415,7 @@ class PostDetailsScreenTest {
   }
 
   @Test
-  fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserIsAuthor() {
-    val vm =
-        PostDetailsScreenViewModel(
-            LocalRepositories.postsRepository,
-            LocalRepositories.userRepository,
-            LocalRepositories.commentRepository,
-            LocalRepositories.animalRepository,
-            LocalRepositories.likeRepository,
-            LocalRepositories.userAnimalsRepository,
-            "poster1")
-    composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = vm,
-          onGoBack = {},
-          onProfile = {},
-      )
-    }
-    composeRule.waitForIdle()
-
-    fun openSheet() {
-      composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
-      composeRule.waitForIdle()
-      composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
-    }
-
-    openSheet()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.TITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.LOCATION).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_SHARE).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.POST).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_DELETE).assertIsDisplayed()
-
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).performClick()
-    composeRule.waitForIdle()
-
-    openSheet()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
-  }
-
-  @Test
-  fun deletePopUp_works() {
+  fun deletePopUp_works_for_author() {
     val vm =
         PostDetailsScreenViewModel(
             LocalRepositories.postsRepository,

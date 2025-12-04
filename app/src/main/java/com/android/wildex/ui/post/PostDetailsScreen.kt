@@ -165,6 +165,7 @@ fun PostDetailsScreenContent(
 
   if (showActionSheet) {
     PostDetailsActions(
+        postLocation = uiState.location,
         onDeletePressed = { showDeletionValidation = true },
         onDismissRequest = onDismissActionSheet,
         isAuthor = (uiState.currentUserId == uiState.authorId),
@@ -265,7 +266,7 @@ fun PostDetailsContent(
             Spacer(Modifier.height(8.dp))
 
             LocationSpeciesLikeBar(
-                location = uiState.location,
+                location = uiState.location?.name ?: "",
                 species = uiState.animalSpecies,
                 likedByCurrentUser = uiState.likedByCurrentUser,
                 likesCount = uiState.likesCount,

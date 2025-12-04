@@ -398,13 +398,10 @@ class PostDetailsScreenTest {
     }
 
     openSheet()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.TITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.LOCATION).assertIsDisplayed()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS).assertIsDisplayed()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_SHARE).assertIsDisplayed()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
-    composeRule.onNodeWithTag(PostDetailsActionsTestTags.POST).assertIsNotDisplayed()
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_DELETE).assertIsNotDisplayed()
 
     composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).performClick()

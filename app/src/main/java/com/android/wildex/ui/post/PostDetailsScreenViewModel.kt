@@ -15,6 +15,7 @@ import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 data class PostDetailsUIState(
     val postId: Id = "",
     val pictureURL: URL = "",
-    val location: String = "",
+    val location: Location? = null,
     val description: String = "",
     val date: String = "",
     val animalName: String = "",
@@ -130,7 +131,7 @@ class PostDetailsScreenViewModel(
           PostDetailsUIState(
               postId = postId,
               pictureURL = post.pictureURL,
-              location = post.location?.name ?: "",
+              location = post.location,
               description = post.description,
               date = formatDate(post.date),
               likesCount = likeCount,

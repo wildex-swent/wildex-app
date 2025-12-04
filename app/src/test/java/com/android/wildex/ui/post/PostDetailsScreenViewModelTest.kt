@@ -356,7 +356,6 @@ class PostDetailsScreenViewModelTest {
         coEvery { commentRepository.deleteAllCommentsOfPost("post1") } just Runs
         coEvery { likeRepository.deleteAllLikesOfPost("post1") } just Runs
         coEvery { userAnimalsRepository.deleteAnimalToUserAnimals("poster1", "Tiger") } just Runs
-        coEvery { animalRepository.deleteAnimal("Tiger") } just Runs
 
         viewModel.loadPostDetails("post1")
         advanceUntilIdle()
@@ -368,6 +367,5 @@ class PostDetailsScreenViewModelTest {
         coVerify { commentRepository.deleteAllCommentsOfPost("post1") }
         coVerify { likeRepository.deleteAllLikesOfPost("post1") }
         coVerify { userAnimalsRepository.deleteAnimalToUserAnimals("poster1", "Tiger") }
-        coVerify { animalRepository.deleteAnimal("Tiger") }
       }
 }

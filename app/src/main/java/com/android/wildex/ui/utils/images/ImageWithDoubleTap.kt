@@ -94,7 +94,7 @@ fun DoubleTapHeartOverlay(
   val scale = remember { Animatable(0f) }
   val alpha = remember { Animatable(1f) }
 
-  LaunchedEffect(isVisible) {
+  LaunchedEffect(Unit) {
     scale.animateTo(1.5f, animationSpec = tween(durationMillis = 300))
 
     alpha.animateTo(0f, animationSpec = tween(durationMillis = 400, delayMillis = 300))

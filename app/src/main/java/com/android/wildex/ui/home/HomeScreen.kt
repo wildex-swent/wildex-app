@@ -136,30 +136,31 @@ fun HomeScreen(
   ) { pd ->
     val pullState = rememberPullToRefreshState()
 
-        PullToRefreshBox(
-            state = pullState,
-            isRefreshing = uiState.isRefreshing && isOnline,
-            modifier = Modifier.padding(pd).testTag(HomeScreenTestTags.PULL_TO_REFRESH),
-            onRefresh = {
-              if (isOnline) homeScreenViewModel.refreshUIState()
-              else homeScreenViewModel.refreshOffline()
-            },
-        ) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            postStates.isEmpty() -> NoPostsView()
-            else -> {
-                val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
-                PostsView(
-                    postStates = postStates,
-                    onProfilePictureClick = onProfilePictureClick,
-                    onPostLike = homeScreenViewModel::toggleLike,
-                    onPostClick = onPostClick,
-                )
-          }}
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing && isOnline,
+        modifier = Modifier.padding(pd).testTag(HomeScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) homeScreenViewModel.refreshUIState()
+          else homeScreenViewModel.refreshOffline()
+        },
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        postStates.isEmpty() -> NoPostsView()
+        else -> {
+          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
+          PostsView(
+              postStates = postStates,
+              onProfilePictureClick = onProfilePictureClick,
+              onPostLike = homeScreenViewModel::toggleLike,
+              onPostClick = onPostClick,
+          )
         }
       }
+    }
+  }
 }
 
 /** Displays a placeholder view when there are no posts available. */

@@ -143,15 +143,14 @@ fun PostDetailsContent(
 private fun PostDescription(uiState: PostDetailsUIState) {
   if (uiState.description.isNotBlank()) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = colorScheme.surfaceVariant,
+                containerColor = colorScheme.background,
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-      Column(modifier = Modifier.padding(14.dp)) {
+      Column(modifier = Modifier.padding(8.dp)) {
         ExpandableTextCore(
             text = uiState.description,
             collapsedLines = 4,
@@ -352,7 +351,6 @@ fun Comment(
                   onClick = {},
                   onLongClick = { if (canDelete) showMenu = true },
               ),
-      shape = RoundedCornerShape(32.dp),
       colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
       elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
   ) {

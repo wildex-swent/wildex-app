@@ -53,7 +53,7 @@ fun ExpandableTextCore(
               if (expanded) context.getString(R.string.report_details_show_less)
               else context.getString(R.string.report_details_read_more),
           style = typography.labelSmall,
-          color = colorScheme.tertiary,
+          color = colorScheme.onBackground.copy(alpha = 0.75f),
           modifier =
               Modifier.testTag(toggleTag).align(Alignment.End).clickable { expanded = !expanded },
       )

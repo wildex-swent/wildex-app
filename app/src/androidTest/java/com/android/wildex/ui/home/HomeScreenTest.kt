@@ -43,6 +43,7 @@ class HomeScreenTest {
   private val commentRepository = LocalRepositories.commentRepository
   private val animalRepository = LocalRepositories.animalRepository
   private val userSettingsRepository = LocalRepositories.userSettingsRepository
+  private val userFriendsRepository = LocalRepositories.userFriendsRepository
 
   private val fullPost =
       Post(
@@ -68,6 +69,7 @@ class HomeScreenTest {
             commentRepository,
             animalRepository,
             userSettingsRepository,
+            userFriendsRepository,
             "currentUserId-1",
         )
     userRepository.addUser(
@@ -450,6 +452,7 @@ class HomeScreenTest {
               LocalRepositories.commentRepository,
               LocalRepositories.animalRepository,
               LocalRepositories.userSettingsRepository,
+              LocalRepositories.userFriendsRepository,
               "currentUserId-1",
           )
       vm.loadUIState()

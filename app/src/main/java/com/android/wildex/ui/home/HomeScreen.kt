@@ -142,13 +142,16 @@ fun HomeScreen(
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
         postStates.isEmpty() -> NoPostsView()
-        else ->
-            PostsView(
-                postStates = postStates,
-                onProfilePictureClick = onProfilePictureClick,
-                onPostLike = homeScreenViewModel::toggleLike,
-                onPostClick = onPostClick,
-            )
+        else -> {
+          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
+
+          PostsView(
+              postStates = filteredPostStates,
+              onProfilePictureClick = onProfilePictureClick,
+              onPostLike = homeScreenViewModel::toggleLike,
+              onPostClick = onPostClick,
+          )
+        }
       }
     }
   }

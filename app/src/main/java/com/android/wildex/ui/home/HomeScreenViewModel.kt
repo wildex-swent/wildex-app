@@ -17,6 +17,7 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Represents the UI state of the Home Screen.
@@ -45,6 +47,7 @@ data class HomeUIState(
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
+    val postsFilters: PostsFilters = PostsFilters()
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -74,6 +77,22 @@ data class PostState(
 )
 
 /**
+ * Represents the filters that can be applied to the posts to display in the HomeScreen.
+ *
+ * @property onlyFriendsPosts True to only see the posts of the user friends, false to see
+ *   everyone's posts
+ * @property ofAnimal The name of the animal we want to see in the posts
+ * @property fromPlace The name of the place where we want the posts to be from
+ * @property fromAuthor The user whose posts we want to see
+ */
+data class PostsFilters(
+    val onlyFriendsPosts: Boolean = false,
+    val ofAnimal: String? = null,
+    val fromPlace: String? = null,
+    val fromAuthor: SimpleUser? = null
+)
+
+/**
  * ViewModel for managing the home screen UI state and user interactions.
  *
  * Responsible for:
@@ -94,6 +113,8 @@ class HomeScreenViewModel(
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
+    private val userFriendsRepository: UserFriendsRepository =
+        RepositoryProvider.userFriendsRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
@@ -122,7 +143,7 @@ class HomeScreenViewModel(
               isLoading = false,
               errorMsg = null,
               isError = false,
-          )
+              postsFilters = PostsFilters())
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -202,5 +223,60 @@ class HomeScreenViewModel(
   /** Sets a new error message in the UI state. */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
+  }
+
+  /** Sets new posts filters in the UI state. */
+  fun setPostsFilter(
+      onlyFriendsPosts: Boolean = _uiState.value.postsFilters.onlyFriendsPosts,
+      ofAnimal: String? = _uiState.value.postsFilters.ofAnimal,
+      fromPlace: String? = _uiState.value.postsFilters.fromPlace,
+      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor
+  ) {
+    _uiState.value =
+        _uiState.value.copy(
+            postsFilters =
+                PostsFilters(
+                    onlyFriendsPosts = onlyFriendsPosts,
+                    ofAnimal = ofAnimal,
+                    fromPlace = fromPlace,
+                    fromAuthor = fromAuthor))
+  }
+
+  /**
+   * Filters a list of [PostState] to only get the ones respecting the filters, then sorts them from
+   * most to least recent.
+   *
+   * @param postStates The list of [PostState] to sort.
+   * @return The sorted list of [PostState].
+   */
+  fun filterPosts(postStates: List<PostState>): List<PostState> {
+    var filteredPostStates = postStates
+
+    if (_uiState.value.postsFilters.onlyFriendsPosts) {
+      val friendIds = runBlocking {
+        userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId }
+      }
+
+      filteredPostStates = filteredPostStates.filter { friendIds.contains(it.author.userId) }
+    }
+
+    if (_uiState.value.postsFilters.ofAnimal != null) {
+      filteredPostStates =
+          filteredPostStates.filter { it.animalName == _uiState.value.postsFilters.ofAnimal }
+    }
+
+    if (_uiState.value.postsFilters.fromPlace != null) {
+      filteredPostStates =
+          filteredPostStates.filter {
+            it.post.location?.name == _uiState.value.postsFilters.fromPlace
+          }
+    }
+
+    if (_uiState.value.postsFilters.fromAuthor != null) {
+      filteredPostStates =
+          filteredPostStates.filter { it.author == _uiState.value.postsFilters.fromAuthor }
+    }
+
+    return filteredPostStates.sortedByDescending { it.post.date }
   }
 }

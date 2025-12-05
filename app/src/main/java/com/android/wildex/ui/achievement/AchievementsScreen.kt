@@ -242,7 +242,6 @@ fun AchievementItem(
           contentDescription = achievement.name,
           modifier =
               Modifier.fillMaxSize(.7f)
-                  .clip(CircleShape)
                   .testTag(
                       AchievementsScreenTestTags.getImageTagForAchievement(
                           achievement.id,

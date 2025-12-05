@@ -2,16 +2,25 @@ package com.android.wildex.ui.post
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.CommentTag
@@ -20,11 +29,13 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLikeTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CompletableDeferred
@@ -43,7 +54,9 @@ class PostDetailsScreenTest {
   private val userRepository: UserRepository = LocalRepositories.userRepository
   private val commentRepository: CommentRepository = LocalRepositories.commentRepository
   private val likeRepository: LikeRepository = LocalRepositories.likeRepository
-  private val animalRepository = LocalRepositories.animalRepository
+  private val animalRepository: AnimalRepository = LocalRepositories.animalRepository
+  private val userAnimalsRepository: UserAnimalsRepository = LocalRepositories.userAnimalsRepository
+
   private lateinit var postDetailsViewModel: PostDetailsScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -186,6 +199,7 @@ class PostDetailsScreenTest {
             commentRepository,
             animalRepository,
             likeRepository,
+            userAnimalsRepository,
             "currentUserId-1",
         )
   }
@@ -198,31 +212,9 @@ class PostDetailsScreenTest {
   @Test
   fun topBar_backButton_triggersCallback() {
     var backClicked = 0
-    composeRule.setContent { PostDetailsTopBar(onGoBack = { backClicked++ }) }
+    composeRule.setContent { PostDetailsTopBar(onGoBack = { backClicked++ }, onOpenActions = {}) }
     composeRule.onNodeWithContentDescription("Back to Homepage").performClick()
     Assert.assertEquals(1, backClicked)
-  }
-
-  @Test
-  fun postDetailsScreen_displaysDescriptionAndMeta() {
-    // Use real ViewModel and repositories
-    runBlocking { postDetailsViewModel.loadPostDetails("post1") }
-    composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
-    }
-    composeRule.waitForIdle()
-    // Check description
-    composeRule.onNodeWithText("Saw this beautiful tiger during my trip!").assertIsDisplayed()
-    // Check author info and animalId
-    composeRule.onNodeWithText("tiger_lover", substring = true).assertIsDisplayed()
-    composeRule.onNodeWithText("saw a", substring = true).assertIsDisplayed()
-    // Date is dynamic, so just check location
-    composeRule.onNodeWithText("India").assertIsDisplayed()
   }
 
   @Test
@@ -264,7 +256,9 @@ class PostDetailsScreenTest {
     }
     composeRule.waitForIdle()
     // Comments displayed
+    composeRule.scrollToTextWithinScroll("Amazing shot!")
     composeRule.onNodeWithText("Amazing shot!").assertIsDisplayed()
+    composeRule.scrollToTextWithinScroll("Love this!")
     composeRule.onNodeWithText("Love this!").assertIsDisplayed()
     // Add comment
     val commentText = "Great post!"
@@ -295,6 +289,8 @@ class PostDetailsScreenTest {
         .performClick()
     Assert.assertEquals("poster1", profileClicked)
     // Click comment authors profile picture
+    composeRule.scrollToTagWithinScroll(
+        PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
     composeRule
         .onNodeWithTag(
             PostDetailsScreenTestTags.testTagForProfilePicture("commenter1", "commenter"))
@@ -336,6 +332,7 @@ class PostDetailsScreenTest {
               LocalRepositories.commentRepository,
               LocalRepositories.animalRepository,
               LocalRepositories.likeRepository,
+              LocalRepositories.userAnimalsRepository,
               "currentUserId-1",
           )
       composeRule.setContent { PostDetailsScreen("post1", vm) }
@@ -359,4 +356,189 @@ class PostDetailsScreenTest {
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
         .assertIsDisplayed()
   }
+
+  @Test
+  fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserNotAuthor() {
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = postDetailsViewModel,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    fun openSheet() {
+      composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
+      composeRule.waitForIdle()
+      composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
+    }
+
+    openSheet()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS).assertIsDisplayed()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_SHARE).assertIsDisplayed()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_DELETE).assertIsNotDisplayed()
+
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).performClick()
+    composeRule.waitForIdle()
+
+    openSheet()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_COPY).assertIsDisplayed()
+  }
+
+  @Test
+  fun deletePopUp_works_for_author() {
+    val vm =
+        PostDetailsScreenViewModel(
+            LocalRepositories.postsRepository,
+            LocalRepositories.userRepository,
+            LocalRepositories.commentRepository,
+            LocalRepositories.animalRepository,
+            LocalRepositories.likeRepository,
+            LocalRepositories.userAnimalsRepository,
+            "poster1")
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = vm,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithContentDescription("More actions").assertExists().performClick()
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.SHEET).assertIsDisplayed()
+
+    composeRule.onNodeWithTag(PostDetailsActionsTestTags.BTN_DELETE).performClick()
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(PostDetailsScreenTestTags.DELETE_POST_DIALOG).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(PostDetailsScreenTestTags.DELETE_POST_DISMISS_BUTTON)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(PostDetailsScreenTestTags.DELETE_POST_CONFIRM_BUTTON)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun currentUser_cannot_delete_other_comments() {
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = postDetailsViewModel,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.scrollToTextWithinScroll("Amazing shot!")
+    composeRule.onNodeWithText("Amazing shot!").performTouchInput { longClick() }
+    composeRule
+        .onNodeWithTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON)
+        .assertIsNotDisplayed()
+  }
+
+  @Test
+  fun currentUser_can_delete_own_comments() {
+    val vm =
+        PostDetailsScreenViewModel(
+            LocalRepositories.postsRepository,
+            LocalRepositories.userRepository,
+            LocalRepositories.commentRepository,
+            LocalRepositories.animalRepository,
+            LocalRepositories.likeRepository,
+            LocalRepositories.userAnimalsRepository,
+            "commenter1")
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = vm,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.scrollToTextWithinScroll("Amazing shot!")
+    composeRule.onNodeWithText("Amazing shot!").performTouchInput { longClick() }
+    composeRule.onNodeWithTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun doubleTap_works() {
+    composeRule.mainClock.autoAdvance = false
+    composeRule.setContent {
+      PostDetailsScreen(
+          postId = "post1",
+          postDetailsScreenViewModel = postDetailsViewModel,
+          onGoBack = {},
+          onProfile = {},
+      )
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsNotDisplayed()
+    composeRule.onNodeWithTag(PostDetailsContentTestTags.IMAGE_BOX).performTouchInput {
+      doubleClick()
+    }
+    composeRule.mainClock.advanceTimeByFrame()
+    composeRule.onNodeWithTag(ImageWithDoubleTapLikeTestTags.HEART_ANIMATION).assertIsDisplayed()
+  }
+
+  @Test
+  fun expandableText_works() {
+    runBlocking {
+      val longDescription = "Very long description ".repeat(500)
+      val longDescPost =
+          Post(
+              postId = "post2",
+              authorId = "poster1",
+              pictureURL = "https://upload.wikimedia.org/wikipedia/commons/5/56/Tiger.50.jpg",
+              location = Location(0.0, 0.0, "India"),
+              description = longDescription,
+              date = Timestamp.now(),
+              animalId = "tiger",
+          )
+      postRepository.addPost(longDescPost)
+
+      val vm =
+          PostDetailsScreenViewModel(
+              postRepository,
+              userRepository,
+              commentRepository,
+              animalRepository,
+              likeRepository,
+              userAnimalsRepository,
+              "currentUserId-1",
+          )
+
+      composeRule.setContent {
+        PostDetailsScreen(
+            postId = "post2",
+            postDetailsScreenViewModel = vm,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
+      composeRule.waitForIdle()
+      composeRule.scrollToTagWithinScroll(PostDetailsContentTestTags.DESCRIPTION_TEXT)
+      composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TEXT).assertIsDisplayed()
+      composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TOGGLE).assertIsDisplayed()
+    }
+  }
+}
+
+private fun ComposeContentTestRule.scrollToTagWithinScroll(tag: String) {
+  onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasTestTag(tag))
+}
+
+private fun ComposeContentTestRule.scrollToTextWithinScroll(text: String) {
+  onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText(text))
 }

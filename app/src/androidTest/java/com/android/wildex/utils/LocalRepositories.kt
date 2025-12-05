@@ -115,6 +115,10 @@ object LocalRepositories {
       listOfLikes.removeIf { it.likeId == likeId }
     }
 
+    override suspend fun deleteAllLikesOfPost(postId: Id) {
+      listOfLikes.removeIf { it.postId == postId }
+    }
+
     override suspend fun getAllLikesByUser(userId: Id): List<Like> {
       return listOfLikes.filter { it.userId == userId }
     }

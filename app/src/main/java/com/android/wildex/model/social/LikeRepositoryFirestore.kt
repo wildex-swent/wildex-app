@@ -60,6 +60,15 @@ class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepositor
     docRef.delete().await()
   }
 
+  override suspend fun deleteAllLikesOfPost(postId: Id) {
+    db.collection(LIKE_COLLECTION_PATH)
+        .whereEqualTo("postId", postId)
+        .get()
+        .await()
+        .documents
+        .forEach { it.reference.delete().await() }
+  }
+
   override suspend fun getAllLikesByUser(userId: Id): List<Like> {
     val collection =
         db.collection(LIKE_COLLECTION_PATH).whereEqualTo("userId", userId).get().await()

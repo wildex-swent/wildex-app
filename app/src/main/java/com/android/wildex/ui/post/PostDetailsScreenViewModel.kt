@@ -11,9 +11,11 @@ import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -28,7 +30,7 @@ import kotlinx.coroutines.launch
 data class PostDetailsUIState(
     val postId: Id = "",
     val pictureURL: URL = "",
-    val location: String = "",
+    val location: Location? = null,
     val description: String = "",
     val date: String = "",
     val animalName: String = "",
@@ -38,6 +40,7 @@ data class PostDetailsUIState(
     val authorId: Id = "",
     val authorUsername: String = "",
     val authorProfilePictureURL: URL = "",
+    val authorUserType: UserType = UserType.REGULAR,
     val commentsUI: List<CommentWithAuthorUI> = emptyList(),
     val currentUserId: Id = "",
     val currentUserProfilePictureURL: URL = "",
@@ -51,6 +54,7 @@ data class PostDetailsUIState(
 )
 
 data class CommentWithAuthorUI(
+    val commentId: Id = "",
     val authorId: Id = "",
     val authorProfilePictureUrl: String = "",
     val authorUserName: String = "",
@@ -65,6 +69,8 @@ class PostDetailsScreenViewModel(
     private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
+    private val userAnimalsRepository: UserAnimalsRepository =
+        RepositoryProvider.userAnimalsRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
 
@@ -125,7 +131,7 @@ class PostDetailsScreenViewModel(
           PostDetailsUIState(
               postId = postId,
               pictureURL = post.pictureURL,
-              location = post.location?.name ?: "",
+              location = post.location,
               description = post.description,
               date = formatDate(post.date),
               likesCount = likeCount,
@@ -133,6 +139,7 @@ class PostDetailsScreenViewModel(
               authorId = post.authorId,
               authorUsername = simpleAuthor.username,
               authorProfilePictureURL = simpleAuthor.profilePictureURL,
+              authorUserType = simpleAuthor.userType,
               animalName = animal.name,
               animalSpecies = animal.species,
               commentsUI = commentsUI,
@@ -173,8 +180,7 @@ class PostDetailsScreenViewModel(
         val likeId = likeRepository.getNewLikeId()
         likeRepository.addLike(Like(likeId = likeId, postId = postId, userId = currentUserId))
       } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "addLike failed for $postId", e)
-        setErrorMsg("Failed to like: ${e.message}")
+        handleException("Add Like failed for $postId", e)
         rollback()
       } finally {
         likeInFlight = false
@@ -203,8 +209,7 @@ class PostDetailsScreenViewModel(
             likeRepository.getLikeForPost(postId) ?: throw IllegalStateException("Like not found")
         likeRepository.deleteLike(like.likeId)
       } catch (e: Exception) {
-        Log.e("PostDetailsViewModel", "removeLike failed for $postId", e)
-        setErrorMsg("Failed to remove like: ${e.message}")
+        handleException("Remove Like failed for $postId", e)
         rollback()
       } finally {
         likeInFlight = false
@@ -255,16 +260,61 @@ class PostDetailsScreenViewModel(
                 text = text,
                 date = now,
                 tag = CommentTag.POST_COMMENT))
+        updatePostDetails(postId)
       } catch (e: Exception) {
         // Rollback UI
-        Log.e("PostDetailsViewModel", "Error adding comment to post id $postId", e)
-        setErrorMsg("Failed to add comment: ${e.message}")
         val current = _uiState.value
         _uiState.value =
             current.copy(
                 commentsUI = current.commentsUI.drop(1),
                 commentsCount = (current.commentsCount - 1).coerceAtLeast(0),
             )
+        handleException("Error adding comment to post id $postId", e)
+      }
+    }
+  }
+
+  /** Optimistic comment remove with rollback on failure. */
+  fun removeComment(commentId: Id) {
+    viewModelScope.launch {
+      val postId = _uiState.value.postId
+
+      // 1) Optimistically remove comment + decrease count
+      val before = _uiState.value
+      val newCommentsUI = before.commentsUI.filterNot { it.commentId == commentId }
+      _uiState.value =
+          before.copy(
+              commentsUI = newCommentsUI,
+              commentsCount = before.commentsCount - 1,
+          )
+
+      try {
+        // 2) Remove comment
+        commentRepository.deleteComment(commentId)
+      } catch (e: Exception) {
+        // Rollback UI
+        val current = _uiState.value
+        _uiState.value =
+            current.copy(
+                commentsUI = before.commentsUI,
+                commentsCount = before.commentsCount,
+            )
+        handleException("Error deleting comment id $commentId to post id $postId", e)
+      }
+    }
+  }
+
+  /** Deletes a post and associated items */
+  fun removePost(postId: Id) {
+    viewModelScope.launch {
+      try {
+        val animalId = postRepository.getPost(postId).animalId
+        postRepository.deletePost(postId)
+        commentRepository.deleteAllCommentsOfPost(postId)
+        likeRepository.deleteAllLikesOfPost(postId)
+        userAnimalsRepository.deleteAnimalToUserAnimals(_uiState.value.authorId, animalId)
+      } catch (e: Exception) {
+        handleException("Failed to delete post $postId", e)
       }
     }
   }
@@ -287,6 +337,7 @@ class PostDetailsScreenViewModel(
     return comments.map { comment ->
       val author = userRepository.getSimpleUser(comment.authorId)
       CommentWithAuthorUI(
+          commentId = comment.commentId,
           authorId = author.userId,
           authorProfilePictureUrl = author.profilePictureURL,
           authorUserName = author.username,
@@ -295,5 +346,17 @@ class PostDetailsScreenViewModel(
           date = formatDate(comment.date),
       )
     }
+  }
+
+  /**
+   * Centralized error handler for fatal errors.
+   *
+   * @param message High-level description of where the error happened.
+   * @param e The exception that was thrown.
+   */
+  private fun handleException(message: String, e: Exception) {
+    Log.e("PostDetailsScreenViewModel", message, e)
+    setErrorMsg("$message: ${e.message}")
+    _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
   }
 }

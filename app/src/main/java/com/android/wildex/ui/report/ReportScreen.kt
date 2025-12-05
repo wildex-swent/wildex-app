@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -66,6 +64,7 @@ object ReportScreenTestTags {
   const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
   const val SUBMIT_REPORT = "report_screen_submit_report"
+  const val PULL_TO_REFRESH = "report_screen_pull_to_refresh"
 
   fun testTagForReport(reportId: Id, element: String): String =
       "ReportScreen_report_${reportId}_$element"
@@ -96,10 +95,9 @@ fun ReportScreen(
     bottomBar: @Composable () -> Unit = {},
 ) {
   val context = LocalContext.current
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
   val uiState by reportScreenViewModel.uiState.collectAsState()
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -130,8 +128,7 @@ fun ReportScreen(
           context = context,
           onProfileClick = onProfileClick,
           onReportClick = onReportClick,
-          onSubmitReportClick = onSubmitReportClick,
-      )
+          onSubmitReportClick = onSubmitReportClick)
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -157,7 +154,7 @@ fun ReportScreenContent(
     context: Context,
     onProfileClick: (Id) -> Unit,
     onReportClick: (Id) -> Unit,
-    onSubmitReportClick: () -> Unit,
+    onSubmitReportClick: () -> Unit
 ) {
   val pullState = rememberPullToRefreshState()
 
@@ -166,27 +163,27 @@ fun ReportScreenContent(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = { reportScreenViewModel.refreshUIState() },
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.reports.isEmpty() -> NoReportsView()
-        else -> {
-          ReportsView(
-              reports = uiState.reports,
-              userId = uiState.currentUser.userId,
-              username = uiState.currentUser.username,
-              userType = uiState.currentUser.userType,
-              onProfileClick = onProfileClick,
-              onReportClick = onReportClick,
-              cancelReport = reportScreenViewModel::cancelReport,
-              selfAssignReport = reportScreenViewModel::selfAssignReport,
-              resolveReport = reportScreenViewModel::resolveReport,
-              unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
-          )
+        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)) {
+          when {
+            uiState.isError -> LoadingFail()
+            uiState.isLoading -> LoadingScreen()
+            uiState.reports.isEmpty() -> NoReportsView()
+            else -> {
+              ReportsView(
+                  reports = uiState.reports,
+                  userId = uiState.currentUser.userId,
+                  username = uiState.currentUser.username,
+                  userType = uiState.currentUser.userType,
+                  onProfileClick = onProfileClick,
+                  onReportClick = onReportClick,
+                  cancelReport = reportScreenViewModel::cancelReport,
+                  selfAssignReport = reportScreenViewModel::selfAssignReport,
+                  resolveReport = reportScreenViewModel::resolveReport,
+                  unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+              )
+            }
+          }
         }
-      }
-    }
     // Submit Report button
     Card(
         shape = RoundedCornerShape(8.dp),

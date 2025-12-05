@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -8,7 +9,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.PostsRepository
@@ -19,10 +23,12 @@ import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +43,7 @@ class FriendScreenTest {
   private val friendRequestRepository: FriendRequestRepository =
       LocalRepositories.friendRequestRepository
   private val postsRepository: PostsRepository = LocalRepositories.postsRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var friendScreenViewModel: FriendScreenViewModel
 
   private lateinit var searchDataUpdater: SearchDataUpdater
@@ -51,7 +58,8 @@ class FriendScreenTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "Le pays des bisounours")
+          country = "Le pays des bisounours",
+      )
 
   private val user1 =
       User(
@@ -63,7 +71,8 @@ class FriendScreenTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "War")
+          country = "War",
+      )
 
   private val user2 =
       User(
@@ -75,7 +84,8 @@ class FriendScreenTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "RockNRoll")
+          country = "RockNRoll",
+      )
 
   private val user3 =
       User(
@@ -87,7 +97,8 @@ class FriendScreenTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "Heaven")
+          country = "Heaven",
+      )
 
   private val user4 =
       User(
@@ -99,7 +110,8 @@ class FriendScreenTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France")
+          country = "France",
+      )
 
   @Before
   fun setup() = runBlocking {
@@ -139,7 +151,9 @@ class FriendScreenTest {
                     userRepository = userRepository,
                     postRepository = postsRepository,
                     userFriendsRepository = userFriendsRepository,
-                    friendRequestRepository = friendRequestRepository))
+                    friendRequestRepository = friendRequestRepository,
+                ),
+        )
   }
 
   @After
@@ -149,12 +163,16 @@ class FriendScreenTest {
 
   @Test
   fun initialStateCurrentUserDisplaysCorrectly() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
@@ -194,12 +212,16 @@ class FriendScreenTest {
 
   @Test
   fun initialStateOtherUserDisplaysCorrectly() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.FRIENDS_TAB_BUTTON).assertIsNotDisplayed()
@@ -240,13 +262,17 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanNavigateBetweenTabs() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("currentUserId", "user3") }
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SearchBarTestTags.SEARCH_BAR).assertIsDisplayed()
@@ -317,13 +343,17 @@ class FriendScreenTest {
 
   @Test
   fun onGoBackButtonInvokesCallback() {
+    fakeObserver.setOnline(true)
     var goBackPushed = false
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = { goBackPushed = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = { goBackPushed = true },
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.GO_BACK_BUTTON)
@@ -334,13 +364,17 @@ class FriendScreenTest {
 
   @Test
   fun onProfileClickInvokesCallback() {
+    fakeObserver.setOnline(true)
     var profileClicked = ""
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = { profileClicked = it },
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = { profileClicked = it },
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForProfilePicture(user1.userId))
@@ -364,12 +398,16 @@ class FriendScreenTest {
 
   @Test
   fun unfollowingAllFriendsShowsNoFriendsText() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.NO_FRIENDS).assertIsNotDisplayed()
     composeTestRule
@@ -408,12 +446,16 @@ class FriendScreenTest {
 
   @Test
   fun followingAllSuggestionsShowsNoSuggestions() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.NO_SUGGESTIONS).assertIsNotDisplayed()
     composeTestRule
@@ -426,12 +468,16 @@ class FriendScreenTest {
 
   @Test
   fun clearingAllReceivedRequestsShowsNoReceivedRequests() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).performClick()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.NO_RECEIVED_REQUESTS).assertIsNotDisplayed()
@@ -445,13 +491,17 @@ class FriendScreenTest {
 
   @Test
   fun cancellingAllSentRequestsShowsNoSentRequests() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("currentUserId", "user3") }
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.REQUESTS_TAB_BUTTON).performClick()
     composeTestRule.onNodeWithTag(FriendScreenTestTags.NO_SENT_REQUESTS).assertIsNotDisplayed()
@@ -465,12 +515,16 @@ class FriendScreenTest {
 
   @Test
   fun otherUserWithNoFriendsShowsNoOtherUserFriends() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user4",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user4",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(FriendScreenTestTags.NO_FRIENDS).assertIsDisplayed()
     composeTestRule
@@ -481,12 +535,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanRemoveAndReAddFriend() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForUnfollowButton(user1.userId))
@@ -502,13 +560,17 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanRemoveAndReAddFriendWhenOtherUser() {
+    fakeObserver.setOnline(true)
     runBlocking { userFriendsRepository.addFriendToUserFriendsOfUser("user2", "user1") }
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForUnfollowButton(user2.userId))
@@ -524,12 +586,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanSendRequestToSuggestionThenCancelAndSeeSuggestionAgain() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForFollowButton(user3.userId))
@@ -550,12 +616,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanSendRequestWhenOtherUser() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user3.userId))
@@ -572,12 +642,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanAcceptReceivedRequestAndSeeNewFriends() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user4.userId))
@@ -614,13 +688,17 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanAcceptReceivedRequestAndSeeNewFriendWhenOtherUser() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("user3", "currentUserId") }
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForUnfollowButton(user3.userId))
@@ -637,12 +715,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanDeclineReceivedRequestAndSeeOldFriends() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForTemplate(user4.userId))
@@ -679,13 +761,17 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanDeclineReceivedRequestAndSeeResultWhenOtherUser() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("user3", "currentUserId") }
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForFollowButton(user3.userId))
@@ -702,12 +788,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanCancelSentRequest() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForFollowButton(user3.userId))
@@ -724,12 +814,16 @@ class FriendScreenTest {
 
   @Test
   fun currentUserCanCancelSentRequestWhenOtherUser() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "user1",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "user1",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(FriendScreenTestTags.testTagForFollowButton(user3.userId))
@@ -745,12 +839,16 @@ class FriendScreenTest {
 
   @Test
   fun searchBarFocusTakesAllScreen() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(SearchBarTestTags.TRAILING_ICON).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
@@ -773,12 +871,16 @@ class FriendScreenTest {
 
   @Test
   fun searchBarUnFocusRestoresScreen() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
     composeTestRule.onNodeWithTag(SearchBarTestTags.LEADING_ICON).performClick()
@@ -800,12 +902,16 @@ class FriendScreenTest {
 
   @Test
   fun clickingTrailingIconClearsText() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
@@ -823,20 +929,25 @@ class FriendScreenTest {
 
   @Test
   fun searchBarInputDisplaysCorrectRecommendations() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
       searchDataUpdater =
           SearchDataUpdater(userRepository, FileSearchDataStorage(LocalContext.current))
       runBlocking { searchDataUpdater.updateSearchData() }
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {},
-          userIndex =
-              UserIndex(
-                  searchDataProvider =
-                      SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
-                  userRepository = userRepository))
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+            userIndex =
+                UserIndex(
+                    searchDataProvider =
+                        SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
+                    userRepository = userRepository,
+                ),
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
@@ -892,21 +1003,26 @@ class FriendScreenTest {
 
   @Test
   fun searchBarResultsAreClickableAndWorkAsIntended() {
+    fakeObserver.setOnline(true)
     var profileClicked = ""
     composeTestRule.setContent {
       searchDataUpdater =
           SearchDataUpdater(userRepository, FileSearchDataStorage(LocalContext.current))
       runBlocking { searchDataUpdater.updateSearchData() }
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = { profileClicked = it },
-          onGoBack = {},
-          userIndex =
-              UserIndex(
-                  searchDataProvider =
-                      SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
-                  userRepository = userRepository))
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = { profileClicked = it },
+            onGoBack = {},
+            userIndex =
+                UserIndex(
+                    searchDataProvider =
+                        SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
+                    userRepository = userRepository,
+                ),
+        )
+      }
     }
 
     composeTestRule
@@ -928,7 +1044,9 @@ class FriendScreenTest {
     composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
     composeTestRule
         .onNodeWithTag(
-            SearchBarTestTags.testTagForResultProfilePicture("user2"), useUnmergedTree = true)
+            SearchBarTestTags.testTagForResultProfilePicture("user2"),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
         .performClick()
     Assert.assertEquals("user2", profileClicked)
@@ -941,7 +1059,9 @@ class FriendScreenTest {
     composeTestRule.onNodeWithTag(SearchBarTestTags.INPUT_FIELD).performClick()
     composeTestRule
         .onNodeWithTag(
-            SearchBarTestTags.testTagForResultProfilePicture("user1"), useUnmergedTree = true)
+            SearchBarTestTags.testTagForResultProfilePicture("user1"),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
         .performClick()
     Assert.assertEquals("user1", profileClicked)
@@ -949,20 +1069,25 @@ class FriendScreenTest {
 
   @Test
   fun searchBarResultsExcludeCurrentUser() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
       searchDataUpdater =
           SearchDataUpdater(userRepository, FileSearchDataStorage(LocalContext.current))
       runBlocking { searchDataUpdater.updateSearchData() }
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {},
-          userIndex =
-              UserIndex(
-                  searchDataProvider =
-                      SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
-                  userRepository = userRepository))
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+            userIndex =
+                UserIndex(
+                    searchDataProvider =
+                        SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)),
+                    userRepository = userRepository,
+                ),
+        )
+      }
     }
 
     composeTestRule
@@ -976,12 +1101,16 @@ class FriendScreenTest {
 
   @Test
   fun leavingSearchViewClearsTextInput() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      FriendScreen(
-          friendScreenViewModel = friendScreenViewModel,
-          userId = "currentUserId",
-          onProfileClick = {},
-          onGoBack = {})
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
@@ -992,5 +1121,24 @@ class FriendScreenTest {
     composeTestRule
         .onNodeWithTag(SearchBarTestTags.INPUT_FIELD)
         .assertTextEquals("Search users", "")
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineProfileScreen() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        FriendScreen(
+            friendScreenViewModel = friendScreenViewModel,
+            userId = "currentUserId",
+            onProfileClick = {},
+            onGoBack = {},
+        )
+      }
+    }
+    composeTestRule.onNodeWithTag(FriendScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(friendScreenViewModel.uiState.value.isRefreshing)
   }
 }

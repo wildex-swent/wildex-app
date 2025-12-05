@@ -1,6 +1,7 @@
 package com.android.wildex.ui.profile
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertCountEquals
@@ -20,7 +21,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.action.ViewActions.swipeDown
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.animal.Animal
@@ -31,6 +35,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
@@ -43,12 +48,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileScreenTest {
+  private val fakeObserver = FakeConnectivityObserver(true)
 
   @get:Rule val composeRule = createComposeRule()
 
@@ -92,7 +99,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "currentUserId-1",
@@ -103,7 +111,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend0",
@@ -114,7 +123,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend1",
@@ -125,7 +135,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       userRepository.addUser(
           User(
               userId = "friend2",
@@ -136,7 +147,8 @@ class ProfileScreenTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+          ))
       animalRepository.addAnimal(
           Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
       animalRepository.addAnimal(
@@ -266,6 +278,7 @@ class ProfileScreenTest {
 
   @Test
   fun profileScreen_shows_description_node_even_when_bio_empty() = runTest {
+    fakeObserver.setOnline(true)
     val user = sampleUser.copy(bio = "")
     val userRepo = mockk<UserRepositoryFirestore>()
     coEvery { userRepo.getUser("u-1") } returns user
@@ -282,10 +295,12 @@ class ProfileScreenTest {
             currentUserId = "someone-else",
         )
     composeRule.setContent {
-      ProfileScreen(
-          profileScreenViewModel = vm,
-          userUid = "u-1",
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(
+            profileScreenViewModel = vm,
+            userUid = "u-1",
+        )
+      }
     }
     advanceUntilIdle()
     composeRule.waitForIdle()
@@ -294,6 +309,7 @@ class ProfileScreenTest {
 
   @Test
   fun profileScreen_owner_shows_my_profile_and_callbacks() = runTest {
+    fakeObserver.setOnline(true)
     val user = sampleUser.copy(userId = "u-1")
     val userRepo = mockk<UserRepositoryFirestore>()
     coEvery { userRepo.getUser("u-1") } returns user
@@ -312,12 +328,14 @@ class ProfileScreenTest {
     var achievements = 0
     var map = 0
     composeRule.setContent {
-      ProfileScreen(
-          profileScreenViewModel = vm,
-          userUid = "u-1",
-          onAchievements = { if (it == "u-1") achievements++ },
-          onMap = { if (it == "u-1") map++ },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(
+            profileScreenViewModel = vm,
+            userUid = "u-1",
+            onAchievements = { if (it == "u-1") achievements++ },
+            onMap = { if (it == "u-1") map++ },
+        )
+      }
     }
     advanceUntilIdle()
     composeRule.waitForIdle()
@@ -337,7 +355,9 @@ class ProfileScreenTest {
     composeRule.setContent {
       Column {
         ProfileImageAndName(
-            viewModel = defaultViewModel, state = defaultViewModel.uiState.collectAsState().value)
+            viewModel = defaultViewModel,
+            state = defaultViewModel.uiState.collectAsState().value,
+        )
         ProfileDescription()
         ProfileAchievements(ownerProfile = true)
         ProfileMap()
@@ -412,11 +432,14 @@ class ProfileScreenTest {
 
   @Test
   fun friendsAndAnimalsStatsShowTheCorrectStats() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ProfileScreen(
-          profileScreenViewModel = defaultViewModel,
-          userUid = "u-1",
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(
+            profileScreenViewModel = defaultViewModel,
+            userUid = "u-1",
+        )
+      }
     }
     composeRule
         .onNodeWithTag(ProfileScreenTestTags.ANIMAL_COUNT, useUnmergedTree = true)
@@ -444,6 +467,7 @@ class ProfileScreenTest {
 
   @Test
   fun loadingScreen_showsWhileFetchingPosts() {
+    fakeObserver.setOnline(true)
     val fetchSignal = CompletableDeferred<Unit>()
     val delayedUsersRepo =
         object : LocalRepositories.UserRepositoryImpl() {
@@ -467,7 +491,11 @@ class ProfileScreenTest {
               currentUserId = "currentUserId-1",
           )
 
-      composeRule.setContent { ProfileScreen(vm, "u-1") }
+      composeRule.setContent {
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          ProfileScreen(vm, "u-1")
+        }
+      }
       composeRule.waitForIdle()
       composeRule
           .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
@@ -482,7 +510,12 @@ class ProfileScreenTest {
 
   @Test
   fun failScreenShown_whenUserLookupFails() {
-    composeRule.setContent { ProfileScreen(defaultViewModel, "") }
+    fakeObserver.setOnline(true)
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(defaultViewModel, "")
+      }
+    }
     composeRule.waitForIdle()
     composeRule
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
@@ -527,8 +560,11 @@ class ProfileScreenTest {
 
   @Test
   fun noInteractableAppearWhenCurrentUser() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "currentUserId-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "currentUserId-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
@@ -539,8 +575,11 @@ class ProfileScreenTest {
 
   @Test
   fun currentUserCanSendRequestWhenNotFriend() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
@@ -558,9 +597,12 @@ class ProfileScreenTest {
 
   @Test
   fun currentUserCanAcceptReceivedRequest() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("u-1", "currentUserId-1") }
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
@@ -578,9 +620,12 @@ class ProfileScreenTest {
 
   @Test
   fun currentUserCanDeclineReceivedRequest() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("u-1", "currentUserId-1") }
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
@@ -598,9 +643,12 @@ class ProfileScreenTest {
 
   @Test
   fun currentUserCanCancelSentRequest() {
+    fakeObserver.setOnline(true)
     runBlocking { friendRequestRepository.initializeFriendRequest("currentUserId-1", "u-1") }
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsNotDisplayed()
@@ -618,9 +666,12 @@ class ProfileScreenTest {
 
   @Test
   fun currentUserCanUnfollowUser() {
+    fakeObserver.setOnline(true)
     runBlocking { userFriendsRepository.addFriendToUserFriendsOfUser("currentUserId-1", "u-1") }
     composeRule.setContent {
-      ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(profileScreenViewModel = defaultViewModel, userUid = "u-1")
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.FOLLOW_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.UNFOLLOW_BUTTON).assertIsDisplayed()
@@ -634,5 +685,41 @@ class ProfileScreenTest {
     composeRule.onNodeWithTag(ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.DECLINE_REQUEST_BUTTON).assertIsNotDisplayed()
     composeRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_REQUEST_BUTTON).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineProfileScreen() {
+    fakeObserver.setOnline(false)
+    val user = sampleUser.copy(userId = "u-1")
+    val userRepo = mockk<UserRepositoryFirestore>()
+    coEvery { userRepo.getUser("u-1") } returns user
+    val achRepo = FakeAchievementsRepo(emptyList())
+    val updateUseCase = createTestUpdateAchievementsUseCase(achRepo)
+    val vm =
+        ProfileScreenViewModel(
+            userRepository = userRepo,
+            achievementRepository = achRepo,
+            postRepository = LocalRepositories.postsRepository,
+            updateUserAchievements = updateUseCase,
+            userAnimalsRepository = userAnimalsRepository,
+            userFriendsRepository = userFriendsRepository,
+            currentUserId = "u-1",
+        )
+    var achievements = 0
+    var map = 0
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileScreen(
+            profileScreenViewModel = vm,
+            userUid = "u-1",
+            onAchievements = { if (it == "u-1") achievements++ },
+            onMap = { if (it == "u-1") map++ },
+        )
+      }
+    }
+    composeRule.onNodeWithTag(ProfileScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(vm.uiState.value.isRefreshing)
   }
 }

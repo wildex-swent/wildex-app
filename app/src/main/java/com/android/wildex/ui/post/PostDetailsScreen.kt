@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -61,6 +60,7 @@ object PostDetailsScreenTestTags {
   const val DELETE_POST_DIALOG = "delete_post_dialog"
   const val DELETE_POST_CONFIRM_BUTTON = "delete_post_confirm_button"
   const val DELETE_POST_DISMISS_BUTTON = "delete_post_dismiss_button"
+  const val PULL_TO_REFRESH = "pullToRefresh"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,9 +73,8 @@ fun PostDetailsScreen(
 ) {
   val context = LocalContext.current
   val uiState by postDetailsScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   var showActionSheet by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { postDetailsScreenViewModel.loadPostDetails(postId) }
@@ -150,7 +149,7 @@ fun PostDetailsScreenContent(
   PullToRefreshBox(
       state = pullState,
       isRefreshing = uiState.isRefreshing,
-      modifier = Modifier.padding(innerPadding),
+      modifier = Modifier.padding(innerPadding).testTag(PostDetailsScreenTestTags.PULL_TO_REFRESH),
       onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
   ) {
     when {

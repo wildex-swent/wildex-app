@@ -70,6 +70,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -103,6 +104,7 @@ object ProfileScreenTestTags {
   const val CANCEL_REQUEST_BUTTON = "ProfileScreenCancelRequestButton"
   const val ACCEPT_REQUEST_BUTTON = "ProfileScreenAcceptRequestButton"
   const val DECLINE_REQUEST_BUTTON = "ProfileScreenDeclineRequestButton"
+  const val PULL_TO_REFRESH = "ProfileScreenPullToRefresh"
 }
 
 /** Profile Screen Composable */
@@ -118,8 +120,10 @@ fun ProfileScreen(
     onFriends: (Id) -> Unit = {},
     onMap: (Id) -> Unit = {},
 ) {
-  val uiState by profileScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val uiState by profileScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   var showMap by remember { mutableStateOf(true) }
 
@@ -154,14 +158,16 @@ fun ProfileScreen(
     PullToRefreshBox(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { profileScreenViewModel.refreshUIState(userUid) },
+        modifier = Modifier.padding(pd).testTag(ProfileScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) profileScreenViewModel.refreshUIState(userUid)
+          else profileScreenViewModel.refreshOffline()
+        },
     ) {
       when {
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
         else -> {
-
           ProfileContent(
               user = uiState.user,
               viewModel = profileScreenViewModel,
@@ -216,7 +222,8 @@ fun ProfileContent(
               modifier = Modifier.weight(1f).defaultMinSize(minHeight = 56.dp),
               id = id,
               onFriends = onFriends,
-              friendCount = state.friendsCount)
+              friendCount = state.friendsCount,
+          )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -434,7 +441,8 @@ private fun ProfileStatCard(
             modifier =
                 Modifier.testTag(
                     if (title == "Friends") ProfileScreenTestTags.FRIENDS_COUNT
-                    else ProfileScreenTestTags.ANIMAL_COUNT))
+                    else ProfileScreenTestTags.ANIMAL_COUNT),
+        )
         Text(
             text = title,
             color = contentColor.copy(alpha = 0.95f),
@@ -511,23 +519,26 @@ fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onUnfollow)
+                  onClick = onUnfollow,
+              )
               .background(color = colorScheme.onSurface, shape = RoundedCornerShape(20.dp))) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
-              Icon(
-                  imageVector = Icons.Filled.DeleteForever,
-                  contentDescription = "Delete friend icon",
-                  tint = colorScheme.surface,
-                  modifier = Modifier.size(16.dp),
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                  text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
-                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                  color = colorScheme.surface)
-            }
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+        ) {
+          Icon(
+              imageVector = Icons.Filled.DeleteForever,
+              contentDescription = "Delete friend icon",
+              tint = colorScheme.surface,
+              modifier = Modifier.size(16.dp),
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+              text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
+              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+              color = colorScheme.surface,
+          )
+        }
       }
 }
 
@@ -540,23 +551,26 @@ fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onFollow)
+                  onClick = onFollow,
+              )
               .background(color = colorScheme.primary, shape = RoundedCornerShape(20.dp))) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
-              Icon(
-                  imageVector = Icons.Filled.Add,
-                  contentDescription = "Send friend request icon",
-                  tint = colorScheme.background,
-                  modifier = Modifier.size(16.dp),
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                  text = LocalContext.current.getString(R.string.friend_screen_send_request),
-                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                  color = colorScheme.background)
-            }
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+        ) {
+          Icon(
+              imageVector = Icons.Filled.Add,
+              contentDescription = "Send friend request icon",
+              tint = colorScheme.background,
+              modifier = Modifier.size(16.dp),
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+              text = LocalContext.current.getString(R.string.friend_screen_send_request),
+              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+              color = colorScheme.background,
+          )
+        }
       }
 }
 
@@ -569,18 +583,20 @@ fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onCancel)
+                  onClick = onCancel,
+              )
               .background(color = colorScheme.onSurface, shape = RoundedCornerShape(20.dp))) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
-              Text(
-                  text =
-                      LocalContext.current.getString(
-                          R.string.friend_screen_pending_request_other_user),
-                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                  color = colorScheme.surface)
-            }
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+        ) {
+          Text(
+              text =
+                  LocalContext.current.getString(R.string.friend_screen_pending_request_other_user),
+              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+              color = colorScheme.surface,
+          )
+        }
       }
 }
 
@@ -590,7 +606,7 @@ fun ReceivedRequestInteractable(
     onAccept: () -> Unit = {},
     onDecline: () -> Unit = {},
     testTagAccept: String,
-    testTagDecline: String
+    testTagDecline: String,
 ) {
   Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
     Box(
@@ -599,18 +615,20 @@ fun ReceivedRequestInteractable(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onAccept)
+                    onClick = onAccept,
+                )
                 .background(color = colorScheme.primary, shape = RoundedCornerShape(50.dp))) {
           Row(
               verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "Accept friend request icon",
-                    tint = colorScheme.background,
-                    modifier = Modifier.size(16.dp),
-                )
-              }
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+          ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = "Accept friend request icon",
+                tint = colorScheme.background,
+                modifier = Modifier.size(16.dp),
+            )
+          }
         }
     Spacer(modifier = Modifier.width(20.dp))
     Box(
@@ -619,18 +637,20 @@ fun ReceivedRequestInteractable(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onDecline)
+                    onClick = onDecline,
+                )
                 .background(color = colorScheme.onSurface, shape = RoundedCornerShape(50.dp))) {
           Row(
               verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Decline friend request icon",
-                    tint = colorScheme.surface,
-                    modifier = Modifier.size(16.dp),
-                )
-              }
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+          ) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Decline friend request icon",
+                tint = colorScheme.surface,
+                modifier = Modifier.size(16.dp),
+            )
+          }
         }
   }
 }
@@ -640,28 +660,32 @@ fun ReceivedRequestInteractable(
 fun ProfileFriendInteractable(
     viewModel: ProfileScreenViewModel,
     friendStatus: FriendStatus,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
   Box(modifier = modifier, contentAlignment = Alignment.CenterEnd) {
     when (friendStatus) {
       FriendStatus.FRIEND ->
           UnfollowButton(
               onUnfollow = { viewModel.unfollowUser() },
-              testTag = ProfileScreenTestTags.UNFOLLOW_BUTTON)
+              testTag = ProfileScreenTestTags.UNFOLLOW_BUTTON,
+          )
       FriendStatus.NOT_FRIEND ->
           FollowButton(
               onFollow = { viewModel.sendRequestToUser() },
-              testTag = ProfileScreenTestTags.FOLLOW_BUTTON)
+              testTag = ProfileScreenTestTags.FOLLOW_BUTTON,
+          )
       FriendStatus.PENDING_RECEIVED ->
           ReceivedRequestInteractable(
               onAccept = { viewModel.acceptReceivedRequest() },
               onDecline = { viewModel.declineReceivedRequest() },
               testTagAccept = ProfileScreenTestTags.ACCEPT_REQUEST_BUTTON,
-              testTagDecline = ProfileScreenTestTags.DECLINE_REQUEST_BUTTON)
+              testTagDecline = ProfileScreenTestTags.DECLINE_REQUEST_BUTTON,
+          )
       FriendStatus.PENDING_SENT ->
           SentRequestInteractable(
               onCancel = { viewModel.cancelSentRequestToUser() },
-              testTag = ProfileScreenTestTags.CANCEL_REQUEST_BUTTON)
+              testTag = ProfileScreenTestTags.CANCEL_REQUEST_BUTTON,
+          )
       FriendStatus.IS_CURRENT_USER -> Unit
     }
   }

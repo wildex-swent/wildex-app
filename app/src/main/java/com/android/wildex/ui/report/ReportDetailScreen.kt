@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
@@ -117,9 +116,8 @@ fun ReportDetailsScreen(
 ) {
   val context = LocalContext.current
   val uiState by reportDetailsViewModel.uiState.collectAsState()
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   // Initial load
   LaunchedEffect(Unit) { reportDetailsViewModel.loadReportDetails(reportId) }
@@ -151,8 +149,7 @@ fun ReportDetailsScreen(
           reportDetailsViewModel = reportDetailsViewModel,
           onProfile = onProfile,
           reportId = reportId,
-          onGoBack = onGoBack,
-      )
+          onGoBack = onGoBack)
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -166,7 +163,7 @@ fun ReportDetailsScreenContent(
     reportDetailsViewModel: ReportDetailsScreenViewModel,
     onProfile: (Id) -> Unit,
     reportId: Id,
-    onGoBack: () -> Unit,
+    onGoBack: () -> Unit
 ) {
   val pullState = rememberPullToRefreshState()
   val focusManager = LocalFocusManager.current
@@ -227,9 +224,7 @@ fun ReportDetailsScreenContent(
               .testTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH)
               .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
       onRefresh = {
-        if (!showCompletionDialog) {
-          reportDetailsViewModel.refreshReportDetails(reportId)
-        }
+        if (!showCompletionDialog) reportDetailsViewModel.refreshReportDetails(reportId)
       },
   ) {
     when {
@@ -727,32 +722,33 @@ private fun ReportCommentInput(
 
       var text by remember { mutableStateOf("") }
 
-      OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
-          placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
-          modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
-          shape = RoundedCornerShape(32.dp),
-          singleLine = true,
-          enabled = isOnline,
-          trailingIcon = {
-            IconButton(
-                onClick = {
-                  if (text.isNotBlank()) {
-                    onSend(text)
-                    text = ""
-                  }
-                },
-                modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
-            ) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Send,
-                  contentDescription = "Send comment",
-                  tint = colorScheme.onBackground,
-              )
-            }
-          },
-      )
+      if (isOnline) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
+            modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
+            shape = RoundedCornerShape(32.dp),
+            singleLine = true,
+            trailingIcon = {
+              IconButton(
+                  onClick = {
+                    if (text.isNotBlank()) {
+                      onSend(text)
+                      text = ""
+                    }
+                  },
+                  modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
+              ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send comment",
+                    tint = colorScheme.onBackground,
+                )
+              }
+            },
+        )
+      }
     }
   }
 }

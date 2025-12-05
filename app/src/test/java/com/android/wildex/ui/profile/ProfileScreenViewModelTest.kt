@@ -23,6 +23,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -593,6 +596,19 @@ class ProfileScreenViewModelTest {
 
       Assert.assertEquals(s2.friendStatus, s.friendStatus)
       Assert.assertEquals(s.friendsCount, s2.friendsCount)
+    }
+  }
+
+  @Test
+  fun refreshOffline_sets_error_profile_screen() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
     }
   }
 }

@@ -11,9 +11,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.mockk
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,7 +47,8 @@ class NotificationScreenViewModelTest {
           title = "Titre test",
           body = "Corps test",
           route = "route/test",
-          date = Timestamp.now())
+          date = Timestamp.now(),
+      )
 
   @Before
   fun setUp() {
@@ -128,4 +132,17 @@ class NotificationScreenViewModelTest {
         coVerify(exactly = 1) { userRepository.getSimpleUser(sampleAuthor.userId) }
         confirmVerified(notificationRepository, userRepository)
       }
+
+  @Test
+  fun refreshOffline_sets_error_notifications() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
+    }
+  }
 }

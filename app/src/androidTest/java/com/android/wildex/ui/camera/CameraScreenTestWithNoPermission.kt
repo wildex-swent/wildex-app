@@ -14,6 +14,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import androidx.test.rule.GrantPermissionRule
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
@@ -23,6 +24,7 @@ import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import io.mockk.*
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
@@ -48,6 +50,7 @@ class CameraScreenTestWithNoPermission {
   private val animalRepository: AnimalRepository = LocalRepositories.animalRepository
   private val userAnimalsRepository: UserAnimalsRepository = LocalRepositories.userAnimalsRepository
   private val currentUserId = "currentUserId"
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   private lateinit var viewModel: CameraScreenViewModel
 
@@ -73,7 +76,11 @@ class CameraScreenTestWithNoPermission {
 
   @Test
   fun cameraScreen_initialDisplay_onCameraPermission() {
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN).assertIsDisplayed()
@@ -86,7 +93,11 @@ class CameraScreenTestWithNoPermission {
   // ========== PERMISSION SCREEN TESTS =========
   @Test
   fun permissionScreen_canBeShown() {
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     assertPermissionScreenIsDisplayed()
   }
@@ -107,7 +118,9 @@ class CameraScreenTestWithNoPermission {
           }
         }
     composeTestRule.setContent {
-      WithActivityResultRegistry(testRegistry) { CameraScreen(cameraScreenViewModel = vm) }
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        WithActivityResultRegistry(testRegistry) { CameraScreen(cameraScreenViewModel = vm) }
+      }
     }
     composeTestRule.waitForIdle()
     assertPermissionScreenIsDisplayed()
@@ -148,7 +161,11 @@ class CameraScreenTestWithNoPermission {
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowDetectVm) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = slowDetectVm)
+      }
+    }
     composeTestRule.waitForIdle()
     slowDetectVm.detectAnimalImage(mockUri, composeTestRule.activity)
     composeTestRule.waitForIdle()
@@ -161,7 +178,11 @@ class CameraScreenTestWithNoPermission {
   @Test
   fun postCreationScreen_canBeShown() {
     val mockUri = mockk<Uri>()
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
@@ -171,7 +192,11 @@ class CameraScreenTestWithNoPermission {
   @Test
   fun postCreationScreen_inputsDescription() {
     val mockUri = mockk<Uri>()
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
@@ -186,7 +211,11 @@ class CameraScreenTestWithNoPermission {
   @Test
   fun postCreationScreen_inputsLocation() {
     val mockUri = mockk<Uri>()
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
@@ -224,7 +253,11 @@ class CameraScreenTestWithNoPermission {
             currentUserId,
         )
     val mockUri = Uri.EMPTY
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowPostVm) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = slowPostVm)
+      }
+    }
     slowPostVm.detectAnimalImage(mockUri, composeTestRule.activity)
     assertPostCreationScreenIsDisplayed()
     slowPostVm.createPost(composeTestRule.activity) {}
@@ -259,7 +292,11 @@ class CameraScreenTestWithNoPermission {
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = slowDetectVm) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = slowDetectVm)
+      }
+    }
     composeTestRule.waitForIdle()
     assertPermissionScreenIsDisplayed()
     slowDetectVm.detectAnimalImage(mockUri, composeTestRule.activity)
@@ -273,7 +310,11 @@ class CameraScreenTestWithNoPermission {
   @Test
   fun cameraScreen_transition_fromPostCreationBackToCameraPermission() {
     val mockUri = mockk<Uri>()
-    composeTestRule.setContent { CameraScreen(cameraScreenViewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel)
+      }
+    }
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     composeTestRule.waitForIdle()
@@ -293,7 +334,9 @@ class CameraScreenTestWithNoPermission {
     val mockUri = Uri.EMPTY
     var onPostCalled = false
     composeTestRule.setContent {
-      CameraScreen(cameraScreenViewModel = viewModel) { onPostCalled = true }
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = viewModel) { onPostCalled = true }
+      }
     }
     runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
@@ -326,7 +369,9 @@ class CameraScreenTestWithNoPermission {
             currentUserId,
         )
     composeTestRule.setContent {
-      CameraScreen(cameraScreenViewModel = slowPostVm, onPost = { onPostCalled = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CameraScreen(cameraScreenViewModel = slowPostVm, onPost = { onPostCalled = true })
+      }
     }
     composeTestRule.waitForIdle()
     runBlocking { slowPostVm.detectAnimalImage(mockUri, composeTestRule.activity) }

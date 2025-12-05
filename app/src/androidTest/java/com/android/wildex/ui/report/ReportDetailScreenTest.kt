@@ -2,7 +2,7 @@ package com.android.wildex.ui.report
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -22,9 +22,11 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -36,6 +38,7 @@ class ReportDetailScreenTest {
   private val reportRepository: ReportRepository = LocalRepositories.reportRepository
   private val userRepository: UserRepository = LocalRepositories.userRepository
   private val commentRepository: CommentRepository = LocalRepositories.commentRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var reportDetailsViewModel: ReportDetailsScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -106,11 +109,14 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_displaysCoreSections() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ReportDetailsScreen(
-          reportId = "reportId1",
-          reportDetailsViewModel = reportDetailsViewModel,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.SCREEN).assertIsDisplayed()
@@ -135,6 +141,7 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_longDescription_showsDescriptionToggle_andToggles() {
+    fakeObserver.setOnline(true)
     runBlocking {
       val longDescription = "Very long description ".repeat(500)
       val longDescReport =
@@ -156,10 +163,12 @@ class ReportDetailScreenTest {
               currentUserId = "user1",
           )
       composeRule.setContent {
-        ReportDetailsScreen(
-            reportId = "longDescReport",
-            reportDetailsViewModel = vm,
-        )
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          ReportDetailsScreen(
+              reportId = "longDescReport",
+              reportDetailsViewModel = vm,
+          )
+        }
       }
       composeRule.waitForIdle()
       composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.DESCRIPTION_CARD)
@@ -171,11 +180,14 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_addLongComment_showsCommentTags_withTogglePresent() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ReportDetailsScreen(
-          reportId = "reportId1",
-          reportDetailsViewModel = reportDetailsViewModel,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
     }
     composeRule.waitForIdle()
     val longComment = "Very long comment ".repeat(50)
@@ -195,11 +207,14 @@ class ReportDetailScreenTest {
 
   @Test
   fun navigationOptionsBottomSheet_shownFromLocationPill_andButtonsDoNotCrash() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ReportDetailsScreen(
-          reportId = "reportId1",
-          reportDetailsViewModel = reportDetailsViewModel,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
     }
     composeRule.waitForIdle()
     fun openSheet() {
@@ -224,6 +239,7 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_regularCreator_deleteFlow_showsCancelConfirmAndCanceledCompletion() {
+    fakeObserver.setOnline(true)
     runBlocking {
       val regular =
           User(
@@ -257,10 +273,12 @@ class ReportDetailScreenTest {
               currentUserId = "regularCreatorFlow",
           )
       composeRule.setContent {
-        ReportDetailsScreen(
-            reportId = "regularFlowReport",
-            reportDetailsViewModel = vm,
-        )
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          ReportDetailsScreen(
+              reportId = "regularFlowReport",
+              reportDetailsViewModel = vm,
+          )
+        }
       }
       composeRule.waitForIdle()
       composeRule.scrollToTagWithinScroll(ReportActionsTestTags.ACTION_ROW)
@@ -292,6 +310,7 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_professionalCreator_noAssignee_showsAssignAndDelete_andOpensDialogs() {
+    fakeObserver.setOnline(true)
     runBlocking {
       val pro =
           User(
@@ -325,10 +344,12 @@ class ReportDetailScreenTest {
               currentUserId = "proCreator",
           )
       composeRule.setContent {
-        ReportDetailsScreen(
-            reportId = "noAssigneeReport",
-            reportDetailsViewModel = vm,
-        )
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          ReportDetailsScreen(
+              reportId = "noAssigneeReport",
+              reportDetailsViewModel = vm,
+          )
+        }
       }
       composeRule.waitForIdle()
       composeRule.scrollToTagWithinScroll(ReportActionsTestTags.ACTION_ROW)
@@ -363,11 +384,14 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_professionalAssignedToCurrent_showsResolveAndUnassign_andCompletesResolveFlow() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ReportDetailsScreen(
-          reportId = "reportId1",
-          reportDetailsViewModel = reportDetailsViewModel,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportDetailsScreen(
+            reportId = "reportId1",
+            reportDetailsViewModel = reportDetailsViewModel,
+        )
+      }
     }
     composeRule.waitForIdle()
     composeRule.scrollToTagWithinScroll(ReportActionsTestTags.ACTION_ROW)
@@ -411,6 +435,7 @@ class ReportDetailScreenTest {
 
   @Test
   fun reportDetailsScreen_professionalCreator_assignedToOther_showsDeleteOnly_andOpensCancelDialog() {
+    fakeObserver.setOnline(true)
     runBlocking {
       val pro =
           User(
@@ -457,10 +482,12 @@ class ReportDetailScreenTest {
               currentUserId = "proCreator2",
           )
       composeRule.setContent {
-        ReportDetailsScreen(
-            reportId = "assignedToOtherReport",
-            reportDetailsViewModel = vm,
-        )
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          ReportDetailsScreen(
+              reportId = "assignedToOtherReport",
+              reportDetailsViewModel = vm,
+          )
+        }
       }
       composeRule.waitForIdle()
       composeRule.scrollToTagWithinScroll(ReportActionsTestTags.ACTION_ROW)
@@ -519,15 +546,18 @@ class ReportDetailScreenTest {
 
   @Test
   fun commentInputIsDisabledWhenOffline() {
+    fakeObserver.setOnline(false)
     composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         ReportDetailsScreen(
             reportId = "reportId1",
             reportDetailsViewModel = reportDetailsViewModel,
         )
       }
     }
-    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD).assertIsNotEnabled()
+    composeRule
+        .onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD)
+        .assertIsNotDisplayed()
   }
 }
 

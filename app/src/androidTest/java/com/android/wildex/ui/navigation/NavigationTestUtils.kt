@@ -2,6 +2,7 @@ package com.android.wildex.ui.navigation
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -17,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
 import com.android.wildex.WildexApp
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
@@ -39,6 +41,7 @@ import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FakeJwtGenerator
 import com.android.wildex.utils.FirebaseEmulator
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.runBlocking
@@ -55,6 +58,7 @@ abstract class NavigationTestUtils {
   protected lateinit var navController: NavHostController
 
   protected lateinit var userId: Id
+  protected val fakeObserver = FakeConnectivityObserver(initial = true)
 
   init {
     assert(FirebaseEmulator.isRunning) {
@@ -72,13 +76,15 @@ abstract class NavigationTestUtils {
     val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
 
     composeRule.setContent {
-      navController = rememberNavController()
-      WildexTheme {
-        WildexApp(
-            context = LocalContext.current,
-            navController = navController,
-            credentialManager = fakeCredentialManager,
-        )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        navController = rememberNavController()
+        WildexTheme {
+          WildexApp(
+              context = LocalContext.current,
+              navController = navController,
+              credentialManager = fakeCredentialManager,
+          )
+        }
       }
     }
     userId = runBlocking {

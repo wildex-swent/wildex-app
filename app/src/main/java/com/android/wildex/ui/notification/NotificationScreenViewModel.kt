@@ -92,6 +92,11 @@ class NotificationScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Shows an offline error message when trying to refresh while offline. */
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
+  }
+
   private fun handleException(message: String, e: Exception) {
     Log.e("NotificationScreenViewModel", message, e)
     setErrorMsg("$message: ${e.message}")

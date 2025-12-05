@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
@@ -81,6 +82,7 @@ object HomeScreenTestTags {
   const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
+  const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -116,6 +118,8 @@ fun HomeScreen(
   val postStates = uiState.postStates
 
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { homeScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -135,18 +139,19 @@ fun HomeScreen(
     PullToRefreshBox(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
-        modifier = Modifier.padding(pd),
-        onRefresh = { homeScreenViewModel.refreshUIState() },
+        modifier = Modifier.padding(pd).testTag(HomeScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) homeScreenViewModel.refreshUIState()
+          else homeScreenViewModel.refreshOffline()
+        },
     ) {
       when {
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
         postStates.isEmpty() -> NoPostsView()
         else -> {
-          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
-
           PostsView(
-              postStates = filteredPostStates,
+              postStates = postStates,
               onProfilePictureClick = onProfilePictureClick,
               onPostLike = homeScreenViewModel::toggleLike,
               onPostClick = onPostClick,
@@ -224,7 +229,7 @@ fun PostItem(
     postState: PostState,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
-    onPostClick: (Id) -> Unit,
+    onPostClick: (Id) -> Unit
 ) {
   val colorScheme = colorScheme
   val post = postState.post

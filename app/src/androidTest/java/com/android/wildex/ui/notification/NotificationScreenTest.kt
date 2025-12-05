@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
@@ -12,7 +13,10 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
+import androidx.test.espresso.action.ViewActions.swipeDown
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.notification.Notification
 import com.android.wildex.model.notification.NotificationRepository
 import com.android.wildex.model.user.SimpleUser
@@ -20,14 +24,75 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import org.junit.Assert
+import org.junit.Assert.assertFalse
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class NotificationScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
+  private lateinit var fakeNotifRepo: NotificationRepository
+  private lateinit var domainNotifications: List<Notification>
+  private lateinit var fakeUserRepo: UserRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
+
+  @Before
+  fun setUp() {
+    domainNotifications =
+        sampleNotifications.map {
+          Notification(
+              notificationId = it.notificationId,
+              targetId = "target_${it.notificationId}",
+              authorId = it.simpleUser.userId,
+              isRead = false,
+              title = it.notificationTitle,
+              body = it.notificationDescription,
+              route = it.notificationRoute,
+              date = Timestamp(0, 0),
+          )
+        }
+    fakeNotifRepo =
+        object : NotificationRepository {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
+            return domainNotifications
+          }
+
+          override suspend fun markNotificationAsRead(notificationId: Id) {}
+
+          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
+
+          override suspend fun deleteNotification(notificationId: Id) {}
+
+          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
+
+          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
+        }
+    fakeUserRepo =
+        object : UserRepository {
+          override suspend fun getSimpleUser(userId: Id): SimpleUser {
+            return SimpleUser(
+                userId = userId,
+                username = "unknown",
+                profilePictureURL = "",
+                userType = UserType.REGULAR,
+            )
+          }
+
+          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
+
+          override suspend fun getAllUsers(): List<User> = emptyList()
+
+          override suspend fun addUser(user: User) {}
+
+          override suspend fun editUser(userId: Id, newUser: User) {}
+
+          override suspend fun deleteUser(userId: Id) {}
+        }
+  }
 
   private val sampleNotifications =
       listOf(
@@ -38,8 +103,7 @@ class NotificationScreenTest {
                       userId = "user1",
                       username = "Jean",
                       profilePictureURL = "",
-                      userType = UserType.REGULAR,
-                  ),
+                      userType = UserType.REGULAR),
               notificationRoute = "route/to/post/1",
               notificationTitle = "Jean has liked your post",
               notificationDescription = "3min ago",
@@ -94,6 +158,7 @@ class NotificationScreenTest {
 
   @Test
   fun goBack_triggersCallback() {
+    fakeObserver.setOnline(true)
     var back = 0
     val fakeNotifRepo =
         object : NotificationRepository {
@@ -139,7 +204,9 @@ class NotificationScreenTest {
         )
 
     composeRule.setContent {
-      NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
+      }
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
@@ -273,6 +340,7 @@ class NotificationScreenTest {
 
   @Test
   fun notificationScreen_showsSampleNotificationsByDefault() {
+    fakeObserver.setOnline(true)
     val domainNotifications =
         sampleNotifications.map {
           Notification(
@@ -335,7 +403,9 @@ class NotificationScreenTest {
 
     composeRule.setContent {
       MaterialTheme(colorScheme = lightColorScheme()) {
-        NotificationScreen(notificationScreenViewModel = vm)
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          NotificationScreen(notificationScreenViewModel = vm)
+        }
       }
     }
     composeRule.waitForIdle()
@@ -344,5 +414,26 @@ class NotificationScreenTest {
         .onAllNodesWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
         .assertCountEquals(0)
     composeRule.onNodeWithText("Jean has liked your post").assertIsDisplayed()
+  }
+
+  @Test
+  fun refreshDisabledWhenOfflineNotifications() {
+    fakeObserver.setOnline(false)
+    val vm =
+        NotificationScreenViewModel(
+            notificationRepository = fakeNotifRepo,
+            userRepository = fakeUserRepo,
+            currentUserId = "anyUser",
+        )
+
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = vm)
+      }
+    }
+    composeRule.onNodeWithTag(NotificationScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(vm.uiState.value.isRefreshing)
   }
 }

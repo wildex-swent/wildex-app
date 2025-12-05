@@ -15,6 +15,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -27,6 +28,7 @@ import org.junit.Test
 class ReportScreenTest {
   private val reportRepository: ReportRepository = LocalRepositories.reportRepository
   private val userRepository: UserRepository = LocalRepositories.userRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var reportScreenViewModel: ReportScreenViewModel
 
   @get:Rule val composeRule = createComposeRule()
@@ -43,8 +45,7 @@ class ReportScreenTest {
             date = Timestamp.now(),
             description = "description1",
             authorId = "user2",
-            assigneeId = null,
-        )
+            assigneeId = null)
 
     val report2 =
         Report(
@@ -55,8 +56,7 @@ class ReportScreenTest {
             date = Timestamp.now(),
             description = "description2",
             authorId = "user3",
-            assigneeId = "user1",
-        )
+            assigneeId = "user1")
 
     reportRepository.addReport(report1)
     reportRepository.addReport(report2)
@@ -72,8 +72,7 @@ class ReportScreenTest {
             profilePictureURL = "urlBob1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "USA",
-        )
+            country = "USA")
 
     val user2 =
         User(
@@ -85,8 +84,7 @@ class ReportScreenTest {
             profilePictureURL = "urlAlice1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "England",
-        )
+            country = "England")
 
     val user3 =
         User(
@@ -98,8 +96,7 @@ class ReportScreenTest {
             profilePictureURL = "urlCharlie3",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "Germany",
-        )
+            country = "Germany")
 
     userRepository.addUser(user1)
     userRepository.addUser(user2)
@@ -109,8 +106,7 @@ class ReportScreenTest {
         ReportScreenViewModel(
             reportRepository = reportRepository,
             userRepository = userRepository,
-            currentUserId = "user1",
-        )
+            currentUserId = "user1")
   }
 
   @After
@@ -120,12 +116,15 @@ class ReportScreenTest {
 
   @Test
   fun notificationBellClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var notificationClicked = false
     composeRule.setContent {
-      ReportScreen(
-          reportScreenViewModel = reportScreenViewModel,
-          onNotificationClick = { notificationClicked = true },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onNotificationClick = { notificationClicked = true },
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -135,12 +134,15 @@ class ReportScreenTest {
 
   @Test
   fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var profilePictureClicked = false
     composeRule.setContent {
-      ReportScreen(
-          reportScreenViewModel = reportScreenViewModel,
-          onProfileClick = { profilePictureClicked = true },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onProfileClick = { profilePictureClicked = true },
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -152,7 +154,12 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenReports() {
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    fakeObserver.setOnline(true)
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
@@ -165,14 +172,12 @@ class ReportScreenTest {
     composeRule
         .onNodeWithTag(
             ReportScreenTestTags.testTagForProfilePicture("user2", "author"),
-            useUnmergedTree = true,
-        )
+            useUnmergedTree = true)
         .assertIsDisplayed()
     composeRule
         .onNodeWithTag(
             ReportScreenTestTags.testTagForProfilePicture("user3", "author"),
-            useUnmergedTree = true,
-        )
+            useUnmergedTree = true)
         .assertIsDisplayed()
 
     composeRule
@@ -185,13 +190,18 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNOReports() {
+    fakeObserver.setOnline(true)
     runBlocking {
       reportRepository.deleteReport("reportId1")
       reportRepository.deleteReport("reportId2")
       reportScreenViewModel.refreshUIState()
     }
 
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
@@ -204,17 +214,21 @@ class ReportScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenUserIsRegular() {
+    fakeObserver.setOnline(true)
     runBlocking {
       reportScreenViewModel =
           ReportScreenViewModel(
               reportRepository = reportRepository,
               userRepository = userRepository,
-              currentUserId = "user3",
-          )
+              currentUserId = "user3")
       reportScreenViewModel.refreshUIState()
     }
 
-    composeRule.setContent { ReportScreen(reportScreenViewModel = reportScreenViewModel) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule
@@ -227,8 +241,9 @@ class ReportScreenTest {
 
   @Test
   fun offlineScreenIsDisplayedWhenOfflineReportScreen() {
+    fakeObserver.setOnline(false)
     composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         ReportScreen(reportScreenViewModel = reportScreenViewModel)
       }
     }

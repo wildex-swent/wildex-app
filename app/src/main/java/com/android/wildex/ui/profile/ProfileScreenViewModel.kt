@@ -189,6 +189,11 @@ class ProfileScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Shows an offline error message when trying to refresh while offline. */
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
+  }
+
   /** Sets the given error message to the ui state */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)

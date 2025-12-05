@@ -27,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -37,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.utils.offline.OfflineScreen
 
@@ -70,9 +68,8 @@ fun SubmitReportFormScreen(
     onSubmitClick: () -> Unit
 ) {
   val context = LocalContext.current
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   if (isOnline) {
     SubmitReportFormScreenContent(

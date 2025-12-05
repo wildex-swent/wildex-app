@@ -303,4 +303,17 @@ class ReportScreenViewModelTest {
       assertTrue(state.errorMsg!!.contains("Error loading reports"))
     }
   }
+
+  @Test
+  fun refreshOffline_sets_error_report_screen() {
+    mainDispatcherRule.runTest {
+      val before = viewModel.uiState.value
+      viewModel.refreshOffline()
+      val after = viewModel.uiState.value
+      assertNull(before.errorMsg)
+      assertNotNull(after.errorMsg)
+      assertTrue(
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
+    }
+  }
 }

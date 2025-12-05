@@ -263,6 +263,11 @@ class ReportScreenViewModel(
     }
   }
 
+  /** Shows an offline error message when trying to refresh while offline. */
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
+  }
+
   /** Returns a formatted date string from a [Timestamp]. */
   private fun formatDate(ts: Timestamp): String {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())

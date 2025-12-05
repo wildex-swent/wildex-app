@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.android.wildex.model.DefaultConnectivityObserver
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.notification.NotificationChannelType
 import com.android.wildex.model.notification.NotificationGroupType
@@ -78,9 +81,12 @@ class MainActivity : ComponentActivity() {
     createNotificationChannels()
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
-      WildexTheme(theme = AppTheme.appearanceMode) {
-        Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
-      }
+      CompositionLocalProvider(
+          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)) {
+            WildexTheme(theme = AppTheme.appearanceMode) {
+              Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+            }
+          }
     }
   }
 

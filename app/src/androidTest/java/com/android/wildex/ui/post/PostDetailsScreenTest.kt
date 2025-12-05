@@ -381,13 +381,16 @@ class PostDetailsScreenTest {
 
   @Test
   fun postDetailsActionsBottomSheet_shownFromMoreVertIcon_CurrentUserNotAuthor() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -413,6 +416,7 @@ class PostDetailsScreenTest {
 
   @Test
   fun deletePopUp_works_for_author() {
+    fakeObserver.setOnline(true)
     val vm =
         PostDetailsScreenViewModel(
             LocalRepositories.postsRepository,
@@ -423,12 +427,14 @@ class PostDetailsScreenTest {
             LocalRepositories.userAnimalsRepository,
             "poster1")
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = vm,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = vm,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -450,13 +456,16 @@ class PostDetailsScreenTest {
 
   @Test
   fun currentUser_cannot_delete_other_comments() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -469,6 +478,7 @@ class PostDetailsScreenTest {
 
   @Test
   fun currentUser_can_delete_own_comments() {
+    fakeObserver.setOnline(true)
     val vm =
         PostDetailsScreenViewModel(
             LocalRepositories.postsRepository,
@@ -479,12 +489,14 @@ class PostDetailsScreenTest {
             LocalRepositories.userAnimalsRepository,
             "commenter1")
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = vm,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = vm,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -495,14 +507,17 @@ class PostDetailsScreenTest {
 
   @Test
   fun doubleTap_works() {
+    fakeObserver.setOnline(true)
     composeRule.mainClock.autoAdvance = false
     composeRule.setContent {
-      PostDetailsScreen(
-          postId = "post1",
-          postDetailsScreenViewModel = postDetailsViewModel,
-          onGoBack = {},
-          onProfile = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        PostDetailsScreen(
+            postId = "post1",
+            postDetailsScreenViewModel = postDetailsViewModel,
+            onGoBack = {},
+            onProfile = {},
+        )
+      }
     }
     composeRule.waitForIdle()
 
@@ -516,6 +531,7 @@ class PostDetailsScreenTest {
 
   @Test
   fun expandableText_works() {
+    fakeObserver.setOnline(true)
     runBlocking {
       val longDescription = "Very long description ".repeat(500)
       val longDescPost =
@@ -542,12 +558,14 @@ class PostDetailsScreenTest {
           )
 
       composeRule.setContent {
-        PostDetailsScreen(
-            postId = "post2",
-            postDetailsScreenViewModel = vm,
-            onGoBack = {},
-            onProfile = {},
-        )
+        CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+          PostDetailsScreen(
+              postId = "post2",
+              postDetailsScreenViewModel = vm,
+              onGoBack = {},
+              onProfile = {},
+          )
+        }
       }
       composeRule.waitForIdle()
       composeRule.scrollToTagWithinScroll(PostDetailsContentTestTags.DESCRIPTION_TEXT)

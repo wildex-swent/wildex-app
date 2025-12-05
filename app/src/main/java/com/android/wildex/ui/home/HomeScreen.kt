@@ -138,7 +138,7 @@ fun HomeScreen(
 
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = uiState.isRefreshing && isOnline,
+        isRefreshing = uiState.isRefreshing,
         modifier = Modifier.padding(pd).testTag(HomeScreenTestTags.PULL_TO_REFRESH),
         onRefresh = {
           if (isOnline) homeScreenViewModel.refreshUIState()
@@ -150,7 +150,6 @@ fun HomeScreen(
         uiState.isLoading -> LoadingScreen()
         postStates.isEmpty() -> NoPostsView()
         else -> {
-          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
           PostsView(
               postStates = postStates,
               onProfilePictureClick = onProfilePictureClick,

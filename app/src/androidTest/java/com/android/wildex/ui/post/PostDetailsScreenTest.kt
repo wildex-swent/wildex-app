@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -231,7 +232,9 @@ class PostDetailsScreenTest {
     }
     composeRule.waitForIdle()
     // Check description
-    composeRule.onNodeWithText("Saw this beautiful tiger during my trip!").assertIsDisplayed()
+    composeRule.waitUntil(5000) {
+      composeRule.onNodeWithText("Saw this beautiful tiger during my trip!").isDisplayed()
+    }
     // Check author info and animalId
     composeRule.onNodeWithText("tiger_lover", substring = true).assertIsDisplayed()
     composeRule.onNodeWithText("saw a", substring = true).assertIsDisplayed()

@@ -134,7 +134,7 @@ fun FriendScreen(
 
         PullToRefreshBox(
             state = pullState,
-            isRefreshing = uiState.isRefreshing && isOnline,
+            isRefreshing = uiState.isRefreshing,
             modifier =
                 Modifier.padding(paddingValues)
                     .fillMaxSize()

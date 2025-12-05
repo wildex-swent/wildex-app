@@ -157,7 +157,7 @@ fun ProfileScreen(
 
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = uiState.isRefreshing && isOnline,
+        isRefreshing = uiState.isRefreshing,
         modifier = Modifier.padding(pd).testTag(ProfileScreenTestTags.PULL_TO_REFRESH),
         onRefresh = {
           if (isOnline) profileScreenViewModel.refreshUIState(userUid)

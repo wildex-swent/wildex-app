@@ -96,7 +96,7 @@ fun NotificationScreen(
     val pullState = rememberPullToRefreshState()
     PullToRefreshBox(
         state = pullState,
-        isRefreshing = uiState.isRefreshing && isOnline,
+        isRefreshing = uiState.isRefreshing,
         onRefresh = {
           if (isOnline) notificationScreenViewModel.refreshUIState()
           else notificationScreenViewModel.refreshOffline()

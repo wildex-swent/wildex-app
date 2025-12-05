@@ -12,6 +12,8 @@ import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserType
@@ -40,6 +42,7 @@ class HomeScreenViewModelTest {
   private lateinit var commentRepository: CommentRepository
   private lateinit var animalRepository: AnimalRepository
   private lateinit var userSettingsRepository: UserSettingsRepository
+  private lateinit var userFriendsRepository: UserFriendsRepository
   private lateinit var viewModel: HomeScreenViewModel
 
   private val defaultUser: SimpleUser =
@@ -124,6 +127,36 @@ class HomeScreenViewModelTest {
           pictureURL = "url_two",
       )
 
+  private val postState1 =
+      PostState(
+          post = p1.copy(date = Timestamp(0, 0), location = Location(0.0, 0.0, "Home")),
+          isLiked = true,
+          author = author1,
+          animalName = animal1.name,
+          likeCount = 1,
+          commentsCount = 1)
+
+  private val postState2 =
+      PostState(
+          post = p2.copy(date = Timestamp(10, 0), location = Location(0.0, 0.0, "EPFL")),
+          isLiked = false,
+          author = author2,
+          animalName = animal2.name,
+          likeCount = 1,
+          commentsCount = 1)
+
+  private val user1 =
+      User(
+          userId = "author1",
+          username = "author_one",
+          name = "name",
+          surname = "surname",
+          bio = "bio",
+          profilePictureURL = "url1",
+          userType = UserType.REGULAR,
+          creationDate = Timestamp(0, 0),
+          country = "country")
+
   @Before
   fun setUp() {
     postsRepository = mockk()
@@ -132,6 +165,7 @@ class HomeScreenViewModelTest {
     commentRepository = mockk()
     animalRepository = mockk()
     userSettingsRepository = mockk()
+    userFriendsRepository = mockk()
     viewModel =
         HomeScreenViewModel(
             postsRepository,
@@ -140,6 +174,7 @@ class HomeScreenViewModelTest {
             commentRepository,
             animalRepository,
             userSettingsRepository,
+            userFriendsRepository,
             "uid-1",
         )
     coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
@@ -164,6 +199,10 @@ class HomeScreenViewModelTest {
     Assert.assertFalse(initialState.isLoading)
     Assert.assertNull(initialState.errorMsg)
     Assert.assertFalse(initialState.isError)
+    Assert.assertFalse(initialState.postsFilters.onlyFriendsPosts)
+    Assert.assertNull(initialState.postsFilters.ofAnimal)
+    Assert.assertNull(initialState.postsFilters.fromPlace)
+    Assert.assertNull(initialState.postsFilters.fromAuthor)
   }
 
   @Test
@@ -275,6 +314,7 @@ class HomeScreenViewModelTest {
               commentRepository,
               animalRepository,
               userSettingsRepository,
+              userFriendsRepository,
               "")
       viewModel.refreshUIState()
       advanceUntilIdle()
@@ -420,5 +460,92 @@ class HomeScreenViewModelTest {
       viewModel.clearErrorMsg()
       Assert.assertNull(viewModel.uiState.value.errorMsg)
     }
+  }
+
+  @Test
+  fun setPostsFilterUpdatesValues() {
+    viewModel.setPostsFilter(
+        onlyFriendsPosts = true,
+        ofAnimal = "NewAnimalFilter",
+        fromPlace = "NewPlaceFilter",
+        fromAuthor =
+            SimpleUser(
+                userId = "NewUserIdFilter",
+                username = "NewUsernameFilter",
+                profilePictureURL = "NewURLFilter",
+                userType = UserType.REGULAR))
+
+    val state = viewModel.uiState.value
+
+    Assert.assertTrue(state.postsFilters.onlyFriendsPosts)
+    Assert.assertEquals("NewAnimalFilter", state.postsFilters.ofAnimal)
+    Assert.assertEquals("NewPlaceFilter", state.postsFilters.fromPlace)
+    Assert.assertEquals(
+        SimpleUser(
+            userId = "NewUserIdFilter",
+            username = "NewUsernameFilter",
+            profilePictureURL = "NewURLFilter",
+            userType = UserType.REGULAR),
+        state.postsFilters.fromAuthor)
+  }
+
+  @Test
+  fun filterPostsSortsPostsByDate() {
+    val postStates = listOf(postState1, postState2)
+
+    val actual = viewModel.filterPosts(postStates = postStates)
+    val expected = postStates.reversed()
+
+    Assert.assertEquals(expected, actual)
+  }
+
+  @Test
+  fun filterPostsByFriendsWorks() {
+    coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(user1)
+
+    viewModel.setPostsFilter(onlyFriendsPosts = true)
+
+    val postStates = listOf(postState1, postState2)
+
+    val actual = viewModel.filterPosts(postStates = postStates)
+
+    Assert.assertTrue(actual.contains(postState1))
+    Assert.assertEquals(1, actual.size)
+  }
+
+  @Test
+  fun filterPostsByAnimalWorks() {
+    viewModel.setPostsFilter(ofAnimal = postState1.animalName)
+
+    val postStates = listOf(postState1, postState2)
+
+    val actual = viewModel.filterPosts(postStates = postStates)
+
+    Assert.assertTrue(actual.contains(postState1))
+    Assert.assertEquals(1, actual.size)
+  }
+
+  @Test
+  fun filterPostsByPlaceWorks() {
+    viewModel.setPostsFilter(fromPlace = postState1.post.location?.name)
+
+    val postStates = listOf(postState1, postState2)
+
+    val actual = viewModel.filterPosts(postStates = postStates)
+
+    Assert.assertTrue(actual.contains(postState1))
+    Assert.assertEquals(1, actual.size)
+  }
+
+  @Test
+  fun filterPostsByAuthorWorks() {
+    viewModel.setPostsFilter(fromAuthor = postState1.author)
+
+    val postStates = listOf(postState1, postState2)
+
+    val actual = viewModel.filterPosts(postStates = postStates)
+
+    Assert.assertTrue(actual.contains(postState1))
+    Assert.assertEquals(1, actual.size)
   }
 }

@@ -40,8 +40,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
-import coil.compose.AsyncImage
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id

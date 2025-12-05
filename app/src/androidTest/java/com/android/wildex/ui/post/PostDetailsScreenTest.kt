@@ -38,7 +38,6 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.utils.images.ImageWithDoubleTapLikeTestTags
-import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp

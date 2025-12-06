@@ -253,7 +253,6 @@ fun PostItem(
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit
 ) {
-  val colorScheme = colorScheme
   val post = postState.post
   val author = postState.author
   val animalName = postState.animalName
@@ -296,11 +295,9 @@ fun PostItem(
         liked = liked,
         likeCount = likeCount,
         commentCount = commentCount,
-        colorScheme = colorScheme,
         onToggleLike = onToggleLike,
         onPostClick = { onPostClick(post.postId) },
-        pageCount = pagerState.pageCount,
-        currentPage = pagerState.currentPage)
+        pagerState = pagerState)
   }
 }
 
@@ -474,6 +471,18 @@ private fun PostSlider(
   }
 }
 
+@Composable
+private fun SlideState(slideIndex: Int, currentPage: Int) {
+  Box(
+      modifier =
+          Modifier.size(if (currentPage == slideIndex) 7.dp else 5.dp)
+              .clip(RoundedCornerShape(50.dp))
+              .background(
+                  color =
+                      colorScheme.onBackground.copy(
+                          alpha = if (currentPage == slideIndex) 0.9f else 0.6f)))
+}
+
 /**
  * Displays a post's actions.
  *
@@ -490,11 +499,9 @@ private fun PostActions(
     liked: Boolean,
     likeCount: Int,
     commentCount: Int,
-    colorScheme: ColorScheme,
     onToggleLike: () -> Unit,
     onPostClick: () -> Unit,
-    pageCount: Int,
-    currentPage: Int
+    pagerState: PagerState
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
@@ -526,7 +533,7 @@ private fun PostActions(
     }
 
     // Page selected
-    if (pageCount > 1) {
+    if (pagerState.pageCount > 1) {
       Box(
           modifier =
               Modifier.fillMaxHeight().testTag(HomeScreenTestTags.sliderStateTag(post.postId)),
@@ -534,23 +541,9 @@ private fun PostActions(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 5.dp)) {
-                  Box(
-                      modifier =
-                          Modifier.size(if (currentPage == 0) 7.dp else 5.dp)
-                              .clip(RoundedCornerShape(50.dp))
-                              .background(
-                                  color =
-                                      colorScheme.onBackground.copy(
-                                          alpha = if (currentPage == 0) 0.9f else 0.6f)))
+                  SlideState(0, pagerState.currentPage)
                   Spacer(modifier = Modifier.width(5.dp))
-                  Box(
-                      modifier =
-                          Modifier.size(if (currentPage == 1) 7.dp else 5.dp)
-                              .clip(RoundedCornerShape(50.dp))
-                              .background(
-                                  color =
-                                      colorScheme.onBackground.copy(
-                                          alpha = if (currentPage == 1) 0.9f else 0.6f)))
+                  SlideState(1, pagerState.currentPage)
                 }
           }
     }

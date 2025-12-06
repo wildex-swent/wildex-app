@@ -74,6 +74,8 @@ sealed class Screen(
     }
   }
 
+  object LocationPicker : Screen(route = "location_picker", name = "Location Picker")
+
   data class AnimalInformation(val animalUid: Id) :
       Screen(route = "animal_information_screen/${animalUid}", name = "Animal Information Screen") {
     companion object {

@@ -77,7 +77,6 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.AppTheme
 import com.android.wildex.R
-import com.android.wildex.model.DefaultConnectivityObserver
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
@@ -132,9 +131,8 @@ fun LocationPickerScreen(
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
   // Offline detection
-  val connectivityObserver = remember { DefaultConnectivityObserver(context) }
-  val isOnlineObs by connectivityObserver.isOnline.collectAsState()
-  val isOnline = isOnlineObs && LocalConnectivityObserver.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   val isDark =
       when (AppTheme.appearanceMode) {
@@ -392,7 +390,7 @@ private fun LocationPickerTopBar(
           Text(
               text = context.getString(R.string.location_search_box),
               overflow = TextOverflow.Ellipsis,
-          )
+              maxLines = 1)
         },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),

@@ -20,6 +20,7 @@ import com.android.wildex.BuildConfig
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.mapbox.common.MapboxOptions
 import org.junit.Before
 import org.junit.Rule
@@ -28,6 +29,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class LocationPickerScreenTest {
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
   @get:Rule
@@ -50,12 +52,15 @@ class LocationPickerScreenTest {
   @Test
   fun backButton_invokesCallback() {
     var backClicked = false
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = { backClicked = true },
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = { backClicked = true },
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(LocationPickerTestTags.BACK_BUTTON)
@@ -66,12 +71,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun typingQuery_showsSuggestions_andClickingSuggestion_opensConfirmDialog() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule
         .onNodeWithText("Search city, address or place", substring = false)
@@ -85,12 +93,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun gpsIcon_writesCurrentLocationNameIntoSearchBar() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule.runOnIdle {
       vm.onLocationPermissionResult(true)
@@ -103,12 +114,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun clickingSearchIcon_opensConfirmDialog_withForwardGeocodeResult() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD).performTextInput("Lausanne")
 
@@ -123,12 +137,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun clearIcon_clearsQuery() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD).performTextInput("Abc")
 
@@ -143,12 +160,15 @@ class LocationPickerScreenTest {
   @Test
   fun clickingSuggestion_thenPressingNo_closesDialog_andDoesNotCallOnLocationPicked() {
     var pickedLocation: Location? = null
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = { pickedLocation = it },
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = { pickedLocation = it },
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule
         .onNodeWithText("Search city, address or place", substring = false)
@@ -165,13 +185,16 @@ class LocationPickerScreenTest {
 
   @Test
   fun clickingSuggestion_thenPressingYes_callsOnLocationPicked() {
+    fakeObserver.setOnline(true)
     var pickedLocation: Location? = null
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = { pickedLocation = it },
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = { pickedLocation = it },
+            viewModel = vm,
+        )
+      }
     }
     composeTestRule
         .onNodeWithText("Search city, address or place", substring = false)
@@ -189,12 +212,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun clickingSearchIcon_clearsFocusOnSearchField() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     val searchField =
         composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD, useUnmergedTree = true)
@@ -208,12 +234,15 @@ class LocationPickerScreenTest {
 
   @Test
   fun imeSearchAction_clearsFocusOnSearchField() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      LocationPickerScreen(
-          onBack = {},
-          onLocationPicked = {},
-          viewModel = vm,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        LocationPickerScreen(
+            onBack = {},
+            onLocationPicked = {},
+            viewModel = vm,
+        )
+      }
     }
     val searchField =
         composeTestRule.onNodeWithTag(LocationPickerTestTags.SEARCH_FIELD, useUnmergedTree = true)
@@ -227,8 +256,9 @@ class LocationPickerScreenTest {
   @Test
   fun offlineMode_showsOfflineScreen_andTopBarBackButton() {
     var backClicked = false
+    fakeObserver.setOnline(false)
     composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides false) {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         LocationPickerScreen(
             onBack = { backClicked = true },
             onLocationPicked = {},

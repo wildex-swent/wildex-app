@@ -61,7 +61,7 @@ data class ReportUIState(
     val date: String,
     val description: String,
     val author: SimpleUser,
-    val assigneeUsername: String,
+    val assigned: Boolean,
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -158,7 +158,6 @@ class ReportScreenViewModel(
   private suspend fun buildReportUiStateOrNull(report: Report): ReportUIState? {
     return try {
       val author = loadAuthorOrDefault(report)
-      val assigneeUsername = loadAssigneeUsernameOrEmpty(report)
 
       ReportUIState(
           reportId = report.reportId,
@@ -167,7 +166,7 @@ class ReportScreenViewModel(
           date = formatDate(report.date),
           description = report.description,
           author = author,
-          assigneeUsername = assigneeUsername,
+          assigned = report.assigneeId != null,
       )
     } catch (e: Exception) {
       handleException("Error building UI state for report ${report.reportId}", e)
@@ -188,22 +187,6 @@ class ReportScreenViewModel(
     }
   }
 
-  /** Loads the assignee username for a report, or an empty string if missing/failing. */
-  private suspend fun loadAssigneeUsernameOrEmpty(report: Report): String {
-    val assigneeId = report.assigneeId ?: return ""
-    if (assigneeId.isEmpty()) return ""
-
-    return try {
-      userRepository.getSimpleUser(assigneeId).username
-    } catch (e: Exception) {
-      handleException(
-          "Error loading assignee $assigneeId user data for report ${report.reportId}",
-          e,
-      )
-      ""
-    }
-  }
-
   /** Clears any existing error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -212,56 +195,6 @@ class ReportScreenViewModel(
   /** Sets a new error message in the UI state. */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
-  }
-
-  /** Cancels a report made by a regular user */
-  fun cancelReport(reportId: Id) {
-    viewModelScope.launch {
-      try {
-        reportRepository.deleteReport(reportId)
-        refreshUIState()
-      } catch (e: Exception) {
-        handleException("Error canceling report $reportId", e)
-      }
-    }
-  }
-
-  /** Self-assigns a report */
-  fun selfAssignReport(reportId: Id) {
-    viewModelScope.launch {
-      try {
-        val report = reportRepository.getReport(reportId)
-        reportRepository.editReport(reportId, report.copy(assigneeId = currentUserId))
-        refreshUIState()
-      } catch (e: Exception) {
-        handleException("Error self-assigning report $reportId", e)
-      }
-    }
-  }
-
-  /** Unself-assigns a report */
-  fun unselfAssignReport(reportId: Id) {
-    viewModelScope.launch {
-      try {
-        val report = reportRepository.getReport(reportId)
-        reportRepository.editReport(reportId, report.copy(assigneeId = null))
-        refreshUIState()
-      } catch (e: Exception) {
-        handleException("Error unself-assigning report $reportId", e)
-      }
-    }
-  }
-
-  /** Resolves a report and deletes it */
-  fun resolveReport(reportId: Id) {
-    viewModelScope.launch {
-      try {
-        reportRepository.deleteReport(reportId)
-        refreshUIState()
-      } catch (e: Exception) {
-        handleException("Error resolving report $reportId", e)
-      }
-    }
   }
 
   /** Shows an offline error message when trying to refresh while offline. */

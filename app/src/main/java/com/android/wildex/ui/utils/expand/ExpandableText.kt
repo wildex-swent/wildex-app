@@ -26,8 +26,8 @@ import com.android.wildex.R
 fun ExpandableTextCore(
     text: String,
     collapsedLines: Int,
-    bodyTag: String,
-    toggleTag: String,
+    bodyTag: String = "",
+    toggleTag: String = "",
     style: TextStyle = typography.bodyMedium,
     color: Color = colorScheme.onBackground,
 ) {

@@ -10,13 +10,16 @@ package com.android.wildex.ui.home
  * to details.
  */
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,11 +28,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -62,15 +70,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.profile.StaticMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -85,6 +97,16 @@ object HomeScreenTestTags {
   const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
+
+  fun sliderTag(postId: Id): String = testTagForPost(postId, "Slider")
+
+  fun mapPreviewTag(postId: Id): String = testTagForPost(postId, "MapPreview")
+
+  fun mapPreviewButtonTag(postId: Id): String = testTagForPost(postId, "MapPreviewButton")
+
+  fun mapLocationTag(postId: Id): String = testTagForPost(postId, "MapLocation")
+
+  fun sliderStateTag(postId: Id): String = testTagForPost(postId, "SliderState")
 
   fun commentTag(postId: Id): String = testTagForPost(postId, "CommentCount")
 
@@ -235,6 +257,7 @@ fun PostItem(
   val post = postState.post
   val author = postState.author
   val animalName = postState.animalName
+  val pagerState = rememberPagerState(pageCount = { if (post.location != null) 2 else 1 })
 
   // -------- Optimistic Like State (instant UI) --------
   var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
@@ -261,7 +284,11 @@ fun PostItem(
         onProfilePictureClick = onProfilePictureClick)
 
     // Image
-    PostImage(post = post, onPostClick = { onPostClick(post.postId) })
+    PostSlider(
+        post = post,
+        postLocationName = postState.postLocationName,
+        onPostClick = { onPostClick(post.postId) },
+        pagerState)
 
     // Actions: likes & comments & location
     PostActions(
@@ -272,7 +299,8 @@ fun PostItem(
         colorScheme = colorScheme,
         onToggleLike = onToggleLike,
         onPostClick = { onPostClick(post.postId) },
-    )
+        pageCount = pagerState.pageCount,
+        currentPage = pagerState.currentPage)
   }
 }
 
@@ -361,18 +389,88 @@ private fun PostHeader(
  * @param onPostClick The action when the user clicks on the post, to see its details.
  */
 @Composable
-private fun PostImage(post: Post, onPostClick: () -> Unit) {
+private fun PostSlider(
+    post: Post,
+    postLocationName: String?,
+    onPostClick: () -> Unit,
+    pagerState: PagerState
+) {
   Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick() }) {
-    AsyncImage(
-        model = post.pictureURL,
-        contentDescription = "Post picture",
-        modifier =
-            Modifier.fillMaxWidth()
-                .height(400.dp)
-                .clip(RoundedCornerShape(0.dp))
-                .testTag(HomeScreenTestTags.imageTag(post.postId)),
-        contentScale = ContentScale.Crop,
-    )
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.sliderTag(post.postId))) { page
+          ->
+          when (page) {
+            0 -> {
+              AsyncImage(
+                  model = post.pictureURL,
+                  contentDescription = "Post picture",
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .height(400.dp)
+                          .clip(RoundedCornerShape(0.dp))
+                          .testTag(HomeScreenTestTags.imageTag(post.postId)),
+                  contentScale = ContentScale.Crop,
+              )
+            }
+            1 -> {
+              val loc = post.location!!
+              val context = LocalContext.current
+              val isDark =
+                  when (AppTheme.appearanceMode) {
+                    AppearanceMode.DARK -> true
+                    AppearanceMode.LIGHT -> false
+                    AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+                  }
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .height(400.dp)
+                          .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+                    StaticMiniMap(
+                        modifier = Modifier.matchParentSize(),
+                        pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                        styleUri = context.getString(R.string.map_style),
+                        styleImportId = context.getString(R.string.map_standard_import),
+                        isDark = isDark,
+                        fallbackZoom = 2.0,
+                        context = context)
+                    Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
+                      Row(
+                          verticalAlignment = Alignment.CenterVertically,
+                          modifier =
+                              Modifier.clip(RoundedCornerShape(20.dp))
+                                  .background(colorScheme.onBackground)
+                                  .padding(horizontal = 10.dp, vertical = 8.dp),
+                      ) {
+                        Icon(
+                            imageVector = Icons.Filled.Place,
+                            contentDescription = "Country Icon",
+                            tint = colorScheme.background,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            modifier =
+                                Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                            text = postLocationName!!,
+                            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = colorScheme.background,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                      }
+                    }
+                    Box(
+                        modifier =
+                            Modifier.matchParentSize()
+                                .clickable { onPostClick() }
+                                .background(Color.Transparent)
+                                .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
+                  }
+            }
+          }
+        }
   }
 }
 
@@ -395,10 +493,11 @@ private fun PostActions(
     colorScheme: ColorScheme,
     onToggleLike: () -> Unit,
     onPostClick: () -> Unit,
+    pageCount: Int,
+    currentPage: Int
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-      verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.SpaceBetween,
   ) {
     // Likes
@@ -426,7 +525,35 @@ private fun PostActions(
       )
     }
 
-    Spacer(Modifier.width(15.dp))
+    // Page selected
+    if (pageCount > 1) {
+      Box(
+          modifier =
+              Modifier.fillMaxHeight().testTag(HomeScreenTestTags.sliderStateTag(post.postId)),
+          contentAlignment = Alignment.TopCenter) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 5.dp)) {
+                  Box(
+                      modifier =
+                          Modifier.size(if (currentPage == 0) 7.dp else 5.dp)
+                              .clip(RoundedCornerShape(50.dp))
+                              .background(
+                                  color =
+                                      colorScheme.onBackground.copy(
+                                          alpha = if (currentPage == 0) 0.9f else 0.6f)))
+                  Spacer(modifier = Modifier.width(5.dp))
+                  Box(
+                      modifier =
+                          Modifier.size(if (currentPage == 1) 7.dp else 5.dp)
+                              .clip(RoundedCornerShape(50.dp))
+                              .background(
+                                  color =
+                                      colorScheme.onBackground.copy(
+                                          alpha = if (currentPage == 1) 0.9f else 0.6f)))
+                }
+          }
+    }
 
     // Comments
     Row(

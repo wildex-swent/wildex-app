@@ -235,7 +235,7 @@ private fun updateCameraForPins(
       pins,
       CameraOptions.Builder().build(),
       fitPadding,
-      null,
+      16.0,
       null,
   ) { cam ->
     if (cam.isEmpty) return@cameraForCoordinates

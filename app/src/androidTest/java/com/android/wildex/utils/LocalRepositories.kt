@@ -578,7 +578,11 @@ object LocalRepositories {
   }
 
   open class GeocodingRepositoryImpl() : GeocodingRepository {
-    override suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
+    override suspend fun reverseGeocode(
+        latitude: Double,
+        longitude: Double,
+        precision: Boolean
+    ): String? {
       return "Location($latitude, $longitude)"
     }
 

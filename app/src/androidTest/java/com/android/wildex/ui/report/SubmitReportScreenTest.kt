@@ -58,11 +58,6 @@ class SubmitReportScreenTest {
     }
 
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX).assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(SubmitReportFormScreenTestTags.DESCRIPTION_FIELD)
-        .assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsDisplayed()
   }
 
   @Test

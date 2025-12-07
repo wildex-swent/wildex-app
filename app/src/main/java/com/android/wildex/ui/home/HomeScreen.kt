@@ -285,7 +285,7 @@ fun PostItem(
     // Image
     PostSlider(
         post = post,
-        postLocationName = postState.postLocationName,
+        postLocationName = postState.post.location?.name,
         onPostClick = { onPostClick(post.postId) },
         pagerState)
 
@@ -432,30 +432,32 @@ private fun PostSlider(
                         isDark = isDark,
                         fallbackZoom = 2.0,
                         context = context)
-                    Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
-                      Row(
-                          verticalAlignment = Alignment.CenterVertically,
-                          modifier =
-                              Modifier.clip(RoundedCornerShape(20.dp))
-                                  .background(colorScheme.onBackground)
-                                  .padding(horizontal = 10.dp, vertical = 8.dp),
-                      ) {
-                        Icon(
-                            imageVector = Icons.Filled.Place,
-                            contentDescription = "Country Icon",
-                            tint = colorScheme.background,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
+                    if (postLocationName != null) {
+                      Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier =
-                                Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                            text = postLocationName!!,
-                            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = colorScheme.background,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                                Modifier.clip(RoundedCornerShape(20.dp))
+                                    .background(colorScheme.onBackground)
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                        ) {
+                          Icon(
+                              imageVector = Icons.Filled.Place,
+                              contentDescription = "Country Icon",
+                              tint = colorScheme.background,
+                              modifier = Modifier.size(16.dp),
+                          )
+                          Spacer(modifier = Modifier.width(8.dp))
+                          Text(
+                              modifier =
+                                  Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                              text = postLocationName!!,
+                              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                              color = colorScheme.background,
+                              maxLines = 1,
+                              overflow = TextOverflow.Ellipsis,
+                          )
+                        }
                       }
                     }
                     Box(

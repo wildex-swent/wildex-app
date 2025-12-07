@@ -19,11 +19,7 @@ class MapboxGeocodingRepository(
     private val baseURL: String = "https://api.mapbox.com",
 ) : GeocodingRepository {
 
-  override suspend fun reverseGeocode(
-      latitude: Double,
-      longitude: Double,
-      precision: Boolean
-  ): String? =
+  override suspend fun reverseGeocode(latitude: Double, longitude: Double): String? =
       withContext(dispatcher) {
         val base = baseURL.toHttpUrl()
         val url =
@@ -42,7 +38,7 @@ class MapboxGeocodingRepository(
               okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return@use null
                 val body = response.body?.string() ?: return@use null
-                parseFirstPlaceName(body, precision)
+                parseFirstPlaceName(body)
               }
             }
             .getOrNull()
@@ -110,14 +106,14 @@ class MapboxGeocodingRepository(
    * @param json The JSON string to parse.
    * @return The name of the first place extracted from the JSON, or null if none found.
    */
-  private fun parseFirstPlaceName(json: String, precision: Boolean): String? {
+  private fun parseFirstPlaceName(json: String): String? {
     val root = JSONObject(json)
     val features = root.optJSONArray("features") ?: return null
     if (features.length() == 0) return null
     val first = features.optJSONObject(0) ?: return null
     val properties = first.optJSONObject("properties") ?: return null
 
-    return properties.getBestName(precision)
+    return properties.getBestName()
   }
 
   /**
@@ -159,10 +155,7 @@ class MapboxGeocodingRepository(
    *
    * @return The best name available, or null if none found.
    */
-  private fun JSONObject.getBestName(precision: Boolean): String? {
-    if (!precision) {
-      return this.optString("place_formatted", "").takeIf { it.isNotBlank() }
-    }
+  private fun JSONObject.getBestName(): String? {
     return this.optString("full_address", "").takeIf { it.isNotBlank() }
         ?: this.optString("place_formatted", "").takeIf { it.isNotBlank() }
         ?: this.optString("name", "").takeIf { it.isNotBlank() }
@@ -175,7 +168,7 @@ class MapboxGeocodingRepository(
    */
   private fun JSONObject.getLocation(): Location? {
     val properties = this.optJSONObject("properties") ?: return null
-    val name = properties.getBestName(true) ?: "Unknown location"
+    val name = properties.getBestName() ?: "Unknown location"
 
     val geometry = this.optJSONObject("geometry") ?: return null
     val coordinates = geometry.optJSONArray("coordinates") ?: return null

@@ -135,7 +135,6 @@ class HomeScreenViewModelTest {
   private val postState1 =
       PostState(
           post = p1.copy(date = Timestamp(0, 0), location = Location(0.0, 0.0, "Home")),
-          postLocationName = "Home",
           isLiked = true,
           author = author1,
           animalName = animal1.name,
@@ -145,7 +144,6 @@ class HomeScreenViewModelTest {
   private val postState2 =
       PostState(
           post = p2.copy(date = Timestamp(10, 0), location = Location(0.0, 0.0, "EPFL")),
-          postLocationName = "EPFL",
           isLiked = false,
           author = author2,
           animalName = animal2.name,
@@ -181,7 +179,6 @@ class HomeScreenViewModelTest {
             likeRepository,
             commentRepository,
             animalRepository,
-            geocodingRepository,
             userSettingsRepository,
             userFriendsRepository,
             "uid-1",
@@ -222,11 +219,10 @@ class HomeScreenViewModelTest {
       val location2 = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
+      coEvery { geocodingRepository.reverseGeocode(location.latitude, location.longitude) } returns
+          "Home"
       coEvery {
-        geocodingRepository.reverseGeocode(location.latitude, location.longitude, false)
-      } returns "Home"
-      coEvery {
-        geocodingRepository.reverseGeocode(location2.latitude, location2.longitude, false)
+        geocodingRepository.reverseGeocode(location2.latitude, location2.longitude)
       } returns "EPFL"
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.refreshUIState()
@@ -239,7 +235,6 @@ class HomeScreenViewModelTest {
           listOf(
               PostState(
                   p1,
-                  postLocationName = "Home",
                   isLiked = true,
                   author = author1,
                   animalName = animal1.name,
@@ -247,7 +242,6 @@ class HomeScreenViewModelTest {
                   commentsCount = 1),
               PostState(
                   p2,
-                  postLocationName = "EPFL",
                   isLiked = false,
                   author = author2,
                   animalName = animal2.name,
@@ -271,11 +265,10 @@ class HomeScreenViewModelTest {
       val location2 = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
+      coEvery { geocodingRepository.reverseGeocode(location.latitude, location.longitude) } returns
+          "Home"
       coEvery {
-        geocodingRepository.reverseGeocode(location.latitude, location.longitude, false)
-      } returns "Home"
-      coEvery {
-        geocodingRepository.reverseGeocode(location2.latitude, location2.longitude, false)
+        geocodingRepository.reverseGeocode(location2.latitude, location2.longitude)
       } returns "EPFL"
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.loadUIState()
@@ -288,7 +281,6 @@ class HomeScreenViewModelTest {
           listOf(
               PostState(
                   p1,
-                  postLocationName = "Home",
                   isLiked = true,
                   author = author1,
                   animalName = animal1.name,
@@ -296,7 +288,6 @@ class HomeScreenViewModelTest {
                   commentsCount = 1),
               PostState(
                   p2,
-                  postLocationName = "EPFL",
                   isLiked = false,
                   author = author2,
                   animalName = animal2.name,
@@ -342,7 +333,6 @@ class HomeScreenViewModelTest {
               likeRepository,
               commentRepository,
               animalRepository,
-              geocodingRepository,
               userSettingsRepository,
               userFriendsRepository,
               "")
@@ -396,9 +386,8 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p2)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u2
       coEvery { likeRepository.getLikeForPost("p2") } returns like2
-      coEvery {
-        geocodingRepository.reverseGeocode(location.latitude, location.longitude, false)
-      } returns "EPFL"
+      coEvery { geocodingRepository.reverseGeocode(location.latitude, location.longitude) } returns
+          "EPFL"
       viewModel.refreshUIState()
       advanceUntilIdle()
 
@@ -407,7 +396,6 @@ class HomeScreenViewModelTest {
           listOf(
               PostState(
                   p2,
-                  postLocationName = "EPFL",
                   isLiked = true,
                   author = author2,
                   animalName = animal2.name,
@@ -464,9 +452,8 @@ class HomeScreenViewModelTest {
       val location = p1.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
-      coEvery {
-        geocodingRepository.reverseGeocode(location.latitude, location.longitude, false)
-      } returns "Home"
+      coEvery { geocodingRepository.reverseGeocode(location.latitude, location.longitude) } returns
+          "Home"
 
       viewModel.refreshUIState()
       advanceUntilIdle()
@@ -478,7 +465,6 @@ class HomeScreenViewModelTest {
           listOf(
               PostState(
                   p1,
-                  postLocationName = "Home",
                   isLiked = false,
                   author = author1,
                   animalName = animal1.name,

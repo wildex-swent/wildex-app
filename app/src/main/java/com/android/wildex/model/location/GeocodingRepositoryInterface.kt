@@ -10,10 +10,9 @@ interface GeocodingRepository {
    *
    * @param latitude latitude
    * @param longitude longitude
-   * @param precision whether the response should be very precise or not
    * @return place name or null if not found.
    */
-  suspend fun reverseGeocode(latitude: Double, longitude: Double, precision: Boolean): String?
+  suspend fun reverseGeocode(latitude: Double, longitude: Double): String?
 
   /**
    * Forward geocode text into a single result.

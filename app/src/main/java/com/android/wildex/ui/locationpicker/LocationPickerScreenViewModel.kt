@@ -88,7 +88,7 @@ class LocationPickerViewModel(
   fun onMapClicked(lat: Double, lon: Double) {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, error = null, isError = false)
-      val name = geocodingRepository.reverseGeocode(lat, lon, true)
+      val name = geocodingRepository.reverseGeocode(lat, lon)
       val loc = Location(lat, lon, name ?: "Unknown Location at: ($lat, $lon)")
       _uiState.value =
           _uiState.value.copy(

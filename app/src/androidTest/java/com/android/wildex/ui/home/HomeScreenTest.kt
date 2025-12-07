@@ -54,7 +54,6 @@ class HomeScreenTest {
   private val userSettingsRepository = LocalRepositories.userSettingsRepository
   private val fakeObserver = FakeConnectivityObserver(initial = true)
   private val userFriendsRepository = LocalRepositories.userFriendsRepository
-  private val geocodingRepository = LocalRepositories.geocodingRepository
 
   private val fullPost =
       Post(
@@ -80,7 +79,6 @@ class HomeScreenTest {
             likeRepository,
             commentRepository,
             animalRepository,
-            geocodingRepository,
             userSettingsRepository,
             userFriendsRepository,
             "currentUserId-1",
@@ -423,7 +421,7 @@ class HomeScreenTest {
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
         .assertIsDisplayed()
-        .assertTextEquals("Location(0.0, 0.0)")
+        .assertTextEquals("Casablanca")
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.sliderTag(fullPost.postId), useUnmergedTree = true)
         .performScrollToIndex(0)
@@ -639,7 +637,6 @@ class HomeScreenTest {
               LocalRepositories.likeRepository,
               LocalRepositories.commentRepository,
               LocalRepositories.animalRepository,
-              LocalRepositories.geocodingRepository,
               LocalRepositories.userSettingsRepository,
               LocalRepositories.userFriendsRepository,
               "currentUserId-1",

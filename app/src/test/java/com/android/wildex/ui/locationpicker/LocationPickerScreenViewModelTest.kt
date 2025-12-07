@@ -120,7 +120,7 @@ class LocationPickerScreenViewModelTest {
   @Test
   fun mapClickedHandlesNamedAndUnknownLocations() =
       mainDispatcherRule.runTest {
-        coEvery { geocodingRepository.reverseGeocode(5.0, 6.0, true) } returns "Found"
+        coEvery { geocodingRepository.reverseGeocode(5.0, 6.0) } returns "Found"
         viewModel.onMapClicked(5.0, 6.0)
         advanceUntilIdle()
         var state = viewModel.uiState.value
@@ -133,7 +133,7 @@ class LocationPickerScreenViewModelTest {
         assertFalse(state.isLoading)
         assertTrue(state.suggestions.isEmpty())
 
-        coEvery { geocodingRepository.reverseGeocode(1.0, 2.0, true) } returns null
+        coEvery { geocodingRepository.reverseGeocode(1.0, 2.0) } returns null
         viewModel.onMapClicked(1.0, 2.0)
         advanceUntilIdle()
         state = viewModel.uiState.value

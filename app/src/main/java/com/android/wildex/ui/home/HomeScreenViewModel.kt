@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.wildex.AppTheme
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.AnimalRepository
-import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
@@ -70,7 +69,6 @@ private val defaultUser: SimpleUser =
  */
 data class PostState(
     val post: Post,
-    val postLocationName: String?,
     val isLiked: Boolean,
     val author: SimpleUser,
     val animalName: String,
@@ -113,7 +111,6 @@ class HomeScreenViewModel(
     private val likeRepository: LikeRepository = RepositoryProvider.likeRepository,
     private val commentRepository: CommentRepository = RepositoryProvider.commentRepository,
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
-    private val geocodingRepository: GeocodingRepository = RepositoryProvider.geocodingRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userFriendsRepository: UserFriendsRepository =
@@ -177,12 +174,6 @@ class HomeScreenViewModel(
               val animalName = animalRepository.getAnimal(post.animalId).name
               val likeCount = likeRepository.getLikesForPost(post.postId).size
               val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
-              val postLocation = post.location
-              val postLocationName =
-                  if (postLocation != null)
-                      geocodingRepository.reverseGeocode(
-                          postLocation.latitude, postLocation.longitude, false)
-                  else null
 
               PostState(
                   post = post,
@@ -190,8 +181,7 @@ class HomeScreenViewModel(
                   isLiked = isLiked,
                   animalName = animalName,
                   likeCount = likeCount,
-                  commentsCount = commentCount,
-                  postLocationName = postLocationName)
+                  commentsCount = commentCount)
             } catch (_: Exception) {
               null
             }

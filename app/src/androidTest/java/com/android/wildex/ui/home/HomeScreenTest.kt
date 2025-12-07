@@ -277,8 +277,8 @@ class HomeScreenTest {
   @Test
   fun postWithoutLocation_doesNotShowLocation() {
     fakeObserver.setOnline(true)
-    val noLocationPost = fullPost.copy(location = null)
-    val blankLocationPost = fullPost.copy(location = Location(0.0, 0.0, "   "))
+    val noLocationPost = fullPost.copy(postId = "noLoc", location = null)
+    val blankLocationPost = fullPost.copy(postId = "blankLoc", location = Location(0.0, 0.0, "   "))
     runBlocking {
       postRepository.addPost(noLocationPost)
       postRepository.addPost(blankLocationPost)
@@ -293,6 +293,12 @@ class HomeScreenTest {
     composeTestRule
         .onNodeWithTag(
             HomeScreenTestTags.locationTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapLocationTag(noLocationPost.postId),
             useUnmergedTree = true,
         )
         .assertIsNotDisplayed()

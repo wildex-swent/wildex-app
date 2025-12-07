@@ -63,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -283,11 +284,7 @@ fun PostItem(
         onProfilePictureClick = onProfilePictureClick)
 
     // Image
-    PostSlider(
-        post = post,
-        postLocationName = postState.post.location?.name,
-        onPostClick = { onPostClick(post.postId) },
-        pagerState)
+    PostSlider(post = post, onPostClick = { onPostClick(post.postId) }, pagerState)
 
     // Actions: likes & comments & location
     PostActions(
@@ -386,91 +383,79 @@ private fun PostHeader(
  * @param onPostClick The action when the user clicks on the post, to see its details.
  */
 @Composable
-private fun PostSlider(
-    post: Post,
-    postLocationName: String?,
-    onPostClick: () -> Unit,
-    pagerState: PagerState
-) {
-  Box(modifier = Modifier.fillMaxWidth().clickable { onPostClick() }) {
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.sliderTag(post.postId))) { page
-          ->
-          when (page) {
-            0 -> {
-              AsyncImage(
-                  model = post.pictureURL,
-                  contentDescription = "Post picture",
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(400.dp)
-                          .clip(RoundedCornerShape(0.dp))
-                          .testTag(HomeScreenTestTags.imageTag(post.postId)),
-                  contentScale = ContentScale.Crop,
-              )
-            }
-            1 -> {
-              val loc = post.location!!
-              val context = LocalContext.current
-              val isDark =
-                  when (AppTheme.appearanceMode) {
-                    AppearanceMode.DARK -> true
-                    AppearanceMode.LIGHT -> false
-                    AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerState) {
+  HorizontalPager(
+      state = pagerState,
+      modifier =
+          Modifier.fillMaxWidth()
+              .height(LocalWindowInfo.current.containerSize.height.dp / 6)
+              .testTag(HomeScreenTestTags.sliderTag(post.postId))) { page ->
+        when (page) {
+          0 -> {
+            AsyncImage(
+                model = post.pictureURL,
+                contentDescription = "Post picture",
+                modifier =
+                    Modifier.fillMaxSize()
+                        .testTag(HomeScreenTestTags.imageTag(post.postId))
+                        .clickable { onPostClick() },
+                contentScale = ContentScale.Crop,
+            )
+          }
+          1 -> {
+            val loc = post.location!!
+            val context = LocalContext.current
+            val isDark =
+                when (AppTheme.appearanceMode) {
+                  AppearanceMode.DARK -> true
+                  AppearanceMode.LIGHT -> false
+                  AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+                }
+            Box(
+                modifier =
+                    Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+                  StaticMiniMap(
+                      modifier = Modifier.matchParentSize(),
+                      pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                      styleUri = context.getString(R.string.map_style),
+                      styleImportId = context.getString(R.string.map_standard_import),
+                      isDark = isDark,
+                      fallbackZoom = 2.0,
+                      context = context)
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier =
+                          Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                              .clip(RoundedCornerShape(20.dp))
+                              .background(colorScheme.onBackground)
+                              .padding(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = "Country Icon",
+                        tint = colorScheme.background,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                        text = post.location.name,
+                        style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = colorScheme.background,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                   }
-              Box(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(400.dp)
-                          .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-                    StaticMiniMap(
-                        modifier = Modifier.matchParentSize(),
-                        pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                        styleUri = context.getString(R.string.map_style),
-                        styleImportId = context.getString(R.string.map_standard_import),
-                        isDark = isDark,
-                        fallbackZoom = 2.0,
-                        context = context)
-                    if (postLocationName != null) {
-                      Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier =
-                                Modifier.clip(RoundedCornerShape(20.dp))
-                                    .background(colorScheme.onBackground)
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                        ) {
-                          Icon(
-                              imageVector = Icons.Filled.Place,
-                              contentDescription = "Country Icon",
-                              tint = colorScheme.background,
-                              modifier = Modifier.size(16.dp),
-                          )
-                          Spacer(modifier = Modifier.width(8.dp))
-                          Text(
-                              modifier =
-                                  Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                              text = postLocationName!!,
-                              style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                              color = colorScheme.background,
-                              maxLines = 1,
-                              overflow = TextOverflow.Ellipsis,
-                          )
-                        }
-                      }
-                    }
-                    Box(
-                        modifier =
-                            Modifier.matchParentSize()
-                                .clickable { onPostClick() }
-                                .background(Color.Transparent)
-                                .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
-                  }
-            }
+                  Box(
+                      modifier =
+                          Modifier.matchParentSize()
+                              .clickable { onPostClick() }
+                              .background(Color.Transparent)
+                              .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
+                }
           }
         }
-  }
+      }
 }
 
 @Composable

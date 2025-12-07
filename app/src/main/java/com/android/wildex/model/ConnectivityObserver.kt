@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,9 +43,7 @@ class DefaultConnectivityObserver(
       }
 
   init {
-    val request =
-        NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
-    connectivityManager.registerNetworkCallback(request, networkCallback)
+    connectivityManager.registerDefaultNetworkCallback(networkCallback)
   }
 
   private fun isCurrentlyOnline(): Boolean {

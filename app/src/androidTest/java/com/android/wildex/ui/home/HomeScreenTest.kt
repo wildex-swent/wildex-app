@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -12,10 +13,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.BuildConfig
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Comment
@@ -29,6 +32,7 @@ import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
+import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -67,6 +71,7 @@ class HomeScreenTest {
 
   @Before
   fun setup() = runBlocking {
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     homeScreenVM =
         HomeScreenViewModel(
             postRepository,
@@ -272,8 +277,8 @@ class HomeScreenTest {
   @Test
   fun postWithoutLocation_doesNotShowLocation() {
     fakeObserver.setOnline(true)
-    val noLocationPost = fullPost.copy(location = null)
-    val blankLocationPost = fullPost.copy(location = Location(0.0, 0.0, "   "))
+    val noLocationPost = fullPost.copy(postId = "noLoc", location = null)
+    val blankLocationPost = fullPost.copy(postId = "blankLoc", location = Location(0.0, 0.0, "   "))
     runBlocking {
       postRepository.addPost(noLocationPost)
       postRepository.addPost(blankLocationPost)
@@ -293,10 +298,25 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
+            HomeScreenTestTags.mapLocationTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.sliderStateTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
             HomeScreenTestTags.locationTag(blankLocationPost.postId),
             useUnmergedTree = true,
         )
         .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.sliderStateTag(blankLocationPost.postId), useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
   }
 
   @Test
@@ -315,6 +335,40 @@ class HomeScreenTest {
   }
 
   @Test
+  fun mapPreviewClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var postClicked = false
+    runBlocking {
+      postRepository.addPost(fullPost)
+      homeScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(
+            homeScreenVM,
+            onPostClick = { postId ->
+              if (postId == fullPost.postId) {
+                postClicked = true
+              }
+            },
+        )
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.sliderTag(fullPost.postId), useUnmergedTree = true)
+        .performScrollToIndex(1)
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapPreviewTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    assert(postClicked)
+  }
+
+  @Test
   fun notificationBellClick_invokesCallback() {
     fakeObserver.setOnline(true)
     var notificationClicked = false
@@ -325,6 +379,94 @@ class HomeScreenTest {
     }
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
     assert(notificationClicked)
+  }
+
+  @Test
+  fun mapPreviewWorksAsIntended() {
+    fakeObserver.setOnline(true)
+    val noLocationPost = fullPost.copy(postId = "noLocation", location = null, animalId = "a2")
+    runBlocking {
+      postRepository.addPost(fullPost)
+      postRepository.addPost(noLocationPost)
+      homeScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM)
+      }
+    }
+    scrollToPost(fullPost.postId)
+    assertFullPostIsDisplayed(fullPost.postId)
+    composeTestRule
+        .onNodeWithText("Ant", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.sliderStateTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapPreviewTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.sliderTag(fullPost.postId), useUnmergedTree = true)
+        .performScrollToIndex(1)
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapPreviewTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals("Casablanca")
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.sliderTag(fullPost.postId), useUnmergedTree = true)
+        .performScrollToIndex(0)
+    assertFullPostIsDisplayed(fullPost.postId)
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapPreviewTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+
+    scrollToPost(noLocationPost.postId)
+    composeTestRule
+        .onNodeWithText("Eagle", useUnmergedTree = true)
+        .performScrollTo()
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.imageTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.sliderStateTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapPreviewButtonTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            HomeScreenTestTags.mapLocationTag(noLocationPost.postId), useUnmergedTree = true)
+        .assertIsNotDisplayed()
   }
 
   @Test
@@ -577,6 +719,9 @@ class HomeScreenTest {
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.sliderTag(postId), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)

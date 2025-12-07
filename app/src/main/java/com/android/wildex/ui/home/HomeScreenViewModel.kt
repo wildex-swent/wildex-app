@@ -181,8 +181,7 @@ class HomeScreenViewModel(
                   isLiked = isLiked,
                   animalName = animalName,
                   likeCount = likeCount,
-                  commentsCount = commentCount,
-              )
+                  commentsCount = commentCount)
             } catch (_: Exception) {
               null
             }

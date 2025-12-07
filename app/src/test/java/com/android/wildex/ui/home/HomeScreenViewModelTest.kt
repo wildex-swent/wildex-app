@@ -251,6 +251,8 @@ class HomeScreenViewModelTest {
   fun loadUIState_updates_UI_state_success() {
     mainDispatcherRule.runTest {
       val deferred = CompletableDeferred<List<Post>>()
+      val location = p1.location ?: Location(0.0, 0.0)
+      val location2 = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
@@ -365,6 +367,7 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val u2 = u1.copy(username = "user_one_2")
+      val location = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } returns listOf(p2)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u2
       coEvery { likeRepository.getLikeForPost("p2") } returns like2
@@ -429,6 +432,7 @@ class HomeScreenViewModelTest {
   @Test
   fun refreshUIState_setsAndClears_isLoading_and_clearsErrorOnSuccess() {
     mainDispatcherRule.runTest {
+      val location = p1.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
 

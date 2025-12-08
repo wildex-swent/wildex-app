@@ -178,7 +178,11 @@ class ReportScreenViewModelTest {
       val actualReportImageUrls = state.reports.map { it.imageURL }
       assertEquals(expectedReportImageUrls, actualReportImageUrls)
 
-      val expectedReportLocations = listOf("Test Location 2", "Test Location 3")
+      val expectedReportLocations =
+          listOf(
+              Location(80.0, 10.0, "Test Location 2"),
+              Location(100.0, 100.0, "Test Location 3"),
+          )
       val actualReportLocations = state.reports.map { it.location }
       assertEquals(expectedReportLocations, actualReportLocations)
 

@@ -10,7 +10,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,10 +26,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,7 +55,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -60,16 +68,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
+import com.android.wildex.ui.profile.StaticMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 import com.android.wildex.ui.utils.offline.OfflineScreen
+import com.mapbox.geojson.Point
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
@@ -160,7 +172,7 @@ fun ReportScreen(
  *
  * @param innerPadding The padding values for the inner content.
  * @param uiState The UI state of the report screen.
- * @param viewModel The view model for the report screen.
+ * @param reportScreenViewModel The view model for the report screen.
  * @param context The context of the application.
  * @param onProfileClick The function to be called when a profile picture is clicked.
  * @param onReportClick The function to be called when a report is clicked.
@@ -246,9 +258,9 @@ fun ReportsView(
  *
  * @param reportState The state of the report to be displayed.
  * @param userId The ID of the user.
- * @param onReportClick The function to be called when the report is clicked.
  * @param onProfileClick The function to be called when the profile picture of the author is
  *   clicked.
+ * @param onReportClick The function to be called when the report is clicked.
  */
 @Composable
 fun ReportItem(
@@ -259,6 +271,7 @@ fun ReportItem(
 ) {
   val author = reportState.author
   val statusColor = if (reportState.assigned) colorScheme.primary else colorScheme.error
+  val pagerState = rememberPagerState(pageCount = { 2 })
 
   Card(
       shape = RoundedCornerShape(0.dp),
@@ -312,18 +325,12 @@ fun ReportItem(
       }
     }
 
-    // Image
-    Card(
-        shape = RoundedCornerShape(0.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onReportClick(reportState.reportId) },
-    ) {
-      AsyncImage(
-          model = reportState.imageURL,
-          contentDescription = "Report Image",
-          modifier = Modifier.fillMaxWidth().height(250.dp),
-          contentScale = ContentScale.Crop,
-      )
-    }
+    // Image and map
+    ReportSlider(
+        reportState = reportState,
+        onReportClick = { onReportClick(reportState.reportId) },
+        pagerState = pagerState,
+    )
 
     Spacer(modifier = Modifier.height(6.dp))
 
@@ -334,25 +341,23 @@ fun ReportItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
       // Location
-      if (reportState.location.isNotBlank()) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Icon(
-              imageVector = Icons.Default.LocationOn,
-              contentDescription = "Location",
-              tint = colorScheme.primary,
-          )
-          Spacer(Modifier.width(4.dp))
-          Text(
-              text = reportState.location,
-              style = typography.labelMedium,
-              color = colorScheme.primary,
-              maxLines = 2,
-              overflow = TextOverflow.Ellipsis,
-          )
-        }
+      Row(
+          horizontalArrangement = Arrangement.Center,
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "Location",
+            tint = colorScheme.primary,
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = reportState.location.name,
+            style = typography.labelMedium,
+            color = colorScheme.primary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
       }
       // Status
       Card(
@@ -385,6 +390,80 @@ fun ReportItem(
   Spacer(modifier = Modifier.height(6.dp))
 }
 
+/**
+ * Displays a reports's image and the location on the map
+ *
+ * @param reportState The report whose image is to be displayed.
+ * @param onReportClick The action when the user clicks on the report, to see its details.
+ */
+@Composable
+private fun ReportSlider(
+    reportState: ReportUIState,
+    onReportClick: () -> Unit,
+    pagerState: PagerState,
+) {
+  HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth().height(300.dp)) { page ->
+    when (page) {
+      0 -> {
+        AsyncImage(
+            model = reportState.imageURL,
+            contentDescription = "Report picture",
+            modifier = Modifier.fillMaxSize().clickable { onReportClick() },
+            contentScale = ContentScale.Crop,
+        )
+      }
+      1 -> {
+        val loc = reportState.location
+        val context = LocalContext.current
+        val isDark =
+            when (AppTheme.appearanceMode) {
+              AppearanceMode.DARK -> true
+              AppearanceMode.LIGHT -> false
+              AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+            }
+        Box(modifier = Modifier.fillMaxSize()) {
+          StaticMiniMap(
+              modifier = Modifier.matchParentSize(),
+              pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+              styleUri = context.getString(R.string.map_style),
+              styleImportId = context.getString(R.string.map_standard_import),
+              isDark = isDark,
+              fallbackZoom = 2.0,
+              context = context)
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier =
+                  Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                      .clip(RoundedCornerShape(20.dp))
+                      .background(colorScheme.onBackground)
+                      .padding(horizontal = 10.dp, vertical = 8.dp),
+          ) {
+            Icon(
+                imageVector = Icons.Filled.Place,
+                contentDescription = "Country Icon",
+                tint = colorScheme.background,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = reportState.location.name,
+                style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = colorScheme.background,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+          }
+          Box(
+              modifier =
+                  Modifier.matchParentSize()
+                      .clickable { onReportClick() }
+                      .background(Color.Transparent))
+        }
+      }
+    }
+  }
+}
+
 /** A composable that displays a message when there are no reports. */
 @Composable
 fun NoReportsView() {
@@ -410,6 +489,12 @@ fun NoReportsView() {
   }
 }
 
+/**
+ * A composable that displays the buttons at the bottom right of the report screen.
+ *
+ * @param onSubmitReportClick The function to be called when the submit report button is clicked.
+ * @param context The context of the application.
+ */
 @Composable
 fun ReportScreenButtons(
     onSubmitReportClick: () -> Unit = {},

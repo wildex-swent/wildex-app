@@ -10,6 +10,7 @@ import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.model.utils.URL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -52,12 +53,12 @@ data class ReportScreenUIState(
  * @property date The date of the report.
  * @property description The description of the report.
  * @property author The [SimpleUser] object representing the author of the report.
- * @property assigneeUsername The ID of the assignee of the report.
+ * @property assigned A boolean indicating whether the report is assigned.
  */
 data class ReportUIState(
     val reportId: Id,
     val imageURL: URL,
-    val location: String,
+    val location: Location,
     val date: String,
     val description: String,
     val author: SimpleUser,
@@ -162,7 +163,7 @@ class ReportScreenViewModel(
       ReportUIState(
           reportId = report.reportId,
           imageURL = report.imageURL,
-          location = report.location.generalName,
+          location = report.location,
           date = formatDate(report.date),
           description = report.description,
           author = author,

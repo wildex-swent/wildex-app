@@ -426,8 +426,7 @@ class CameraScreenViewModelTest {
                 post.pictureURL == testImageUrl &&
                 post.animalId == testAnimalId &&
                 post.location == testLocation
-          }
-      )
+          })
     }
   }
 }

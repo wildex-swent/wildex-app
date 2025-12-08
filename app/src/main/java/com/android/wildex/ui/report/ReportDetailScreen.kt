@@ -437,8 +437,7 @@ private fun ReportPicture(imageURL: URL) {
                         0f to Color.Black.copy(alpha = 0.7f),
                         1f to Color.Transparent,
                     ),
-                )
-    )
+                ))
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -449,8 +448,7 @@ private fun ReportPicture(imageURL: URL) {
                         0f to Color.Transparent,
                         1f to colorScheme.background,
                     ),
-                )
-    )
+                ))
   }
 }
 

@@ -9,7 +9,6 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.internal.indexOfFirstNonAsciiWhitespace
 import org.json.JSONObject
 
 /** Geocoding repository using Mapbox. */
@@ -121,8 +120,7 @@ class MapboxGeocodingRepository(
     if (features.length() == 0) return null
     val first = features.optJSONObject(0) ?: return null
     val properties = first.optJSONObject("properties") ?: return null
-    val name = properties.getBestName()
-    return name
+    return properties.getBestName()
   }
 
   /**

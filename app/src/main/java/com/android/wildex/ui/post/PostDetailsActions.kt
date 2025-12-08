@@ -72,8 +72,7 @@ fun PostDetailsActions(
   ) {
     LazyColumn(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .heightIn(max = LocalWindowInfo.current.containerSize.height.dp * 0.8f)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -95,9 +94,7 @@ fun PostDetailsActions(
               onDismissRequest()
             },
             enabled = locationUri != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS),
+            modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS),
             shape = RoundedCornerShape(28.dp),
             border = BorderStroke(1.dp, colorScheme.outline),
             colors =
@@ -127,17 +124,14 @@ fun PostDetailsActions(
               postLocation?.name.let {
                 currentScope.launch {
                   clipboard.setClipEntry(
-                      ClipEntry(clipData = ClipData.newPlainText("location", it))
-                  )
+                      ClipEntry(clipData = ClipData.newPlainText("location", it)))
                 }
                 Toast.makeText(context, "Location copied", Toast.LENGTH_SHORT).show()
               }
               onDismissRequest()
             },
             enabled = locationUri != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(PostDetailsActionsTestTags.BTN_COPY),
+            modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_COPY),
             shape = RoundedCornerShape(28.dp),
             border = BorderStroke(1.dp, colorScheme.outline),
             colors =
@@ -180,9 +174,7 @@ fun PostDetailsActions(
               onDismissRequest()
             },
             enabled = locationUri != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(PostDetailsActionsTestTags.BTN_SHARE),
+            modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_SHARE),
             shape = RoundedCornerShape(28.dp),
             border = BorderStroke(1.dp, colorScheme.outline),
             colors =
@@ -210,12 +202,10 @@ fun PostDetailsActions(
         item {
           OutlinedButton(
               onClick = {
-                  onDeletePressed()
-                  onDismissRequest()
+                onDeletePressed()
+                onDismissRequest()
               },
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .testTag(PostDetailsActionsTestTags.BTN_DELETE),
+              modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_DELETE),
               shape = RoundedCornerShape(28.dp),
               border = BorderStroke(1.dp, colorScheme.outline),
               colors =

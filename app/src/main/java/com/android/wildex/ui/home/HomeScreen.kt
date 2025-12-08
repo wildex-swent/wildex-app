@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -280,7 +279,6 @@ fun PostItem(
         post = post,
         author = author,
         animalName = animalName,
-        colorScheme = colorScheme,
         onProfilePictureClick = onProfilePictureClick,
     )
 
@@ -306,7 +304,6 @@ fun PostItem(
  * @param post The post whose header is to be displayed.
  * @param author The author of the post.
  * @param animalName The name of the animal appearing on the post.
- * @param colorScheme The colorscheme to follow.
  * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's
  *   author.
  */
@@ -315,7 +312,6 @@ private fun PostHeader(
     post: Post,
     author: SimpleUser,
     animalName: String,
-    colorScheme: ColorScheme,
     onProfilePictureClick: (Id) -> Unit,
 ) {
   Row(
@@ -373,7 +369,7 @@ private fun PostHeader(
             Spacer(Modifier.width(2.dp))
             Text(
                 text = post.location.generalName,
-                style = typography.labelSmall,
+                style = typography.labelMedium,
                 color = colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -422,51 +418,50 @@ private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerSta
               AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
             }
         Box(
-            modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))
-        ) {
-          StaticMiniMap(
-              modifier = Modifier.matchParentSize(),
-              pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-              styleUri = context.getString(R.string.map_style),
-              styleImportId = context.getString(R.string.map_standard_import),
-              isDark = isDark,
-              fallbackZoom = 2.0,
-              context = context,
-          )
-          if (loc.specificName.isNotEmpty()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colorScheme.onBackground)
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
-            ) {
-              Icon(
-                  imageVector = Icons.Filled.Place,
-                  contentDescription = "Country Icon",
-                  tint = colorScheme.background,
-                  modifier = Modifier.size(16.dp),
+            modifier =
+                Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+              StaticMiniMap(
+                  modifier = Modifier.matchParentSize(),
+                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                  styleUri = context.getString(R.string.map_style),
+                  styleImportId = context.getString(R.string.map_standard_import),
+                  isDark = isDark,
+                  fallbackZoom = 2.0,
+                  context = context,
               )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                  modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                  text = loc.specificName,
-                  style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                  color = colorScheme.background,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-              )
+              if (loc.specificName.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(colorScheme.onBackground)
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                  Icon(
+                      imageVector = Icons.Filled.Place,
+                      contentDescription = "Country Icon",
+                      tint = colorScheme.background,
+                      modifier = Modifier.size(16.dp),
+                  )
+                  Spacer(modifier = Modifier.width(6.dp))
+                  Text(
+                      modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                      text = loc.specificName,
+                      style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                      color = colorScheme.background,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis,
+                  )
+                }
+              }
+              Box(
+                  modifier =
+                      Modifier.matchParentSize()
+                          .clickable { onPostClick() }
+                          .background(Color.Transparent)
+                          .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
             }
-          }
-          Box(
-              modifier =
-                  Modifier.matchParentSize()
-                      .clickable { onPostClick() }
-                      .background(Color.Transparent)
-                      .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId))
-          )
-        }
       }
     }
   }
@@ -481,10 +476,7 @@ private fun SlideState(slideIndex: Int, currentPage: Int) {
               .background(
                   color =
                       colorScheme.onBackground.copy(
-                          alpha = if (currentPage == slideIndex) 0.9f else 0.6f
-                      )
-              )
-  )
+                          alpha = if (currentPage == slideIndex) 0.9f else 0.6f)))
 }
 
 /**

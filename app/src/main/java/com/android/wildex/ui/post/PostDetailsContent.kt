@@ -271,8 +271,8 @@ fun LocationSpeciesLikeBar(
     onLike: () -> Unit = {},
     onUnlike: () -> Unit = {},
 ) {
-    val size = 1.plus(if (species.isNotBlank()) 1 else 0).plus(if (location.isNotBlank()) 1 else 0)
-    val itemWeight = 1f / size
+  val size = 1.plus(if (species.isNotBlank()) 1 else 0).plus(if (location.isNotBlank()) 1 else 0)
+  val itemWeight = 1f / size
 
   // Location & Likes row
   Row(

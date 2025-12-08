@@ -1,20 +1,13 @@
 package com.android.wildex.ui.report
 
-import android.location.Location
 import android.net.Uri
-import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.MainDispatcherRule
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.Tasks
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -34,8 +27,6 @@ class SubmitReportScreenViewModelTest {
 
   private lateinit var reportRepository: ReportRepository
   private lateinit var storageRepository: StorageRepository
-  private lateinit var geocodingRepository: GeocodingRepository
-  private lateinit var locationClient: FusedLocationProviderClient
   private lateinit var viewModel: SubmitReportScreenViewModel
 
   private val fakeImageUri = mockk<Uri>(relaxed = true)
@@ -44,13 +35,10 @@ class SubmitReportScreenViewModelTest {
   fun setUp() {
     reportRepository = mockk()
     storageRepository = mockk()
-    locationClient = mockk()
-    geocodingRepository = mockk()
     viewModel =
         SubmitReportScreenViewModel(
             reportRepository = reportRepository,
             storageRepository = storageRepository,
-            geocodingRepository = geocodingRepository,
             currentUserId = "testUser",
         )
   }
@@ -131,7 +119,7 @@ class SubmitReportScreenViewModelTest {
 
         advanceUntilIdle()
         val state = viewModel.uiState.value
-        assertEquals("Location permission is required to submit a report.", state.errorMsg)
+        assertEquals("Location is required to submit a report.", state.errorMsg)
       }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -140,20 +128,9 @@ class SubmitReportScreenViewModelTest {
       mainDispatcherRule.runTest {
         viewModel.updateImage(fakeImageUri)
         viewModel.updateDescription("Some description")
+        viewModel.updateLocation(Location(46.5197, 6.6323, name = "Lausanne"))
         val fakeReportId = "r123"
         val fakeImageUrl = "https://fakeurl.com/img.jpg"
-
-        // Mock the FusedLocationProviderClient to return an Android Location
-        val androidLocation = mockk<Location>(relaxed = true)
-        every { androidLocation.latitude } returns 12.0
-        every { androidLocation.longitude } returns 13.0
-
-        every { locationClient.lastLocation } returns Tasks.forResult(androidLocation)
-        coEvery { geocodingRepository.reverseGeocode(any(), any()) } returns
-            com.android.wildex.model.utils.Location(12.0, 13.0, "Test location")
-
-        viewModel.fetchUserLocation(locationClient)
-        advanceUntilIdle()
 
         coEvery { reportRepository.getNewReportId() } returns fakeReportId
         coEvery { storageRepository.uploadReportImage(fakeReportId, fakeImageUri) } returns
@@ -180,18 +157,7 @@ class SubmitReportScreenViewModelTest {
       mainDispatcherRule.runTest {
         viewModel.updateImage(fakeImageUri)
         viewModel.updateDescription("Test desc")
-
-        // Mock Android location and Task to set the location via fetchUserLocation
-        val androidLocation = mockk<Location>(relaxed = true)
-        every { androidLocation.latitude } returns 1.0
-        every { androidLocation.longitude } returns 2.0
-
-        every { locationClient.lastLocation } returns Tasks.forResult(androidLocation)
-        coEvery { geocodingRepository.reverseGeocode(any(), any()) } returns
-            com.android.wildex.model.utils.Location(1.0, 2.0, "Test location")
-
-        viewModel.fetchUserLocation(locationClient)
-        advanceUntilIdle()
+        viewModel.updateLocation(Location(46.5197, 6.6323, name = "Lausanne"))
 
         coEvery { reportRepository.getNewReportId() } throws Exception("Network error")
 
@@ -201,63 +167,5 @@ class SubmitReportScreenViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state.errorMsg!!.contains("Network error"))
         assertFalse(state.isSubmitting)
-      }
-
-  // New tests for fetchUserLocation
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchUserLocation_success_setsLocation() =
-      mainDispatcherRule.runTest {
-        val androidLocation = mockk<Location>(relaxed = true)
-        every { androidLocation.latitude } returns 10.0
-        every { androidLocation.longitude } returns 20.0
-
-        every { locationClient.lastLocation } returns Tasks.forResult(androidLocation)
-
-        viewModel.fetchUserLocation(locationClient)
-        coEvery { geocodingRepository.reverseGeocode(any(), any()) } returns
-            com.android.wildex.model.utils.Location(10.0, 20.0, "Test location")
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.location)
-        assertEquals(10.0, state.location!!.latitude)
-        assertEquals(20.0, state.location!!.longitude)
-      }
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchUserLocation_nullLocation_setsError() =
-      mainDispatcherRule.runTest {
-        every { locationClient.lastLocation } returns Tasks.forResult(null)
-
-        viewModel.fetchUserLocation(locationClient)
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertTrue(state.errorMsg!!.contains("Unable to fetch current location."))
-      }
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchUserLocation_failure_setsError() =
-      mainDispatcherRule.runTest {
-        val task = mockk<Task<Location>>()
-        val ex = Exception("GPS failed")
-        every { task.addOnSuccessListener(any<OnSuccessListener<Location>>()) } answers { task }
-        every { task.addOnFailureListener(any<OnFailureListener>()) } answers
-            {
-              val listener = it.invocation.args[0] as OnFailureListener
-              listener.onFailure(ex)
-              task
-            }
-
-        every { locationClient.lastLocation } returns task
-
-        viewModel.fetchUserLocation(locationClient)
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.errorMsg)
       }
 }

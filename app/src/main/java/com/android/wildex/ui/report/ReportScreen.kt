@@ -299,7 +299,7 @@ fun ReportItem(
   ) {
     // Header: Profile picture + report author + date + location
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
       ClickableProfilePicture(
@@ -309,8 +309,7 @@ fun ReportItem(
                       ReportScreenTestTags.testTagForProfilePicture(
                           profileId = author.userId,
                           role = "author",
-                      )
-                  ),
+                      )),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
           profileUserType = author.userType,
@@ -336,19 +335,15 @@ fun ReportItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-          Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
           Text(
               text = reportState.date,
               style = typography.labelSmall,
               color = colorScheme.onBackground,
-              modifier = Modifier.weight(1f)
+              modifier = Modifier.weight(1f),
           )
-          if (reportState.location.isNotEmpty()) {
+          if (reportState.location.isNotBlank()) {
             Row(
                 modifier = Modifier.weight(1f, fill = false),
                 verticalAlignment = Alignment.CenterVertically,
@@ -362,7 +357,7 @@ fun ReportItem(
               Spacer(Modifier.width(2.dp))
               Text(
                   text = reportState.location,
-                  style = typography.labelSmall,
+                  style = typography.labelMedium,
                   color = colorScheme.onBackground,
                   maxLines = 1,
                   overflow = TextOverflow.Ellipsis,
@@ -377,15 +372,14 @@ fun ReportItem(
         modifier =
             Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onReportClick(reportState.reportId) }
-    ) {
-      AsyncImage(
-          model = reportState.imageURL,
-          contentDescription = "Report Image",
-          modifier = Modifier.fillMaxWidth(),
-          contentScale = ContentScale.FillWidth,
-      )
-    }
+                .clickable { onReportClick(reportState.reportId) }) {
+          AsyncImage(
+              model = reportState.imageURL,
+              contentDescription = "Report Image",
+              modifier = Modifier.fillMaxWidth(),
+              contentScale = ContentScale.FillWidth,
+          )
+        }
     // Description
     Text(
         text = reportState.description,

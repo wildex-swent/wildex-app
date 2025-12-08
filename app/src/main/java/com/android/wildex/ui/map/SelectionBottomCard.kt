@@ -2,6 +2,7 @@ package com.android.wildex.ui.map
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -57,32 +60,78 @@ fun SelectionBottomCard(
     onToggleLike: (Id) -> Unit,
     onProfile: (Id) -> Unit = {},
     isCurrentUser: Boolean,
+    groupSize: Int = 1,
+    groupIndex: Int = 0,
+    onNext: () -> Unit = {},
+    onPrev: () -> Unit = {},
 ) {
   if (selection == null) return
   val cs = colorScheme
   Surface(
-      modifier = modifier.widthIn(min = 320.dp).wrapContentHeight(),
+      modifier =
+          modifier.widthIn(min = 320.dp).wrapContentHeight().pointerInput(groupSize) {
+            if (groupSize <= 1) {
+              // no swipe if there’s nothing to swipe through
+              return@pointerInput
+            }
+
+            var totalDragX = 0f
+
+            detectHorizontalDragGestures(
+                onDragStart = { totalDragX = 0f },
+                onHorizontalDrag = { _, dragAmount -> totalDragX += dragAmount },
+                onDragEnd = {
+                  val threshold = 80f // you can tweak this
+
+                  when {
+                    totalDragX > threshold -> onPrev()
+                    totalDragX < -threshold -> onNext()
+                    else -> {
+                      // swipe too small → ignore
+                    }
+                  }
+                },
+                onDragCancel = { totalDragX = 0f },
+            )
+          },
       shape = RoundedCornerShape(22.dp),
       color = cs.background,
       contentColor = cs.onBackground,
   ) {
     Box {
-      when (selection) {
-        is PinDetails.PostDetails -> {
-          PostSelectionCard(
-              details = selection,
-              onPost = onPost,
-              onToggleLike = onToggleLike,
-              activeTab = activeTab,
-              isCurrentUser = isCurrentUser,
-              onProfile = onProfile,
-          )
+      Column(
+          modifier = Modifier.fillMaxWidth(),
+      ) {
+        when (selection) {
+          is PinDetails.PostDetails -> {
+            PostSelectionCard(
+                details = selection,
+                onPost = onPost,
+                onToggleLike = onToggleLike,
+                activeTab = activeTab,
+                isCurrentUser = isCurrentUser,
+                onProfile = onProfile,
+            )
+          }
+          is PinDetails.ReportDetails -> {
+            ReportSelectionCard(
+                details = selection,
+                onReport = onReport,
+                onProfile = onProfile,
+            )
+          }
         }
-        is PinDetails.ReportDetails -> {
-          ReportSelectionCard(
-              details = selection,
-              onReport = onReport,
-              onProfile = onProfile,
+        if (groupSize > 1) {
+          Spacer(Modifier.height(4.dp))
+          HorizontalDivider(
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+              thickness = DividerDefaults.Thickness,
+              color = cs.outlineVariant.copy(alpha = 0.3f))
+          ClusterFooterPager(
+              groupSize = groupSize,
+              groupIndex = groupIndex,
+              onNext = onNext,
+              onPrev = onPrev,
           )
         }
       }
@@ -95,6 +144,60 @@ fun SelectionBottomCard(
       ) {
         Icon(Icons.Filled.Close, contentDescription = "Close", tint = cs.onBackground)
       }
+    }
+  }
+}
+
+/**
+ * Small footer pager for navigating items inside a cluster. Sits at the very bottom of the card,
+ * visually separated from content.
+ */
+@Composable
+private fun ClusterFooterPager(
+    groupSize: Int,
+    groupIndex: Int,
+    onNext: () -> Unit,
+    onPrev: () -> Unit,
+) {
+  val cs = colorScheme
+
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween,
+  ) {
+    IconButton(
+        onClick = onPrev,
+        modifier = Modifier.size(32.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Filled.ChevronLeft,
+          contentDescription = "Previous",
+          tint = cs.onBackground,
+      )
+    }
+
+    // Centered, very lightweight counter (no chip background)
+    Box(
+        modifier = Modifier.weight(1f),
+        contentAlignment = Alignment.Center,
+    ) {
+      Text(
+          text = "${groupIndex + 1} / $groupSize",
+          style = typography.labelMedium,
+          color = cs.onSurfaceVariant,
+      )
+    }
+
+    IconButton(
+        onClick = onNext,
+        modifier = Modifier.size(32.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Filled.ChevronRight,
+          contentDescription = "Next",
+          tint = cs.onBackground,
+      )
     }
   }
 }

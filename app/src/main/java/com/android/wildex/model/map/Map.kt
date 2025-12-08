@@ -73,6 +73,7 @@ sealed class MapPin {
       override val imageURL: String = "",
       override val authorId: String = "cluster",
       val count: Int,
+      val childIds: List<Id> = emptyList(),
   ) : MapPin()
 }
 

@@ -157,13 +157,13 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-        Assert.assertTrue(viewModel.uiState.value.selected is PinDetails.PostDetails)
+        Assert.assertTrue(viewModel.uiState.value.selected[0] is PinDetails.PostDetails)
 
         viewModel.onTabSelected(MapTab.Reports, loggedInUserId)
         advanceUntilIdle()
         viewModel.onPinSelected("r1")
         advanceUntilIdle()
-        Assert.assertTrue(viewModel.uiState.value.selected is PinDetails.ReportDetails)
+        Assert.assertTrue(viewModel.uiState.value.selected[0] is PinDetails.ReportDetails)
       }
 
   @Test
@@ -183,10 +183,10 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
+        val before = (viewModel.uiState.value.selected[0] as PinDetails.PostDetails).likeCount
         viewModel.toggleLike("p1")
         advanceUntilIdle()
-        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
+        val after = (viewModel.uiState.value.selected[0] as PinDetails.PostDetails).likeCount
         Assert.assertEquals(before + 1, after)
         coVerify { likeRepository.addLike(any()) }
       }
@@ -273,15 +273,15 @@ class MapScreenViewModelTest {
         coEvery { animalRepository.getAnimal(any()) } throws RuntimeException("nope")
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-        val sel = viewModel.uiState.value.selected as PinDetails.PostDetails
+        val sel = viewModel.uiState.value.selected[0] as PinDetails.PostDetails
         Assert.assertEquals("animal", sel.animalName)
 
         coEvery { likeRepository.getNewLikeId() } returns "like-99"
         coEvery { likeRepository.addLike(any()) } throws RuntimeException("net")
-        val before = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
+        val before = (viewModel.uiState.value.selected[0] as PinDetails.PostDetails).likeCount
         viewModel.toggleLike("p1")
         advanceUntilIdle()
-        val after = (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount
+        val after = (viewModel.uiState.value.selected[0] as PinDetails.PostDetails).likeCount
         Assert.assertEquals(before, after)
         Assert.assertTrue(
             viewModel.uiState.value.errorMsg?.contains("Could not update like") == true)
@@ -327,7 +327,7 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         Assert.assertEquals(
             0,
-            (viewModel.uiState.value.selected as PinDetails.PostDetails).likeCount,
+            (viewModel.uiState.value.selected[0] as PinDetails.PostDetails).likeCount,
         )
         coEvery { likeRepository.getLikeForPost("p2") } returns null
         coEvery { likeRepository.getNewLikeId() } returns "like-X"

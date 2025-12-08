@@ -147,12 +147,7 @@
     <string name="no_reports">Nothing to see here…</string>
     <string name="report_author">Reported by</string>
     <string name="report_author_current">me</string>
-    <string name="submit_report">Submit a Report!</string>
-    <string name="cancel_report">Cancel Report</string>
-    <string name="self_assign_report">I got this!</string>
-    <string name="resolve_report">Resolved!</string>
-    <string name="cancel_self_assigned_report">Cancel</string>
-    <string name="report_assignee">Assigned to:</string>
+    <string name="submit_report">Submit Report</string>
 
     <!-- Report details screen -->
     <string name="report_details_bar_title">Back</string>

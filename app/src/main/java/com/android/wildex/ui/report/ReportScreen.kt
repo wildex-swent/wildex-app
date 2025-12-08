@@ -14,11 +14,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +33,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -78,7 +75,8 @@ import com.android.wildex.ui.utils.offline.OfflineScreen
 object ReportScreenTestTags {
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
   const val REPORT_LIST = "report_screen_report_list"
-  const val SUBMIT_REPORT = "report_screen_submit_report"
+  const val MORE_ACTIONS_BUTTON = "report_screen_more_actions_button"
+  const val SUBMIT_REPORT_BUTTON = "report_screen_submit_report"
   const val PULL_TO_REFRESH = "report_screen_pull_to_refresh"
 
   fun testTagForReport(reportId: Id, element: String): String =
@@ -204,7 +202,10 @@ fun ReportScreenContent(
     Box(
         modifier =
             Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp, vertical = 8.dp)) {
-          ReportScreenButtons(onSubmitReportClick)
+          ReportScreenButtons(
+              onSubmitReportClick = onSubmitReportClick,
+              context = context,
+          )
         }
   }
 }
@@ -227,7 +228,7 @@ fun ReportsView(
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(ReportScreenTestTags.REPORT_LIST),
       verticalArrangement = Arrangement.spacedBy(2.dp),
-      contentPadding = PaddingValues(vertical = 2.dp),
+      contentPadding = PaddingValues(top = 2.dp, bottom = 80.dp),
   ) {
     items(reports.size) { index ->
       ReportItem(
@@ -236,9 +237,6 @@ fun ReportsView(
           onProfileClick = onProfileClick,
           onReportClick = onReportClick,
       )
-      if (index < reports.size - 1) {
-        HorizontalDivider(thickness = 2.dp, color = colorScheme.surfaceVariant)
-      }
     }
   }
 }
@@ -329,66 +327,62 @@ fun ReportItem(
 
     Spacer(modifier = Modifier.height(6.dp))
 
-    // Report info : Description + Location + Status
-    Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
-      // Description
-      Column(
-          modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp).weight(1.5f),
-      ) {
-        ExpandableTextCore(
-            text = reportState.description,
-            collapsedLines = 5,
-        )
-      }
-      // Location and Status
-      Column(
-          modifier =
-              Modifier.fillMaxHeight().padding(horizontal = 12.dp, vertical = 6.dp).weight(1f),
-          verticalArrangement = Arrangement.SpaceEvenly,
-          horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        // Location
-        if (reportState.location.isNotBlank()) {
-          Row(
-              horizontalArrangement = Arrangement.Center,
-              verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location",
-                tint = colorScheme.primary,
-            )
-            Spacer(Modifier.width(4.dp))
-            Text(
-                text = reportState.location,
-                style = typography.labelMedium,
-                color = colorScheme.primary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-          }
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        // Status
-        Card(
-            colors = CardDefaults.cardColors(containerColor = statusColor),
+    // Location and Status
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      // Location
+      if (reportState.location.isNotBlank()) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+          Icon(
+              imageVector = Icons.Default.LocationOn,
+              contentDescription = "Location",
+              tint = colorScheme.primary,
+          )
+          Spacer(Modifier.width(4.dp))
           Text(
-              text =
-                  if (reportState.assigned) {
-                    "Assigned"
-                  } else {
-                    "Open"
-                  },
-              modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-              style = typography.titleLarge,
-              color = colorScheme.onBackground,
+              text = reportState.location,
+              style = typography.labelMedium,
+              color = colorScheme.primary,
+              maxLines = 2,
+              overflow = TextOverflow.Ellipsis,
           )
         }
       }
+      // Status
+      Card(
+          colors = CardDefaults.cardColors(containerColor = statusColor),
+      ) {
+        Text(
+            text =
+                if (reportState.assigned) {
+                  "Assigned"
+                } else {
+                  "Open"
+                },
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            style = typography.titleLarge,
+            color = colorScheme.onBackground,
+        )
+      }
     }
-    Spacer(modifier = Modifier.height(10.dp))
+
+    // Description
+    Column(
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+      ExpandableTextCore(
+          text = reportState.description,
+          collapsedLines = 4,
+      )
+    }
   }
+  Spacer(modifier = Modifier.height(6.dp))
 }
 
 /** A composable that displays a message when there are no reports. */
@@ -419,6 +413,7 @@ fun NoReportsView() {
 @Composable
 fun ReportScreenButtons(
     onSubmitReportClick: () -> Unit = {},
+    context: Context,
 ) {
   var isExpanded by remember { mutableStateOf(false) }
   val rotation by animateFloatAsState(targetValue = if (isExpanded) 45f else 0f)
@@ -447,14 +442,14 @@ fun ReportScreenButtons(
               horizontalArrangement = Arrangement.SpaceEvenly,
           ) {
             Icon(
-                modifier = Modifier.testTag(ReportScreenTestTags.SUBMIT_REPORT),
+                modifier = Modifier.testTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON),
                 imageVector = Icons.Default.ReportProblem,
                 contentDescription = "Submit Report",
                 tint = colorScheme.primary,
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Submit Report",
+                text = context.getString(R.string.submit_report),
                 color = colorScheme.primary,
                 style = typography.titleSmall,
             )
@@ -464,6 +459,7 @@ fun ReportScreenButtons(
     }
     // More actions button
     FloatingActionButton(
+        modifier = Modifier.testTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON),
         onClick = { isExpanded = !isExpanded },
         containerColor = colorScheme.surfaceVariant,
     ) {

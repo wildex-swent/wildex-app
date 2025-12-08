@@ -182,6 +182,28 @@ class ReportScreenTest {
   }
 
   @Test
+  fun submitReportClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var submitReportClicked = false
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onSubmitReportClick = { submitReportClicked = true },
+        )
+      }
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON).performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .performClick()
+    assert(submitReportClicked)
+  }
+
+  @Test
   fun testTagsAreCorrectlySetWhenReports() {
     fakeObserver.setOnline(true)
     composeRule.setContent {
@@ -213,6 +235,23 @@ class ReportScreenTest {
     composeRule
         .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
         .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .assertIsNotDisplayed()
   }
 
   @Test

@@ -95,7 +95,7 @@ fun PostDetailsContent(
             Spacer(Modifier.height(8.dp))
 
             LocationSpeciesLikeBar(
-                location = uiState.location?.name ?: "",
+                location = uiState.location?.generalName ?: "",
                 species = uiState.animalSpecies,
                 likedByCurrentUser = uiState.likedByCurrentUser,
                 likesCount = uiState.likesCount,

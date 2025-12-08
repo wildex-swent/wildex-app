@@ -128,7 +128,8 @@ fun ReportScreen(
           context = context,
           onProfileClick = onProfileClick,
           onReportClick = onReportClick,
-          onSubmitReportClick = onSubmitReportClick)
+          onSubmitReportClick = onSubmitReportClick,
+      )
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -154,7 +155,7 @@ fun ReportScreenContent(
     context: Context,
     onProfileClick: (Id) -> Unit,
     onReportClick: (Id) -> Unit,
-    onSubmitReportClick: () -> Unit
+    onSubmitReportClick: () -> Unit,
 ) {
   val pullState = rememberPullToRefreshState()
 
@@ -163,27 +164,28 @@ fun ReportScreenContent(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = { reportScreenViewModel.refreshUIState() },
-        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            uiState.reports.isEmpty() -> NoReportsView()
-            else -> {
-              ReportsView(
-                  reports = uiState.reports,
-                  userId = uiState.currentUser.userId,
-                  username = uiState.currentUser.username,
-                  userType = uiState.currentUser.userType,
-                  onProfileClick = onProfileClick,
-                  onReportClick = onReportClick,
-                  cancelReport = reportScreenViewModel::cancelReport,
-                  selfAssignReport = reportScreenViewModel::selfAssignReport,
-                  resolveReport = reportScreenViewModel::resolveReport,
-                  unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
-              )
-            }
-          }
+        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.reports.isEmpty() -> NoReportsView()
+        else -> {
+          ReportsView(
+              reports = uiState.reports,
+              userId = uiState.currentUser.userId,
+              username = uiState.currentUser.username,
+              userType = uiState.currentUser.userType,
+              onProfileClick = onProfileClick,
+              onReportClick = onReportClick,
+              cancelReport = reportScreenViewModel::cancelReport,
+              selfAssignReport = reportScreenViewModel::selfAssignReport,
+              resolveReport = reportScreenViewModel::resolveReport,
+              unSelfAssignReport = reportScreenViewModel::unselfAssignReport,
+          )
         }
+      }
+    }
     // Submit Report button
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -305,7 +307,10 @@ fun ReportItem(
               Modifier.size(40.dp)
                   .testTag(
                       ReportScreenTestTags.testTagForProfilePicture(
-                          profileId = author.userId, role = "author")),
+                          profileId = author.userId,
+                          role = "author",
+                      )
+                  ),
           profileId = author.userId,
           profilePictureURL = author.profilePictureURL,
           profileUserType = author.userType,
@@ -321,18 +326,17 @@ fun ReportItem(
                       UserType.REGULAR ->
                           LocalContext.current.getString(R.string.report_author_current)
                       UserType.PROFESSIONAL -> {
-                        if (author.userId == userId) {
-                          LocalContext.current.getString(R.string.report_author_current)
-                        } else {
-                          author.username
-                        }
+                        if (author.userId == userId)
+                            LocalContext.current.getString(R.string.report_author_current)
+                        else author.username
                       }
                     },
-            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+            style = typography.titleMedium,
             color = colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+          Spacer(modifier = Modifier.height(6.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -342,25 +346,28 @@ fun ReportItem(
               text = reportState.date,
               style = typography.labelSmall,
               color = colorScheme.onBackground,
+              modifier = Modifier.weight(1f)
           )
-          Row(
-              modifier = Modifier.fillMaxWidth(.4f),
-              verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location",
-                modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-                tint = colorScheme.onBackground,
-            )
-            Spacer(Modifier.width(2.dp))
-            Text(
-                text = reportState.location,
-                style = typography.labelMedium,
-                color = colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+          if (reportState.location.isNotEmpty()) {
+            Row(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Icon(
+                  imageVector = Icons.Default.LocationOn,
+                  contentDescription = "Location",
+                  modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+                  tint = colorScheme.onBackground,
+              )
+              Spacer(Modifier.width(2.dp))
+              Text(
+                  text = reportState.location,
+                  style = typography.labelSmall,
+                  color = colorScheme.onBackground,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+              )
+            }
           }
         }
       }
@@ -370,14 +377,15 @@ fun ReportItem(
         modifier =
             Modifier.padding(start = 8.dp, end = 8.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onReportClick(reportState.reportId) }) {
-          AsyncImage(
-              model = reportState.imageURL,
-              contentDescription = "Report Image",
-              modifier = Modifier.fillMaxWidth(),
-              contentScale = ContentScale.FillWidth,
-          )
-        }
+                .clickable { onReportClick(reportState.reportId) }
+    ) {
+      AsyncImage(
+          model = reportState.imageURL,
+          contentDescription = "Report Image",
+          modifier = Modifier.fillMaxWidth(),
+          contentScale = ContentScale.FillWidth,
+      )
+    }
     // Description
     Text(
         text = reportState.description,

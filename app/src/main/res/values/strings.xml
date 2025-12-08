@@ -188,16 +188,16 @@
     <string name="report_details_share_location">Share location</string>
     <string name="report_details_no_apps">No apps available.</string>
     <string name="report_details_share_body">
-    ⚠️ Wildex report: possible endangered or injured animal\n
-    \n
-    A report was created near:\n
-    %1$s\n
-    Coordinates: %2$s, %3$s\n
-    \n
-    Map link: %4$s\n
-    \n
-    Shared from Wildex – a community for watching over wildlife.
-</string>
+        ⚠️ Wildex report: possible endangered or injured animal\n
+        \n
+        A report was created near:\n
+        %1$s\n
+        Coordinates: %2$s, %3$s\n
+        \n
+        Map link: %4$s\n
+        \n
+        Shared from Wildex – a community for watching over wildlife.
+    </string>
     <string name="report_details_add_comment">Add a comment …</string>
     <plurals name="report_details_comments_count">
         <item quantity="one">%d Comment</item>
@@ -224,6 +224,12 @@
     <string name="post_details_actions_copy">Copy location</string>
     <string name="post_details_actions_share">Share location</string>
     <string name="post_details_actions_delete_post">Delete post</string>
+    <string name="post_details_share_body">
+        Check out this wildlife sighting on Wildex!\n
+        📍 Location :\n
+        %1$s\n
+        See more on Wildex!
+    </string>
 
     <!-- Location Picker screen -->
     <string name="location_search_box">Search city, address or place</string>

@@ -72,158 +72,174 @@ fun PostDetailsActions(
   ) {
     LazyColumn(
         modifier =
-            Modifier.fillMaxWidth()
+            Modifier
+                .fillMaxWidth()
                 .heightIn(max = LocalWindowInfo.current.containerSize.height.dp * 0.8f)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
 
-          // Google Maps
-          item {
-            OutlinedButton(
-                onClick = {
-                  locationUri?.let {
-                    val intent = Intent(Intent.ACTION_VIEW, it)
-                    intent.setPackage("com.google.android.apps.maps")
-                    if (intent.resolveActivity(context.packageManager) != null) {
-                      context.startActivity(intent)
-                    } else {
-                      Toast.makeText(context, "No Google Maps app found", Toast.LENGTH_SHORT).show()
-                    }
-                  }
-                  onDismissRequest()
-                },
-                enabled = locationUri != null,
-                modifier =
-                    Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS),
-                shape = RoundedCornerShape(28.dp),
-                border = BorderStroke(1.dp, colorScheme.outline),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.onBackground,
-                    ),
-            ) {
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(12.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-              ) {
-                Icon(
-                    imageVector = Icons.Filled.Map,
-                    contentDescription = "Google Maps",
-                    tint = colorScheme.primary,
-                )
-                Text(context.getString(R.string.post_details_actions_google_maps))
-              }
-            }
-          }
-
-          // Copy
-          item {
-            OutlinedButton(
-                onClick = {
-                  val text = locationUri.toString()
-                  currentScope.launch {
-                    clipboard.setClipEntry(
-                        ClipEntry(clipData = ClipData.newPlainText("location", text)))
-                  }
-                  Toast.makeText(context, "Location copied", Toast.LENGTH_SHORT).show()
-                  onDismissRequest()
-                },
-                enabled = locationUri != null,
-                modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_COPY),
-                shape = RoundedCornerShape(28.dp),
-                border = BorderStroke(1.dp, colorScheme.outline),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.onBackground,
-                    ),
-            ) {
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(12.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-              ) {
-                Icon(
-                    imageVector = Icons.Filled.ContentCopy,
-                    contentDescription = "Copy location",
-                    tint = colorScheme.primary,
-                )
-                Text(context.getString(R.string.post_details_actions_copy))
-              }
-            }
-          }
-
-          // Share
-          item {
-            OutlinedButton(
-                onClick = {
-                  locationUri?.let { uri ->
-                    val intent =
-                        Intent(Intent.ACTION_SEND).apply {
-                          type = "text/plain"
-                          putExtra(Intent.EXTRA_TEXT, uri.toString())
-                        }
-                    context.startActivity(Intent.createChooser(intent, "Share location"))
-                  }
-                  onDismissRequest()
-                },
-                enabled = locationUri != null,
-                modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_SHARE),
-                shape = RoundedCornerShape(28.dp),
-                border = BorderStroke(1.dp, colorScheme.outline),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.onBackground,
-                    ),
-            ) {
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(12.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-              ) {
-                Icon(
-                    imageVector = Icons.Filled.Share,
-                    contentDescription = "Share location",
-                    tint = colorScheme.primary,
-                )
-                Text(context.getString(R.string.post_details_actions_share))
-              }
-            }
-          }
-
-          // Post actions for author
-          if (isAuthor) {
-            item {
-              OutlinedButton(
-                  onClick = onDeletePressed,
-                  modifier = Modifier.fillMaxWidth().testTag(PostDetailsActionsTestTags.BTN_DELETE),
-                  shape = RoundedCornerShape(28.dp),
-                  border = BorderStroke(1.dp, colorScheme.outline),
-                  colors =
-                      ButtonDefaults.outlinedButtonColors(
-                          contentColor = colorScheme.onBackground,
-                      ),
-              ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                  Icon(
-                      imageVector = Icons.Filled.Delete,
-                      contentDescription = "Delete Post",
-                      tint = colorScheme.error,
-                  )
-                  Text(
-                      text = context.getString(R.string.post_details_actions_delete_post),
-                      color = colorScheme.error,
-                  )
+      // Google Maps
+      item {
+        OutlinedButton(
+            onClick = {
+              locationUri?.let {
+                val intent = Intent(Intent.ACTION_VIEW, it)
+                intent.setPackage("com.google.android.apps.maps")
+                if (intent.resolveActivity(context.packageManager) != null) {
+                  context.startActivity(intent)
+                } else {
+                  Toast.makeText(context, "No Google Maps app found", Toast.LENGTH_SHORT).show()
                 }
               }
+              onDismissRequest()
+            },
+            enabled = locationUri != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(PostDetailsActionsTestTags.BTN_GOOGLE_MAPS),
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(1.dp, colorScheme.outline),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    contentColor = colorScheme.onBackground,
+                ),
+        ) {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Filled.Map,
+                contentDescription = "Google Maps",
+                tint = colorScheme.primary,
+            )
+            Text(context.getString(R.string.post_details_actions_google_maps))
+          }
+        }
+      }
+
+      // Copy
+      item {
+        OutlinedButton(
+            onClick = {
+              postLocation?.name.let {
+                currentScope.launch {
+                  clipboard.setClipEntry(
+                      ClipEntry(clipData = ClipData.newPlainText("location", it))
+                  )
+                }
+                Toast.makeText(context, "Location copied", Toast.LENGTH_SHORT).show()
+              }
+              onDismissRequest()
+            },
+            enabled = locationUri != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(PostDetailsActionsTestTags.BTN_COPY),
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(1.dp, colorScheme.outline),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    contentColor = colorScheme.onBackground,
+                ),
+        ) {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Filled.ContentCopy,
+                contentDescription = "Copy location",
+                tint = colorScheme.primary,
+            )
+            Text(context.getString(R.string.post_details_actions_copy))
+          }
+        }
+      }
+
+      // Share
+      item {
+        OutlinedButton(
+            onClick = {
+              postLocation?.let {
+                val url =
+                    "https://www.google.com/maps/search/?api=1&query=${it.latitude},${it.longitude}"
+                val intent =
+                    Intent(Intent.ACTION_SEND).apply {
+                      type = "text/plain"
+                      putExtra(
+                          Intent.EXTRA_TEXT,
+                          context.getString(R.string.post_details_share_body, url),
+                      )
+                    }
+                context.startActivity(Intent.createChooser(intent, "Share location"))
+              }
+              onDismissRequest()
+            },
+            enabled = locationUri != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(PostDetailsActionsTestTags.BTN_SHARE),
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(1.dp, colorScheme.outline),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    contentColor = colorScheme.onBackground,
+                ),
+        ) {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Filled.Share,
+                contentDescription = "Share location",
+                tint = colorScheme.primary,
+            )
+            Text(context.getString(R.string.post_details_actions_share))
+          }
+        }
+      }
+
+      // Post actions for author
+      if (isAuthor) {
+        item {
+          OutlinedButton(
+              onClick = onDeletePressed,
+              modifier = Modifier
+                  .fillMaxWidth()
+                  .testTag(PostDetailsActionsTestTags.BTN_DELETE),
+              shape = RoundedCornerShape(28.dp),
+              border = BorderStroke(1.dp, colorScheme.outline),
+              colors =
+                  ButtonDefaults.outlinedButtonColors(
+                      contentColor = colorScheme.onBackground,
+                  ),
+          ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Icon(
+                  imageVector = Icons.Filled.Delete,
+                  contentDescription = "Delete Post",
+                  tint = colorScheme.error,
+              )
+              Text(
+                  text = context.getString(R.string.post_details_actions_delete_post),
+                  color = colorScheme.error,
+              )
             }
           }
-
-          item { Spacer(Modifier.height(12.dp)) }
         }
+      }
+
+      item { Spacer(Modifier.height(12.dp)) }
+    }
   }
 }

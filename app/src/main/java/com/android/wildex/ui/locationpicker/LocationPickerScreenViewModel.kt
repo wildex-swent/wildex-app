@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 data class LocationPickerUiState(
     val center: Location = Location(46.5197, 6.6323, name = "Lausanne"),
     val selected: Location? = null,
+    val userLocation: Location? = null,
+    val hasCenteredOnUserLocation: Boolean = false,
     val searchQuery: String = "",
     val suggestions: List<Location> = emptyList(),
     val isSearching: Boolean = false,
@@ -80,8 +82,20 @@ class LocationPickerViewModel(
 
   fun onUserLocationAvailable(latitude: Double, longitude: Double) {
     val current = _uiState.value
+    val userLoc =
+        Location(
+            latitude = latitude,
+            longitude = longitude,
+            name = current.userLocation?.name.orEmpty(),
+        )
+    val shouldCenter = !current.hasCenteredOnUserLocation && current.selected == null
     if (current.selected == null) {
-      _uiState.value = current.copy(center = Location(latitude = latitude, longitude = longitude))
+      _uiState.value =
+          current.copy(
+              userLocation = userLoc,
+              center = if (shouldCenter) userLoc else current.center,
+              hasCenteredOnUserLocation = true,
+          )
     }
   }
 
@@ -140,5 +154,23 @@ class LocationPickerViewModel(
 
   fun clearError() {
     _uiState.value = _uiState.value.copy(error = null, isError = false)
+  }
+
+  fun useCurrentLocationNameAsQuery() {
+    val current = _uiState.value
+    if (!current.isLocationPermissionGranted) return
+    val userLoc = current.userLocation ?: return
+    viewModelScope.launch {
+      val name = geocodingRepository.reverseGeocode(userLoc.latitude, userLoc.longitude)
+      if (name == null) {
+        _uiState.value =
+            current.copy(error = "Couldn't get your current location name", isError = true)
+        return@launch
+      }
+      val updatedUserLoc = userLoc.copy(name = name)
+      _uiState.value = _uiState.value.copy(userLocation = updatedUserLoc)
+      onSearchQueryChanged(name)
+      onMapClicked(userLoc.latitude, userLoc.longitude)
+    }
   }
 }

@@ -1,5 +1,7 @@
 package com.android.wildex.model.utils
 
+import java.io.Serializable
+
 /**
  * Represents a geographical location with latitude and longitude.
  *
@@ -7,4 +9,5 @@ package com.android.wildex.model.utils
  * @property longitude The longitude of the location.
  * @property name The name of the location.
  */
-data class Location(val latitude: Double, val longitude: Double, val name: String = "")
+data class Location(val latitude: Double, val longitude: Double, val name: String = "") :
+    Serializable

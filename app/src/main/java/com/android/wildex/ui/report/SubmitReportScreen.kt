@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.camera.CameraPermissionScreen
 import com.android.wildex.ui.camera.CameraPreviewScreen
@@ -38,8 +39,6 @@ import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 
 /**
  * Screen displaying the Submit Report Screen.
@@ -54,13 +53,14 @@ fun SubmitReportScreen(
     viewModel: SubmitReportScreenViewModel = viewModel(),
     onSubmitted: () -> Unit = {},
     onGoBack: () -> Unit = {},
+    onPickLocation: () -> Unit = {},
+    serializedLocation: Location? = null,
+    onPickedLocationConsumed: () -> Unit = {},
 ) {
   val context = LocalContext.current
   val uiState by viewModel.uiState.collectAsState()
   val connectivityObserver = LocalConnectivityObserver.current
   val isOnline by connectivityObserver.isOnline.collectAsState()
-
-  val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
   // Display error messages as Toasts
   LaunchedEffect(uiState.errorMsg) {
@@ -78,10 +78,12 @@ fun SubmitReportScreen(
       SubmitReportScreenContent(
           uiState = uiState,
           viewModel = viewModel,
-          locationClient = locationClient,
           context = context,
           onSubmitted = onSubmitted,
           innerPadding = innerPadding,
+          onPickLocation = onPickLocation,
+          serializedLocation = serializedLocation,
+          onPickedLocationConsumed = onPickedLocationConsumed,
       )
     } else {
       OfflineScreen(innerPadding = innerPadding)
@@ -94,18 +96,17 @@ fun SubmitReportScreen(
 fun SubmitReportScreenContent(
     uiState: SubmitReportUiState,
     viewModel: SubmitReportScreenViewModel,
-    locationClient: FusedLocationProviderClient,
     context: Context,
     onSubmitted: () -> Unit,
     innerPadding: PaddingValues,
+    onPickLocation: () -> Unit = {},
+    serializedLocation: Location? = null,
+    onPickedLocationConsumed: () -> Unit = {},
 ) {
   var showCamera by remember { mutableStateOf(false) }
-  var locationRequested by remember { mutableStateOf(false) }
 
   val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
   val hasCameraPermission = cameraPermissionState.status.isGranted
-  val hasLocationPermission = locationPermissionState.status.isGranted
 
   val imagePickerLauncher =
       rememberLauncherForActivityResult(
@@ -115,13 +116,12 @@ fun SubmitReportScreenContent(
         showCamera = false
       }
 
-  // Fetch location when permission is granted
-  FetchLocation(
-      hasLocationPermission = hasLocationPermission,
-      locationRequested = locationRequested,
-      viewModel = viewModel,
-      locationClient = locationClient,
-      context = context)
+  LaunchedEffect(serializedLocation) {
+    if (serializedLocation != null) {
+      viewModel.onLocationPicked(serializedLocation)
+      onPickedLocationConsumed()
+    }
+  }
 
   Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
     when {
@@ -154,47 +154,10 @@ fun SubmitReportScreenContent(
             uiState = uiState,
             onCameraClick = { showCamera = true },
             onDescriptionChange = viewModel::updateDescription,
-            onSubmitClick = {
-              if (!hasLocationPermission) {
-                locationRequested = true
-                locationPermissionState.launchPermissionRequest()
-              } else {
-                viewModel.fetchUserLocation(locationClient)
-                viewModel.submitReport(onSubmitted)
-              }
-            })
+            onSubmitClick = { viewModel.submitReport(onSubmitted) },
+            onPickLocation = onPickLocation,
+        )
       }
-    }
-  }
-}
-
-/**
- * Screen displaying the Submit Report Screen.
- *
- * @param hasLocationPermission True if there's access to the location, false otherwise.
- * @param locationRequested True if the location is requested, false otherwise.
- * @param viewModel The viewmodel of the screen.
- * @param locationClient The location of the client.
- * @param context The context.
- */
-@Composable
-private fun FetchLocation(
-    hasLocationPermission: Boolean,
-    locationRequested: Boolean,
-    viewModel: SubmitReportScreenViewModel,
-    locationClient: FusedLocationProviderClient,
-    context: Context
-) {
-  LaunchedEffect(hasLocationPermission, locationRequested) {
-    if (hasLocationPermission && locationRequested) {
-      viewModel.fetchUserLocation(locationClient)
-    } else if (!hasLocationPermission && locationRequested) {
-      Toast.makeText(
-              context,
-              "Location permission is required to submit a report",
-              Toast.LENGTH_SHORT,
-          )
-          .show()
     }
   }
 }

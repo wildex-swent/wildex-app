@@ -30,9 +30,7 @@ class SubmitReportFormScreenTest {
   private lateinit var onDescriptionChange: (String) -> Unit
   private lateinit var onSubmitClick: () -> Unit
   private lateinit var onGoBack: () -> Unit
-
   private val fakeObserver = FakeConnectivityObserver(initial = true)
-
   private var cameraClicked = false
   private var lastDescription: String? = null
   private var submitClicked = false
@@ -112,12 +110,12 @@ class SubmitReportFormScreenTest {
                 SubmitReportUiState(
                     isSubmitting = false,
                     description = "some description",
+                    hasPickedLocation = true,
                     imageUri = Uri.parse("content://test/image.jpg"),
                 ),
             onCameraClick = onCameraClick,
             onDescriptionChange = onDescriptionChange,
-            onSubmitClick = onSubmitClick,
-        )
+            onSubmitClick = onSubmitClick)
       }
     }
     composeTestRule

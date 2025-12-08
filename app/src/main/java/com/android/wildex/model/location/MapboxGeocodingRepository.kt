@@ -9,6 +9,7 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.internal.indexOfFirstNonAsciiWhitespace
 import org.json.JSONObject
 
 /** Geocoding repository using Mapbox. */
@@ -39,10 +40,10 @@ class MapboxGeocodingRepository(
                 if (!response.isSuccessful) return@use null
                 val body = response.body?.string() ?: return@use null
                 val name = parseFirstPlaceName(body) ?: return@use null
-                val addressParts = name.split(',')
-                if (addressParts.size > 2) {
-                  val specificAddress = addressParts.take(addressParts.size - 2).joinToString(", ")
-                  val generalAddress = addressParts.takeLast(2).joinToString(", ")
+                val addressParts = name.trim().split(',')
+                if (addressParts.size > 1) {
+                  val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
+                  val generalAddress = addressParts.takeLast(1).joinToString(", ")
                   Location(latitude, longitude, name, specificAddress, generalAddress)
                 } else {
                   Location(latitude, longitude, name)
@@ -186,11 +187,11 @@ class MapboxGeocodingRepository(
     val latitude = coordinates.optDouble(1)
     if (longitude.isNaN() || latitude.isNaN()) return null
 
-    val addressParts = name.split(",")
-    if (addressParts.size < 2) return Location(latitude, longitude, name)
+    val addressParts = name.trim().split(",")
+    if (addressParts.isEmpty()) return Location(latitude, longitude, name)
 
-    val generalAddress = addressParts.takeLast(2).joinToString(", ")
-    val specificAddress = addressParts.take(addressParts.size - 2).joinToString(", ")
+    val generalAddress = addressParts.takeLast(1).joinToString(", ")
+    val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
 
     return Location(
         latitude = latitude,

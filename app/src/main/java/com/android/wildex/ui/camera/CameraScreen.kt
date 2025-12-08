@@ -55,7 +55,11 @@ fun CameraScreen(
   val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
   val hasCameraPermission = cameraPermissionState.status.isGranted
 
-  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+  val locationPermissionState =
+      rememberPermissionState(
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          onPermissionResult = { if (it) cameraScreenViewModel.toggleAddLocation() },
+      )
   val hasLocationPermission = locationPermissionState.status.isGranted
 
   val imagePickerLauncher =
@@ -92,7 +96,8 @@ fun CameraScreen(
               onUploadClick = { imagePickerLauncher.launch("image/*") },
               modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
               permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
-              extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
+              extraRequestMsg = context.getString(R.string.camera_permission_msg_2),
+          )
         }
         uiState.isDetecting ->
             DetectingScreen(

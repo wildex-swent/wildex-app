@@ -159,20 +159,25 @@ fun PostDetailsScreenContent(
         PostDetailsContent(
             uiState = uiState,
             postDetailsScreenViewModel = postDetailsScreenViewModel,
-            onProfile = onProfile)
+            onProfile = onProfile,
+        )
         if (showDeletionValidation) {
           AlertDialog(
               onDismissRequest = { showDeletionValidation = false },
+              containerColor = colorScheme.background,
               title = {
                 Text(
                     text = context.getString(R.string.post_details_delete_post),
-                    style = typography.titleLarge)
+                    style = typography.titleLarge,
+                )
               },
               text = {
                 Text(
                     text = context.getString(R.string.post_details_delete_post_confirmation),
-                    style = typography.bodyMedium)
+                    style = typography.bodyMedium,
+                )
               },
+              tonalElevation = 4.dp,
               modifier = Modifier.testTag(PostDetailsScreenTestTags.DELETE_POST_DIALOG),
               confirmButton = {
                 TextButton(
@@ -187,7 +192,8 @@ fun PostDetailsScreenContent(
                   Text(
                       text = context.getString(R.string.post_details_final_delete_post),
                       color = colorScheme.error,
-                      style = typography.bodyMedium)
+                      style = typography.bodyMedium,
+                  )
                 }
               },
               dismissButton = {
@@ -198,7 +204,8 @@ fun PostDetailsScreenContent(
                 ) {
                   Text(
                       text = context.getString(R.string.post_details_cancel_delete_post),
-                      style = typography.bodyMedium)
+                      style = typography.bodyMedium,
+                  )
                 }
               },
           )
@@ -227,49 +234,50 @@ fun CommentInput(
                   color = colorScheme.onBackground.copy(alpha = 0.06f),
                   shape = RoundedCornerShape(0.dp),
               )
-              .padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          ClickableProfilePicture(
-              modifier =
-                  Modifier.size(44.dp)
-                      .testTag(
-                          testTagForProfilePicture(profileId = userId, role = "comment_input")),
-              profileId = userId,
-              profilePictureURL = userProfilePictureURL,
-              profileUserType = userUserType,
-              onProfile = onProfile,
-          )
+              .padding(horizontal = 12.dp, vertical = 8.dp)
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClickableProfilePicture(
+          modifier =
+              Modifier.size(44.dp)
+                  .testTag(testTagForProfilePicture(profileId = userId, role = "comment_input")),
+          profileId = userId,
+          profilePictureURL = userProfilePictureURL,
+          profileUserType = userUserType,
+          onProfile = onProfile,
+      )
 
-          Spacer(modifier = Modifier.width(8.dp))
+      Spacer(modifier = Modifier.width(8.dp))
 
-          var text by remember { mutableStateOf("") }
+      var text by remember { mutableStateOf("") }
 
-          OutlinedTextField(
-              value = text,
-              onValueChange = { text = it },
-              placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
-              modifier = Modifier.weight(1f),
-              shape = RoundedCornerShape(32.dp),
-              singleLine = true,
-              trailingIcon = {
-                IconButton(
-                    onClick = {
-                      if (text.isNotBlank()) {
-                        postDetailsScreenViewModel.addComment(text)
-                        text = ""
-                      }
-                    }) {
-                      Icon(
-                          imageVector = Icons.AutoMirrored.Filled.Send,
-                          contentDescription = "Send comment",
-                          tint = colorScheme.primary,
-                      )
-                    }
-              },
-          )
-        }
-      }
+      OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
+          modifier = Modifier.weight(1f),
+          shape = RoundedCornerShape(32.dp),
+          singleLine = true,
+          trailingIcon = {
+            IconButton(
+                onClick = {
+                  if (text.isNotBlank()) {
+                    postDetailsScreenViewModel.addComment(text)
+                    text = ""
+                  }
+                }
+            ) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Send,
+                  contentDescription = "Send comment",
+                  tint = colorScheme.primary,
+              )
+            }
+          },
+      )
+    }
+  }
 }

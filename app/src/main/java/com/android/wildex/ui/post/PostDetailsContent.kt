@@ -271,6 +271,9 @@ fun LocationSpeciesLikeBar(
     onLike: () -> Unit = {},
     onUnlike: () -> Unit = {},
 ) {
+    val size = 1.plus(if (species.isNotBlank()) 1 else 0).plus(if (location.isNotBlank()) 1 else 0)
+    val itemWeight = 1f / size
+
   // Location & Likes row
   Row(
       modifier = Modifier.fillMaxWidth(),
@@ -283,6 +286,7 @@ fun LocationSpeciesLikeBar(
     if (location.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.weight(itemWeight),
       ) {
         Icon(
             imageVector = Icons.Filled.LocationOn,
@@ -304,6 +308,7 @@ fun LocationSpeciesLikeBar(
     if (species.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.weight(itemWeight),
       ) {
         Icon(
             imageVector = Icons.Filled.Pets,
@@ -328,6 +333,7 @@ fun LocationSpeciesLikeBar(
         onToggleLike = { if (!likedByCurrentUser) onLike() else onUnlike() },
         iconSize = iconSize,
         textStyle = textStyle,
+        modifier = Modifier.weight(itemWeight),
     )
   }
 }

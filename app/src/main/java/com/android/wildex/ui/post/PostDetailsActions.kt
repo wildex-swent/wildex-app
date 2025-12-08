@@ -209,7 +209,10 @@ fun PostDetailsActions(
       if (isAuthor) {
         item {
           OutlinedButton(
-              onClick = onDeletePressed,
+              onClick = {
+                  onDeletePressed()
+                  onDismissRequest()
+              },
               modifier = Modifier
                   .fillMaxWidth()
                   .testTag(PostDetailsActionsTestTags.BTN_DELETE),

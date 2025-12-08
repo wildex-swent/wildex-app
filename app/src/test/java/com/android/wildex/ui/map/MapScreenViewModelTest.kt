@@ -1,6 +1,7 @@
 package com.android.wildex.ui.map
 
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -20,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
 import org.junit.Before
@@ -203,7 +205,7 @@ class MapScreenViewModelTest {
         Assert.assertNotNull(s.errorMsg)
 
         viewModel.clearSelection()
-        Assert.assertNull(viewModel.uiState.value.selected)
+        Assert.assertTrue(viewModel.uiState.value.selected.isEmpty())
         viewModel.clearErrorMsg()
         Assert.assertNull(viewModel.uiState.value.errorMsg)
         viewModel.clearRenderError()
@@ -273,8 +275,14 @@ class MapScreenViewModelTest {
         coEvery { animalRepository.getAnimal(any()) } throws RuntimeException("nope")
         viewModel.onPinSelected("p1")
         advanceUntilIdle()
-        val sel = viewModel.uiState.value.selected[0] as PinDetails.PostDetails
-        Assert.assertEquals("animal", sel.animalName)
+        val afterAnimalFail = viewModel.uiState.value
+        Assert.assertTrue(afterAnimalFail.errorMsg?.contains("Failed to load pin") == true)
+        Assert.assertTrue(afterAnimalFail.selected.isEmpty())
+
+        coEvery { animalRepository.getAnimal(any()) } returns mockk(relaxed = true)
+        viewModel.onPinSelected("p1")
+        advanceUntilIdle()
+        Assert.assertTrue(viewModel.uiState.value.selected.first() is PinDetails.PostDetails)
 
         coEvery { likeRepository.getNewLikeId() } returns "like-99"
         coEvery { likeRepository.addLike(any()) } throws RuntimeException("net")
@@ -336,5 +344,122 @@ class MapScreenViewModelTest {
         advanceUntilIdle()
         Assert.assertTrue(
             viewModel.uiState.value.errorMsg?.contains("Could not update like: boom") == true)
+      }
+
+  @Test
+  fun selectNext_and_selectPrev_cycleThroughSelection() =
+      mainDispatcherRule.runTest {
+        val fld = MapScreenViewModel::class.java.getDeclaredField("_uiState")
+        fld.isAccessible = true
+        @Suppress("UNCHECKED_CAST") val flow = fld.get(viewModel) as MutableStateFlow<MapUIState>
+
+        val user =
+            SimpleUser(
+                userId = "u",
+                username = "user",
+                profilePictureURL = "",
+                userType = UserType.REGULAR,
+            )
+
+        val d1 =
+            PinDetails.PostDetails(
+                post = post1,
+                author = user,
+                likedByMe = false,
+                likeCount = 0,
+                commentCount = 0,
+                animalName = "fox",
+            )
+        val d2 =
+            PinDetails.PostDetails(
+                post = post2,
+                author = user,
+                likedByMe = true,
+                likeCount = 5,
+                commentCount = 1,
+                animalName = "owl",
+            )
+        val d3 = d1.copy(post = post1.copy(postId = "p3"))
+
+        flow.value =
+            flow.value.copy(
+                selected = listOf(d1, d2, d3),
+                selectedIndex = 0,
+            )
+
+        // index: 0 -> 1 -> 2 -> 0
+        viewModel.selectNext()
+        Assert.assertEquals(1, viewModel.uiState.value.selectedIndex)
+        viewModel.selectNext()
+        Assert.assertEquals(2, viewModel.uiState.value.selectedIndex)
+        viewModel.selectNext()
+        Assert.assertEquals(0, viewModel.uiState.value.selectedIndex)
+
+        // prev from 0 goes to 2
+        viewModel.selectPrev()
+        Assert.assertEquals(2, viewModel.uiState.value.selectedIndex)
+      }
+
+  @Test
+  fun onClusterPinClicked_populatesGroupSelection_andSkipsFailingChildren() =
+      mainDispatcherRule.runTest {
+        // Prepare pins already in uiState
+        val postPin1 =
+            MapPin.PostPin(
+                id = "p1",
+                authorId = post1.authorId,
+                location = lausanne,
+                imageURL = "",
+            )
+        val postPin2 =
+            MapPin.PostPin(
+                id = "p2",
+                authorId = post2.authorId,
+                location = lausanne,
+                imageURL = "",
+            )
+        val reportPin1 =
+            MapPin.ReportPin(
+                id = "r1",
+                authorId = report1.authorId,
+                location = report1.location,
+                imageURL = "",
+                assigneeId = report1.assigneeId,
+            )
+
+        // Inject pins into uiState
+        val fld = MapScreenViewModel::class.java.getDeclaredField("_uiState")
+        fld.isAccessible = true
+        @Suppress("UNCHECKED_CAST") val flow = fld.get(viewModel) as MutableStateFlow<MapUIState>
+        flow.value = flow.value.copy(pins = listOf(postPin1, postPin2, reportPin1))
+
+        // Mocks for children jobs:
+        coEvery { postsRepository.getPost("p1") } returns post1
+        coEvery { postsRepository.getPost("p2") } throws RuntimeException("fail-child")
+        coEvery { userRepository.getSimpleUser(any()) } returns
+            SimpleUser("u", "name", "", userType = UserType.REGULAR)
+        coEvery { likeRepository.getLikeForPost(any()) } returns null
+        coEvery { likeRepository.getLikesForPost(any()) } returns emptyList()
+        coEvery { commentRepository.getAllCommentsByPost(any()) } returns emptyList()
+        coEvery { animalRepository.getAnimal(any()) } returns mockk(relaxed = true)
+        coEvery { reportRepository.getReport("r1") } returns report1
+
+        val cluster =
+            MapPin.ClusterPin(
+                id = "cluster-1",
+                location = lausanne,
+                childIds = listOf("p1", "p2", "r1"),
+                count = 3,
+            )
+
+        viewModel.onClusterPinClicked(cluster)
+        advanceUntilIdle()
+
+        val sel = viewModel.uiState.value.selected
+        // We expect p1 (post) and r1 (report); p2 failed and is skipped
+        Assert.assertEquals(2, sel.size)
+        Assert.assertTrue(sel.any { it is PinDetails.PostDetails && it.post.postId == "p1" })
+        Assert.assertTrue(sel.any { it is PinDetails.ReportDetails && it.report.reportId == "r1" })
+        Assert.assertEquals(lausanne, viewModel.uiState.value.centerCoordinates)
       }
 }

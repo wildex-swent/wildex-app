@@ -71,7 +71,6 @@ fun SelectionBottomCard(
       modifier =
           modifier.widthIn(min = 320.dp).wrapContentHeight().pointerInput(groupSize) {
             if (groupSize <= 1) {
-              // no swipe if there’s nothing to swipe through
               return@pointerInput
             }
 
@@ -81,14 +80,11 @@ fun SelectionBottomCard(
                 onDragStart = { totalDragX = 0f },
                 onHorizontalDrag = { _, dragAmount -> totalDragX += dragAmount },
                 onDragEnd = {
-                  val threshold = 80f // you can tweak this
+                  val threshold = 80f
 
                   when {
                     totalDragX > threshold -> onPrev()
                     totalDragX < -threshold -> onNext()
-                    else -> {
-                      // swipe too small → ignore
-                    }
                   }
                 },
                 onDragCancel = { totalDragX = 0f },
@@ -162,13 +158,16 @@ private fun ClusterFooterPager(
   val cs = colorScheme
 
   Row(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 12.dp, vertical = 6.dp)
+              .testTag(MapContentTestTags.SELECTION_PAGER),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.SpaceBetween,
   ) {
     IconButton(
         onClick = onPrev,
-        modifier = Modifier.size(32.dp),
+        modifier = Modifier.size(32.dp).testTag(MapContentTestTags.SELECTION_PAGER_PREV),
     ) {
       Icon(
           imageVector = Icons.Filled.ChevronLeft,
@@ -186,12 +185,13 @@ private fun ClusterFooterPager(
           text = "${groupIndex + 1} / $groupSize",
           style = typography.labelMedium,
           color = cs.onSurfaceVariant,
+          modifier = Modifier.testTag(MapContentTestTags.SELECTION_PAGER_LABEL),
       )
     }
 
     IconButton(
         onClick = onNext,
-        modifier = Modifier.size(32.dp),
+        modifier = Modifier.size(32.dp).testTag(MapContentTestTags.SELECTION_PAGER_NEXT),
     ) {
       Icon(
           imageVector = Icons.Filled.ChevronRight,

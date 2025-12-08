@@ -83,6 +83,11 @@ object MapContentTestTags {
 
   const val BACK_BUTTON = "MapScreen/BackButton"
 
+  const val SELECTION_PAGER = "MapScreen/SelectionPager"
+  const val SELECTION_PAGER_PREV = "MapScreen/SelectionPager/Prev"
+  const val SELECTION_PAGER_NEXT = "MapScreen/SelectionPager/Next"
+  const val SELECTION_PAGER_LABEL = "MapScreen/SelectionPager/Label"
+
   fun getPinTag(tab: MapTab): String = "MapTabSwitcher-${tab.name}"
 }
 

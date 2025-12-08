@@ -9,5 +9,10 @@ import java.io.Serializable
  * @property longitude The longitude of the location.
  * @property name The name of the location.
  */
-data class Location(val latitude: Double, val longitude: Double, val name: String = "") :
-    Serializable
+data class Location(
+    val latitude: Double,
+    val longitude: Double,
+    val name: String = "",
+    val specificName: String = "",
+    val generalName: String = ""
+): Serializable

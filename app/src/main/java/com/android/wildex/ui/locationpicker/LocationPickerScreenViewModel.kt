@@ -102,8 +102,9 @@ class LocationPickerViewModel(
   fun onMapClicked(lat: Double, lon: Double) {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, error = null, isError = false)
-      val name = geocodingRepository.reverseGeocode(lat, lon)
-      val loc = Location(lat, lon, name ?: "Unknown Location at: ($lat, $lon)")
+      val loc =
+          geocodingRepository.reverseGeocode(lat, lon)
+              ?: Location(lat, lon, "Unknown Location at: ($lat, $lon)")
       _uiState.value =
           _uiState.value.copy(
               selected = loc,
@@ -161,7 +162,7 @@ class LocationPickerViewModel(
     if (!current.isLocationPermissionGranted) return
     val userLoc = current.userLocation ?: return
     viewModelScope.launch {
-      val name = geocodingRepository.reverseGeocode(userLoc.latitude, userLoc.longitude)
+      val name = geocodingRepository.reverseGeocode(userLoc.latitude, userLoc.longitude)?.name
       if (name == null) {
         _uiState.value =
             current.copy(error = "Couldn't get your current location name", isError = true)

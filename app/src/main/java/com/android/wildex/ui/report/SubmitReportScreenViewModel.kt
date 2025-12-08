@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * Data class representing the UI state of the Submit Report Screen.
@@ -48,6 +50,7 @@ data class SubmitReportUiState(
 class SubmitReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
+    private val geocodingRepository: GeocodingRepository = RepositoryProvider.geocodingRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SubmitReportUiState())
@@ -83,24 +86,10 @@ class SubmitReportScreenViewModel(
   fun fetchUserLocation(locationClient: FusedLocationProviderClient) {
     viewModelScope.launch {
       try {
-        locationClient.lastLocation
-            .addOnSuccessListener { loc ->
-              if (loc != null) {
-                _uiState.value =
-                    _uiState.value.copy(
-                        location =
-                            Location(
-                                latitude = loc.latitude,
-                                longitude = loc.longitude,
-                                name = _uiState.value.location?.name ?: "Unknown",
-                            ))
-              } else {
-                setError("Unable to fetch current location.")
-              }
-            }
-            .addOnFailureListener {
-              setError("Failed to get location: ${it.message}. Please enable GPS.")
-            }
+        locationClient.lastLocation.await()?.let {
+          val location = geocodingRepository.reverseGeocode(it.latitude, it.longitude)
+          _uiState.value = _uiState.value.copy(location = location)
+        } ?: setError("Unable to fetch current location.")
       } catch (e: Exception) {
         setError("Error fetching location: ${e.message}")
       }

@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -118,9 +119,8 @@ fun ReportScreen(
             currentUser = user,
             title =
                 when (user.userType) {
-                  UserType.REGULAR -> LocalContext.current.getString(R.string.report_title_regular)
-                  UserType.PROFESSIONAL ->
-                      LocalContext.current.getString(R.string.report_title_professional)
+                  UserType.REGULAR -> stringResource(R.string.report_title_regular)
+                  UserType.PROFESSIONAL -> stringResource(R.string.report_title_professional)
                 },
             onNotificationClick = onNotificationClick,
             onProfilePictureClick = onCurrentProfileClick)

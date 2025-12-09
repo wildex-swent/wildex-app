@@ -27,7 +27,7 @@ private val defaultUser: SimpleUser =
 
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,
-    val isUserOwner: Boolean = false,
+    val isUserOwner: Boolean = true,
     val animals: List<AnimalState> = emptyList(),
     val isLoading: Boolean = false,
     val isError: Boolean = false,

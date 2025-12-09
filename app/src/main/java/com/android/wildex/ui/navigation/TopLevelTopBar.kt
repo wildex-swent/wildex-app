@@ -71,7 +71,7 @@ fun TopLevelTopBar(
               profileId = currentUser.userId,
               profilePictureURL = currentUser.profilePictureURL,
               profileUserType = currentUser.userType,
-              onProfile = { id -> onProfilePictureClick() },
+              onProfile = { _ -> onProfilePictureClick() },
           )
         }
       },

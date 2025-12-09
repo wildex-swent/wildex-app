@@ -60,6 +60,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -179,7 +180,7 @@ fun ReportScreen(
  * @param onSubmitReportClick The function to be called when the submit report button is clicked.
  */
 @Composable
-fun ReportScreenContent(
+private fun ReportScreenContent(
     innerPadding: PaddingValues,
     uiState: ReportScreenUIState,
     reportScreenViewModel: ReportScreenViewModel,
@@ -231,7 +232,7 @@ fun ReportScreenContent(
  * @param onReportClick The function to be called when a report is clicked.
  */
 @Composable
-fun ReportsView(
+private fun ReportsView(
     reports: List<ReportUIState> = emptyList(),
     userId: Id = "",
     onProfileClick: (Id) -> Unit = {},
@@ -263,7 +264,7 @@ fun ReportsView(
  * @param onReportClick The function to be called when the report is clicked.
  */
 @Composable
-fun ReportItem(
+private fun ReportItem(
     reportState: ReportUIState,
     userId: Id = "",
     onProfileClick: (Id) -> Unit = {},
@@ -332,7 +333,15 @@ fun ReportItem(
         pagerState = pagerState,
     )
 
-    Spacer(modifier = Modifier.height(6.dp))
+    Row(
+        modifier = Modifier.padding(top = 5.dp).align(Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      SlideState(0, pagerState.currentPage)
+      Spacer(modifier = Modifier.width(5.dp))
+      SlideState(1, pagerState.currentPage)
+    }
 
     // Location and Status
     Row(
@@ -342,6 +351,7 @@ fun ReportItem(
     ) {
       // Location
       Row(
+          modifier = Modifier.width(LocalWindowInfo.current.containerSize.width.dp / 6),
           horizontalArrangement = Arrangement.Center,
           verticalAlignment = Alignment.CenterVertically,
       ) {
@@ -356,6 +366,7 @@ fun ReportItem(
             style = typography.labelMedium,
             color = colorScheme.primary,
             maxLines = 2,
+            softWrap = true,
             overflow = TextOverflow.Ellipsis,
         )
       }
@@ -435,20 +446,20 @@ private fun ReportSlider(
               modifier =
                   Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
                       .clip(RoundedCornerShape(20.dp))
-                      .background(colorScheme.onBackground)
+                      .background(colorScheme.surfaceVariant)
                       .padding(horizontal = 10.dp, vertical = 8.dp),
           ) {
             Icon(
                 imageVector = Icons.Filled.Place,
                 contentDescription = "Country Icon",
-                tint = colorScheme.background,
+                tint = colorScheme.primary,
                 modifier = Modifier.size(16.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = reportState.location.name,
                 style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.background,
+                color = colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -464,9 +475,21 @@ private fun ReportSlider(
   }
 }
 
+@Composable
+private fun SlideState(slideIndex: Int, currentPage: Int) {
+  Box(
+      modifier =
+          Modifier.size(if (currentPage == slideIndex) 7.dp else 5.dp)
+              .clip(RoundedCornerShape(50.dp))
+              .background(
+                  color =
+                      colorScheme.onBackground.copy(
+                          alpha = if (currentPage == slideIndex) 0.9f else 0.6f)))
+}
+
 /** A composable that displays a message when there are no reports. */
 @Composable
-fun NoReportsView() {
+private fun NoReportsView() {
   Column(
       modifier = Modifier.fillMaxSize().padding(24.dp).testTag(ReportScreenTestTags.NO_REPORT_TEXT),
       horizontalAlignment = Alignment.CenterHorizontally,
@@ -496,7 +519,7 @@ fun NoReportsView() {
  * @param context The context of the application.
  */
 @Composable
-fun ReportScreenButtons(
+private fun ReportScreenButtons(
     onSubmitReportClick: () -> Unit = {},
     context: Context,
 ) {

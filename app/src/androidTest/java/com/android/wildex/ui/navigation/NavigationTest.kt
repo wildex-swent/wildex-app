@@ -405,7 +405,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToReportScreenFromBottomBar()
     composeRule.waitForIdle()
     composeRule.checkReportScreenIsDisplayed()
-    composeRule.navigateToMyProfileScreenFromReport(userId)
+    composeRule.navigateToMyProfileScreenFromReport()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId)
     composeRule.navigateBackFromProfile()

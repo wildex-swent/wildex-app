@@ -400,7 +400,7 @@ abstract class NavigationTestUtils {
     performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
   }
 
-  fun ComposeTestRule.navigateToMyProfileScreenFromReport(userId: Id) {
-    performClickOnTag(ReportScreenTestTags.testTagForProfilePicture(userId, "user"))
+  fun ComposeTestRule.navigateToMyProfileScreenFromReport() {
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 }

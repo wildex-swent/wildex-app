@@ -143,6 +143,10 @@ class SettingsScreenViewModel(
     }
   }
 
+  fun onOfflineClick() {
+    setErrorMsg("This action is not supported offline. Check your connection and try again.")
+  }
+
   /** Clears any existing error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)

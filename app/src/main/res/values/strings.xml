@@ -123,6 +123,14 @@
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>
 
+    <!-- Save to gallery screen -->
+    <string name="save_to_gallery_first">Save to gallery ?</string>
+    <string name="save_to_gallery_second">You are offline. Do you want to keep this picture and post later?</string>
+    <string name="save_to_gallery_third">Save</string>
+    <string name="discard_picture_first">Discard this picture ?</string>
+    <string name="discard_picture_second">This will discard this picture and take you back to the camera screen</string>
+    <string name="discard_picture_third">Confirm</string>
+
     <!--   Submit report screen   -->
     <string name="report">Report</string>
     <string name="submit_rescue_alert">Submit a Rescue Alert</string>

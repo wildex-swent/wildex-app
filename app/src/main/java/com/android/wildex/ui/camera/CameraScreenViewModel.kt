@@ -1,8 +1,10 @@
 package com.android.wildex.ui.camera
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,6 +37,7 @@ data class CameraUiState(
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
     val isDetecting: Boolean = false,
+    val isSavingOffline: Boolean = false,
 )
 
 class CameraScreenViewModel(
@@ -67,6 +70,60 @@ class CameraScreenViewModel(
       } catch (e: Exception) {
         setErrorMsg("Failed to detect animal and start post creation : ${e.message}")
         _uiState.value = _uiState.value.copy(isDetecting = false, currentImageUri = null)
+      }
+    }
+  }
+
+  /**
+   * Enters offline preview mode with the given image URI.
+   *
+   * @param imageUri The URI of the image to preview offline.
+   */
+  fun enterOfflinePreview(imageUri: Uri) {
+    _uiState.value = _uiState.value.copy(isSavingOffline = true, currentImageUri = imageUri)
+  }
+
+  /**
+   * Saves the current image to the device gallery.
+   *
+   * @param context The context used to access the device's media storage.
+   */
+  fun saveImageToGallery(context: Context) {
+    val uri = _uiState.value.currentImageUri ?: return
+    viewModelScope.launch {
+      try {
+        val resolver = context.contentResolver
+        resolver.openInputStream(uri).use { inputStream ->
+          if (inputStream == null) {
+            setErrorMsg("Failed to open source image.")
+            return@launch
+          }
+
+          val contentValues =
+              ContentValues().apply {
+                put(
+                    MediaStore.MediaColumns.DISPLAY_NAME,
+                    "wildex_${System.currentTimeMillis()}.jpg")
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/Wildex")
+              }
+
+          val galleryUri =
+              resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                  ?: throw Exception("Gallery entry could not be created")
+
+          resolver.openOutputStream(galleryUri).use { outputStream ->
+            if (outputStream == null) {
+              throw Exception("Could not open gallery output stream")
+            }
+            inputStream.copyTo(outputStream)
+          }
+        }
+
+        setErrorMsg("Image saved to gallery")
+        _uiState.value = _uiState.value.copy(currentImageUri = null, isSavingOffline = false)
+      } catch (e: Exception) {
+        setErrorMsg("Failed to save image: ${e.message}")
       }
     }
   }

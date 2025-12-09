@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -85,7 +84,7 @@ fun PostCreationScreen(
                       .fillMaxHeight(0.3f)
                       .background(
                           Brush.verticalGradient(
-                              0f to Color.Transparent,
+                              0f to colorScheme.tertiary,
                               1f to colorScheme.surface,
                           )))
 

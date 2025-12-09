@@ -9,9 +9,11 @@ import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.Taxonomy
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.UserAnimalsRepository
+import com.android.wildex.model.utils.Location
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Tasks
@@ -35,6 +37,7 @@ class CameraScreenViewModelTest {
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var animalRepository: AnimalRepository
   private lateinit var animalInfoRepository: AnimalInfoRepository
+  private lateinit var geocodingRepository: GeocodingRepository
   private lateinit var context: Context
   private lateinit var uri: Uri
   private lateinit var resolver: ContentResolver
@@ -47,12 +50,14 @@ class CameraScreenViewModelTest {
 
   @Before
   fun setup() {
+
     postsRepository = mockk(relaxed = true)
     storageRepository = mockk(relaxed = true)
     userAnimalsRepository = mockk(relaxed = true)
     animalRepository = mockk(relaxed = true)
     animalInfoRepository = mockk(relaxed = true)
     context = mockk(relaxed = true)
+    geocodingRepository = mockk(relaxed = true)
     uri = mockk()
     resolver = mockk()
     galleryUri = mockk()
@@ -68,6 +73,7 @@ class CameraScreenViewModelTest {
             userAnimalsRepository = userAnimalsRepository,
             animalRepository = animalRepository,
             animalInfoRepository = animalInfoRepository,
+            geocodingRepository = geocodingRepository,
             currentUserId = testUserId,
         )
     Dispatchers.setMain(StandardTestDispatcher())
@@ -392,6 +398,8 @@ class CameraScreenViewModelTest {
     val fusedLocationClient = mockk<FusedLocationProviderClient>()
     every { LocationServices.getFusedLocationProviderClient(context) } returns fusedLocationClient
     every { fusedLocationClient.lastLocation } returns Tasks.forResult(location)
+    val testLocation = Location(46.5, 6.5, "Test Location")
+    coEvery { geocodingRepository.reverseGeocode(any(), any()) } returns testLocation
     viewModel.updateImageUri(uri)
     viewModel.toggleAddLocation()
     viewModel.updateDescription(description)
@@ -412,15 +420,12 @@ class CameraScreenViewModelTest {
     coVerify {
       postsRepository.addPost(
           match { post ->
-            val loc = post.location
             post.postId == testPostId &&
                 post.authorId == testUserId &&
                 post.description == description &&
                 post.pictureURL == testImageUrl &&
                 post.animalId == testAnimalId &&
-                loc != null &&
-                loc.latitude == location.latitude &&
-                loc.longitude == location.longitude
+                post.location == testLocation
           })
     }
   }

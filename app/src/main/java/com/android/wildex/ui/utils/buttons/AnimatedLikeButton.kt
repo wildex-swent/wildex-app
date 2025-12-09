@@ -38,6 +38,7 @@ fun AnimatedLikeButton(
     likedByCurrentUser: Boolean,
     likesCount: Int,
     onToggleLike: () -> Unit,
+    modifier: Modifier = Modifier,
     iconSize: Dp = 30.dp,
     textStyle: TextStyle = typography.bodyLarge,
 ) {
@@ -53,7 +54,7 @@ fun AnimatedLikeButton(
     }
   }
 
-  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
     Icon(
         imageVector =
             if (likedByCurrentUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,

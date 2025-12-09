@@ -15,3 +15,5 @@ val DarkErrorRed = Color(0xFFbd000d)
 // Common Colors
 val White = Color.White
 val WildexBlack = Color(0xFF182b3c)
+
+val Transparent = Color.Transparent

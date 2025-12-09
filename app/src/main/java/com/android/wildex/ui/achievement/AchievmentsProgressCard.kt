@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -74,7 +73,7 @@ fun AchievementsProgressCard(progression: Pair<Int, Int>) {
                                   colorScheme.primary.copy(alpha = 0.9f),
                                   colorScheme.primary.copy(alpha = 0.65f),
                                   colorScheme.primary.copy(alpha = 0.45f),
-                                  Color.Transparent,
+                                  colorScheme.tertiary,
                               ),
                           start = Offset.Zero,
                           end = Offset.Infinite,

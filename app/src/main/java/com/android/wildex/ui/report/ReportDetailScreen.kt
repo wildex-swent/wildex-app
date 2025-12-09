@@ -149,7 +149,8 @@ fun ReportDetailsScreen(
           reportDetailsViewModel = reportDetailsViewModel,
           onProfile = onProfile,
           reportId = reportId,
-          onGoBack = onGoBack)
+          onGoBack = onGoBack,
+      )
     } else {
       OfflineScreen(innerPadding = innerPadding)
     }
@@ -163,7 +164,7 @@ fun ReportDetailsScreenContent(
     reportDetailsViewModel: ReportDetailsScreenViewModel,
     onProfile: (Id) -> Unit,
     reportId: Id,
-    onGoBack: () -> Unit
+    onGoBack: () -> Unit,
 ) {
   val pullState = rememberPullToRefreshState()
   val focusManager = LocalFocusManager.current
@@ -324,7 +325,7 @@ private fun ReportDetailsContent(
             ReportInfoBar(
                 author = uiState.author,
                 date = uiState.date,
-                location = uiState.location.name,
+                location = uiState.location.generalName,
                 onProfile = onProfile,
                 onLocationClick = onLocationClick,
             )
@@ -434,7 +435,7 @@ private fun ReportPicture(imageURL: URL) {
                 .background(
                     Brush.verticalGradient(
                         0f to Color.Black.copy(alpha = 0.7f),
-                        1f to Color.Transparent,
+                        1f to colorScheme.tertiary,
                     ),
                 ))
     Box(
@@ -444,7 +445,7 @@ private fun ReportPicture(imageURL: URL) {
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Transparent,
+                        0f to colorScheme.tertiary,
                         1f to colorScheme.background,
                     ),
                 ))
@@ -501,6 +502,7 @@ private fun ReportInfoBar(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag(ReportDetailsScreenTestTags.INFO_AUTHOR_NAME),
         )
+        Spacer(modifier = Modifier.height(6.dp))
         if (date.isNotBlank()) {
           Spacer(Modifier.height(2.dp))
           Text(

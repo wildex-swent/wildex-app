@@ -118,7 +118,7 @@ fun SubmitReportScreenContent(
 
   LaunchedEffect(serializedLocation) {
     if (serializedLocation != null) {
-      viewModel.onLocationPicked(serializedLocation)
+      viewModel.updateLocation(serializedLocation)
       onPickedLocationConsumed()
     }
   }

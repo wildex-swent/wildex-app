@@ -13,12 +13,12 @@ import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.utils.Id
-import com.android.wildex.model.utils.Location
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -48,6 +48,7 @@ class CameraScreenViewModel(
     private val animalRepository: AnimalRepository = RepositoryProvider.animalRepository,
     private val animalInfoRepository: AnimalInfoRepository =
         RepositoryProvider.animalInfoRepository,
+    private val geocodingRepository: GeocodingRepository = RepositoryProvider.geocodingRepository,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(CameraUiState())
@@ -158,7 +159,7 @@ class CameraScreenViewModel(
         val location =
             if (_uiState.value.addLocation) {
               LocationServices.getFusedLocationProviderClient(context).lastLocation.await().let {
-                Location(it.latitude, it.longitude)
+                geocodingRepository.reverseGeocode(it.latitude, it.longitude)
               }
             } else null
         val finalPost =

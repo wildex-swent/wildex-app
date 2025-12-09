@@ -87,7 +87,7 @@ class MapboxGeocodingRepositoryAndroidTest {
         )
 
     val result = repo.reverseGeocode(latitude = 33.57311, longitude = -7.589843)
-    assertEquals("Casablanca, Morocco", result)
+    assertEquals("Casablanca, Morocco", result!!.name)
 
     val request = client.lastRequest!!
     assertEquals("https", request.url.scheme)
@@ -183,7 +183,7 @@ class MapboxGeocodingRepositoryAndroidTest {
             okHttpClient = RecordingOkHttpClient(responseBody = jsonPlaceFormatted),
             accessToken = "test-token",
         )
-    assertEquals("Somewhere, World", repoPlaceFormatted.reverseGeocode(33.5, -7.5))
+    assertEquals("Somewhere, World", repoPlaceFormatted.reverseGeocode(33.5, -7.5)!!.name)
 
     val jsonNameOnly =
         """
@@ -208,7 +208,7 @@ class MapboxGeocodingRepositoryAndroidTest {
             okHttpClient = RecordingOkHttpClient(responseBody = jsonNameOnly),
             accessToken = "test-token",
         )
-    assertEquals("OnlyName", repoNameOnly.reverseGeocode(2.0, 1.0))
+    assertEquals("OnlyName", repoNameOnly.reverseGeocode(2.0, 1.0)!!.name)
   }
 
   @Test

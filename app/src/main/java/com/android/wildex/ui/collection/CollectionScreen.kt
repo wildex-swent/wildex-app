@@ -164,7 +164,6 @@ fun CollectionTopBar(
                   if (isUserOwner) Icons.Outlined.Notifications
                   else Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = if (isUserOwner) "Notifications" else "Back",
-              tint = colorScheme.tertiary,
               modifier = Modifier.size(30.dp),
           )
         }

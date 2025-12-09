@@ -76,7 +76,7 @@ class ReportDetailScreenTest {
             reportId = "reportId1",
             imageURL =
                 "https://leesbird.com/wp-content/uploads/2012/01/ring-billed-gull-imm-injured-wing-1c.jpg",
-            location = Location(0.3, 0.3, name = "Test Location"),
+            location = Location(0.3, 0.3, "Test Location", "Test Location", "Test Location"),
             date = Timestamp.now(),
             description = "A test report description that should be visible in the UI.",
             authorId = "user2",

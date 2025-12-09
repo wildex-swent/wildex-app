@@ -18,6 +18,7 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
+import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -50,6 +51,7 @@ class CameraScreenTestWithPermission {
   private val animalInfoRepository: AnimalInfoRepository = LocalRepositories.animalInfoRepository
   private val animalRepository: AnimalRepository = LocalRepositories.animalRepository
   private val userAnimalsRepository: UserAnimalsRepository = LocalRepositories.userAnimalsRepository
+  private val geocodingRepository: GeocodingRepository = LocalRepositories.geocodingRepository
   private val currentUserId = "currentUserId"
   private val fakeObserver = FakeConnectivityObserver(initial = true)
 
@@ -64,6 +66,7 @@ class CameraScreenTestWithPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
+            geocodingRepository,
             currentUserId,
         )
   }
@@ -196,6 +199,7 @@ class CameraScreenTestWithPermission {
             userAnimalsRepository,
             animalRepository,
             delayedInfoRepo,
+            geocodingRepository,
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
@@ -292,6 +296,7 @@ class CameraScreenTestWithPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
+            geocodingRepository,
             currentUserId,
         )
     val mockUri = Uri.EMPTY
@@ -333,6 +338,7 @@ class CameraScreenTestWithPermission {
             userAnimalsRepository,
             animalRepository,
             delayedInfoRepo,
+            geocodingRepository,
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
@@ -414,6 +420,7 @@ class CameraScreenTestWithPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
+            geocodingRepository,
             currentUserId,
         )
     composeTestRule.setContent {

@@ -18,7 +18,6 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
-import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
@@ -50,7 +49,6 @@ class CameraScreenTestWithNoPermission {
   private val animalInfoRepository: AnimalInfoRepository = LocalRepositories.animalInfoRepository
   private val animalRepository: AnimalRepository = LocalRepositories.animalRepository
   private val userAnimalsRepository: UserAnimalsRepository = LocalRepositories.userAnimalsRepository
-  private val geocodingRepository: GeocodingRepository = LocalRepositories.geocodingRepository
   private val currentUserId = "currentUserId"
   private val fakeObserver = FakeConnectivityObserver(initial = true)
 
@@ -65,7 +63,6 @@ class CameraScreenTestWithNoPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
-            geocodingRepository,
             currentUserId,
         )
   }
@@ -161,7 +158,6 @@ class CameraScreenTestWithNoPermission {
             userAnimalsRepository,
             animalRepository,
             delayedInfoRepo,
-            geocodingRepository,
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
@@ -215,9 +211,14 @@ class CameraScreenTestWithNoPermission {
   @Test
   fun postCreationScreen_inputsLocation() {
     val mockUri = mockk<Uri>()
+    var pickLocationCalled = false
+
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        CameraScreen(cameraScreenViewModel = viewModel)
+        CameraScreen(
+            cameraScreenViewModel = viewModel,
+            onPickLocation = { pickLocationCalled = true },
+        )
       }
     }
     composeTestRule.waitForIdle()
@@ -225,15 +226,10 @@ class CameraScreenTestWithNoPermission {
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
+        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_PICK)
         .performScrollTo()
         .performClick()
-    assert(viewModel.uiState.value.addLocation)
-    composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
-        .performScrollTo()
-        .performClick()
-    assert(!viewModel.uiState.value.addLocation)
+    assert(pickLocationCalled)
   }
 
   // ========== LOADING SCREEN TESTS ===============
@@ -254,7 +250,6 @@ class CameraScreenTestWithNoPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
-            geocodingRepository,
             currentUserId,
         )
     val mockUri = Uri.EMPTY
@@ -294,7 +289,6 @@ class CameraScreenTestWithNoPermission {
             userAnimalsRepository,
             animalRepository,
             delayedInfoRepo,
-            geocodingRepository,
             currentUserId,
         )
     // Make detection slow so we can see the detecting screen
@@ -339,12 +333,18 @@ class CameraScreenTestWithNoPermission {
   fun cameraScreen_onPost_calledAfterSuccessfulPostCreation() {
     val mockUri = Uri.EMPTY
     var onPostCalled = false
+    val vm = spyk(viewModel)
+    every { vm.createPost(any(), any()) } answers
+        {
+          val callback = secondArg<() -> Unit>()
+          callback()
+        }
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        CameraScreen(cameraScreenViewModel = viewModel) { onPostCalled = true }
+        CameraScreen(cameraScreenViewModel = vm, onPost = { onPostCalled = true })
       }
     }
-    runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
+    runBlocking { vm.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
     composeTestRule
@@ -372,7 +372,6 @@ class CameraScreenTestWithNoPermission {
             userAnimalsRepository,
             animalRepository,
             animalInfoRepository,
-            geocodingRepository,
             currentUserId,
         )
     composeTestRule.setContent {
@@ -442,7 +441,7 @@ class CameraScreenTestWithNoPermission {
         .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
+        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_PICK)
         .performScrollTo()
         .assertIsDisplayed()
     composeTestRule

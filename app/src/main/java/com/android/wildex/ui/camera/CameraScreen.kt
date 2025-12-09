@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -39,6 +40,9 @@ fun CameraScreen(
     cameraScreenViewModel: CameraScreenViewModel = viewModel(),
     onPost: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    onPickLocation: () -> Unit = {},
+    serializedLocation: Location? = null,
+    onPickedLocationConsumed: () -> Unit = {},
 ) {
   val uiState by cameraScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -52,15 +56,15 @@ fun CameraScreen(
     }
   }
 
+  LaunchedEffect(serializedLocation) {
+    if (serializedLocation != null) {
+      cameraScreenViewModel.onLocationPicked(serializedLocation)
+      onPickedLocationConsumed()
+    }
+  }
+
   val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
   val hasCameraPermission = cameraPermissionState.status.isGranted
-
-  val locationPermissionState =
-      rememberPermissionState(
-          Manifest.permission.ACCESS_COARSE_LOCATION,
-          onPermissionResult = { if (it) cameraScreenViewModel.toggleAddLocation() },
-      )
-  val hasLocationPermission = locationPermissionState.status.isGranted
 
   val imagePickerLauncher =
       rememberLauncherForActivityResult(
@@ -109,16 +113,14 @@ fun CameraScreen(
             PostCreationScreen(
                 description = uiState.description,
                 onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
-                useLocation = uiState.addLocation,
-                onLocationToggle = {
-                  if (!hasLocationPermission) locationPermissionState.launchPermissionRequest()
-                  else cameraScreenViewModel.toggleAddLocation()
-                },
                 photoUri = uiState.currentImageUri!!,
                 detectionResponse = uiState.animalDetectResponse!!,
                 onConfirm = {
                   cameraScreenViewModel.createPost(context = context, onPost = onPost)
                 },
+                onPickLocation = onPickLocation,
+                location = uiState.location,
+                onClear = { cameraScreenViewModel.clearLocation() },
                 onCancel = { cameraScreenViewModel.resetState() },
                 modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
             )

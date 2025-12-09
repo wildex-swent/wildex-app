@@ -411,12 +411,21 @@ private fun NavGraphBuilder.cameraComposable(
     navigationActions: NavigationActions,
     currentUserId: Id?,
 ) {
-  composable(Screen.Camera.route) {
+
+  composable(Screen.Camera.route) { backStackEntry ->
+    val savedStateHandle = backStackEntry.savedStateHandle
+    val serializedLocationFlow = remember {
+      savedStateHandle.getStateFlow<Location?>(LOCATION_PICKER_RESULT_KEY, null)
+    }
+    val pickedLocation by serializedLocationFlow.collectAsStateWithLifecycle()
     CameraScreen(
         bottomBar = {
           if (currentUserId != null) BottomNavigation(Tab.Camera, navigationActions, currentUserId)
         },
         onPost = { navigationActions.navigateTo(Screen.Home) },
+        onPickLocation = { navigationActions.navigateTo(Screen.LocationPicker) },
+        serializedLocation = pickedLocation,
+        onPickedLocationConsumed = { savedStateHandle[LOCATION_PICKER_RESULT_KEY] = null },
     )
   }
 }

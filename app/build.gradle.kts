@@ -263,6 +263,10 @@ dependencies {
 
   // Lottie
   implementation(libs.lottie.compose)
+
+  // DataStore
+  implementation(libs.datastore.preferences)
+  implementation(libs.datastore)
 }
 
 tasks.withType<Test> {

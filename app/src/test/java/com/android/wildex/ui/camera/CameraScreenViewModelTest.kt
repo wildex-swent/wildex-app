@@ -1,7 +1,9 @@
 package com.android.wildex.ui.camera
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
@@ -14,6 +16,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Tasks
 import io.mockk.*
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -32,6 +36,9 @@ class CameraScreenViewModelTest {
   private lateinit var animalRepository: AnimalRepository
   private lateinit var animalInfoRepository: AnimalInfoRepository
   private lateinit var context: Context
+  private lateinit var uri: Uri
+  private lateinit var resolver: ContentResolver
+  private lateinit var galleryUri: Uri
 
   private val testUserId = "test-user-123"
   private val testPostId = "test-post-123"
@@ -40,13 +47,19 @@ class CameraScreenViewModelTest {
 
   @Before
   fun setup() {
-
     postsRepository = mockk(relaxed = true)
     storageRepository = mockk(relaxed = true)
     userAnimalsRepository = mockk(relaxed = true)
     animalRepository = mockk(relaxed = true)
     animalInfoRepository = mockk(relaxed = true)
     context = mockk(relaxed = true)
+    uri = mockk()
+    resolver = mockk()
+    galleryUri = mockk()
+
+    every { context.contentResolver } returns resolver
+    every { resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, any()) } returns
+        galleryUri
 
     viewModel =
         CameraScreenViewModel(
@@ -90,6 +103,7 @@ class CameraScreenViewModelTest {
     assertNull(state.errorMsg)
     assertFalse(state.isLoading)
     assertFalse(state.isDetecting)
+    assertFalse(state.isSavingOffline)
   }
 
   @Test
@@ -163,6 +177,109 @@ class CameraScreenViewModelTest {
     viewModel.detectAnimalImage(uri, context)
     advanceUntilIdle()
     assertFalse(viewModel.uiState.value.isDetecting)
+  }
+
+  @Test
+  fun enterOfflinePreviewUpdatesUIState() {
+    viewModel.resetState()
+    val oldState = viewModel.uiState.value
+    assertFalse(oldState.isSavingOffline)
+    assertNull(oldState.currentImageUri)
+    viewModel.enterOfflinePreview(uri)
+    val newState = viewModel.uiState.value
+    assertTrue(newState.isSavingOffline)
+    assertNotNull(newState.currentImageUri)
+  }
+
+  @Test
+  fun saveImageToGalleryReturnsEarlyWithNullImage() {
+    runTest {
+      viewModel.resetState()
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+      assertNull(viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun saveImageToGallerySuccessfullyCopiesImageAndClearsState() {
+    runTest {
+      viewModel.enterOfflinePreview(uri)
+
+      val inputStream = "test".toByteArray().inputStream()
+      every { resolver.openInputStream(uri) } returns inputStream
+
+      val outputStream = ByteArrayOutputStream()
+      every { resolver.openOutputStream(galleryUri) } returns outputStream
+
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+
+      assertNull(viewModel.uiState.value.currentImageUri)
+      assertFalse(viewModel.uiState.value.isSavingOffline)
+    }
+  }
+
+  @Test
+  fun saveImageToGallerySetsErrorWhenInputStreamIsNull() {
+    runTest {
+      viewModel.enterOfflinePreview(uri)
+
+      every { resolver.openInputStream(uri) } returns null
+
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+
+      assertEquals("Failed to open source image.", viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun saveImageToGallerySetsErrorWhenGalleryInputInsertFails() {
+    runTest {
+      viewModel.enterOfflinePreview(uri)
+
+      val inputStream = mockk<InputStream>(relaxed = true)
+      every { resolver.openInputStream(uri) } returns inputStream
+
+      every { resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, any()) } returns null
+
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+
+      assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to save image"))
+    }
+  }
+
+  @Test
+  fun saveImageToGallerySetsErrorWhenOutputStreamIsNull() {
+    runTest {
+      viewModel.enterOfflinePreview(uri)
+
+      val inputStream = mockk<InputStream>(relaxed = true)
+      every { resolver.openInputStream(uri) } returns inputStream
+
+      every { resolver.openOutputStream(galleryUri) } returns null
+
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+
+      assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to save image"))
+    }
+  }
+
+  @Test
+  fun saveImageToGallerySetsErrorOnThrownException() {
+    runTest {
+      viewModel.enterOfflinePreview(uri)
+
+      every { resolver.openInputStream(uri) } throws RuntimeException("boom")
+
+      viewModel.saveImageToGallery(context)
+      advanceUntilIdle()
+
+      assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to save image"))
+    }
   }
 
   @Test

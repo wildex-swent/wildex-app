@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -195,8 +194,8 @@ private fun PostPicture(
                 .align(Alignment.TopCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.7f),
-                        1f to Color.Transparent,
+                        0f to colorScheme.background.copy(alpha = 0.7f),
+                        1f to colorScheme.tertiary,
                     )))
     // bottom gradient to transition into sheet
     Box(
@@ -206,7 +205,7 @@ private fun PostPicture(
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Transparent,
+                        0f to colorScheme.tertiary,
                         1f to colorScheme.background,
                     )))
   }

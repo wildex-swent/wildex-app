@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -146,9 +145,9 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
                             Brush.horizontalGradient(
                                 colors =
                                     listOf(
-                                        Color.Transparent,
+                                        colorScheme.tertiary,
                                         colorScheme.primary,
-                                        Color.Transparent,
+                                        colorScheme.tertiary,
                                     )),
                             shape = RoundedCornerShape(3.dp),
                         ))

@@ -88,7 +88,12 @@ fun PostDetailsActions(
                 if (intent.resolveActivity(context.packageManager) != null) {
                   context.startActivity(intent)
                 } else {
-                  Toast.makeText(context, "No Google Maps app found", Toast.LENGTH_SHORT).show()
+                  Toast.makeText(
+                          context,
+                          context.getString(R.string.post_details_no_maps_found),
+                          Toast.LENGTH_SHORT,
+                      )
+                      .show()
                 }
               }
               onDismissRequest()
@@ -126,7 +131,12 @@ fun PostDetailsActions(
                   clipboard.setClipEntry(
                       ClipEntry(clipData = ClipData.newPlainText("location", it)))
                 }
-                Toast.makeText(context, "Location copied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                        context,
+                        context.getString(R.string.post_details_location_copied),
+                        Toast.LENGTH_SHORT,
+                    )
+                    .show()
               }
               onDismissRequest()
             },
@@ -160,7 +170,11 @@ fun PostDetailsActions(
             onClick = {
               postLocation?.let {
                 val url =
-                    "https://www.google.com/maps/search/?api=1&query=${it.latitude},${it.longitude}"
+                    context.getString(
+                        R.string.post_details_maps_link,
+                        it.latitude.toString(),
+                        it.longitude.toString(),
+                    )
                 val intent =
                     Intent(Intent.ACTION_SEND).apply {
                       type = "text/plain"

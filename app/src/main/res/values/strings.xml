@@ -235,5 +235,8 @@
     <string name="location_search_box">Search city, address or place</string>
     <string name="location_picker_confirm_text">Is "%1$s" the location you want to pick?</string>
     <string name="location_picker_title">Pick Location</string>
+    <string name="post_details_no_maps_found">No Google Maps app found</string>
+    <string name="post_details_location_copied">Location copied</string>
+    <string name="post_details_maps_link">https://www.google.com/maps/search/?api=1&amp;query=%1$s,%2$s</string>
 
 </resources>

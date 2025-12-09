@@ -59,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -459,7 +458,7 @@ private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerSta
                   modifier =
                       Modifier.matchParentSize()
                           .clickable { onPostClick() }
-                          .background(Color.Transparent)
+                          .background(colorScheme.tertiary)
                           .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
             }
       }

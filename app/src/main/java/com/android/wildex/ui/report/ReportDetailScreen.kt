@@ -435,7 +435,7 @@ private fun ReportPicture(imageURL: URL) {
                 .background(
                     Brush.verticalGradient(
                         0f to Color.Black.copy(alpha = 0.7f),
-                        1f to Color.Transparent,
+                        1f to colorScheme.tertiary,
                     ),
                 ))
     Box(
@@ -445,7 +445,7 @@ private fun ReportPicture(imageURL: URL) {
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Transparent,
+                        0f to colorScheme.tertiary,
                         1f to colorScheme.background,
                     ),
                 ))

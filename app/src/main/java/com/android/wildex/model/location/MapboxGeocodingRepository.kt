@@ -42,7 +42,7 @@ class MapboxGeocodingRepository(
                 val addressParts = name.trim().split(',')
                 if (addressParts.size > 1) {
                   val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
-                  val generalAddress = addressParts.takeLast(1).joinToString(", ")
+                  val generalAddress = addressParts.takeLast(1).first()
                   Location(latitude, longitude, name, specificAddress, generalAddress)
                 } else {
                   Location(latitude, longitude, name)
@@ -188,7 +188,7 @@ class MapboxGeocodingRepository(
     val addressParts = name.trim().split(",")
     if (addressParts.isEmpty()) return Location(latitude, longitude, name)
 
-    val generalAddress = addressParts.takeLast(1).joinToString(", ")
+    val generalAddress = addressParts.takeLast(1).first()
     val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
 
     return Location(

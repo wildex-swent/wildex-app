@@ -54,7 +54,8 @@ data class MapUIState(
     val availableTabs: List<MapTab> = emptyList(),
     val activeTab: MapTab = MapTab.Posts,
     val pins: List<MapPin> = emptyList(),
-    val selected: PinDetails? = null,
+    val selected: List<PinDetails> = emptyList(),
+    val selectedIndex: Int = 0,
     val centerCoordinates: Location = Location(46.5197, 6.6323, "Lausanne"),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
@@ -115,7 +116,8 @@ class MapScreenViewModel(
             isError = false,
             errorMsg = null,
             isLoading = false,
-            selected = null)
+            selected = emptyList(),
+            selectedIndex = 0)
     viewModelScope.launch { updateUIState(userUid) }
   }
 
@@ -175,7 +177,8 @@ class MapScreenViewModel(
               centerCoordinates = centerCoordinates,
               isError = false,
               errorMsg = null,
-          )
+              selected = emptyList(),
+              selectedIndex = 0)
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load map components.")
       _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
@@ -190,7 +193,7 @@ class MapScreenViewModel(
    */
   fun onTabSelected(tab: MapTab, userUid: Id) {
     if (tab !in _uiState.value.availableTabs) return
-    _uiState.value = _uiState.value.copy(activeTab = tab, selected = null)
+    _uiState.value = _uiState.value.copy(activeTab = tab, selected = emptyList(), selectedIndex = 0)
     refreshUIState(userUid)
   }
 
@@ -208,39 +211,35 @@ class MapScreenViewModel(
         when (pin) {
           is MapPin.PostPin -> {
             val post = postRepository.getPost(pin.id)
-            val author = runCatching { userRepository.getSimpleUser(post.authorId) }.getOrNull()
-            val liked =
-                runCatching { likeRepository.getLikeForPost(post.postId) != null }
-                    .getOrDefault(false)
-            val animalName =
-                try {
-                  animalRepository.getAnimal(post.animalId).name
-                } catch (_: Exception) {
-                  "animal"
-                }
+            val author = userRepository.getSimpleUser(post.authorId)
+            val liked = likeRepository.getLikeForPost(post.postId) != null
+            val animalName = animalRepository.getAnimal(post.animalId).name
             val likeCount = likeRepository.getLikesForPost(post.postId).size
             val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
             _uiState.value =
                 _uiState.value.copy(
                     selected =
-                        PinDetails.PostDetails(
-                            post,
-                            author,
-                            liked,
-                            likeCount,
-                            commentCount,
-                            animalName,
-                        ))
+                        listOf(
+                            PinDetails.PostDetails(
+                                post,
+                                author,
+                                liked,
+                                likeCount,
+                                commentCount,
+                                animalName,
+                            )),
+                    selectedIndex = 0,
+                )
           }
           is MapPin.ReportPin -> {
             val report = reportRepository.getReport(pin.id)
-            val author = runCatching { userRepository.getSimpleUser(report.authorId) }.getOrNull()
-            val assignee =
-                report.assigneeId?.let {
-                  runCatching { userRepository.getSimpleUser(it) }.getOrNull()
-                }
+            val author = userRepository.getSimpleUser(report.authorId)
+            val assignee = report.assigneeId?.let { userRepository.getSimpleUser(it) }
             _uiState.value =
-                _uiState.value.copy(selected = PinDetails.ReportDetails(report, author, assignee))
+                _uiState.value.copy(
+                    selected = listOf(PinDetails.ReportDetails(report, author, assignee)),
+                    selectedIndex = 0,
+                )
           }
           is MapPin.ClusterPin -> null
         }
@@ -250,9 +249,90 @@ class MapScreenViewModel(
     }
   }
 
+  /**
+   * Handles cluster pin selection by the user.
+   *
+   * @param cluster The selected [MapPin.ClusterPin].
+   */
+  fun onClusterPinClicked(cluster: MapPin.ClusterPin) {
+    viewModelScope.launch {
+      try {
+        val pins = _uiState.value.pins
+
+        val children = cluster.childIds.mapNotNull { id -> pins.firstOrNull { it.id == id } }
+
+        // Load all details in parallel
+        val details = loadClusterDetails(children)
+
+        if (details.isNotEmpty()) {
+          _uiState.value =
+              _uiState.value.copy(
+                  selected = details, // enable group selection
+                  selectedIndex = 0, // start at first item
+                  centerCoordinates = cluster.location,
+              )
+        }
+      } catch (e: Exception) {
+        setErrorMsg("Failed to load group: ${e.message}")
+      }
+    }
+  }
+
+  /**
+   * Loads details for all pins within a cluster.
+   *
+   * @param children List of [MapPin] representing the pins within the cluster.
+   * @return A list of [PinDetails] containing the details of each pin.
+   */
+  private suspend fun loadClusterDetails(children: List<MapPin>): List<PinDetails> =
+      coroutineScope {
+        val jobs = children.map { pin -> async { loadDetailForClusterPin(pin) } }
+        jobs.mapNotNull { it.await() }
+      }
+
+  /**
+   * Loads details for a single pin within a cluster.
+   *
+   * @param pin The [MapPin] for which to load details.
+   * @return The [PinDetails] for the pin, or null if loading fails.
+   */
+  private suspend fun loadDetailForClusterPin(pin: MapPin): PinDetails? =
+      when (pin) {
+        is MapPin.PostPin ->
+            try {
+              val post = postRepository.getPost(pin.id)
+              val author = userRepository.getSimpleUser(post.authorId)
+              val liked = likeRepository.getLikeForPost(post.postId) != null
+              val likeCount = likeRepository.getLikesForPost(post.postId).size
+              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
+              val animalName = animalRepository.getAnimal(post.animalId).name
+
+              PinDetails.PostDetails(
+                  post = post,
+                  author = author,
+                  likedByMe = liked,
+                  likeCount = likeCount,
+                  commentCount = commentCount,
+                  animalName = animalName,
+              )
+            } catch (_: Exception) {
+              null
+            }
+        is MapPin.ReportPin ->
+            try {
+              val report = reportRepository.getReport(pin.id)
+              val author = userRepository.getSimpleUser(report.authorId)
+              val assignee = report.assigneeId?.let { userRepository.getSimpleUser(it) }
+              PinDetails.ReportDetails(report, author, assignee)
+            } catch (_: Exception) {
+              null
+            }
+        else -> null
+      }
+
   /** Clears the currently selected pin details. */
   fun clearSelection() {
-    _uiState.value = _uiState.value.copy(selected = null)
+    _uiState.value = _uiState.value.copy(selected = emptyList(), selectedIndex = 0)
   }
 
   /** Clears any existing error message from the UI state. */
@@ -286,6 +366,20 @@ class MapScreenViewModel(
     _renderState.value = _renderState.value.copy(renderError = null)
   }
 
+  fun selectNext() {
+    val sel = _uiState.value.selected
+    if (sel.isEmpty()) return
+    val next = (_uiState.value.selectedIndex + 1) % sel.size
+    _uiState.value = _uiState.value.copy(selectedIndex = next)
+  }
+
+  fun selectPrev() {
+    val sel = _uiState.value.selected
+    if (sel.isEmpty()) return
+    val prev = (_uiState.value.selectedIndex - 1 + sel.size) % sel.size
+    _uiState.value = _uiState.value.copy(selectedIndex = prev)
+  }
+
   /** Sets a new error message in the UI state. */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
@@ -306,18 +400,12 @@ class MapScreenViewModel(
 
     val before = _uiState.value
     val beforeSelection = before.selected
-    val optimistic =
-        (beforeSelection as? PinDetails.PostDetails)
-            ?.takeIf { it.post.postId == postId }
-            ?.let { sel ->
-              val likedNow = !sel.likedByMe
-              sel.copy(
-                  likedByMe = likedNow,
-                  likeCount =
-                      if (likedNow) sel.likeCount + 1 else (sel.likeCount - 1).coerceAtLeast(0),
-              )
-            }
-    if (optimistic != null) _uiState.value = before.copy(selected = optimistic)
+    val optimistic = buildOptimisticSelection(beforeSelection, postId)
+
+    val didOptimisticallyChange = optimistic != beforeSelection
+    if (didOptimisticallyChange) {
+      _uiState.value = before.copy(selected = optimistic)
+    }
 
     viewModelScope.launch {
       try {
@@ -329,13 +417,35 @@ class MapScreenViewModel(
       } catch (e: Exception) {
         val cur = _uiState.value
         val curSel = cur.selected
-        if (curSel is PinDetails.PostDetails && curSel.post.postId == postId) {
+        val hadTarget = curSel.any { it is PinDetails.PostDetails && it.post.postId == postId }
+        if (hadTarget) {
           _uiState.value =
               cur.copy(selected = beforeSelection, errorMsg = "Could not update like: ${e.message}")
         } else setErrorMsg("Could not update like: ${e.message}")
       }
     }
   }
+
+  /**
+   * Builds an optimistic selection state for a post after toggling its like status.
+   *
+   * @param beforeSelection The current list of [PinDetails] before the like toggle.
+   * @param postId The ID of the post whose like status is being toggled.
+   * @return A new list of [PinDetails] reflecting the optimistic like status change.
+   */
+  private fun buildOptimisticSelection(
+      beforeSelection: List<PinDetails>,
+      postId: Id,
+  ): List<PinDetails> =
+      beforeSelection.map { sel ->
+        if (sel is PinDetails.PostDetails && sel.post.postId == postId) {
+          val likedNow = !sel.likedByMe
+          sel.copy(
+              likedByMe = likedNow,
+              likeCount = if (likedNow) sel.likeCount + 1 else (sel.likeCount - 1).coerceAtLeast(0),
+          )
+        } else sel
+      }
 
   /**
    * Loads all posts with their authors' avatar URLs.

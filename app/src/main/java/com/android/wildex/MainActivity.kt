@@ -204,10 +204,7 @@ private fun NavGraphBuilder.submitFormComposable(navigationActions: NavigationAc
   composable(Screen.SubmitReport.route) { backStackEntry ->
     val savedStateHandle = backStackEntry.savedStateHandle
     val serializedLocationFlow = remember {
-      savedStateHandle.getStateFlow<Location?>(
-          LOCATION_PICKER_RESULT_KEY,
-          null,
-      )
+      savedStateHandle.getStateFlow<Location?>(LOCATION_PICKER_RESULT_KEY, null)
     }
     val pickedLocation by serializedLocationFlow.collectAsStateWithLifecycle()
 

@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -60,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -260,7 +258,7 @@ fun PostItem(
     postState: PostState,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
-    onPostClick: (Id) -> Unit
+    onPostClick: (Id) -> Unit,
 ) {
   val post = postState.post
   val author = postState.author
@@ -288,8 +286,8 @@ fun PostItem(
         post = post,
         author = author,
         animalName = animalName,
-        colorScheme = colorScheme,
-        onProfilePictureClick = onProfilePictureClick)
+        onProfilePictureClick = onProfilePictureClick,
+    )
 
     // Image
     PostSlider(post = post, onPostClick = { onPostClick(post.postId) }, pagerState)
@@ -302,7 +300,8 @@ fun PostItem(
         commentCount = commentCount,
         onToggleLike = onToggleLike,
         onPostClick = { onPostClick(post.postId) },
-        pagerState = pagerState)
+        pagerState = pagerState,
+    )
   }
 }
 
@@ -312,7 +311,6 @@ fun PostItem(
  * @param post The post whose header is to be displayed.
  * @param author The author of the post.
  * @param animalName The name of the animal appearing on the post.
- * @param colorScheme The colorscheme to follow.
  * @param onProfilePictureClick The action when the user clicks on the profile picture of the post's
  *   author.
  */
@@ -321,7 +319,6 @@ private fun PostHeader(
     post: Post,
     author: SimpleUser,
     animalName: String,
-    colorScheme: ColorScheme,
     onProfilePictureClick: (Id) -> Unit,
 ) {
   Row(
@@ -353,32 +350,39 @@ private fun PostHeader(
             overflow = TextOverflow.Ellipsis,
         )
       }
-      Text(
-          text =
-              SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(post.date.toDate()),
-          style = typography.labelSmall,
-          color = colorScheme.onBackground,
-      )
-    }
-    if (post.location?.name?.isNotBlank() == true) {
-      Row(
-          modifier = Modifier.testTag(HomeScreenTestTags.locationTag(post.postId)),
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Icon(
-            imageVector = Icons.Default.LocationOn,
-            contentDescription = "Location",
-            modifier = Modifier.size(13.dp).offset(y = (-1).dp),
-            tint = colorScheme.onBackground,
-        )
-        Spacer(Modifier.width(2.dp))
+      Spacer(Modifier.height(6.dp))
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
-            text = post.location.name,
-            style = typography.labelMedium,
+            text =
+                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    .format(post.date.toDate()),
+            style = typography.labelSmall,
             color = colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
+        if (post.location?.generalName?.isNotBlank() == true) {
+          Row(
+              modifier =
+                  Modifier.weight(1f, fill = false)
+                      .testTag(HomeScreenTestTags.locationTag(post.postId)),
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Location",
+                modifier = Modifier.size(13.dp).offset(y = (-1).dp),
+                tint = colorScheme.onBackground,
+            )
+            Spacer(Modifier.width(2.dp))
+            Text(
+                text = post.location.generalName,
+                style = typography.labelMedium,
+                color = colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+          }
+        }
       }
     }
   }
@@ -397,73 +401,77 @@ private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerSta
       modifier =
           Modifier.fillMaxWidth()
               .height(LocalWindowInfo.current.containerSize.height.dp / 6)
-              .testTag(HomeScreenTestTags.sliderTag(post.postId))) { page ->
-        when (page) {
-          0 -> {
-            AsyncImage(
-                model = post.pictureURL,
-                contentDescription = "Post picture",
-                modifier =
-                    Modifier.fillMaxSize()
-                        .testTag(HomeScreenTestTags.imageTag(post.postId))
-                        .clickable { onPostClick() },
-                contentScale = ContentScale.Crop,
-            )
-          }
-          1 -> {
-            val loc = post.location!!
-            val context = LocalContext.current
-            val isDark =
-                when (AppTheme.appearanceMode) {
-                  AppearanceMode.DARK -> true
-                  AppearanceMode.LIGHT -> false
-                  AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
-                }
-            Box(
-                modifier =
-                    Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-                  StaticMiniMap(
-                      modifier = Modifier.matchParentSize(),
-                      pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                      styleUri = context.getString(R.string.map_style),
-                      styleImportId = context.getString(R.string.map_standard_import),
-                      isDark = isDark,
-                      fallbackZoom = 2.0,
-                      context = context)
-                  Row(
-                      verticalAlignment = Alignment.CenterVertically,
-                      modifier =
-                          Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                              .clip(RoundedCornerShape(20.dp))
-                              .background(colorScheme.onBackground)
-                              .padding(horizontal = 10.dp, vertical = 8.dp),
-                  ) {
-                    Icon(
-                        imageVector = Icons.Filled.Place,
-                        contentDescription = "Country Icon",
-                        tint = colorScheme.background,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                        text = post.location.name,
-                        style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = colorScheme.background,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                  }
-                  Box(
-                      modifier =
-                          Modifier.matchParentSize()
-                              .clickable { onPostClick() }
-                              .background(Color.Transparent)
-                              .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
-                }
-          }
-        }
+              .testTag(HomeScreenTestTags.sliderTag(post.postId)),
+  ) { page ->
+    when (page) {
+      0 -> {
+        AsyncImage(
+            model = post.pictureURL,
+            contentDescription = "Post picture",
+            modifier =
+                Modifier.fillMaxSize().testTag(HomeScreenTestTags.imageTag(post.postId)).clickable {
+                  onPostClick()
+                },
+            contentScale = ContentScale.Crop,
+        )
       }
+      1 -> {
+        val loc = post.location!!
+        val context = LocalContext.current
+        val isDark =
+            when (AppTheme.appearanceMode) {
+              AppearanceMode.DARK -> true
+              AppearanceMode.LIGHT -> false
+              AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
+            }
+        Box(
+            modifier =
+                Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+              StaticMiniMap(
+                  modifier = Modifier.matchParentSize(),
+                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                  styleUri = context.getString(R.string.map_style),
+                  styleImportId = context.getString(R.string.map_standard_import),
+                  isDark = isDark,
+                  fallbackZoom = 2.0,
+                  context = context,
+              )
+              if (loc.specificName.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(colorScheme.onBackground)
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                  Icon(
+                      imageVector = Icons.Filled.Place,
+                      contentDescription = "Country Icon",
+                      tint = colorScheme.background,
+                      modifier = Modifier.size(16.dp),
+                  )
+                  Spacer(modifier = Modifier.width(6.dp))
+                  Text(
+                      modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                      text = loc.specificName,
+                      style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                      color = colorScheme.background,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis,
+                  )
+                }
+              }
+              Box(
+                  modifier =
+                      Modifier.matchParentSize()
+                          .clickable { onPostClick() }
+                          .background(colorScheme.tertiary)
+                          .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
+            }
+      }
+    }
+  }
 }
 
 @Composable
@@ -496,7 +504,7 @@ private fun PostActions(
     commentCount: Int,
     onToggleLike: () -> Unit,
     onPostClick: () -> Unit,
-    pagerState: PagerState
+    pagerState: PagerState,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
@@ -532,15 +540,17 @@ private fun PostActions(
       Box(
           modifier =
               Modifier.fillMaxHeight().testTag(HomeScreenTestTags.sliderStateTag(post.postId)),
-          contentAlignment = Alignment.TopCenter) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 5.dp)) {
-                  SlideState(0, pagerState.currentPage)
-                  Spacer(modifier = Modifier.width(5.dp))
-                  SlideState(1, pagerState.currentPage)
-                }
-          }
+          contentAlignment = Alignment.TopCenter,
+      ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 5.dp),
+        ) {
+          SlideState(0, pagerState.currentPage)
+          Spacer(modifier = Modifier.width(5.dp))
+          SlideState(1, pagerState.currentPage)
+        }
+      }
     }
 
     // Comments

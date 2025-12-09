@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -29,6 +30,7 @@ object CameraScreenTestTags {
   const val CAMERA_PREVIEW_SCREEN = "camera_preview_screen"
   const val DETECTING_SCREEN = "detecting_screen"
   const val POST_CREATION_SCREEN = "post_creation_screen"
+  const val SAVE_TO_GALLERY_SCREEN = "save_to_gallery_screen"
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -40,6 +42,8 @@ fun CameraScreen(
 ) {
   val uiState by cameraScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
@@ -51,7 +55,11 @@ fun CameraScreen(
   val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
   val hasCameraPermission = cameraPermissionState.status.isGranted
 
-  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+  val locationPermissionState =
+      rememberPermissionState(
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          onPermissionResult = { if (it) cameraScreenViewModel.toggleAddLocation() },
+      )
   val hasLocationPermission = locationPermissionState.status.isGranted
 
   val imagePickerLauncher =
@@ -75,7 +83,8 @@ fun CameraScreen(
           CameraPreviewScreen(
               onPhotoTaken = {
                 cameraScreenViewModel.updateImageUri(it)
-                cameraScreenViewModel.detectAnimalImage(it, context)
+                if (isOnline) cameraScreenViewModel.detectAnimalImage(it, context)
+                else cameraScreenViewModel.enterOfflinePreview(it)
               },
               onUploadClick = { imagePickerLauncher.launch("image/*") },
               modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
@@ -87,7 +96,8 @@ fun CameraScreen(
               onUploadClick = { imagePickerLauncher.launch("image/*") },
               modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
               permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
-              extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
+              extraRequestMsg = context.getString(R.string.camera_permission_msg_2),
+          )
         }
         uiState.isDetecting ->
             DetectingScreen(
@@ -111,6 +121,13 @@ fun CameraScreen(
                 },
                 onCancel = { cameraScreenViewModel.resetState() },
                 modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
+            )
+        uiState.isSavingOffline ->
+            SaveToGalleryScreen(
+                photoUri = uiState.currentImageUri!!,
+                onSave = { cameraScreenViewModel.saveImageToGallery(context) },
+                onDiscard = { cameraScreenViewModel.resetState() },
+                modifier = Modifier.testTag(CameraScreenTestTags.SAVE_TO_GALLERY_SCREEN),
             )
       }
     }

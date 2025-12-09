@@ -62,7 +62,7 @@ class HomeScreenTest {
           authorId = "poster0",
           pictureURL =
               "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14213.jpg",
-          location = Location(0.0, 0.0, "Casablanca"),
+          location = Location(0.0, 0.0, "Casablanca", "Casablanca", "Casablanca"),
           description = "Description 1",
           date = Timestamp.now(),
           animalId = "a1",

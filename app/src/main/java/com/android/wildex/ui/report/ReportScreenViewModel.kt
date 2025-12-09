@@ -163,7 +163,7 @@ class ReportScreenViewModel(
       ReportUIState(
           reportId = report.reportId,
           imageURL = report.imageURL,
-          location = report.location.name,
+          location = report.location.generalName,
           date = formatDate(report.date),
           description = report.description,
           author = author,

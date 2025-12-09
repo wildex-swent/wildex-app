@@ -27,7 +27,8 @@ import java.util.Calendar
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -196,16 +197,16 @@ class HomeScreenViewModelTest {
   @Test
   fun viewModel_initializes_default_UI_state() {
     val initialState = viewModel.uiState.value
-    Assert.assertTrue(initialState.postStates.isEmpty())
-    Assert.assertEquals(initialState.currentUser, defaultUser)
-    Assert.assertFalse(initialState.isRefreshing)
-    Assert.assertFalse(initialState.isLoading)
-    Assert.assertNull(initialState.errorMsg)
-    Assert.assertFalse(initialState.isError)
-    Assert.assertFalse(initialState.postsFilters.onlyFriendsPosts)
-    Assert.assertNull(initialState.postsFilters.ofAnimal)
-    Assert.assertNull(initialState.postsFilters.fromPlace)
-    Assert.assertNull(initialState.postsFilters.fromAuthor)
+    assertTrue(initialState.postStates.isEmpty())
+    assertEquals(initialState.currentUser, defaultUser)
+    assertFalse(initialState.isRefreshing)
+    assertFalse(initialState.isLoading)
+    assertNull(initialState.errorMsg)
+    assertFalse(initialState.isError)
+    assertFalse(initialState.postsFilters.onlyFriendsPosts)
+    assertNull(initialState.postsFilters.ofAnimal)
+    assertNull(initialState.postsFilters.fromPlace)
+    assertNull(initialState.postsFilters.fromAuthor)
   }
 
   @Test
@@ -217,8 +218,8 @@ class HomeScreenViewModelTest {
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.refreshUIState()
 
-      Assert.assertTrue(viewModel.uiState.value.isRefreshing)
-      Assert.assertFalse(viewModel.uiState.value.isLoading)
+      assertTrue(viewModel.uiState.value.isRefreshing)
+      assertFalse(viewModel.uiState.value.isLoading)
       deferred.complete(listOf(p1, p2))
       advanceUntilIdle()
       val expectedStates =
@@ -239,11 +240,11 @@ class HomeScreenViewModelTest {
                   commentsCount = 1),
           )
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(expectedStates, updatedState.postStates)
-      Assert.assertEquals(u1, updatedState.currentUser)
-      Assert.assertFalse(updatedState.isLoading)
-      Assert.assertNull(updatedState.errorMsg)
-      Assert.assertFalse(updatedState.isRefreshing)
+      assertEquals(expectedStates, updatedState.postStates)
+      assertEquals(u1, updatedState.currentUser)
+      assertFalse(updatedState.isLoading)
+      assertNull(updatedState.errorMsg)
+      assertFalse(updatedState.isRefreshing)
     }
   }
 
@@ -251,15 +252,13 @@ class HomeScreenViewModelTest {
   fun loadUIState_updates_UI_state_success() {
     mainDispatcherRule.runTest {
       val deferred = CompletableDeferred<List<Post>>()
-      val location = p1.location ?: Location(0.0, 0.0)
-      val location2 = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
       viewModel.loadUIState()
 
-      Assert.assertTrue(viewModel.uiState.value.isLoading)
-      Assert.assertFalse(viewModel.uiState.value.isRefreshing)
+      assertTrue(viewModel.uiState.value.isLoading)
+      assertFalse(viewModel.uiState.value.isRefreshing)
       deferred.complete(listOf(p1, p2))
       advanceUntilIdle()
       val expectedStates =
@@ -280,11 +279,11 @@ class HomeScreenViewModelTest {
                   commentsCount = 1),
           )
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(expectedStates, updatedState.postStates)
-      Assert.assertEquals(u1, updatedState.currentUser)
-      Assert.assertFalse(updatedState.isLoading)
-      Assert.assertNull(updatedState.errorMsg)
-      Assert.assertFalse(updatedState.isRefreshing)
+      assertEquals(expectedStates, updatedState.postStates)
+      assertEquals(u1, updatedState.currentUser)
+      assertFalse(updatedState.isLoading)
+      assertNull(updatedState.errorMsg)
+      assertFalse(updatedState.isRefreshing)
     }
   }
 
@@ -298,11 +297,11 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertTrue(s.postStates.isEmpty())
-      Assert.assertEquals(s.currentUser, defaultUser)
-      Assert.assertFalse(s.isLoading)
-      Assert.assertFalse(s.isRefreshing)
-      Assert.assertNotNull(s.errorMsg)
+      assertTrue(s.postStates.isEmpty())
+      assertEquals(s.currentUser, defaultUser)
+      assertFalse(s.isLoading)
+      assertFalse(s.isRefreshing)
+      assertNotNull(s.errorMsg)
     }
   }
 
@@ -325,12 +324,12 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertTrue(s.postStates.isEmpty())
-      Assert.assertEquals(s.currentUser.userId, defaultUser.userId)
-      Assert.assertEquals(s.currentUser.username, defaultUser.username)
-      Assert.assertFalse(s.isLoading)
-      Assert.assertFalse(s.isRefreshing)
-      Assert.assertNotNull(s.errorMsg)
+      assertTrue(s.postStates.isEmpty())
+      assertEquals(s.currentUser.userId, defaultUser.userId)
+      assertEquals(s.currentUser.username, defaultUser.username)
+      assertFalse(s.isLoading)
+      assertFalse(s.isRefreshing)
+      assertNotNull(s.errorMsg)
     }
   }
 
@@ -349,11 +348,11 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
       val s2 = viewModel.uiState.value
 
-      Assert.assertEquals(s1.postStates, s2.postStates)
-      Assert.assertEquals(s1.currentUser, s2.currentUser)
-      Assert.assertNotNull(s2.errorMsg)
-      Assert.assertFalse(s2.isLoading)
-      Assert.assertFalse(s2.isRefreshing)
+      assertEquals(s1.postStates, s2.postStates)
+      assertEquals(s1.currentUser, s2.currentUser)
+      assertNotNull(s2.errorMsg)
+      assertFalse(s2.isLoading)
+      assertFalse(s2.isRefreshing)
     }
   }
 
@@ -367,7 +366,6 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val u2 = u1.copy(username = "user_one_2")
-      val location = p2.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } returns listOf(p2)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u2
       coEvery { likeRepository.getLikeForPost("p2") } returns like2
@@ -385,16 +383,16 @@ class HomeScreenViewModelTest {
                   likeCount = 1,
                   commentsCount = 1),
           )
-      Assert.assertEquals(expectedStates, s.postStates)
-      Assert.assertEquals(u2, s.currentUser)
+      assertEquals(expectedStates, s.postStates)
+      assertEquals(u2, s.currentUser)
     }
   }
 
   @Test
   fun homeUIState_defaultValues_areCorrect() {
     val s = HomeUIState()
-    Assert.assertTrue(s.postStates.isEmpty())
-    Assert.assertEquals(s.currentUser, defaultUser)
+    assertTrue(s.postStates.isEmpty())
+    assertEquals(s.currentUser, defaultUser)
   }
 
   @Test
@@ -432,7 +430,6 @@ class HomeScreenViewModelTest {
   @Test
   fun refreshUIState_setsAndClears_isLoading_and_clearsErrorOnSuccess() {
     mainDispatcherRule.runTest {
-      val location = p1.location ?: Location(0.0, 0.0)
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
 
@@ -440,9 +437,9 @@ class HomeScreenViewModelTest {
       advanceUntilIdle()
 
       val s = viewModel.uiState.value
-      Assert.assertFalse(s.isLoading)
-      Assert.assertNull(s.errorMsg)
-      Assert.assertEquals(
+      assertFalse(s.isLoading)
+      assertNull(s.errorMsg)
+      assertEquals(
           listOf(
               PostState(
                   p1,
@@ -462,10 +459,10 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } throws RuntimeException("boom")
       viewModel.refreshUIState()
       advanceUntilIdle()
-      Assert.assertNotNull(viewModel.uiState.value.errorMsg)
+      assertNotNull(viewModel.uiState.value.errorMsg)
 
       viewModel.clearErrorMsg()
-      Assert.assertNull(viewModel.uiState.value.errorMsg)
+      assertNull(viewModel.uiState.value.errorMsg)
     }
   }
 
@@ -497,10 +494,10 @@ class HomeScreenViewModelTest {
 
     val state = viewModel.uiState.value
 
-    Assert.assertTrue(state.postsFilters.onlyFriendsPosts)
-    Assert.assertEquals("NewAnimalFilter", state.postsFilters.ofAnimal)
-    Assert.assertEquals("NewPlaceFilter", state.postsFilters.fromPlace)
-    Assert.assertEquals(
+    assertTrue(state.postsFilters.onlyFriendsPosts)
+    assertEquals("NewAnimalFilter", state.postsFilters.ofAnimal)
+    assertEquals("NewPlaceFilter", state.postsFilters.fromPlace)
+    assertEquals(
         SimpleUser(
             userId = "NewUserIdFilter",
             username = "NewUsernameFilter",
@@ -516,7 +513,7 @@ class HomeScreenViewModelTest {
     val actual = viewModel.filterPosts(postStates = postStates)
     val expected = postStates.reversed()
 
-    Assert.assertEquals(expected, actual)
+    assertEquals(expected, actual)
   }
 
   @Test
@@ -529,8 +526,8 @@ class HomeScreenViewModelTest {
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    Assert.assertTrue(actual.contains(postState1))
-    Assert.assertEquals(1, actual.size)
+    assertTrue(actual.contains(postState1))
+    assertEquals(1, actual.size)
   }
 
   @Test
@@ -541,8 +538,8 @@ class HomeScreenViewModelTest {
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    Assert.assertTrue(actual.contains(postState1))
-    Assert.assertEquals(1, actual.size)
+    assertTrue(actual.contains(postState1))
+    assertEquals(1, actual.size)
   }
 
   @Test
@@ -553,8 +550,8 @@ class HomeScreenViewModelTest {
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    Assert.assertTrue(actual.contains(postState1))
-    Assert.assertEquals(1, actual.size)
+    assertTrue(actual.contains(postState1))
+    assertEquals(1, actual.size)
   }
 
   @Test
@@ -565,7 +562,7 @@ class HomeScreenViewModelTest {
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    Assert.assertTrue(actual.contains(postState1))
-    Assert.assertEquals(1, actual.size)
+    assertTrue(actual.contains(postState1))
+    assertEquals(1, actual.size)
   }
 }

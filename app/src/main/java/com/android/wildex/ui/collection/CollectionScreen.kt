@@ -138,7 +138,6 @@ fun OtherUserCollectionTopBar(onGoBack: () -> Unit) {
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = "Back",
-              tint = colorScheme.tertiary,
               modifier = Modifier.size(30.dp),
           )
         }

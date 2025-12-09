@@ -20,8 +20,6 @@
     <string name="profile">My Profile</string>
     <string name="view_map">View in full screen →</string>
     <string name="default_description">No bio yet.</string>
-    <string name="send_friend_request">Send Friend Request</string>
-    <string name="cancel_friend_request">Cancel Friend Request</string>
     <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
 
@@ -92,6 +90,7 @@
     <string name="map_posts">Posts</string>
     <string name="map_my_posts">My posts</string>
     <string name="map_reports">Reports</string>
+    <string name="cluster_group_position">%1$d / %2$d</string>
 
     <!-- Achievements screen -->
     <string name="achievements">Achievements</string>
@@ -122,6 +121,14 @@
     <string name="cancel_button">Cancel &amp; Retry</string>
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>
+
+    <!-- Save to gallery screen -->
+    <string name="save_to_gallery_first">Save to gallery ?</string>
+    <string name="save_to_gallery_second">You are offline. Do you want to keep this picture and post later?</string>
+    <string name="save_to_gallery_third">Save</string>
+    <string name="discard_picture_first">Discard this picture ?</string>
+    <string name="discard_picture_second">This will discard this picture and take you back to the camera screen</string>
+    <string name="discard_picture_third">Confirm</string>
 
     <!--   Submit report screen   -->
     <string name="report">Report</string>
@@ -180,16 +187,16 @@
     <string name="report_details_share_location">Share location</string>
     <string name="report_details_no_apps">No apps available.</string>
     <string name="report_details_share_body">
-    ⚠️ Wildex report: possible endangered or injured animal\n
-    \n
-    A report was created near:\n
-    %1$s\n
-    Coordinates: %2$s, %3$s\n
-    \n
-    Map link: %4$s\n
-    \n
-    Shared from Wildex – a community for watching over wildlife.
-</string>
+        ⚠️ Wildex report: possible endangered or injured animal\n
+        \n
+        A report was created near:\n
+        %1$s\n
+        Coordinates: %2$s, %3$s\n
+        \n
+        Map link: %4$s\n
+        \n
+        Shared from Wildex – a community for watching over wildlife.
+    </string>
     <string name="report_details_add_comment">Add a comment …</string>
     <plurals name="report_details_comments_count">
         <item quantity="one">%d Comment</item>
@@ -216,10 +223,19 @@
     <string name="post_details_actions_copy">Copy location</string>
     <string name="post_details_actions_share">Share location</string>
     <string name="post_details_actions_delete_post">Delete post</string>
+    <string name="post_details_share_body">
+        Check out this wildlife sighting on Wildex!\n
+        📍 Location :\n
+        %1$s\n
+        See more on Wildex!
+    </string>
 
     <!-- Location Picker screen -->
     <string name="location_search_box">Search city, address or place</string>
     <string name="location_picker_confirm_text">Is "%1$s" the location you want to pick?</string>
     <string name="location_picker_title">Pick Location</string>
+    <string name="post_details_no_maps_found">No Google Maps app found</string>
+    <string name="post_details_location_copied">Location copied</string>
+    <string name="post_details_maps_link">https://www.google.com/maps/search/?api=1&amp;query=%1$s,%2$s</string>
 
 </resources>

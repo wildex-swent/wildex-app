@@ -159,20 +159,25 @@ fun PostDetailsScreenContent(
         PostDetailsContent(
             uiState = uiState,
             postDetailsScreenViewModel = postDetailsScreenViewModel,
-            onProfile = onProfile)
+            onProfile = onProfile,
+        )
         if (showDeletionValidation) {
           AlertDialog(
               onDismissRequest = { showDeletionValidation = false },
+              containerColor = colorScheme.background,
               title = {
                 Text(
                     text = context.getString(R.string.post_details_delete_post),
-                    style = typography.titleLarge)
+                    style = typography.titleLarge,
+                )
               },
               text = {
                 Text(
                     text = context.getString(R.string.post_details_delete_post_confirmation),
-                    style = typography.bodyMedium)
+                    style = typography.bodyMedium,
+                )
               },
+              tonalElevation = 4.dp,
               modifier = Modifier.testTag(PostDetailsScreenTestTags.DELETE_POST_DIALOG),
               confirmButton = {
                 TextButton(
@@ -187,7 +192,8 @@ fun PostDetailsScreenContent(
                   Text(
                       text = context.getString(R.string.post_details_final_delete_post),
                       color = colorScheme.error,
-                      style = typography.bodyMedium)
+                      style = typography.bodyMedium,
+                  )
                 }
               },
               dismissButton = {
@@ -198,7 +204,8 @@ fun PostDetailsScreenContent(
                 ) {
                   Text(
                       text = context.getString(R.string.post_details_cancel_delete_post),
-                      style = typography.bodyMedium)
+                      style = typography.bodyMedium,
+                  )
                 }
               },
           )

@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -95,7 +94,7 @@ fun PostDetailsContent(
             Spacer(Modifier.height(8.dp))
 
             LocationSpeciesLikeBar(
-                location = uiState.location?.name ?: "",
+                location = uiState.location?.generalName ?: "",
                 species = uiState.animalSpecies,
                 likedByCurrentUser = uiState.likedByCurrentUser,
                 likesCount = uiState.likesCount,
@@ -195,8 +194,8 @@ private fun PostPicture(
                 .align(Alignment.TopCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.7f),
-                        1f to Color.Transparent,
+                        0f to colorScheme.background.copy(alpha = 0.7f),
+                        1f to colorScheme.tertiary,
                     )))
     // bottom gradient to transition into sheet
     Box(
@@ -206,7 +205,7 @@ private fun PostPicture(
                 .align(Alignment.BottomCenter)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Transparent,
+                        0f to colorScheme.tertiary,
                         1f to colorScheme.background,
                     )))
   }
@@ -271,6 +270,9 @@ fun LocationSpeciesLikeBar(
     onLike: () -> Unit = {},
     onUnlike: () -> Unit = {},
 ) {
+  val size = 1.plus(if (species.isNotBlank()) 1 else 0).plus(if (location.isNotBlank()) 1 else 0)
+  val itemWeight = 1f / size
+
   // Location & Likes row
   Row(
       modifier = Modifier.fillMaxWidth(),
@@ -283,6 +285,7 @@ fun LocationSpeciesLikeBar(
     if (location.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.weight(itemWeight),
       ) {
         Icon(
             imageVector = Icons.Filled.LocationOn,
@@ -304,6 +307,7 @@ fun LocationSpeciesLikeBar(
     if (species.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.weight(itemWeight),
       ) {
         Icon(
             imageVector = Icons.Filled.Pets,
@@ -328,6 +332,7 @@ fun LocationSpeciesLikeBar(
         onToggleLike = { if (!likedByCurrentUser) onLike() else onUnlike() },
         iconSize = iconSize,
         textStyle = textStyle,
+        modifier = Modifier.weight(itemWeight),
     )
   }
 }

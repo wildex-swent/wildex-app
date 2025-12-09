@@ -157,8 +157,7 @@ class CollectionScreenTest {
       CollectionScreen(
           collectionScreenVM,
           userUid = "currentUserId",
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
-          currentUserTopBar = true)
+          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
     }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
@@ -180,9 +179,7 @@ class CollectionScreenTest {
   @Test
   fun testTagsAreCorrectlySetWhenNoAnimalAndOtherUser() {
     clearRepos()
-    composeTestRule.setContent {
-      CollectionScreen(collectionScreenVM, userUid = "otherUserId", currentUserTopBar = false)
-    }
+    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
         .assertIsDisplayed()
@@ -232,10 +229,7 @@ class CollectionScreenTest {
 
     composeTestRule.setContent {
       CollectionScreen(
-          collectionScreenVM,
-          userUid = "otherUserId",
-          onGoBack = { goBackClicked = true },
-          currentUserTopBar = false)
+          collectionScreenVM, userUid = "otherUserId", onGoBack = { goBackClicked = true })
     }
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -282,9 +276,7 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenAnimalsAndOtherUser() {
-    composeTestRule.setContent {
-      CollectionScreen(collectionScreenVM, userUid = "otherUserId", currentUserTopBar = false)
-    }
+    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsDisplayed()

@@ -1,11 +1,5 @@
-package com.android.wildex.ui.home
+package com.android.wildex.ui.navigation
 
-/**
- * WildexHomeTopAppBar.kt
- *
- * Defines the top app bar for the Wildex home screen. Displays the app title, a notification icon,
- * and the user's profile picture. Provides callbacks for notification and profile actions.
- */
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -25,42 +19,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.android.wildex.model.user.SimpleUser
-import com.android.wildex.model.utils.Id
-import com.android.wildex.ui.home.HomeScreenTestTags.NOTIFICATION_BELL
-import com.android.wildex.ui.home.HomeScreenTestTags.PROFILE_PICTURE
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
-/**
- * Composable that renders the top app bar in the Wildex home screen.
- *
- * @param user The currently logged-in user, used to display their profile picture.
- * @param onNotificationClick Callback invoked when the notification icon is pressed.
- * @param onProfilePictureClick Callback invoked when the profile picture is pressed, passing the
- *   user's ID.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(
+fun TopLevelTopBar(
     user: SimpleUser,
-    onNotificationClick: () -> Unit,
-    onProfilePictureClick: (userId: Id) -> Unit,
+    title: String,
+    onNotificationClick: () -> Unit = {},
+    onProfilePictureClick: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
         Box(
-            modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.TITLE),
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
           Text(
-              text = "Wildex",
+              text = title,
               style = typography.titleLarge,
-          )
+              modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
         }
       },
       navigationIcon = {
         IconButton(
             onClick = { onNotificationClick() },
-            modifier = Modifier.testTag(NOTIFICATION_BELL),
+            modifier = Modifier.testTag(NavigationTestTags.NOTIFICATION_BELL),
         ) {
           Icon(
               imageVector = Icons.Outlined.Notifications,
@@ -72,11 +56,11 @@ fun HomeTopBar(
       actions = {
         Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
           ClickableProfilePicture(
-              modifier = Modifier.size(40.dp).testTag(PROFILE_PICTURE),
+              modifier = Modifier.size(40.dp).testTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE),
               profileId = user.userId,
               profilePictureURL = user.profilePictureURL,
               profileUserType = user.userType,
-              onProfile = onProfilePictureClick,
+              onProfile = { id -> onProfilePictureClick() },
           )
         }
       },

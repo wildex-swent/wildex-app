@@ -13,6 +13,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
@@ -128,28 +129,56 @@ class ReportScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).performClick()
+    composeRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).performClick()
     assert(notificationClicked)
   }
 
   @Test
-  fun profilePictureClick_invokesCallback() {
+  fun currentProfilePictureClick_invokesCallback() {
     fakeObserver.setOnline(true)
     var profilePictureClicked = false
     composeRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         ReportScreen(
             reportScreenViewModel = reportScreenViewModel,
-            onProfileClick = { profilePictureClicked = true },
+            onCurrentProfileClick = { profilePictureClicked = true },
+        )
+      }
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).performClick()
+    assert(profilePictureClicked)
+  }
+
+  @Test
+  fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var profilePictureClicked = ""
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onProfileClick = { profilePictureClicked = it },
         )
       }
     }
     composeRule.waitForIdle()
 
     composeRule
-        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForProfilePicture("user2", "author"),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
         .performClick()
-    assert(profilePictureClicked)
+    assert(profilePictureClicked == "user2")
+    composeRule
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForProfilePicture("user3", "author"),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    assert(profilePictureClicked == "user3")
   }
 
   @Test
@@ -162,11 +191,9 @@ class ReportScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
-        .assertIsDisplayed()
-    composeRule.onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.REPORT_LIST).assertIsDisplayed()
 
     composeRule
@@ -204,11 +231,9 @@ class ReportScreenTest {
     }
     composeRule.waitForIdle()
 
-    composeRule.onNodeWithTag(ReportScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(ReportScreenTestTags.testTagForProfilePicture("user1", "user"))
-        .assertIsDisplayed()
-    composeRule.onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportScreenTestTags.NO_REPORT_TEXT).assertIsDisplayed()
   }
 

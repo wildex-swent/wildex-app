@@ -157,18 +157,19 @@ class CollectionScreenTest {
       CollectionScreen(
           collectionScreenVM,
           userUid = "currentUserId",
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
+          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
+          currentUserTopBar = true)
     }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
         .assertIsDisplayed()
         .assertTextEquals("No animals in your collection yet.\nStart exploring…")
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(CollectionScreenTestTags.SCREEN_TITLE)
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertIsDisplayed()
         .assertTextEquals("My Collection")
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -179,18 +180,18 @@ class CollectionScreenTest {
   @Test
   fun testTagsAreCorrectlySetWhenNoAnimalAndOtherUser() {
     clearRepos()
-    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
+    composeTestRule.setContent {
+      CollectionScreen(collectionScreenVM, userUid = "otherUserId", currentUserTopBar = false)
+    }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
         .assertIsDisplayed()
         .assertTextEquals("No animals in this collection.")
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).assertIsNotDisplayed()
-    composeTestRule
-        .onNodeWithTag(CollectionScreenTestTags.NOTIFICATION_BUTTON)
-        .assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.SCREEN_TITLE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
     populateRepos()
   }
@@ -201,10 +202,12 @@ class CollectionScreenTest {
 
     composeTestRule.setContent {
       CollectionScreen(
-          collectionScreenVM, userUid = "currentUserId", onProfileClick = { profileClicked = true })
+          collectionScreenVM,
+          userUid = "currentUserId",
+          onProfilePictureClick = { profileClicked = true })
     }
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).performClick()
     assert(profileClicked)
   }
 
@@ -219,7 +222,7 @@ class CollectionScreenTest {
           onNotificationClick = { notificationClicked = true })
     }
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.NOTIFICATION_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).performClick()
     assert(notificationClicked)
   }
 
@@ -229,7 +232,10 @@ class CollectionScreenTest {
 
     composeTestRule.setContent {
       CollectionScreen(
-          collectionScreenVM, userUid = "otherUserId", onGoBack = { goBackClicked = true })
+          collectionScreenVM,
+          userUid = "otherUserId",
+          onGoBack = { goBackClicked = true },
+          currentUserTopBar = false)
     }
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -258,14 +264,14 @@ class CollectionScreenTest {
         .onNodeWithTag(CollectionScreenTestTags.testTagForAnimal("animalId-6", false))
         .assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.NOTIFICATION_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).assertIsNotDisplayed()
 
     composeTestRule
-        .onNodeWithTag(CollectionScreenTestTags.SCREEN_TITLE)
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertIsDisplayed()
         .assertTextEquals("My Collection")
 
@@ -276,7 +282,10 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenAnimalsAndOtherUser() {
-    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
+    composeTestRule.setContent {
+      CollectionScreen(collectionScreenVM, userUid = "otherUserId", currentUserTopBar = false)
+    }
+    composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsDisplayed()
 
@@ -290,15 +299,13 @@ class CollectionScreenTest {
         .onNodeWithTag(CollectionScreenTestTags.testTagForAnimal("animalId-1", false))
         .assertIsNotDisplayed()
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PROFILE_BUTTON).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsNotDisplayed()
 
-    composeTestRule
-        .onNodeWithTag(CollectionScreenTestTags.NOTIFICATION_BUTTON)
-        .assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsNotDisplayed()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(CollectionScreenTestTags.SCREEN_TITLE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsNotDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }

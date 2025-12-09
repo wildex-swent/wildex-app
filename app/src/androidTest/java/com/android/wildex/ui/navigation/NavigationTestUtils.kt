@@ -332,11 +332,11 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.navigateToMyProfileScreenFromHome() {
-    performClickOnTag(HomeScreenTestTags.PROFILE_PICTURE)
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 
   fun ComposeTestRule.navigateToMyProfileScreenFromCollection() {
-    performClickOnTag(CollectionScreenTestTags.PROFILE_BUTTON)
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 
   fun ComposeTestRule.navigateToPostDetailsScreenFromHome(postUid: String) {

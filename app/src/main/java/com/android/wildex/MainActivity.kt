@@ -339,6 +339,7 @@ private fun NavGraphBuilder.reportComposable(
           if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
         },
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onCurrentProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
         onReportClick = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
         onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
     )
@@ -364,17 +365,17 @@ private fun NavGraphBuilder.collectionComposable(
 ) {
   composable(Screen.Collection.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
+    val isCurrentUser = userId == currentUserId
     if (userId != null) {
       CollectionScreen(
           userUid = userId,
           onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
-          onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
           onGoBack = { navigationActions.goBack() },
+          onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
           bottomBar = {
-            if (userId == currentUserId)
-                BottomNavigation(Tab.Collection, navigationActions, currentUserId)
+            if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
           },
-      )
+          currentUserTopBar = isCurrentUser)
     }
   }
 }
@@ -445,7 +446,9 @@ private fun NavGraphBuilder.homeComposable(
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
-    )
+        onCurrentProfilePictureClick = {
+          navigationActions.navigateTo(Screen.Profile(currentUserId!!))
+        })
   }
 }
 

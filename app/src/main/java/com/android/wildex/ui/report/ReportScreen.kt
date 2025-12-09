@@ -54,14 +54,13 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
-  const val NOTIFICATION_BUTTON = "report_screen_notification_button"
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
-  const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
   const val SUBMIT_REPORT = "report_screen_submit_report"
   const val PULL_TO_REFRESH = "report_screen_pull_to_refresh"
@@ -89,6 +88,7 @@ object ReportScreenTestTags {
 fun ReportScreen(
     reportScreenViewModel: ReportScreenViewModel = viewModel(),
     onProfileClick: (Id) -> Unit = {},
+    onCurrentProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onReportClick: (Id) -> Unit = {},
     onSubmitReportClick: () -> Unit = {},
@@ -111,13 +111,17 @@ fun ReportScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.REPORT_SCREEN),
       bottomBar = { bottomBar() },
       topBar = {
-        ReportScreenTopBar(
-            userId = uiState.currentUser.userId,
-            userType = uiState.currentUser.userType,
-            userProfilePictureURL = uiState.currentUser.profilePictureURL,
-            onProfileClick = onProfileClick,
+        val user = uiState.currentUser
+        TopLevelTopBar(
+            user = user,
+            title =
+                when (user.userType) {
+                  UserType.REGULAR -> LocalContext.current.getString(R.string.report_title_regular)
+                  UserType.PROFESSIONAL ->
+                      LocalContext.current.getString(R.string.report_title_professional)
+                },
             onNotificationClick = onNotificationClick,
-        )
+            onProfilePictureClick = onCurrentProfileClick)
       },
   ) { innerPadding ->
     if (isOnline) {

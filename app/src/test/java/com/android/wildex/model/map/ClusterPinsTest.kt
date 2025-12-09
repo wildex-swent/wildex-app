@@ -53,7 +53,9 @@ class ClusterPinsTest {
     val c2 = clusterPin("c2", 46.1, 6.1, count = 5)
     val pins = listOf<MapPin>(c1, c2)
     val result = clusterPinsForZoom(pins, zoomBand = 8)
-    assertTrue(result.isEmpty())
+    assertEquals(2, result.size)
+    assertTrue(result.all { it is MapPin.ClusterPin })
+    assertEquals(setOf("c1", "c2"), result.map { it.id }.toSet())
   }
 
   @Test
@@ -111,5 +113,63 @@ class ClusterPinsTest {
     assertEquals(2, raw.size)
     assertTrue(raw.none { it is MapPin.ClusterPin })
     assertEquals(setOf("p1", "p2"), raw.map { it.id }.toSet())
+  }
+
+  @Test
+  fun stackSameLocationPins_singlePin_returnsSamePin() {
+    val p = postPin("p1", 46.0, 6.0)
+    val result = stackSameLocationPins(listOf(p))
+    assertEquals(1, result.size)
+    val only = result.single()
+    assertTrue(only is MapPin.PostPin)
+    assertEquals("p1", only.id)
+    assertEquals(p.location.latitude, only.location.latitude, 1e-9)
+    assertEquals(p.location.longitude, only.location.longitude, 1e-9)
+  }
+
+  @Test
+  fun stackSameLocationPins_multiplePins_sameLocation_stackedIntoCluster() {
+    val p1 = postPin("p1", 46.0, 6.0)
+    val p2 = postPin("p2", 46.0, 6.0)
+    val p3 = postPin("p3", 47.0, 7.0) // different location, should stay as-is
+    val result = stackSameLocationPins(listOf(p1, p2, p3))
+    assertEquals(2, result.size)
+    val cluster = result.first { it is MapPin.ClusterPin } as MapPin.ClusterPin
+    val lone = result.first { it.id == "p3" }
+    assertEquals("stack_p1", cluster.id)
+    assertEquals(2, cluster.count)
+    assertEquals(p1.location.latitude, cluster.location.latitude, 1e-9)
+    assertEquals(p1.location.longitude, cluster.location.longitude, 1e-9)
+    assertEquals(setOf("p1", "p2"), cluster.childIds.toSet())
+    assertTrue(lone is MapPin.PostPin)
+    assertEquals("p3", lone.id)
+  }
+
+  @Test
+  fun clusterPinsForZoom_mergesExistingClusterPinAndPost_withWeightsAndChildIds() {
+    val baseLocation = Location(46.0, 6.0, "ClusterBase")
+    val existingCluster =
+        MapPin.ClusterPin(
+            id = "c1",
+            location = baseLocation,
+            count = 3,
+            childIds = listOf("a", "b", "c"),
+        )
+    val post =
+        postPin(
+            id = "p1",
+            lat = 46.001,
+            lon = 6.001,
+        )
+    val pins: List<MapPin> = listOf(existingCluster, post)
+    val result = clusterPinsForZoom(pins, zoomBand = 8)
+    assertEquals(1, result.size)
+    val merged = result.single() as MapPin.ClusterPin
+    assertEquals(4, merged.count)
+    assertEquals(setOf("a", "b", "c", "p1"), merged.childIds.toSet())
+    val expectedLat = (baseLocation.latitude * 3 + post.location.latitude * 1) / 4.0
+    val expectedLon = (baseLocation.longitude * 3 + post.location.longitude * 1) / 4.0
+    assertEquals(expectedLat, merged.location.latitude, 1e-6)
+    assertEquals(expectedLon, merged.location.longitude, 1e-6)
   }
 }

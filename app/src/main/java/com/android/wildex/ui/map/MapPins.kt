@@ -297,7 +297,15 @@ private suspend fun upsertPinAnnotation(
   val (base, showExcl) =
       when (pin) {
         is MapPin.ClusterPin -> {
-          renderClusterPin(count = pin.count, borderColor = borderColor, scale = scale) to false
+          if (pin.id.startsWith("stack_")) {
+            val stacked =
+                withContext(PinsDispatchers.computation) {
+                  renderStackClusterPin(pin.count, borderColor, scale)
+                }
+            stacked to false
+          } else {
+            renderClusterPin(count = pin.count, borderColor = borderColor, scale = scale) to false
+          }
         }
         is MapPin.PostPin -> {
           val targetUrl = pin.imageURL.ifBlank { fallbackUrl }
@@ -614,6 +622,51 @@ internal fun renderBasePin(src: Bitmap?, borderColor: Int, scale: Float): Bitmap
   p.strokeWidth = strokeWidth
   c.drawCircle(cx, cy, imgRadius, p)
 
+  return out
+}
+
+/**
+ * Render a stacked cluster pin with photo and count badge.
+ *
+ * @param count Total number of pins in the stack.
+ * @param borderColor Color integer for the border and badge.
+ * @param scale Scale factor for the pin size.
+ * @return Rendered Bitmap of the stacked cluster pin.
+ */
+@WorkerThread
+@VisibleForTesting
+internal fun renderStackClusterPin(
+    count: Int,
+    borderColor: Int,
+    scale: Float,
+): Bitmap {
+  val base = renderBasePin(src = null, borderColor = borderColor, scale = scale)
+  val out = createBitmap(base.width, base.height)
+  val c = Canvas(out)
+  c.drawColor(Color.TRANSPARENT, PorterDuff.Mode.SRC)
+  val p = Paint(Paint.ANTI_ALIAS_FLAG)
+  c.drawBitmap(base, 0f, 0f, p)
+  val circleBox = BASE_CIRCLE * scale
+  val cx = circleBox / 2f
+  val cy = circleBox / 2f
+  val imgRadius = (circleBox / 2f) - PADDING * scale
+  p.style = Paint.Style.FILL
+  p.color = borderColor
+  c.drawCircle(cx, cy, imgRadius, p)
+  val text = if (count > 99) "99+" else count.toString()
+  p.color = Color.WHITE
+  p.textAlign = Paint.Align.CENTER
+  val baseSize = 28f * scale
+  p.textSize = baseSize
+  val bounds = Rect()
+  p.getTextBounds(text, 0, text.length, bounds)
+  val maxTextWidth = imgRadius * 1.7f
+  if (bounds.width() > maxTextWidth) {
+    p.textSize = 24f * scale
+    p.getTextBounds(text, 0, text.length, bounds)
+  }
+  val textY = cy - bounds.exactCenterY()
+  c.drawText(text, cx, textY, p)
   return out
 }
 

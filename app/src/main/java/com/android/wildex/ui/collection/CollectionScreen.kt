@@ -75,8 +75,6 @@ object CollectionScreenTestTags {
  *   collection of another user than the current logged one.
  * @param bottomBar Composable lambda for rendering the bottom navigation bar when we display the
  *   current user's collection.
- * @param currentUserTopBar boolean for rendering the correct top bar when the current user owns the
- *   screen
  */
 @Composable
 fun CollectionScreen(
@@ -86,8 +84,7 @@ fun CollectionScreen(
     onProfilePictureClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onGoBack: () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
-    currentUserTopBar: Boolean = true
+    bottomBar: @Composable () -> Unit = {}
 ) {
   val uiState by collectionScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -104,7 +101,7 @@ fun CollectionScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.COLLECTION_SCREEN),
       bottomBar = bottomBar,
       topBar = {
-        if (currentUserTopBar)
+        if (uiState.isUserOwner)
             TopLevelTopBar(
                 currentUser = uiState.user,
                 title = context.getString(R.string.collection),

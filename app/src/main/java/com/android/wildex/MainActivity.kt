@@ -374,8 +374,7 @@ private fun NavGraphBuilder.collectionComposable(
           onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
           bottomBar = {
             if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
-          },
-          currentUserTopBar = isCurrentUser)
+          })
     }
   }
 }

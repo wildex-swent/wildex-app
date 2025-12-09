@@ -122,8 +122,11 @@ object HomeScreenTestTags {
  * Entry point composable for the home screen.
  *
  * @param homeScreenViewModel ViewModel managing UI state and data.
+ * @param bottomBar the bottom bar to display on the home screen
  * @param onPostClick Callback invoked when a post is selected.
- * @param onProfilePictureClick Callback invoked when the profile picture is selected.
+ * @param onProfilePictureClick Callback invoked when a profile picture on a post is clicked.
+ * @param onCurrentProfilePictureClick Callback invoked when the current user's profile picture is
+ *   clicked
  * @param onNotificationClick Callback invoked when the notification icon is clicked.
  */
 @Composable

@@ -21,10 +21,21 @@ import androidx.compose.ui.unit.dp
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
+/**
+ * Top Bar Composable for the top level screens of the app that have a top bar. The current top
+ * level screens that have one are: Home, Collection, Report screens. This top bar is composed of a
+ * leading icon button that leads to the Notification screen, a screen title, and a trailing icon
+ * that leads to the current user's profile page.
+ *
+ * @param currentUser user needed for the redirection to the profile page
+ * @param title the title of the screen displaying this top bar
+ * @param onNotificationClick callback function invoked when clicking on the leading icon
+ * @param onProfilePictureClick callback function invoked when clicking on the trailing icon
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopLevelTopBar(
-    user: SimpleUser,
+    currentUser: SimpleUser,
     title: String,
     onNotificationClick: () -> Unit = {},
     onProfilePictureClick: () -> Unit = {}
@@ -57,9 +68,9 @@ fun TopLevelTopBar(
         Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
           ClickableProfilePicture(
               modifier = Modifier.size(40.dp).testTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE),
-              profileId = user.userId,
-              profilePictureURL = user.profilePictureURL,
-              profileUserType = user.userType,
+              profileId = currentUser.userId,
+              profilePictureURL = currentUser.profilePictureURL,
+              profileUserType = currentUser.userType,
               onProfile = { id -> onProfilePictureClick() },
           )
         }

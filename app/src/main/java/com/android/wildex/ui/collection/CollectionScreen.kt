@@ -67,6 +67,8 @@ object CollectionScreenTestTags {
  * @param collectionScreenViewModel ViewModel managing the state for this screen.
  * @param userUid UID of the user whose collection is to be displayed.
  * @param onAnimalClick Callback invoked when an animal is selected.
+ * @param onProfilePictureClick callback invoked when the current user owns the screen and clicks on
+ *   their profile picture
  * @param onNotificationClick Callback invoked when the notification button is clicked, only use
  *   when we display the current user's collection.
  * @param onGoBack Callback invoked when the go back button is clicked, only use when we display the
@@ -104,7 +106,7 @@ fun CollectionScreen(
       topBar = {
         if (currentUserTopBar)
             TopLevelTopBar(
-                user = uiState.user,
+                currentUser = uiState.user,
                 title = context.getString(R.string.collection),
                 onNotificationClick = onNotificationClick,
                 onProfilePictureClick = onProfilePictureClick)

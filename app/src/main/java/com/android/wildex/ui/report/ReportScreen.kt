@@ -78,6 +78,8 @@ object ReportScreenTestTags {
  *
  * @param reportScreenViewModel The view model for the report screen.
  * @param onProfileClick The function to be called when a profile picture is clicked.
+ * @param onCurrentProfileClick The function to be called when the current user's profile picture is
+ *   clicked
  * @param onNotificationClick The function to be called when the notification button is clicked.
  * @param onReportClick The function to be called when a report is clicked.
  * @param onSubmitReportClick The function to be called when the submit report button is clicked.
@@ -113,7 +115,7 @@ fun ReportScreen(
       topBar = {
         val user = uiState.currentUser
         TopLevelTopBar(
-            user = user,
+            currentUser = user,
             title =
                 when (user.userType) {
                   UserType.REGULAR -> LocalContext.current.getString(R.string.report_title_regular)

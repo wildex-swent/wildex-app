@@ -26,7 +26,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -133,12 +137,12 @@ class SettingsScreenViewModelTest {
   @Test
   fun viewModel_initializes_default_UI_state_isEmptyLoading() {
     val s = viewModel.uiState.value
-    Assert.assertFalse(s.isError)
-    Assert.assertEquals(AppearanceMode.AUTOMATIC, s.appearanceMode)
-    Assert.assertTrue(s.notificationsEnabled)
-    Assert.assertEquals(UserType.REGULAR, s.userType)
-    Assert.assertFalse(s.isLoading)
-    Assert.assertNull(s.errorMsg)
+    assertFalse(s.isError)
+    assertEquals(AppearanceMode.AUTOMATIC, s.appearanceMode)
+    assertTrue(s.notificationsEnabled)
+    assertEquals(UserType.REGULAR, s.userType)
+    assertFalse(s.isLoading)
+    assertNull(s.errorMsg)
   }
 
   @Test
@@ -150,19 +154,19 @@ class SettingsScreenViewModelTest {
             deferred.await()
           }
       viewModel.loadUIState()
-      Assert.assertTrue(viewModel.uiState.value.isLoading)
+      assertTrue(viewModel.uiState.value.isLoading)
       deferred.complete(AppearanceMode.DARK)
       advanceUntilIdle()
       val expectedAppearanceMode = AppearanceMode.DARK
       val expectedNotificationsEnabled = false
       val expectedUserType = UserType.REGULAR
       val updatedState = viewModel.uiState.value
-      Assert.assertFalse(updatedState.isLoading)
-      Assert.assertFalse(updatedState.isError)
-      Assert.assertNull(updatedState.errorMsg)
-      Assert.assertEquals(expectedAppearanceMode, updatedState.appearanceMode)
-      Assert.assertEquals(expectedNotificationsEnabled, updatedState.notificationsEnabled)
-      Assert.assertEquals(expectedUserType, updatedState.userType)
+      assertFalse(updatedState.isLoading)
+      assertFalse(updatedState.isError)
+      assertNull(updatedState.errorMsg)
+      assertEquals(expectedAppearanceMode, updatedState.appearanceMode)
+      assertEquals(expectedNotificationsEnabled, updatedState.notificationsEnabled)
+      assertEquals(expectedUserType, updatedState.userType)
     }
   }
 
@@ -173,10 +177,10 @@ class SettingsScreenViewModelTest {
           RuntimeException("boom")
       viewModel.loadUIState()
       advanceUntilIdle()
-      Assert.assertNotNull(viewModel.uiState.value.errorMsg)
+      assertNotNull(viewModel.uiState.value.errorMsg)
 
       viewModel.clearErrorMsg()
-      Assert.assertNull(viewModel.uiState.value.errorMsg)
+      assertNull(viewModel.uiState.value.errorMsg)
     }
   }
 
@@ -188,7 +192,7 @@ class SettingsScreenViewModelTest {
       viewModel.setNotificationsEnabled(true)
       advanceUntilIdle()
       val updatedState = viewModel.uiState.value
-      Assert.assertTrue(updatedState.notificationsEnabled)
+      assertTrue(updatedState.notificationsEnabled)
     }
   }
 
@@ -202,7 +206,7 @@ class SettingsScreenViewModelTest {
       viewModel.setAppearanceMode(AppearanceMode.LIGHT)
       advanceUntilIdle()
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(AppearanceMode.LIGHT, updatedState.appearanceMode)
+      assertEquals(AppearanceMode.LIGHT, updatedState.appearanceMode)
     }
   }
 
@@ -216,7 +220,20 @@ class SettingsScreenViewModelTest {
       advanceUntilIdle()
 
       val updatedState = viewModel.uiState.value
-      Assert.assertEquals(UserType.PROFESSIONAL, updatedState.userType)
+      assertEquals(UserType.PROFESSIONAL, updatedState.userType)
+    }
+  }
+
+  @Test
+  fun onOfflineClickSetsError() {
+    mainDispatcherRule.runTest {
+      viewModel.clearErrorMsg()
+      assertNull(viewModel.uiState.value.errorMsg)
+      viewModel.onOfflineClick()
+      assertNotNull(viewModel.uiState.value.errorMsg)
+      assertEquals(
+          "This action is not supported offline. Check your connection and try again.",
+          viewModel.uiState.value.errorMsg)
     }
   }
 }

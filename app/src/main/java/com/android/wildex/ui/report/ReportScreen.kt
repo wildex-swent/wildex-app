@@ -413,13 +413,22 @@ private fun ReportSlider(
     onReportClick: () -> Unit,
     pagerState: PagerState,
 ) {
-  HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth().height(300.dp)) { page ->
+  HorizontalPager(
+      state = pagerState,
+      modifier =
+          Modifier.fillMaxWidth()
+              .height(300.dp)
+              .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "slider")),
+  ) { page ->
     when (page) {
       0 -> {
         AsyncImage(
             model = reportState.imageURL,
             contentDescription = "Report picture",
-            modifier = Modifier.fillMaxSize().clickable { onReportClick() },
+            modifier =
+                Modifier.fillMaxSize()
+                    .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "image"))
+                    .clickable { onReportClick() },
             contentScale = ContentScale.Crop,
         )
       }
@@ -432,44 +441,47 @@ private fun ReportSlider(
               AppearanceMode.LIGHT -> false
               AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
             }
-        Box(modifier = Modifier.fillMaxSize()) {
-          StaticMiniMap(
-              modifier = Modifier.matchParentSize(),
-              pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-              styleUri = context.getString(R.string.map_style),
-              styleImportId = context.getString(R.string.map_standard_import),
-              isDark = isDark,
-              fallbackZoom = 2.0,
-              context = context)
-          Row(
-              verticalAlignment = Alignment.CenterVertically,
-              modifier =
-                  Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                      .clip(RoundedCornerShape(20.dp))
-                      .background(colorScheme.surfaceVariant)
-                      .padding(horizontal = 10.dp, vertical = 8.dp),
-          ) {
-            Icon(
-                imageVector = Icons.Filled.Place,
-                contentDescription = "Country Icon",
-                tint = colorScheme.primary,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = reportState.location.name,
-                style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-          }
-          Box(
-              modifier =
-                  Modifier.matchParentSize()
-                      .clickable { onReportClick() }
-                      .background(Color.Transparent))
-        }
+        Box(
+            modifier =
+                Modifier.fillMaxSize()
+                    .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "map"))) {
+              StaticMiniMap(
+                  modifier = Modifier.matchParentSize(),
+                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                  styleUri = context.getString(R.string.map_style),
+                  styleImportId = context.getString(R.string.map_standard_import),
+                  isDark = isDark,
+                  fallbackZoom = 2.0,
+                  context = context)
+              Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier =
+                      Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                          .clip(RoundedCornerShape(20.dp))
+                          .background(colorScheme.surfaceVariant)
+                          .padding(horizontal = 10.dp, vertical = 8.dp),
+              ) {
+                Icon(
+                    imageVector = Icons.Filled.Place,
+                    contentDescription = "Country Icon",
+                    tint = colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = reportState.location.name,
+                    style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+              }
+              Box(
+                  modifier =
+                      Modifier.matchParentSize()
+                          .clickable { onReportClick() }
+                          .background(Color.Transparent))
+            }
       }
     }
   }

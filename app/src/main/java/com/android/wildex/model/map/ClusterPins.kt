@@ -158,53 +158,78 @@ private fun buildClusterGroups(
  */
 private fun buildClusterPins(
     groups: Map<Int, List<MapPin>>,
-): List<MapPin> =
-    groups.values.map { group ->
-      if (group.size == 1) {
-        val only = group.first()
-        when (only) {
-          is MapPin.ClusterPin -> only
-          else ->
-              MapPin.ClusterPin(
-                  id = "cluster_single_${only.id}",
-                  location = only.location,
-                  count = 1,
-                  childIds = listOf(only.id),
-              )
-        }
-      } else {
-        var weightedLatSum = 0.0
-        var weightedLonSum = 0.0
-        var totalCount = 0
-        val allChildIds = mutableListOf<Id>()
+): List<MapPin> = groups.values.map(::buildClusterPinForGroup)
 
-        for (pin in group) {
-          val weight =
-              when (pin) {
-                is MapPin.ClusterPin -> pin.count
-                else -> 1
-              }
-          weightedLatSum += pin.location.latitude * weight
-          weightedLonSum += pin.location.longitude * weight
-          totalCount += weight
-
-          when (pin) {
-            is MapPin.ClusterPin -> allChildIds += pin.childIds
-            else -> allChildIds += pin.id
-          }
-        }
-
-        val avgLat = weightedLatSum / totalCount
-        val avgLon = weightedLonSum / totalCount
-
-        MapPin.ClusterPin(
-            id = "cluster_${group.hashCode()}",
-            location = Location(avgLat, avgLon, "Cluster"),
-            count = totalCount,
-            childIds = allChildIds,
-        )
-      }
+/**
+ * Build a ClusterPin for a group of pins.
+ *
+ * @param group List of MapPin in the group.
+ * @return ClusterPin representing the group.
+ */
+private fun buildClusterPinForGroup(group: List<MapPin>): MapPin =
+    if (group.size == 1) {
+      val only = group.first()
+      toSingleClusterPin(only)
+    } else {
+      aggregateCluster(group)
     }
+
+/**
+ * Convert a single MapPin to a ClusterPin with count 1.
+ *
+ * @param only The single MapPin to convert.
+ * @return ClusterPin representing the single pin.
+ */
+private fun toSingleClusterPin(only: MapPin): MapPin.ClusterPin =
+    when (only) {
+      is MapPin.ClusterPin -> only
+      else ->
+          MapPin.ClusterPin(
+              id = "cluster_single_${only.id}",
+              location = only.location,
+              count = 1,
+              childIds = listOf(only.id),
+          )
+    }
+
+/**
+ * Aggregate a group of MapPins into a single ClusterPin.
+ *
+ * @param group List of MapPin in the group.
+ * @return ClusterPin representing the aggregated group.
+ */
+private fun aggregateCluster(group: List<MapPin>): MapPin.ClusterPin {
+  var weightedLatSum = 0.0
+  var weightedLonSum = 0.0
+  var totalCount = 0
+  val allChildIds = mutableListOf<Id>()
+
+  for (pin in group) {
+    val weight =
+        when (pin) {
+          is MapPin.ClusterPin -> pin.count
+          else -> 1
+        }
+    weightedLatSum += pin.location.latitude * weight
+    weightedLonSum += pin.location.longitude * weight
+    totalCount += weight
+
+    when (pin) {
+      is MapPin.ClusterPin -> allChildIds += pin.childIds
+      else -> allChildIds += pin.id
+    }
+  }
+
+  val avgLat = weightedLatSum / totalCount
+  val avgLon = weightedLonSum / totalCount
+
+  return MapPin.ClusterPin(
+      id = "cluster_${group.hashCode()}",
+      location = Location(avgLat, avgLon, "Cluster"),
+      count = totalCount,
+      childIds = allChildIds,
+  )
+}
 
 /**
  * Approximate distance between two lat/lon points (meters).

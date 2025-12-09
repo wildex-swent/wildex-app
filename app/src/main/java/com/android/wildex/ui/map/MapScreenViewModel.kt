@@ -262,49 +262,7 @@ class MapScreenViewModel(
         val children = cluster.childIds.mapNotNull { id -> pins.firstOrNull { it.id == id } }
 
         // Load all details in parallel
-        val details = coroutineScope {
-          val jobs =
-              children.map { pin ->
-                async {
-                  when (pin) {
-                    is MapPin.PostPin -> {
-                      try {
-                        val post = postRepository.getPost(pin.id)
-                        val author = userRepository.getSimpleUser(post.authorId)
-                        val liked = likeRepository.getLikeForPost(post.postId) != null
-                        val likeCount = likeRepository.getLikesForPost(post.postId).size
-                        val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
-                        val animalName = animalRepository.getAnimal(post.animalId).name
-
-                        PinDetails.PostDetails(
-                            post = post,
-                            author = author,
-                            likedByMe = liked,
-                            likeCount = likeCount,
-                            commentCount = commentCount,
-                            animalName = animalName,
-                        )
-                      } catch (_: Exception) {
-                        null
-                      }
-                    }
-                    is MapPin.ReportPin -> {
-                      try {
-                        val report = reportRepository.getReport(pin.id)
-                        val author = userRepository.getSimpleUser(report.authorId)
-                        val assignee = report.assigneeId?.let { userRepository.getSimpleUser(it) }
-                        PinDetails.ReportDetails(report, author, assignee)
-                      } catch (_: Exception) {
-                        null
-                      }
-                    }
-                    else -> null
-                  }
-                }
-              }
-
-          jobs.mapNotNull { it.await() }
-        }
+        val details = loadClusterDetails(children)
 
         if (details.isNotEmpty()) {
           _uiState.value =
@@ -319,6 +277,58 @@ class MapScreenViewModel(
       }
     }
   }
+
+  /**
+   * Loads details for all pins within a cluster.
+   *
+   * @param children List of [MapPin] representing the pins within the cluster.
+   * @return A list of [PinDetails] containing the details of each pin.
+   */
+  private suspend fun loadClusterDetails(children: List<MapPin>): List<PinDetails> =
+      coroutineScope {
+        val jobs = children.map { pin -> async { loadDetailForClusterPin(pin) } }
+        jobs.mapNotNull { it.await() }
+      }
+
+  /**
+   * Loads details for a single pin within a cluster.
+   *
+   * @param pin The [MapPin] for which to load details.
+   * @return The [PinDetails] for the pin, or null if loading fails.
+   */
+  private suspend fun loadDetailForClusterPin(pin: MapPin): PinDetails? =
+      when (pin) {
+        is MapPin.PostPin ->
+            try {
+              val post = postRepository.getPost(pin.id)
+              val author = userRepository.getSimpleUser(post.authorId)
+              val liked = likeRepository.getLikeForPost(post.postId) != null
+              val likeCount = likeRepository.getLikesForPost(post.postId).size
+              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
+              val animalName = animalRepository.getAnimal(post.animalId).name
+
+              PinDetails.PostDetails(
+                  post = post,
+                  author = author,
+                  likedByMe = liked,
+                  likeCount = likeCount,
+                  commentCount = commentCount,
+                  animalName = animalName,
+              )
+            } catch (_: Exception) {
+              null
+            }
+        is MapPin.ReportPin ->
+            try {
+              val report = reportRepository.getReport(pin.id)
+              val author = userRepository.getSimpleUser(report.authorId)
+              val assignee = report.assigneeId?.let { userRepository.getSimpleUser(it) }
+              PinDetails.ReportDetails(report, author, assignee)
+            } catch (_: Exception) {
+              null
+            }
+        else -> null
+      }
 
   /** Clears the currently selected pin details. */
   fun clearSelection() {
@@ -390,17 +400,7 @@ class MapScreenViewModel(
 
     val before = _uiState.value
     val beforeSelection = before.selected
-    val optimistic =
-        beforeSelection.map { sel ->
-          if (sel is PinDetails.PostDetails && sel.post.postId == postId) {
-            val likedNow = !sel.likedByMe
-            sel.copy(
-                likedByMe = likedNow,
-                likeCount =
-                    if (likedNow) sel.likeCount + 1 else (sel.likeCount - 1).coerceAtLeast(0),
-            )
-          } else sel
-        }
+    val optimistic = buildOptimisticSelection(beforeSelection, postId)
 
     val didOptimisticallyChange = optimistic != beforeSelection
     if (didOptimisticallyChange) {
@@ -425,6 +425,27 @@ class MapScreenViewModel(
       }
     }
   }
+
+  /**
+   * Builds an optimistic selection state for a post after toggling its like status.
+   *
+   * @param beforeSelection The current list of [PinDetails] before the like toggle.
+   * @param postId The ID of the post whose like status is being toggled.
+   * @return A new list of [PinDetails] reflecting the optimistic like status change.
+   */
+  private fun buildOptimisticSelection(
+      beforeSelection: List<PinDetails>,
+      postId: Id,
+  ): List<PinDetails> =
+      beforeSelection.map { sel ->
+        if (sel is PinDetails.PostDetails && sel.post.postId == postId) {
+          val likedNow = !sel.likedByMe
+          sel.copy(
+              likedByMe = likedNow,
+              likeCount = if (likedNow) sel.likeCount + 1 else (sel.likeCount - 1).coerceAtLeast(0),
+          )
+        } else sel
+      }
 
   /**
    * Loads all posts with their authors' avatar URLs.

@@ -73,15 +73,12 @@ fun SelectionBottomCard(
             if (groupSize <= 1) {
               return@pointerInput
             }
-
             var totalDragX = 0f
-
             detectHorizontalDragGestures(
                 onDragStart = { totalDragX = 0f },
                 onHorizontalDrag = { _, dragAmount -> totalDragX += dragAmount },
                 onDragEnd = {
                   val threshold = 80f
-
                   when {
                     totalDragX > threshold -> onPrev()
                     totalDragX < -threshold -> onNext()
@@ -176,13 +173,14 @@ private fun ClusterFooterPager(
       )
     }
 
-    // Centered, very lightweight counter (no chip background)
     Box(
         modifier = Modifier.weight(1f),
         contentAlignment = Alignment.Center,
     ) {
       Text(
-          text = "${groupIndex + 1} / $groupSize",
+          text =
+              LocalContext.current.getString(
+                  R.string.cluster_group_position, groupIndex + 1, groupSize),
           style = typography.labelMedium,
           color = cs.onSurfaceVariant,
           modifier = Modifier.testTag(MapContentTestTags.SELECTION_PAGER_LABEL),

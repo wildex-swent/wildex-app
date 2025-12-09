@@ -20,8 +20,6 @@
     <string name="profile">My Profile</string>
     <string name="view_map">View in full screen →</string>
     <string name="default_description">No bio yet.</string>
-    <string name="send_friend_request">Send Friend Request</string>
-    <string name="cancel_friend_request">Cancel Friend Request</string>
     <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
 
@@ -92,6 +90,7 @@
     <string name="map_posts">Posts</string>
     <string name="map_my_posts">My posts</string>
     <string name="map_reports">Reports</string>
+    <string name="cluster_group_position">%1$d / %2$d</string>
 
     <!-- Achievements screen -->
     <string name="achievements">Achievements</string>

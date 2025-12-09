@@ -72,8 +72,10 @@
     <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
 
     <!-- Notification screen -->
-    <string name="notification_title">Notifications</string>
-    <string name="no_notifications">No notifications yet.</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_no_notifications">No notifications yet.</string>
+    <string name="notifications_delete_all">Delete all</string>
+    <string name="notifications_mark_all_read">Mark all read</string>
 
     <!-- Map screen -->
     <string name="map_style">mapbox://styles/ainar5724/cmh7gfj6g00eo01qxdj3ca7tq</string>

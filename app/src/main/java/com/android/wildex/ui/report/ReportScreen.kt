@@ -433,7 +433,6 @@ private fun ReportSlider(
         )
       }
       1 -> {
-        val loc = reportState.location
         val context = LocalContext.current
         val isDark =
             when (AppTheme.appearanceMode) {
@@ -447,17 +446,20 @@ private fun ReportSlider(
                     .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "map"))) {
               StaticMiniMap(
                   modifier = Modifier.matchParentSize(),
-                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                  pins =
+                      listOf(
+                          Point.fromLngLat(
+                              reportState.location.longitude, reportState.location.latitude)),
                   styleUri = context.getString(R.string.map_style),
                   styleImportId = context.getString(R.string.map_standard_import),
                   isDark = isDark,
-                  fallbackZoom = 2.0,
+                  fallbackZoom = 4.0,
                   context = context)
               Row(
                   verticalAlignment = Alignment.CenterVertically,
                   modifier =
-                      Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                          .clip(RoundedCornerShape(20.dp))
+                      Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                          .clip(RoundedCornerShape(16.dp))
                           .background(colorScheme.surfaceVariant)
                           .padding(horizontal = 10.dp, vertical = 8.dp),
               ) {

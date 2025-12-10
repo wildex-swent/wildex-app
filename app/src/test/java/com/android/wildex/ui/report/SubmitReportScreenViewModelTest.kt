@@ -168,4 +168,15 @@ class SubmitReportScreenViewModelTest {
         assertTrue(state.errorMsg!!.contains("Network error"))
         assertFalse(state.isSubmitting)
       }
+
+  @Test
+  fun submitReport_clearsLocation() =
+      mainDispatcherRule.runTest {
+        viewModel.updateLocation(Location(46.5197, 6.6323, name = "Lausanne"))
+        assertTrue(viewModel.uiState.value.hasPickedLocation)
+        viewModel.clearLocation()
+        val state = viewModel.uiState.value
+        assertNull(state.location)
+        assertFalse(state.hasPickedLocation)
+      }
 }

@@ -156,7 +156,7 @@ fun SubmitReportScreenContent(
             onDescriptionChange = viewModel::updateDescription,
             onSubmitClick = { viewModel.submitReport(onSubmitted) },
             onPickLocation = onPickLocation,
-        )
+            onClear = { viewModel.clearLocation() })
       }
     }
   }

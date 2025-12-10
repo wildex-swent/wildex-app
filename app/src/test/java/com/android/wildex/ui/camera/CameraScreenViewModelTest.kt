@@ -4,12 +4,10 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.model.animal.AnimalRepository
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
 import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.Taxonomy
-import com.android.wildex.model.location.GeocodingRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.UserAnimalsRepository
@@ -20,6 +18,7 @@ import com.google.android.gms.tasks.Tasks
 import io.mockk.*
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import junit.framework.TestCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -37,7 +36,6 @@ class CameraScreenViewModelTest {
   private lateinit var userAnimalsRepository: UserAnimalsRepository
   private lateinit var animalRepository: AnimalRepository
   private lateinit var animalInfoRepository: AnimalInfoRepository
-  private lateinit var geocodingRepository: GeocodingRepository
   private lateinit var context: Context
   private lateinit var uri: Uri
   private lateinit var resolver: ContentResolver
@@ -57,7 +55,6 @@ class CameraScreenViewModelTest {
     animalRepository = mockk(relaxed = true)
     animalInfoRepository = mockk(relaxed = true)
     context = mockk(relaxed = true)
-    geocodingRepository = mockk(relaxed = true)
     uri = mockk()
     resolver = mockk()
     galleryUri = mockk()
@@ -73,7 +70,6 @@ class CameraScreenViewModelTest {
             userAnimalsRepository = userAnimalsRepository,
             animalRepository = animalRepository,
             animalInfoRepository = animalInfoRepository,
-            geocodingRepository = geocodingRepository,
             currentUserId = testUserId,
         )
     Dispatchers.setMain(StandardTestDispatcher())
@@ -90,7 +86,7 @@ class CameraScreenViewModelTest {
     assertNull(state.animalDetectResponse)
     assertNull(state.currentImageUri)
     assertEquals("", state.description)
-    assertFalse(state.addLocation)
+    assertFalse(state.hasPickedLocation)
     assertNull(state.errorMsg)
     assertFalse(state.isLoading)
     assertFalse(state.isDetecting)
@@ -99,13 +95,13 @@ class CameraScreenViewModelTest {
   @Test
   fun `resetState clears all state`() {
     viewModel.updateDescription("Test description")
-    viewModel.toggleAddLocation()
+    viewModel.onLocationPicked(Location(latitude = 1.0, longitude = 2.0))
     viewModel.resetState()
     val state = viewModel.uiState.value
     assertNull(state.animalDetectResponse)
     assertNull(state.currentImageUri)
     assertEquals("", state.description)
-    assertFalse(state.addLocation)
+    assertNull(state.location)
     assertNull(state.errorMsg)
     assertFalse(state.isLoading)
     assertFalse(state.isDetecting)
@@ -127,12 +123,12 @@ class CameraScreenViewModelTest {
   }
 
   @Test
-  fun `toggleAddLocation toggles the boolean value`() {
-    assertFalse(viewModel.uiState.value.addLocation)
-    viewModel.toggleAddLocation()
-    assertTrue(viewModel.uiState.value.addLocation)
-    viewModel.toggleAddLocation()
-    assertFalse(viewModel.uiState.value.addLocation)
+  fun onLocationPickedUpdatesLocationAndHasPickedLocation() {
+    val pickedLocation = Location(latitude = 46.5, longitude = 6.5)
+    viewModel.onLocationPicked(pickedLocation)
+    val state = viewModel.uiState.value
+    assertEquals(pickedLocation, state.location)
+    assertTrue(state.hasPickedLocation)
   }
 
   @Test
@@ -389,19 +385,10 @@ class CameraScreenViewModelTest {
             confidence = 0.95f,
         )
     val description = "Test description"
-    val location =
-        android.location.Location("test").apply {
-          latitude = 46.5
-          longitude = 6.5
-        }
-    mockkStatic("com.google.android.gms.location.LocationServices")
-    val fusedLocationClient = mockk<FusedLocationProviderClient>()
-    every { LocationServices.getFusedLocationProviderClient(context) } returns fusedLocationClient
-    every { fusedLocationClient.lastLocation } returns Tasks.forResult(location)
-    val testLocation = Location(46.5, 6.5, "Test Location")
-    coEvery { geocodingRepository.reverseGeocode(any(), any()) } returns testLocation
+    val pickedLocation = Location(latitude = 46.5, longitude = 6.5)
+
     viewModel.updateImageUri(uri)
-    viewModel.toggleAddLocation()
+    viewModel.onLocationPicked(pickedLocation)
     viewModel.updateDescription(description)
     coEvery { animalInfoRepository.detectAnimal(context, uri) } returns listOf(response)
     viewModel.detectAnimalImage(uri, context)
@@ -420,13 +407,26 @@ class CameraScreenViewModelTest {
     coVerify {
       postsRepository.addPost(
           match { post ->
+            val loc = post.location
             post.postId == testPostId &&
                 post.authorId == testUserId &&
                 post.description == description &&
                 post.pictureURL == testImageUrl &&
                 post.animalId == testAnimalId &&
-                post.location == testLocation
+                loc != null &&
+                loc.latitude == pickedLocation.latitude &&
+                loc.longitude == pickedLocation.longitude
           })
     }
+  }
+
+  @Test
+  fun submitReport_clearsLocation() = runTest {
+    viewModel.onLocationPicked(Location(10.0, 20.0, "Test Location"))
+    TestCase.assertTrue(viewModel.uiState.value.hasPickedLocation)
+    viewModel.clearLocation()
+    val state = viewModel.uiState.value
+    TestCase.assertNull(state.location)
+    TestCase.assertFalse(state.hasPickedLocation)
   }
 }

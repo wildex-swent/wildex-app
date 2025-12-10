@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -28,11 +30,13 @@ fun LocationSelector(
     modifier: Modifier = Modifier,
     locationName: String?,
     onClick: () -> Unit,
+    onClear: () -> Unit = {},
+    fraction: Float = 0.9f,
 ) {
   Box(
       modifier =
           modifier
-              .fillMaxWidth(0.9f)
+              .fillMaxWidth(fraction)
               .clickable { onClick() }
               .border(
                   width = 1.dp,
@@ -45,7 +49,7 @@ fun LocationSelector(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
+          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
@@ -55,11 +59,20 @@ fun LocationSelector(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = locationName ?: "Select a location",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,
                 color =
                     if (locationName == null) colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     else colorScheme.onSurface,
             )
+          }
+          if (!locationName.isNullOrEmpty()) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Clear location",
+                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                modifier = Modifier.size(30.dp).clickable { onClear() }.padding(start = 8.dp))
           }
           Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,

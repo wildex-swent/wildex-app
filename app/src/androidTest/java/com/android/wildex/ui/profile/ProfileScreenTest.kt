@@ -444,7 +444,7 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
+  fun achievements_cta_visible_for_non_owner_still_when_used_in_content() {
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
@@ -456,7 +456,7 @@ class ProfileScreenTest {
           onFriends = {},
       )
     }
-    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
+    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(1)
   }
 
   @Test

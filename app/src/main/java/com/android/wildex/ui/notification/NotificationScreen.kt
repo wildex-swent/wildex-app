@@ -1,30 +1,32 @@
 package com.android.wildex.ui.notification
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.ColorScheme
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,25 +50,32 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 
 object NotificationScreenTestTags {
-  const val GO_BACK = "notification_screen_go_back"
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
+
+  const val MARK_ALL_AS_READ_BUTTON = "mark_all_as_read_button"
+  const val CLEAR_ALL_BUTTON = "delete_all_button"
+
   const val PULL_TO_REFRESH = "pull_to_refresh"
+  const val BACK_BUTTON = "back_button"
+  const val TOP_BAR = "top_bar"
+  const val TOP_BAR_TITLE = "top_bar_title"
+  const val NOTIFICATION_LIST = "notification_list"
 
-  fun testTagForNotification(notificationId: Id): String =
-      "NotificationScreen_notification_$notificationId"
+  fun testTagForNotification(notificationId: Id): String = "notification_$notificationId"
 
-  fun testTagForProfilePicture(profileId: String): String {
-    return "ProfilePicture_$profileId"
-  }
+  fun testTagForProfilePicture(notificationId: Id): String =
+      "notification_profile_picture_$notificationId"
+
+  fun testTagForNotificationDate(notificationId: Id): String = "notification_date_$notificationId"
+
+  fun testTagForNotificationTitle(notificationId: Id): String = "notification_title_$notificationId"
+
+  fun testTagForNotificationDescription(notificationId: Id): String =
+      "notification_description_$notificationId"
+
+  fun testTagForNotificationReadState(notificationId: Id): String =
+      "notification_read_state_$notificationId"
 }
-
-data class NotificationItemData(
-    val notificationContentId: Id = "",
-    val notificationRoute: String = "",
-    val notificationTitle: String = "DEFAULT TITLE",
-    val notificationDescription: String = "DEFAULT DESCRIPTION",
-    val onNotificationClick: (Id, String) -> Unit = { _, _ -> }
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +83,7 @@ fun NotificationScreen(
     onGoBack: () -> Unit = {},
     notificationScreenViewModel: NotificationScreenViewModel = viewModel(),
     onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
+    onNotificationClick: (String) -> Unit = {},
 ) {
   val context = LocalContext.current
   val uiState by notificationScreenViewModel.uiState.collectAsState()
@@ -89,65 +99,90 @@ fun NotificationScreen(
   }
   Scaffold(
       modifier = Modifier.fillMaxSize(),
-      topBar = {
-        NotificationTopBar(onGoBack = onGoBack, goBackTag = NotificationScreenTestTags.GO_BACK)
-      },
+      topBar = { NotificationTopBar(onGoBack = onGoBack) },
   ) { pd ->
-    val pullState = rememberPullToRefreshState()
     PullToRefreshBox(
-        state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = {
           if (isOnline) notificationScreenViewModel.refreshUIState()
           else notificationScreenViewModel.refreshOffline()
         },
-        modifier = Modifier.testTag(NotificationScreenTestTags.PULL_TO_REFRESH)) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            uiState.notifications.isEmpty() -> NoNotificationView()
-            else -> {
-              NotificationView(
-                  notifications = uiState.notifications,
-                  pd = pd,
-                  onNotificationClick = onNotificationClick,
-                  onProfileClick = onProfileClick,
-              )
-            }
-          }
+        modifier = Modifier.padding(pd).testTag(NotificationScreenTestTags.PULL_TO_REFRESH),
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.notifications.isEmpty() -> NoNotificationView()
+        else -> {
+          NotificationView(
+              notifications = uiState.notifications,
+              onProfileClick = onProfileClick,
+              onNotificationClick = onNotificationClick,
+              markAsRead = { notificationScreenViewModel.markAsRead(it) },
+              markAllAsRead = { notificationScreenViewModel.markAllAsRead() },
+              clearNotification = { notificationScreenViewModel.clearNotification(it) },
+              clearAllNotifications = { notificationScreenViewModel.clearAllNotifications() },
+          )
         }
+      }
+    }
   }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationView(
-    notifications: List<NotificationUIState> = emptyList(),
-    pd: PaddingValues,
-    onProfileClick: (Id) -> Unit = {},
-    onNotificationClick: (Id, String) -> Unit = { _, _ -> },
+    notifications: List<NotificationUIState>,
+    onProfileClick: (Id) -> Unit,
+    onNotificationClick: (String) -> Unit,
+    markAsRead: (Id) -> Unit,
+    markAllAsRead: () -> Unit,
+    clearNotification: (Id) -> Unit,
+    clearAllNotifications: () -> Unit,
 ) {
-  val cs = colorScheme
+
   LazyColumn(
-      modifier = Modifier.fillMaxWidth().padding(pd).padding(16.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-      contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 4.dp)
+              .testTag(NotificationScreenTestTags.NOTIFICATION_LIST),
+      horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    items(notifications.size) { index ->
-      val notification = notifications[index]
-      NotificationItem(
-          notificationItemData =
-              NotificationItemData(
-                  notificationContentId = notification.notificationId,
-                  notificationRoute = notification.notificationRoute,
-                  notificationTitle = notification.notificationTitle,
-                  notificationDescription = notification.notificationDescription,
-                  onNotificationClick = onNotificationClick,
-              ),
-          simpleUser = notification.simpleUser,
-          onProfileClick = onProfileClick,
-          cs = cs,
+    item {
+      ActionsRow(onMarkAllRead = markAllAsRead, onDeleteAll = clearAllNotifications)
+      Spacer(Modifier.height(16.dp))
+      HorizontalDivider(
+          color = colorScheme.onSurface.copy(alpha = .3f),
+          modifier = Modifier.fillMaxWidth(),
       )
+    }
+    items(notifications) {
+      SwipeToDeleteNotification(
+          onDelete = { clearNotification(it.notificationId) },
+          modifier =
+              Modifier.clickable {
+                    markAsRead(it.notificationId)
+                    onNotificationClick(it.notificationRoute)
+                  }
+                  .testTag(NotificationScreenTestTags.testTagForNotification(it.notificationId)),
+      ) {
+        Column {
+          NotificationItem(
+              simpleUser = it.author,
+              notificationId = it.notificationId,
+              notificationTitle = it.notificationTitle,
+              notificationDescription = it.notificationDescription,
+              notificationRelativeTime = it.notificationRelativeTime,
+              notificationReadState = it.notificationReadState,
+              onProfileClick = onProfileClick,
+          )
+
+          HorizontalDivider(
+              color = colorScheme.onSurface.copy(alpha = .1f),
+              modifier = Modifier.fillMaxWidth(),
+          )
+        }
+      }
     }
   }
 }
@@ -155,61 +190,89 @@ fun NotificationView(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationItem(
-    notificationItemData: NotificationItemData,
     simpleUser: SimpleUser,
-    onProfileClick: (Id) -> Unit = {},
-    cs: ColorScheme,
+    notificationId: Id,
+    notificationTitle: String,
+    notificationDescription: String,
+    notificationRelativeTime: String,
+    notificationReadState: Boolean,
+    onProfileClick: (Id) -> Unit,
 ) {
-  Box(
-      modifier = Modifier.fillMaxWidth(),
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 10.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
   ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-          ClickableProfilePicture(
-              modifier =
-                  Modifier.size(48.dp)
-                      .testTag(
-                          NotificationScreenTestTags.testTagForProfilePicture(simpleUser.userId)),
-              profileId = simpleUser.userId,
-              profilePictureURL = simpleUser.profilePictureURL,
-              profileUserType = simpleUser.userType,
-              onProfile = onProfileClick,
-          )
-          Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(
-                text = notificationItemData.notificationTitle,
-                color = cs.onBackground,
-                style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = notificationItemData.notificationDescription,
-                color = cs.onBackground,
-                style = typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+    // Apply weight to BadgedBox, not the inner content
+    BadgedBox(
+        modifier = Modifier.weight(.2f).aspectRatio(1f, matchHeightConstraintsFirst = true),
+        badge = {
+          if (!notificationReadState) {
+            Badge(
+                modifier =
+                    Modifier.offset(x = 1.dp, y = (-1).dp)
+                        .size(10.dp)
+                        .testTag(
+                            NotificationScreenTestTags.testTagForNotificationReadState(
+                                notificationId)),
+                containerColor = colorScheme.error.copy(.8f),
             )
           }
-          IconButton(
-              onClick = {
-                notificationItemData.onNotificationClick(
-                    notificationItemData.notificationContentId,
-                    notificationItemData.notificationRoute)
-              },
+        },
+    ) {
+      ClickableProfilePicture(
+          modifier =
+              Modifier.fillMaxSize()
+                  .testTag(NotificationScreenTestTags.testTagForProfilePicture(notificationId)),
+          profileId = simpleUser.userId,
+          profilePictureURL = simpleUser.profilePictureURL,
+          profileUserType = simpleUser.userType,
+          onProfile = onProfileClick,
+      )
+    }
+
+    Spacer(modifier = Modifier.width(10.dp))
+    Column(
+        modifier = Modifier.weight(1f).fillMaxHeight(),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+      Text(
+          text = notificationRelativeTime,
+          color = colorScheme.onBackground.copy(alpha = .6f),
+          style = typography.bodySmall,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          textAlign = TextAlign.End,
+          modifier =
+              Modifier.fillMaxWidth()
+                  .testTag(NotificationScreenTestTags.testTagForNotificationDate(notificationId)),
+      )
+      Spacer(modifier = Modifier.height(4.dp))
+      Column(verticalArrangement = Arrangement.Center) {
+        Text(
+            text = notificationTitle,
+            color = colorScheme.onBackground,
+            style = typography.titleMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier =
+                Modifier.testTag(
+                    NotificationScreenTestTags.testTagForNotificationTitle(notificationId)),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        if (notificationDescription.isNotEmpty()) {
+          Text(
+              text = notificationDescription,
+              color = colorScheme.onBackground,
+              style = typography.bodyMedium,
+              maxLines = 2,
+              overflow = TextOverflow.Ellipsis,
               modifier =
-                  Modifier.size(48.dp)
-                      .testTag(
-                          NotificationScreenTestTags.testTagForNotification(
-                              notificationItemData.notificationContentId))) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Open notification",
-                    tint = cs.onBackground,
-                    modifier = Modifier.size(20.dp))
-              }
+                  Modifier.testTag(
+                      NotificationScreenTestTags.testTagForNotificationDescription(notificationId)),
+          )
         }
+      }
+    }
   }
 }
 
@@ -231,7 +294,7 @@ fun NoNotificationView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = LocalContext.current.getString(R.string.no_notifications),
+        text = LocalContext.current.getString(R.string.notifications_no_notifications),
         color = colorScheme.primary,
         style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
         maxLines = 2,

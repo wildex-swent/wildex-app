@@ -54,6 +54,7 @@ import com.android.wildex.ui.navigation.BottomNavigationMenu
 import com.android.wildex.ui.navigation.NavigationActions
 import com.android.wildex.ui.navigation.Screen
 import com.android.wildex.ui.navigation.Tab
+import com.android.wildex.ui.notification.NotificationScreen
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
@@ -197,6 +198,19 @@ fun WildexApp(
 
     // Location Picker
     locationPickerComposable(navigationActions, navController)
+
+    // Notifications
+    notificationsComposable(navigationActions)
+  }
+}
+
+private fun NavGraphBuilder.notificationsComposable(navigationActions: NavigationActions) {
+  composable(Screen.Notifications.route) {
+    NotificationScreen(
+        onGoBack = { navigationActions.goBack() },
+        onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onNotificationClick = { navigationActions.navigateTo(Screen.fromString(it)) },
+    )
   }
 }
 
@@ -445,6 +459,8 @@ private fun NavGraphBuilder.homeComposable(
         onCurrentProfilePictureClick = {
           navigationActions.navigateTo(Screen.Profile(currentUserId!!))
         })
+        onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
+    )
   }
 }
 

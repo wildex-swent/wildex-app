@@ -228,7 +228,7 @@ class DataClassesTest {
             notificationId = "notification1",
             targetId = "user1",
             authorId = "user2",
-            isRead = false,
+            read = false,
             title = "New Friend Request",
             body = "John Doe has sent you a friend request.",
             route = "route",
@@ -238,7 +238,7 @@ class DataClassesTest {
     TestCase.assertEquals("notification1", notification.notificationId)
     TestCase.assertEquals("user1", notification.targetId)
     TestCase.assertEquals("user2", notification.authorId)
-    TestCase.assertEquals(false, notification.isRead)
+    TestCase.assertEquals(false, notification.read)
     TestCase.assertEquals("New Friend Request", notification.title)
     TestCase.assertEquals("John Doe has sent you a friend request.", notification.body)
     TestCase.assertEquals("route", notification.route)

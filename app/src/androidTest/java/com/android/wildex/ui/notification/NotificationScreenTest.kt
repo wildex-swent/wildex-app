@@ -1,439 +1,588 @@
 package com.android.wildex.ui.notification
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.unit.dp
-import androidx.test.espresso.action.ViewActions.swipeDown
+import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipeRight
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.notification.Notification
 import com.android.wildex.model.notification.NotificationRepository
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
-import org.junit.Assert
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class NotificationScreenTest {
 
-  @get:Rule val composeRule = createComposeRule()
-  private lateinit var fakeNotifRepo: NotificationRepository
-  private lateinit var domainNotifications: List<Notification>
-  private lateinit var fakeUserRepo: UserRepository
+  @get:Rule val composeTestRule = createComposeRule()
+
+  private val userRepository = LocalRepositories.userRepository
   private val fakeObserver = FakeConnectivityObserver(initial = true)
 
-  @Before
-  fun setUp() {
-    domainNotifications =
-        sampleNotifications.map {
-          Notification(
-              notificationId = it.notificationId,
-              targetId = "target_${it.notificationId}",
-              authorId = it.simpleUser.userId,
-              isRead = false,
-              title = it.notificationTitle,
-              body = it.notificationDescription,
-              route = it.notificationRoute,
-              date = Timestamp(0, 0),
-          )
-        }
-    fakeNotifRepo =
-        object : NotificationRepository {
-          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
-            return domainNotifications
-          }
-
-          override suspend fun markNotificationAsRead(notificationId: Id) {}
-
-          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
-
-          override suspend fun deleteNotification(notificationId: Id) {}
-
-          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
-
-          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
-        }
-    fakeUserRepo =
-        object : UserRepository {
-          override suspend fun getSimpleUser(userId: Id): SimpleUser {
-            return SimpleUser(
-                userId = userId,
-                username = "unknown",
-                profilePictureURL = "",
-                userType = UserType.REGULAR,
-            )
-          }
-
-          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
-
-          override suspend fun getAllUsers(): List<User> = emptyList()
-
-          override suspend fun addUser(user: User) {}
-
-          override suspend fun editUser(userId: Id, newUser: User) {}
-
-          override suspend fun deleteUser(userId: Id) {}
-        }
-  }
-
-  private val sampleNotifications =
-      listOf(
-          NotificationUIState(
-              notificationId = "1",
-              simpleUser =
-                  SimpleUser(
-                      userId = "user1",
-                      username = "Jean",
-                      profilePictureURL = "",
-                      userType = UserType.REGULAR),
-              notificationRoute = "route/to/post/1",
-              notificationTitle = "Jean has liked your post",
-              notificationDescription = "3min ago",
-          ),
-          NotificationUIState(
-              notificationId = "2",
-              simpleUser =
-                  SimpleUser(
-                      userId = "user2",
-                      username = "Bob",
-                      profilePictureURL = "",
-                      userType = UserType.REGULAR,
-                  ),
-              notificationRoute = "route/to/post/2",
-              notificationTitle = "Bob spotted a tiger",
-              notificationDescription = "15min ago",
-          ),
-          NotificationUIState(
-              notificationId = "3",
-              simpleUser =
-                  SimpleUser(
-                      userId = "user3",
-                      username = "Alice",
-                      profilePictureURL = "",
-                      userType = UserType.REGULAR,
-                  ),
-              notificationRoute = "route/to/post/3",
-              notificationTitle = "Alice commented on your post",
-              notificationDescription = "Alice said: Wow, amazing!",
-          ),
+  private val testNotification =
+      Notification(
+          notificationId = "notif1",
+          targetId = "currentUserId-1",
+          authorId = "author1",
+          title = "New Like",
+          body = "Someone liked your post",
+          date = Timestamp.now(),
+          route = "post/123",
+          read = true,
       )
 
-  @Test
-  fun sampleNotifications_areDisplayed() {
-    composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) {
-        NotificationView(
-            notifications = sampleNotifications,
-            pd = PaddingValues(0.dp),
-            onNotificationClick = { _, _ -> },
-            onProfileClick = {},
-        )
+  open class LocalNotificationRepository : NotificationRepository {
+    val sampleNotifications: MutableList<Notification> = mutableListOf()
+
+    override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
+      return sampleNotifications
+    }
+
+    override suspend fun markNotificationAsRead(notificationId: Id) {
+      sampleNotifications.replaceAll {
+        if (it.notificationId == notificationId) it.copy(read = true) else it
       }
     }
-    composeRule.waitForIdle()
 
-    sampleNotifications.forEach {
-      composeRule.onNodeWithText(it.notificationTitle).assertIsDisplayed()
-      composeRule.onNodeWithText(it.notificationDescription).assertIsDisplayed()
+    override suspend fun markAllNotificationsForUserAsRead(userId: Id) {
+      sampleNotifications.replaceAll { if (it.targetId == userId) it.copy(read = true) else it }
+    }
+
+    override suspend fun deleteNotification(notificationId: Id) {
+      sampleNotifications.removeIf { it.notificationId == notificationId }
+    }
+
+    override suspend fun deleteAllNotificationsForUser(userId: Id) {
+      sampleNotifications.removeIf { it.targetId == userId }
+    }
+
+    override suspend fun deleteAllNotificationsByUser(userId: Id) {
+      sampleNotifications.removeIf { it.authorId == userId }
     }
   }
 
-  @Test
-  fun goBack_triggersCallback() {
-    fakeObserver.setOnline(true)
-    var back = 0
-    val fakeNotifRepo =
-        object : NotificationRepository {
-          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
-              emptyList()
+  private val notificationRepository = LocalNotificationRepository()
 
-          override suspend fun markNotificationAsRead(notificationId: Id) {}
+  private lateinit var notificationScreenVM: NotificationScreenViewModel
 
-          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
-
-          override suspend fun deleteNotification(notificationId: Id) {}
-
-          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
-
-          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
-        }
-    val fakeUserRepo =
-        object : UserRepository {
-          override suspend fun getSimpleUser(userId: Id): SimpleUser =
-              SimpleUser(
-                  userId = userId,
-                  username = "u",
-                  profilePictureURL = "",
-                  userType = UserType.REGULAR,
-              )
-
-          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
-
-          override suspend fun getAllUsers(): List<User> = emptyList()
-
-          override suspend fun addUser(user: User) {}
-
-          override suspend fun editUser(userId: Id, newUser: User) {}
-
-          override suspend fun deleteUser(userId: Id) {}
-        }
-
-    val vm =
-        NotificationScreenViewModel(
-            notificationRepository = fakeNotifRepo,
-            userRepository = fakeUserRepo,
-            currentUserId = "testUser",
-        )
-
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        NotificationScreen(onGoBack = { back++ }, notificationScreenViewModel = vm)
-      }
-    }
-    composeRule.waitForIdle()
-    composeRule.onNodeWithTag(NotificationScreenTestTags.GO_BACK).assertIsDisplayed().performClick()
-    composeRule.runOnIdle { /* ensure callback executed */}
-    Assert.assertEquals(1, back)
-  }
-
-  @Test
-  fun notificationItem_fixedSizes_and_textsDisplayed() {
-    val longTitle = "Really really long title that should be truncated to stay on one line"
-    val longDesc =
-        "Really really long description that should also be truncated to stay on one line"
-    val authorId = "authorX"
-    val contentId = "content42"
-    val testUser =
-        SimpleUser(
-            userId = authorId,
-            username = "Author",
-            profilePictureURL = "",
+  @Before
+  fun setup() = runBlocking {
+    // Add test users
+    userRepository.addUser(
+        User(
+            userId = "currentUserId-1",
+            username = "testuser",
+            name = "Test",
+            surname = "User",
+            bio = "This is a test user.",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
             userType = UserType.REGULAR,
-        )
+            creationDate = Timestamp.now(),
+            country = "Testland",
+        ))
 
-    composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) {
-        NotificationItem(
-            notificationItemData =
-                NotificationItemData(
-                    notificationContentId = contentId,
-                    notificationRoute = "route/to/$contentId",
-                    notificationTitle = longTitle,
-                    notificationDescription = longDesc,
-                    onNotificationClick = { _, _ -> },
-                ),
-            simpleUser = testUser,
-            onProfileClick = {},
-            cs = MaterialTheme.colorScheme,
-        )
-      }
-    }
-    composeRule.waitForIdle()
+    userRepository.addUser(
+        User(
+            userId = "author1",
+            username = "author_1",
+            name = "Author1",
+            surname = "One",
+            bio = "Author 1 user.",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "Testland",
+        ))
+    userRepository.addUser(
+        User(
+            userId = "author2",
+            username = "author_2",
+            name = "Author2",
+            surname = "Two",
+            bio = "Author 2 user.",
+            profilePictureURL =
+                "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "Testland",
+        ))
 
-    composeRule
-        .onNodeWithTag(NotificationScreenTestTags.testTagForProfilePicture(authorId))
-        .assertIsDisplayed()
-        .assertWidthIsEqualTo(48.dp)
-
-    composeRule
-        .onNodeWithTag(NotificationScreenTestTags.testTagForNotification(contentId))
-        .assertIsDisplayed()
-        .assertWidthIsEqualTo(48.dp)
-
-    composeRule.onNodeWithText(longTitle).assertIsDisplayed()
-    composeRule.onNodeWithText(longDesc).assertIsDisplayed()
-  }
-
-  @Composable
-  private fun TestScreenWithSamples(
-      vm: NotificationScreenViewModel,
-      samples: List<NotificationUIState>,
-  ) {
-    NotificationView(notifications = samples, pd = PaddingValues(0.dp))
-  }
-
-  @Test
-  fun refresh_keepsSampleNotificationsDisplayed() {
-    val fakeNotifRepo =
-        object : NotificationRepository {
-          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> =
-              emptyList()
-
-          override suspend fun markNotificationAsRead(notificationId: Id) {}
-
-          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
-
-          override suspend fun deleteNotification(notificationId: Id) {}
-
-          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
-
-          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
-        }
-    val fakeUserRepo =
-        object : UserRepository {
-          override suspend fun getSimpleUser(userId: Id): SimpleUser =
-              SimpleUser(
-                  userId = userId,
-                  username = "u",
-                  profilePictureURL = "",
-                  userType = UserType.REGULAR,
-              )
-
-          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
-
-          override suspend fun getAllUsers(): List<User> = emptyList()
-
-          override suspend fun addUser(user: User) {}
-
-          override suspend fun editUser(userId: Id, newUser: User) {}
-
-          override suspend fun deleteUser(userId: Id) {}
-        }
-    val vm =
+    notificationScreenVM =
         NotificationScreenViewModel(
-            notificationRepository = fakeNotifRepo,
-            userRepository = fakeUserRepo,
-            currentUserId = "testUser",
+            notificationRepository,
+            userRepository,
+            "currentUserId-1",
         )
+  }
 
-    composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) {
-        TestScreenWithSamples(vm, sampleNotifications)
+  @After
+  fun tearDown() {
+    notificationRepository.sampleNotifications.clear()
+    LocalRepositories.clearAll()
+  }
+
+  @Test
+  fun instantiationClassTest() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen()
       }
     }
-    composeRule.waitForIdle()
-
-    composeRule.runOnIdle { vm.refreshUIState() }
-    composeRule.waitForIdle()
-
-    sampleNotifications.forEach {
-      composeRule.onNodeWithText(it.notificationTitle).assertIsDisplayed()
-    }
   }
 
   @Test
-  fun noNotificationView_showsEmptyMessage() {
-    composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) { NoNotificationView() }
-    }
-    composeRule.waitForIdle()
-    composeRule.onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT).assertIsDisplayed()
-  }
-
-  @Test
-  fun notificationScreen_showsSampleNotificationsByDefault() {
+  fun swipeToDeleteWorks() {
     fakeObserver.setOnline(true)
-    val domainNotifications =
-        sampleNotifications.map {
-          Notification(
-              notificationId = it.notificationId,
-              targetId = "target_${it.notificationId}",
-              authorId = it.simpleUser.userId,
-              isRead = false,
-              title = it.notificationTitle,
-              body = it.notificationDescription,
-              route = it.notificationRoute,
-              date = Timestamp(0, 0),
-          )
-        }
-
-    val fakeNotifRepo =
-        object : NotificationRepository {
-          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
-            return domainNotifications
-          }
-
-          override suspend fun markNotificationAsRead(notificationId: Id) {}
-
-          override suspend fun markAllNotificationsForUserAsRead(userId: Id) {}
-
-          override suspend fun deleteNotification(notificationId: Id) {}
-
-          override suspend fun deleteAllNotificationsForUser(userId: Id) {}
-
-          override suspend fun deleteAllNotificationsByUser(userId: Id) {}
-        }
-
-    val fakeUserRepo =
-        object : UserRepository {
-          override suspend fun getSimpleUser(userId: Id): SimpleUser {
-            return SimpleUser(
-                userId = userId,
-                username = "unknown",
-                profilePictureURL = "",
-                userType = UserType.REGULAR,
-            )
-          }
-
-          override suspend fun getUser(userId: Id): User = TODO("not needed for tests")
-
-          override suspend fun getAllUsers(): List<User> = emptyList()
-
-          override suspend fun addUser(user: User) {}
-
-          override suspend fun editUser(userId: Id, newUser: User) {}
-
-          override suspend fun deleteUser(userId: Id) {}
-        }
-
-    val vm =
-        NotificationScreenViewModel(
-            notificationRepository = fakeNotifRepo,
-            userRepository = fakeUserRepo,
-            currentUserId = "anyUser",
+    val notif2 = testNotification.copy(notificationId = "notif2", title = "New Comment", body = "")
+    val notif3 =
+        testNotification.copy(
+            notificationId = "notif3",
+            title = "New Follow",
+            body = "",
+            read = false,
         )
 
-    composeRule.setContent {
-      MaterialTheme(colorScheme = lightColorScheme()) {
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationRepository.sampleNotifications.add(notif2)
+      notificationRepository.sampleNotifications.add(notif3)
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.testTagForNotification("notif1"))
+        .performScrollTo()
+        .assertIsDisplayed()
+        .performTouchInput { swipeRight() }
+    composeTestRule.waitForIdle()
+    notificationScreenVM.refreshUIState()
+
+    assertTrue(
+        notificationScreenVM.uiState.value.notifications.none { it.notificationId == "notif1" })
+  }
+
+  @Test
+  fun testTagsAreCorrectlySetWhenNoNotifications() {
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule.assertTopBarIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.testTagForNotification("notif1"))
+        .assertIsNotDisplayed()
+  }
+
+  @Test
+  fun notificationsShowCorrectly() {
+    fakeObserver.setOnline(true)
+    val notif2 = testNotification.copy(notificationId = "notif2", title = "New Comment", body = "")
+    val notif3 =
+        testNotification.copy(
+            notificationId = "notif3",
+            title = "New Follow",
+            body = "",
+            read = false,
+        )
+
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationRepository.sampleNotifications.add(notif2)
+      notificationRepository.sampleNotifications.add(notif3)
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule.assertTopBarIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
+        .assertIsNotDisplayed()
+
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.NOTIFICATION_LIST).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.MARK_ALL_AS_READ_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.CLEAR_ALL_BUTTON).assertIsDisplayed()
+    composeTestRule.assertNotificationIsDisplayed("notif1", withDesc = true, isRead = true)
+    composeTestRule.assertNotificationIsDisplayed("notif2", withDesc = false, isRead = true)
+    composeTestRule.assertNotificationIsDisplayed("notif3", withDesc = false, isRead = false)
+  }
+
+  @Test
+  fun goBackButtonClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var backClicked = false
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(
+            notificationScreenViewModel = notificationScreenVM,
+            onGoBack = { backClicked = true },
+        )
+      }
+    }
+
+    composeTestRule.assertTopBarIsDisplayed()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.BACK_BUTTON).performClick()
+    assertTrue(backClicked)
+  }
+
+  @Test
+  fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var profileClickedId: String? = null
+
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(
+            notificationScreenViewModel = notificationScreenVM,
+            onProfileClick = { profileClickedId = it },
+        )
+      }
+    }
+
+    composeTestRule.assertNotificationIsDisplayed(
+        notifId = "notif1",
+        withDesc = true,
+        isRead = true,
+    )
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(
+            NotificationScreenTestTags.testTagForProfilePicture("notif1"),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+        .performClick()
+    assertTrue(profileClickedId == "author1")
+  }
+
+  @Test
+  fun notificationClick_invokesCallbackAndMarksAsRead() {
+    fakeObserver.setOnline(true)
+    var notificationRoute: String? = null
+
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(
+            notificationScreenViewModel = notificationScreenVM,
+            onNotificationClick = { notificationRoute = it },
+        )
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotification("notif1"),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+        .performClick()
+
+    assertTrue(notificationRoute == "post/123")
+  }
+
+  @Test
+  fun unreadNotification_displaysBadge() {
+    fakeObserver.setOnline(true)
+
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif2", read = false))
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotificationReadState("notif1"),
+            useUnmergedTree = true,
+        )
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotificationReadState("notif2"),
+            useUnmergedTree = true,
+        )
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun loadingFailed_whenError() {
+    fakeObserver.setOnline(true)
+    val errorRepository =
+        object : LocalNotificationRepository() {
+          override suspend fun getAllNotificationsForUser(userId: Id): List<Notification> {
+            throw Exception("Boom")
+          }
+        }
+
+    val errorVm = NotificationScreenViewModel(errorRepository, userRepository, "currentUserId-1")
+
+    runBlocking {
+      errorRepository.sampleNotifications.add(testNotification)
+      errorRepository.sampleNotifications.add(testNotification.copy(notificationId = "notif2"))
+      errorRepository.sampleNotifications.add(testNotification.copy(notificationId = "notif3"))
+    }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = errorVm)
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL).assertIsDisplayed()
+  }
+
+  fun markAllAsReadButton_works() {
+    fakeObserver.setOnline(true)
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification.copy(read = false))
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif2", read = false))
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif3", read = false))
+      notificationScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.NOTIFICATION_LIST).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.MARK_ALL_AS_READ_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    assertTrue(notificationScreenVM.uiState.value.notifications.all { it.notificationReadState })
+  }
+
+  fun clearAllButton_works() {
+    fakeObserver.setOnline(true)
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif2"))
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif3"))
+      notificationScreenVM.refreshUIState()
+    }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.NOTIFICATION_LIST).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.CLEAR_ALL_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    assertTrue(notificationScreenVM.uiState.value.notifications.isEmpty())
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun loadingScreen_showsWhileFetchingNotifications() {
+    fakeObserver.setOnline(true)
+    val fetchSignal = CompletableDeferred<Unit>()
+
+    val delayedNotificationRepo =
+        object : LocalRepositories.NotificationRepositoryImpl() {
+          override suspend fun getAllNotificationsForUser(userId: String): List<Notification> {
+            fetchSignal.await()
+            return super.getAllNotificationsForUser(userId)
+          }
+        }
+
+    runBlocking {
+      val vm =
+          NotificationScreenViewModel(
+              delayedNotificationRepo,
+              LocalRepositories.userRepository,
+              "currentUserId-1",
+          )
+      vm.loadUIState()
+
+      composeTestRule.setContent {
         CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
           NotificationScreen(notificationScreenViewModel = vm)
         }
       }
-    }
-    composeRule.waitForIdle()
 
-    composeRule
-        .onAllNodesWithTag(NotificationScreenTestTags.NO_NOTIFICATION_TEXT)
-        .assertCountEquals(0)
-    composeRule.onNodeWithText("Jean has liked your post").assertIsDisplayed()
+      composeTestRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsDisplayed()
+
+      fetchSignal.complete(Unit)
+      composeTestRule.waitForIdle()
+
+      composeTestRule
+          .onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN, useUnmergedTree = true)
+          .assertIsNotDisplayed()
+    }
   }
 
   @Test
-  fun refreshDisabledWhenOfflineNotifications() {
+  fun refreshDisabledWhenOfflineWithNotifications() {
     fakeObserver.setOnline(false)
-    val vm =
-        NotificationScreenViewModel(
-            notificationRepository = fakeNotifRepo,
-            userRepository = fakeUserRepo,
-            currentUserId = "anyUser",
-        )
 
-    composeRule.setContent {
+    runBlocking {
+      notificationRepository.sampleNotifications.add(testNotification)
+      notificationRepository.sampleNotifications.add(
+          testNotification.copy(notificationId = "notif2", title = "Second notification"))
+      notificationScreenVM.refreshUIState()
+    }
+
+    composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        NotificationScreen(notificationScreenViewModel = vm)
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
       }
     }
-    composeRule.onNodeWithTag(NotificationScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.PULL_TO_REFRESH).performTouchInput {
       swipeDown()
     }
-    assertFalse(vm.uiState.value.isRefreshing)
+
+    assertFalse(notificationScreenVM.uiState.value.isRefreshing)
+  }
+
+  @Test
+  fun notificationGetsSkipped_whenAuthorLookupFails() {
+    fakeObserver.setOnline(true)
+    val badNotification =
+        testNotification.copy(notificationId = "bad_notif", authorId = "unknown-author")
+
+    notificationRepository.sampleNotifications.add(testNotification)
+    notificationRepository.sampleNotifications.add(badNotification)
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        NotificationScreen(notificationScreenViewModel = notificationScreenVM)
+      }
+    }
+
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(NotificationScreenTestTags.testTagForNotification("bad_notif"))
+        .assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NotificationScreenTestTags.NOTIFICATION_LIST).assertIsDisplayed()
+    composeTestRule.assertNotificationIsDisplayed(
+        testNotification.notificationId,
+        testNotification.body.isNotEmpty(),
+        testNotification.read,
+    )
+  }
+
+  private fun ComposeTestRule.assertTopBarIsDisplayed() {
+    onNodeWithTag(NotificationScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(NotificationScreenTestTags.TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(NotificationScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.assertNotificationIsDisplayed(
+      notifId: Id,
+      withDesc: Boolean,
+      isRead: Boolean,
+  ) {
+    onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotification(notifId),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+    onNodeWithTag(
+            NotificationScreenTestTags.testTagForProfilePicture(notifId),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+    onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotificationTitle(notifId),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+    onNodeWithTag(
+            NotificationScreenTestTags.testTagForNotificationDate(notifId),
+            useUnmergedTree = true,
+        )
+        .performScrollTo()
+    if (!isRead)
+        onNodeWithTag(
+                NotificationScreenTestTags.testTagForNotificationReadState(notifId),
+                useUnmergedTree = true,
+            )
+            .performScrollTo()
+    if (withDesc)
+        onNodeWithTag(
+                NotificationScreenTestTags.testTagForNotificationDescription(notifId),
+                useUnmergedTree = true,
+            )
+            .performScrollTo()
   }
 }

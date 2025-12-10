@@ -83,6 +83,8 @@ sealed class Screen(
     }
   }
 
+  object Notifications : Screen(route = "notifications", name = "Notifications")
+
   companion object {
     fun fromString(path: String): Screen {
       val pathParts = path.split("/")
@@ -102,6 +104,7 @@ sealed class Screen(
         "friend_screen" -> Social(pathParts[1])
         "achievement_screen" -> Achievements(pathParts[1])
         "animal_information_screen" -> AnimalInformation(pathParts[1])
+        "notifications" -> Notifications
         else -> Auth
       }
     }

@@ -2,7 +2,9 @@ package com.android.wildex.ui.authentication
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,8 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -35,8 +37,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.R
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.theme.White
+import com.android.wildex.ui.theme.WildexBlack
+import com.android.wildex.ui.theme.WildexDarkGreen
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -70,24 +80,57 @@ fun SignInScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       content = { paddingValues ->
         Column(
-            modifier =
-                Modifier.fillMaxSize().padding(paddingValues).background(colorScheme.background),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).background(WildexDarkGreen),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+          val logoScale = remember { Animatable(0.9f) }
+          LaunchedEffect(Unit) {
+            logoScale.animateTo(
+                targetValue = 1f,
+                animationSpec =
+                    tween(
+                        durationMillis = 1000,
+                        easing = FastOutSlowInEasing,
+                    ),
+            )
+          }
+
           Image(
-              painter = painterResource(id = R.drawable.app_logo_name),
+              painter = painterResource(id = R.drawable.app_logo_foreground),
               contentDescription = "App logo",
-              modifier = Modifier.size(200.dp).testTag(SignInScreenTestTags.APP_LOGO),
+              modifier =
+                  Modifier.size(200.dp)
+                      .graphicsLayer(scaleX = logoScale.value, scaleY = logoScale.value)
+                      .testTag(SignInScreenTestTags.APP_LOGO),
           )
 
-          Spacer(modifier = Modifier.height(48.dp))
+          Spacer(modifier = Modifier.height(12.dp))
 
+          Text(
+              text = "Discover the wild around you",
+              fontSize = 16.sp,
+              fontWeight = FontWeight.Medium,
+              color = White.copy(alpha = 0.9f),
+              modifier = Modifier.testTag(SignInScreenTestTags.WELCOME),
+          )
+
+          Spacer(modifier = Modifier.height(30.dp))
           // Authenticate With Google Button
-
           if (uiState.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
+            val composition by
+                rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_signin))
+            val progress by
+                animateLottieCompositionAsState(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                )
+
+            LottieAnimation(
+                composition = composition,
+                progress = { progress },
+                modifier = Modifier.size(120.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR),
+            )
           } else {
             GoogleSignInButton(
                 context = context,
@@ -105,9 +148,8 @@ fun SignInScreen(
 fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
   OutlinedButton(
       onClick = onSignInClick,
-      colors = ButtonDefaults.buttonColors(containerColor = colorScheme.background),
+      colors = ButtonDefaults.buttonColors(containerColor = White),
       shape = RoundedCornerShape(50),
-      border = BorderStroke(1.dp, colorScheme.onBackground),
       modifier =
           Modifier.padding(8.dp)
               .fillMaxWidth(0.8f)
@@ -127,7 +169,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context) {
 
       Text(
           text = context.getString(R.string.sign_in),
-          color = colorScheme.onBackground,
+          color = WildexBlack,
           fontSize = 16.sp,
           fontWeight = FontWeight.Medium,
       )

@@ -79,6 +79,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.StaticMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.mapbox.geojson.Point
@@ -88,9 +89,6 @@ import java.util.Locale
 /** Test tag constants used for UI testing of HomeScreen components. */
 object HomeScreenTestTags {
   const val NO_POST_ICON = "HomeScreenNoPost"
-  const val NOTIFICATION_BELL = "HomeScreenNotificationBell"
-  const val PROFILE_PICTURE = "HomeScreenProfilePicture"
-  const val TITLE = "HomeScreenTitle"
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
   const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
@@ -122,8 +120,11 @@ object HomeScreenTestTags {
  * Entry point composable for the home screen.
  *
  * @param homeScreenViewModel ViewModel managing UI state and data.
+ * @param bottomBar the bottom bar to display on the home screen
  * @param onPostClick Callback invoked when a post is selected.
- * @param onProfilePictureClick Callback invoked when the profile picture is selected.
+ * @param onProfilePictureClick Callback invoked when a profile picture on a post is clicked.
+ * @param onCurrentProfilePictureClick Callback invoked when the current user's profile picture is
+ *   clicked
  * @param onNotificationClick Callback invoked when the notification icon is clicked.
  */
 @Composable
@@ -132,6 +133,7 @@ fun HomeScreen(
     bottomBar: @Composable () -> Unit = {},
     onPostClick: (postId: Id) -> Unit = {},
     onProfilePictureClick: (userId: Id) -> Unit = {},
+    onCurrentProfilePictureClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
 ) {
   val uiState by homeScreenViewModel.uiState.collectAsState()
@@ -151,8 +153,14 @@ fun HomeScreen(
   }
 
   Scaffold(
-      topBar = { HomeTopBar(user, onNotificationClick, onProfilePictureClick) },
-      bottomBar = { bottomBar() },
+      topBar = {
+        TopLevelTopBar(
+            user,
+            context.getString(R.string.app_name),
+            onNotificationClick,
+            onCurrentProfilePictureClick)
+      },
+      bottomBar = bottomBar,
       modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
   ) { pd ->
     val pullState = rememberPullToRefreshState()

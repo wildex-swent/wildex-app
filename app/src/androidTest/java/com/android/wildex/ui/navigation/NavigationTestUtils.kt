@@ -332,11 +332,11 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.navigateToMyProfileScreenFromHome() {
-    performClickOnTag(HomeScreenTestTags.PROFILE_PICTURE)
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 
   fun ComposeTestRule.navigateToMyProfileScreenFromCollection() {
-    performClickOnTag(CollectionScreenTestTags.PROFILE_BUTTON)
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 
   fun ComposeTestRule.navigateToPostDetailsScreenFromHome(postUid: String) {
@@ -400,7 +400,7 @@ abstract class NavigationTestUtils {
     performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
   }
 
-  fun ComposeTestRule.navigateToMyProfileScreenFromReport(userId: Id) {
-    performClickOnTag(ReportScreenTestTags.testTagForProfilePicture(userId, "user"))
+  fun ComposeTestRule.navigateToMyProfileScreenFromReport() {
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 }

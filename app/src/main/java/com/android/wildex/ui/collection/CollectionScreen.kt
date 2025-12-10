@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,21 +43,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
-import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
-import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.navigation.TopLevelTopBar
 import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object CollectionScreenTestTags {
   const val GO_BACK_BUTTON = "collection_screen_go_back_button"
-  const val NOTIFICATION_BUTTON = "collection_screen_notification_button"
-  const val PROFILE_BUTTON = "collection_screen_profile_button"
   const val NO_ANIMAL_TEXT = "no_animal_text"
-  const val SCREEN_TITLE = "collection_screen_title"
   const val ANIMAL_LIST = "collection_screen_animal_list"
 
   fun testTagForAnimal(animalId: Id, isUnlocked: Boolean) =
@@ -72,8 +67,8 @@ object CollectionScreenTestTags {
  * @param collectionScreenViewModel ViewModel managing the state for this screen.
  * @param userUid UID of the user whose collection is to be displayed.
  * @param onAnimalClick Callback invoked when an animal is selected.
- * @param onProfileClick Callback invoked when the profile button is clicked, only use when we
- *   display the current user's collection.
+ * @param onProfilePictureClick callback invoked when the current user owns the screen and clicks on
+ *   their profile picture
  * @param onNotificationClick Callback invoked when the notification button is clicked, only use
  *   when we display the current user's collection.
  * @param onGoBack Callback invoked when the go back button is clicked, only use when we display the
@@ -86,7 +81,7 @@ fun CollectionScreen(
     collectionScreenViewModel: CollectionScreenViewModel = viewModel(),
     userUid: String = "",
     onAnimalClick: (Id) -> Unit = {},
-    onProfileClick: (Id) -> Unit = {},
+    onProfilePictureClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onGoBack: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {}
@@ -104,12 +99,15 @@ fun CollectionScreen(
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.COLLECTION_SCREEN),
-      bottomBar = { bottomBar() },
+      bottomBar = bottomBar,
       topBar = {
-        if (!uiState.isLoading) {
-          CollectionTopBar(
-              uiState.isUserOwner, uiState.user, onGoBack, onProfileClick, onNotificationClick)
-        }
+        if (uiState.isUserOwner)
+            TopLevelTopBar(
+                currentUser = uiState.user,
+                title = context.getString(R.string.collection),
+                onNotificationClick = onNotificationClick,
+                onProfilePictureClick = onProfilePictureClick)
+        else OtherUserCollectionTopBar(onGoBack = onGoBack)
       }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
           when {
@@ -125,60 +123,23 @@ fun CollectionScreen(
 /**
  * Composable for the top app bar in the Collection Screen.
  *
- * @param isUserOwner Boolean indicating if the displayed collection belongs to the current user.
- * @param user user whose collection we are viewing
  * @param onGoBack Callback invoked when the go back button is clicked.
- * @param onProfileClick Callback invoked when the profile button is clicked.
- * @param onNotificationClick Callback invoked when the notification button is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CollectionTopBar(
-    isUserOwner: Boolean,
-    user: SimpleUser,
-    onGoBack: () -> Unit,
-    onProfileClick: (Id) -> Unit,
-    onNotificationClick: () -> Unit
-) {
+fun OtherUserCollectionTopBar(onGoBack: () -> Unit) {
   TopAppBar(
-      title = {
-        if (isUserOwner) {
-          Text(
-              modifier = Modifier.fillMaxWidth().testTag(CollectionScreenTestTags.SCREEN_TITLE),
-              text = LocalContext.current.getString(R.string.collection),
-              style = typography.titleLarge,
-              color = colorScheme.onBackground,
-              textAlign = TextAlign.Center)
-        }
-      },
+      title = {},
       navigationIcon = {
         IconButton(
-            modifier =
-                Modifier.testTag(
-                    if (isUserOwner) CollectionScreenTestTags.NOTIFICATION_BUTTON
-                    else CollectionScreenTestTags.GO_BACK_BUTTON),
-            onClick = { if (isUserOwner) onNotificationClick() else onGoBack() },
+            modifier = Modifier.testTag(CollectionScreenTestTags.GO_BACK_BUTTON),
+            onClick = onGoBack,
         ) {
           Icon(
-              imageVector =
-                  if (isUserOwner) Icons.Outlined.Notifications
-                  else Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = if (isUserOwner) "Notifications" else "Back",
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = "Back",
               modifier = Modifier.size(30.dp),
           )
-        }
-      },
-      actions = {
-        if (isUserOwner) {
-          Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-            ClickableProfilePicture(
-                modifier = Modifier.size(40.dp).testTag(CollectionScreenTestTags.PROFILE_BUTTON),
-                profileId = user.userId,
-                profilePictureURL = user.profilePictureURL,
-                profileUserType = user.userType,
-                onProfile = onProfileClick,
-            )
-          }
         }
       })
 }

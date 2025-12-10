@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,14 +55,13 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.OfflineScreen
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
 object ReportScreenTestTags {
-  const val NOTIFICATION_BUTTON = "report_screen_notification_button"
   const val NO_REPORT_TEXT = "report_screen_no_report_text"
-  const val SCREEN_TITLE = "report_screen_title"
   const val REPORT_LIST = "report_screen_report_list"
   const val SUBMIT_REPORT = "report_screen_submit_report"
   const val PULL_TO_REFRESH = "report_screen_pull_to_refresh"
@@ -79,6 +79,8 @@ object ReportScreenTestTags {
  *
  * @param reportScreenViewModel The view model for the report screen.
  * @param onProfileClick The function to be called when a profile picture is clicked.
+ * @param onCurrentProfileClick The function to be called when the current user's profile picture is
+ *   clicked
  * @param onNotificationClick The function to be called when the notification button is clicked.
  * @param onReportClick The function to be called when a report is clicked.
  * @param onSubmitReportClick The function to be called when the submit report button is clicked.
@@ -89,6 +91,7 @@ object ReportScreenTestTags {
 fun ReportScreen(
     reportScreenViewModel: ReportScreenViewModel = viewModel(),
     onProfileClick: (Id) -> Unit = {},
+    onCurrentProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onReportClick: (Id) -> Unit = {},
     onSubmitReportClick: () -> Unit = {},
@@ -111,13 +114,16 @@ fun ReportScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.REPORT_SCREEN),
       bottomBar = { bottomBar() },
       topBar = {
-        ReportScreenTopBar(
-            userId = uiState.currentUser.userId,
-            userType = uiState.currentUser.userType,
-            userProfilePictureURL = uiState.currentUser.profilePictureURL,
-            onProfileClick = onProfileClick,
+        val user = uiState.currentUser
+        TopLevelTopBar(
+            currentUser = user,
+            title =
+                when (user.userType) {
+                  UserType.REGULAR -> stringResource(R.string.report_title_regular)
+                  UserType.PROFESSIONAL -> stringResource(R.string.report_title_professional)
+                },
             onNotificationClick = onNotificationClick,
-        )
+            onProfilePictureClick = onCurrentProfileClick)
       },
   ) { innerPadding ->
     if (isOnline) {

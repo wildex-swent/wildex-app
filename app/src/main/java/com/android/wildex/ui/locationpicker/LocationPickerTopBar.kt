@@ -2,7 +2,7 @@ package com.android.wildex.ui.locationpicker
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +36,7 @@ fun LocationPickerTopBar(context: Context, onGoBack: () -> Unit) {
             onClick = onGoBack,
             modifier = Modifier.testTag(LocationPickerTestTags.BACK_BUTTON),
         ) {
-          Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+          Icon(Icons.Default.ChevronLeft, contentDescription = context.getString(R.string.back))
         }
       },
   )

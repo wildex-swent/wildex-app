@@ -1,7 +1,7 @@
 package com.android.wildex.ui.achievement
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,7 +39,7 @@ fun AchievementsTopBar(onGoBack: () -> Unit) {
             onClick = { onGoBack() },
         ) {
           Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              imageVector = Icons.Default.ChevronLeft,
               contentDescription = context.getString(R.string.back),
           )
         }

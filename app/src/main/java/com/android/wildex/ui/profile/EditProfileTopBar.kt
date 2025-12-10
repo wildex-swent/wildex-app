@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,6 +24,7 @@ import com.android.wildex.R
 @Composable
 fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {
   val cs = colorScheme
+  val context = LocalContext.current
   CenterAlignedTopAppBar(
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -42,8 +43,8 @@ fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {
             onClick = { onGoBack() },
         ) {
           Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
+              imageVector = Icons.Default.ChevronLeft,
+              contentDescription = context.getString(R.string.back),
               tint = cs.onBackground,
           )
         }

@@ -1,148 +1,141 @@
 package com.android.wildex.ui.animation
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.InfiniteTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
-import kotlinx.coroutines.delay
 import kotlin.random.Random
+import kotlin.random.nextInt
 
-private const val MAX_ROTATION_START = 90
-private const val TIME_DELTA = 0.016f
-private const val TIME_DELAY = 16L
-private const val ROTATION_DELTA = 0.03f
-private const val DELAY_RESPAWN = 150L
-private const val DELAY_SPAWN = 300L
-private const val NUMBER_ANIMAL_MAX = 8
-private const val ANIMAL_SIZE = 120
-private const val INITIAL_SPEED = 100
+private val animalRes = listOf(
+  R.drawable.gorilla,
+  R.drawable.dog,
+  R.drawable.dog_face,
+  R.drawable.monkey,
+  R.drawable.orangutan,
+  R.drawable.poodle,
+  R.drawable.wolf,
+  R.drawable.baby_chick,
+  R.drawable.crocodile,
+  R.drawable.dolphin,
+  R.drawable.eagle,
+  R.drawable.duck,
+  R.drawable.fox,
+  R.drawable.giraffe,
+  R.drawable.goat,
+  R.drawable.kangaroo,
+  R.drawable.lion,
+  R.drawable.lizard,
+  R.drawable.lobster,
+  R.drawable.rooster,
+  R.drawable.shark,
+  R.drawable.snake,
+  R.drawable.squid,
+  R.drawable.tiger,
+  R.drawable.tropical_fish,
+  R.drawable.turtle,
+  R.drawable.whale,
+)
 
-class FlyingAnimal(
-  val animal: String,
-  initialPositionX: Float,
-  initialPositionY: Float,
-  initialVelocity: Float
+private data class FlyingAnimal(
+  val animal: Int,
+  val positionX: Float,
+  val initialPositionY: Float,
+  val initialRotation: Float,
+  val finalPositionY: Float,
+  val finalRotation: Float,
+  val speed: Int,
+  val delay: Int,
+  val size: Float
+)
+
+private fun createRandomFlyingAnimal(screenWidth: Float, screenHeight: Float, animalSize: Float): FlyingAnimal{
+  return FlyingAnimal(
+    animal = animalRes.random(),
+    positionX = (screenWidth - animalSize) * Random.nextFloat(),
+    initialPositionY = screenHeight + animalSize,
+    finalPositionY = -animalSize,
+    initialRotation = Random.nextInt(-360..360).toFloat(),
+    finalRotation = Random.nextInt(-360..360).toFloat(),
+    speed = Random.nextInt(3000..7000),
+    delay = Random.nextInt(0..20000),
+    size = animalSize
+  )
+}
+
+@Composable
+private fun FlyingAnimalAnimation(
+  flyingAnimal: FlyingAnimal,
+  animalSize: Dp
 ){
-  var positionY by mutableFloatStateOf(initialPositionY)
-  var positionX by mutableFloatStateOf(initialPositionX)
-  private var velocity by mutableFloatStateOf(initialVelocity)
-  private val rotationDelta =
-    (Random.nextFloat() * MAX_ROTATION_START) - MAX_ROTATION_START / 2
-  var rotation by mutableFloatStateOf(rotationDelta)
+  val infiniteTransition = rememberInfiniteTransition()
+  val posY by infiniteTransition.animateFloat(
+    initialValue = flyingAnimal.initialPositionY,
+    targetValue = flyingAnimal.finalPositionY,
+    animationSpec = infiniteRepeatable(
+      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = flyingAnimal.delay, easing = LinearEasing),
+      repeatMode = RepeatMode.Restart
+    )
+  )
 
-  fun setRandomAnimal(
-    screenWidth: Float,
-    screenHeight: Float,
-    animalSize: Float,
-  ) {
-    val xPos = getXPos(screenWidth, animalSize)
-    positionX = xPos
-    positionY = screenHeight + animalSize
-  }
+  val rotation by infiniteTransition.animateFloat(
+    initialValue = flyingAnimal.initialRotation,
+    targetValue = flyingAnimal.finalRotation,
+    animationSpec = infiniteRepeatable(
+      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = flyingAnimal.delay, easing = LinearEasing),
+      repeatMode = RepeatMode.Reverse
+    )
+  )
 
-  suspend fun fly(animalSize: Float, onFinished: () -> Unit) {
-    while (positionY > -animalSize) {
-      delay(TIME_DELAY)
-      positionY -= velocity * TIME_DELTA
-      rotation -= rotationDelta * ROTATION_DELTA
-    }
-
-    delay(DELAY_RESPAWN)
-    onFinished()
-  }
+  Image(
+    painter = painterResource(id = flyingAnimal.animal),
+    contentDescription = null,
+    modifier = Modifier
+      .offset(x = flyingAnimal.positionX.dp, y = posY.dp)
+      .graphicsLayer(
+        rotationZ = rotation
+      )
+      .size(animalSize)
+  )
 }
 
 @Composable
-fun UploadingAnimation(
-  onFinish: () -> Unit,
-  duration: Long = Long.MIN_VALUE
-) {
-  val screenSize = LocalWindowInfo.current.containerSize
-  val screenWidth = 400.dp
-  val screenHeight = 1080.dp
-  val animalSize = ANIMAL_SIZE.dp
-
-  val flyingAnimals = remember { mutableStateListOf<FlyingAnimal>() }
-
-  if (duration != Long.MIN_VALUE) {
-    LaunchedEffect(duration) {
-      delay(duration)
-      onFinish()
-    }
+fun UploadingAnimation() {
+  val screenWidth = LocalConfiguration.current.screenWidthDp.dp.value
+  val screenHeight = LocalConfiguration.current.screenHeightDp.dp.value
+  val animalSizes = listOf(screenWidth / 7, screenWidth / 8, screenWidth / 9, screenWidth / 10)
+  val flyingAnimals = mutableListOf<FlyingAnimal>()
+  (1..200).forEach{ _ ->
+    flyingAnimals.add(createRandomFlyingAnimal(screenWidth, screenHeight, animalSizes.random()))
   }
 
-  LaunchedEffect(Unit) {
-    while (flyingAnimals.size < NUMBER_ANIMAL_MAX) {
-      delay(DELAY_SPAWN)
-
-      val xPos = getXPos(screenWidth.value, animalSize.value)
-      val newAnimal =
-        FlyingAnimal(
-          animal = "🦁",
-          initialPositionX = xPos,
-          initialPositionY = screenHeight.value + animalSize.value,
-          initialVelocity = INITIAL_SPEED * Random.nextFloat())
-      flyingAnimals.add(newAnimal)
-    }
-  }
-
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-    flyingAnimals.forEachIndexed { index, animal ->
-      LaunchedEffect(animal) {
-        while (true) {
-          animal.fly(animalSize.value) {
-            animal.setRandomAnimal(screenWidth.value, screenHeight.value, animalSize.value)
-          }
-        }
-      }
-
-      // Apply offset and rotation to each animal image
-      Image(
-        painter = painterResource(R.drawable.google_logo),
-        contentDescription = "jid",
-        modifier =
-          Modifier.offset(x = animal.positionX.dp, y = animal.positionY.dp)
-            .size(animalSize)
-            .graphicsLayer(rotationZ = animal.rotation)
-            .testTag("AnimalImage_$index"))
-    }
-  }
-}
-
-private fun getXPos(screenWidth: Float, animalSize: Float): Float {
-  val padding = (animalSize / 2)
-  val posAnimalCenter = (Random.nextFloat() * (screenWidth - animalSize))
-  return padding + posAnimalCenter
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAnimation(){
   Box(
-    modifier = Modifier.height(1080.dp).width(400.dp)
-  ){
-    UploadingAnimation(onFinish = {})
+    modifier = Modifier.fillMaxSize()
+  ) {
+    flyingAnimals.forEach {
+      FlyingAnimalAnimation(it, it.size.dp)
+    }
   }
 }
 

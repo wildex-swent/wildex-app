@@ -73,6 +73,7 @@ import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen

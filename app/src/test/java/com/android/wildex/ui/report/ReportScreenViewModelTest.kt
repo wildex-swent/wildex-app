@@ -180,8 +180,8 @@ class ReportScreenViewModelTest {
 
       val expectedReportLocations =
           listOf(
-              Location(80.0, 10.0, "Test Location 2"),
-              Location(100.0, 100.0, "Test Location 3"),
+              Location(80.0, 10.0, "Test Location 2", "Test Location 2", "Test Location 2"),
+              Location(100.0, 100.0, "Test Location 3", "Test Location 3", "Test Location 3"),
           )
       val actualReportLocations = state.reports.map { it.location }
       assertEquals(expectedReportLocations, actualReportLocations)

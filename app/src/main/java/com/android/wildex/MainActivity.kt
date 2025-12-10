@@ -458,7 +458,7 @@ private fun NavGraphBuilder.homeComposable(
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
         onCurrentProfilePictureClick = {
           navigationActions.navigateTo(Screen.Profile(currentUserId!!))
-        })
+        },
         onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
     )
   }

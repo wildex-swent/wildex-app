@@ -147,6 +147,8 @@
     <string name="no_reports">Nothing to see here…</string>
     <string name="report_author">Reported by</string>
     <string name="report_author_current">me</string>
+    <string name="report_open">Open</string>
+    <string name="report_assigned">Assigned</string>
     <string name="submit_report">Submit Report</string>
 
     <!-- Report details screen -->

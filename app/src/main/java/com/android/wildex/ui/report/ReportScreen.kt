@@ -34,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +59,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -346,46 +344,57 @@ private fun ReportItem(
 
     // Location and Status
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
       // Location
-      Row(
-          modifier = Modifier.width(LocalWindowInfo.current.containerSize.width.dp / 6),
-          horizontalArrangement = Arrangement.Center,
-          verticalAlignment = Alignment.CenterVertically,
+      Box(
+          modifier = Modifier.fillMaxWidth(0.5f),
+          contentAlignment = Alignment.Center,
       ) {
-        Icon(
-            imageVector = Icons.Default.LocationOn,
-            contentDescription = "Location",
-            tint = colorScheme.primary,
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = reportState.location.name,
-            style = typography.labelMedium,
-            color = colorScheme.primary,
-            maxLines = 2,
-            softWrap = true,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Icon(
+              imageVector = Icons.Default.LocationOn,
+              contentDescription = "Location",
+              tint = colorScheme.primary,
+          )
+          Spacer(Modifier.width(4.dp))
+          Text(
+              text = reportState.location.generalName,
+              style = typography.labelMedium,
+              color = colorScheme.primary,
+              maxLines = 1,
+              softWrap = true,
+              overflow = TextOverflow.Ellipsis,
+          )
+        }
       }
       // Status
-      Card(
-          colors = CardDefaults.cardColors(containerColor = statusColor),
+      Box(
+          modifier = Modifier.fillMaxWidth(1f),
+          contentAlignment = Alignment.Center,
       ) {
-        Text(
-            text =
-                if (reportState.assigned) {
-                  "Assigned"
-                } else {
-                  "Open"
-                },
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            style = typography.titleLarge,
-            color = colorScheme.onBackground,
-        )
+        Card(
+            colors = CardDefaults.cardColors(containerColor = statusColor),
+        ) {
+          Text(
+              text =
+                  if (reportState.assigned) {
+                    LocalContext.current.getString(R.string.report_assigned)
+                  } else {
+                    LocalContext.current.getString(R.string.report_open)
+                  },
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+              style = typography.titleLarge,
+              color = colorScheme.onBackground,
+              maxLines = 1,
+              softWrap = true,
+              overflow = TextOverflow.Ellipsis,
+          )
+        }
       }
     }
 
@@ -472,7 +481,7 @@ private fun ReportSlider(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = reportState.location.name,
+                    text = reportState.location.specificName,
                     style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = colorScheme.primary,
                     maxLines = 1,
@@ -566,7 +575,7 @@ private fun ReportScreenButtons(
           ) {
             Icon(
                 modifier = Modifier.testTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON),
-                imageVector = Icons.Default.ReportProblem,
+                painter = painterResource(R.drawable.report_filled),
                 contentDescription = "Submit Report",
                 tint = colorScheme.primary,
             )

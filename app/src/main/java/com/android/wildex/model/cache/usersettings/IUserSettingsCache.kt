@@ -4,6 +4,9 @@ import com.android.wildex.model.user.AppearanceMode
 
 /** Cache interface for user settings. */
 interface IUserSettingsCache {
+  /** Initializes the user settings in the cache with default values. */
+  suspend fun initializeUserSettings()
+
   /**
    * Retrieves the notification enablement setting.
    *

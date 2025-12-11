@@ -13,6 +13,11 @@ class FakeUserSettingsCache : IUserSettingsCache {
     appearanceMode = null
   }
 
+  override suspend fun initializeUserSettings() {
+    enableNotifications = true
+    appearanceMode = AppearanceMode.AUTOMATIC
+  }
+
   override suspend fun getEnableNotification(): Boolean? = enableNotifications
 
   override suspend fun setEnableNotification(enable: Boolean) {

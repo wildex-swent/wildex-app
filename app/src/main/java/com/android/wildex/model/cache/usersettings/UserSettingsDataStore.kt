@@ -1,6 +1,7 @@
 package com.android.wildex.model.cache.usersettings
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -18,8 +19,13 @@ object UserSettingsPreferencesKey {
 
 /** Implementation of IUserSettingsCache using DataStore for persistent storage. */
 class UserSettingsCache(private val context: Context) : IUserSettingsCache {
+  override suspend fun initializeUserSettings() {
+    setEnableNotification(true)
+    setAppearanceMode(AppearanceMode.AUTOMATIC)
+  }
+
   override suspend fun getEnableNotification(): Boolean? {
-    val preferences = context.userSettingsDataStore.data.first()
+    val preferences: Preferences = context.userSettingsDataStore.data.first()
     return preferences[UserSettingsPreferencesKey.ENABLE_NOTIFICATIONS]
   }
 

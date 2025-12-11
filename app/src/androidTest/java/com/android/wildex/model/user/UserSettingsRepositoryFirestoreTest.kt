@@ -169,6 +169,16 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
   }
 
   @Test
+  fun initializeUserSettingsAlsoInitializesCache() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+
+      assertTrue(userSettingsCache.getEnableNotification()!!)
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode())
+    }
+  }
+
+  @Test
   fun getEnableNotificationsUsesCacheAfterFirstFetch() {
     runTest {
       repository.initializeUserSettings(user1.userId)

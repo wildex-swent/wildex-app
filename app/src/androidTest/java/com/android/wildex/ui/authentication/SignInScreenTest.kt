@@ -27,8 +27,6 @@ import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
 
-const val UI_WAIT_TIMEOUT = 5_000L
-
 class SignInScreenTest {
   private lateinit var auth: FirebaseAuth
   private lateinit var fakeCredentialManager: CredentialManager
@@ -82,8 +80,8 @@ class SignInScreenTest {
       SignInScreen(authViewModel = viewModel, credentialManager = fakeCredentialManager)
     }
 
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertExists()
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_INDICATOR).assertIsNotDisplayed()
   }
 

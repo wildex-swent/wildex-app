@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
@@ -121,6 +122,8 @@ fun SettingsScreen(
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   val screenWidth = LocalWindowInfo.current.containerSize.width.dp
   var showDeletionValidation by remember { mutableStateOf(false) }
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { settingsScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -136,7 +139,9 @@ fun SettingsScreen(
       floatingActionButton = {
         Column {
           FloatingActionButton(
-              onClick = { settingsScreenViewModel.signOut { onAccountDeleteOrSignOut() } },
+              onClick = {
+                settingsScreenViewModel.signOut(isOnline) { onAccountDeleteOrSignOut() }
+              },
               shape = RoundedCornerShape(16.dp),
               containerColor = colorScheme.background,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
@@ -156,7 +161,10 @@ fun SettingsScreen(
             )
           }
           FloatingActionButton(
-              onClick = { showDeletionValidation = true },
+              onClick = {
+                if (isOnline) showDeletionValidation = true
+                else settingsScreenViewModel.onOfflineClick()
+              },
               shape = RoundedCornerShape(16.dp),
               containerColor = colorScheme.primary,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
@@ -190,19 +198,21 @@ fun SettingsScreen(
             paddingValues,
             uiState,
             settingsScreenViewModel,
-        )
+            isOnline = isOnline)
         if (showDeletionValidation) {
           AlertDialog(
               onDismissRequest = { showDeletionValidation = false },
               title = {
                 Text(
                     text = context.getString(R.string.delete_account),
-                    style = typography.titleLarge)
+                    style = typography.titleLarge,
+                )
               },
               text = {
                 Text(
                     text = context.getString(R.string.delete_account_confirmation),
-                    style = typography.bodyMedium)
+                    style = typography.bodyMedium,
+                )
               },
               modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
               confirmButton = {
@@ -217,7 +227,8 @@ fun SettingsScreen(
                   Text(
                       text = context.getString(R.string.delete),
                       color = Color.Red,
-                      style = typography.bodyMedium)
+                      style = typography.bodyMedium,
+                  )
                 }
               },
               dismissButton = {
@@ -258,6 +269,7 @@ fun SettingsContent(
     paddingValues: PaddingValues,
     uiState: SettingsUIState,
     settingsScreenViewModel: SettingsScreenViewModel,
+    isOnline: Boolean
 ) {
   val groupButtonsColors =
       SegmentedButtonColors(
@@ -279,14 +291,23 @@ fun SettingsContent(
     val settingHeight = screenHeight / 34
     val paddingHorizontal = screenWidth / 55
     item {
-      EditProfileOption(paddingHorizontal, settingHeight, onEditProfileClick)
+      EditProfileOption(
+          paddingHorizontal = paddingHorizontal,
+          settingHeight = settingHeight,
+          onEditProfileClick = onEditProfileClick,
+          isOnline = isOnline,
+          settingsScreenViewModel = settingsScreenViewModel)
       SettingsDivider()
     }
     item {
-      NotificationOption(paddingHorizontal, settingHeight, uiState.notificationsEnabled) { newState
-        ->
-        settingsScreenViewModel.setNotificationsEnabled(newState)
-      }
+      NotificationOption(
+          paddingHorizontal = paddingHorizontal,
+          settingHeight = settingHeight,
+          currentNotificationState = uiState.notificationsEnabled,
+          isOnline = isOnline,
+          settingsScreenViewModel = settingsScreenViewModel) { newState ->
+            settingsScreenViewModel.setNotificationsEnabled(newState)
+          }
       SettingsDivider()
     }
     item {
@@ -307,7 +328,8 @@ fun SettingsContent(
                 }
             settingsScreenViewModel.setUserType(newUserType)
           },
-      )
+          isOnline = isOnline,
+          settingsScreenViewModel = settingsScreenViewModel)
       SettingsDivider()
     }
     item {
@@ -330,7 +352,8 @@ fun SettingsContent(
             AppTheme.appearanceMode = newAppearanceMode
           },
           groupButtonsColors = groupButtonsColors,
-      )
+          isOnline = isOnline,
+          settingsScreenViewModel = settingsScreenViewModel)
       SettingsDivider()
     }
   }
@@ -446,6 +469,8 @@ fun EditProfileOption(
     paddingHorizontal: Dp,
     settingHeight: Dp,
     onEditProfileClick: () -> Unit = {},
+    isOnline: Boolean,
+    settingsScreenViewModel: SettingsScreenViewModel
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
@@ -455,7 +480,9 @@ fun EditProfileOption(
       settingName = LocalContext.current.getString(R.string.edit_profile),
   ) {
     IconButton(
-        onClick = { onEditProfileClick() },
+        onClick = {
+          if (isOnline) onEditProfileClick() else settingsScreenViewModel.onOfflineClick()
+        },
         modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON),
     ) {
       Icon(
@@ -481,7 +508,9 @@ fun NotificationOption(
     paddingHorizontal: Dp,
     settingHeight: Dp,
     currentNotificationState: Boolean,
-    onNotificationStateChanged: (Boolean) -> Unit,
+    isOnline: Boolean,
+    settingsScreenViewModel: SettingsScreenViewModel,
+    onNotificationStateChanged: (Boolean) -> Unit
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
@@ -512,7 +541,9 @@ fun NotificationOption(
                 Color(1),
                 Color(1),
             ),
-        onCheckedChange = { onNotificationStateChanged(it) },
+        onCheckedChange = {
+          if (isOnline) onNotificationStateChanged(it) else settingsScreenViewModel.onOfflineClick()
+        },
         thumbContent = {
           if (currentNotificationState) {
             Icon(
@@ -546,6 +577,8 @@ fun UserStatusOption(
     currentUserStatus: UserType,
     onUserStatusChanged: (String) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
+    isOnline: Boolean,
+    settingsScreenViewModel: SettingsScreenViewModel
 ) {
   val options =
       listOf(
@@ -570,7 +603,10 @@ fun UserStatusOption(
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-            onClick = { onUserStatusChanged(option) },
+            onClick = {
+              if (isOnline) onUserStatusChanged(option)
+              else settingsScreenViewModel.onOfflineClick()
+            },
             selected = selectedIndex == index,
             colors = groupButtonsColors,
             modifier = Modifier.height(35.dp).testTag(testTags[index]),
@@ -608,6 +644,8 @@ fun AppearanceModeOption(
     currentAppearanceMode: AppearanceMode,
     onAppearanceModeChanged: (String) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
+    isOnline: Boolean,
+    settingsScreenViewModel: SettingsScreenViewModel
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
@@ -628,16 +666,16 @@ fun AppearanceModeOption(
             SettingsScreenTestTags.LIGHT_MODE_BUTTON,
             SettingsScreenTestTags.DARK_MODE_BUTTON,
         )
-    val unCheckedIcons =
-        listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
-    val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
     SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(4.6f))) {
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-            onClick = { onAppearanceModeChanged(option) },
+            onClick = {
+              if (isOnline) onAppearanceModeChanged(option)
+              else settingsScreenViewModel.onOfflineClick()
+            },
             selected = index == selectedIndex,
             modifier = Modifier.height(35.dp).testTag(testTags[index]),
             icon = {},
@@ -647,15 +685,7 @@ fun AppearanceModeOption(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically,
           ) {
-            Icon(
-                imageVector =
-                    if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
-                contentDescription = option,
-                tint =
-                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-            )
-
+            AppearanceModeOptionIcon(index, selectedIndex, option)
             Spacer(modifier = Modifier.width(2.dp))
             AppearanceModeOptionText(option, index, selectedIndex)
           }
@@ -663,6 +693,18 @@ fun AppearanceModeOption(
       }
     }
   }
+}
+
+@Composable
+private fun AppearanceModeOptionIcon(index: Int, selectedIndex: Int, option: String) {
+  val unCheckedIcons =
+      listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
+  val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
+  Icon(
+      imageVector = if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
+      contentDescription = option,
+      tint = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+      modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
 }
 
 /**

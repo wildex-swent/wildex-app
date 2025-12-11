@@ -230,7 +230,6 @@ fun ProfileContent(
         ProfileAchievements(
             id = id,
             onAchievements = onAchievements,
-            ownerProfile = state.isUserOwner,
             listAchievement = state.achievements,
         )
 

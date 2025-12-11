@@ -157,13 +157,14 @@ class EditProfileViewModel(
     _uiState.value =
         _uiState.value.copy(
             username = username,
-            invalidUsernameMsg = when {
-                username.isBlank() -> "Username cannot be empty"
-                username.length > 20 -> "Username cannot exceed 20 characters"
-                usernameList.contains(username) && currentUserName != username -> "Username is already taken"
-                else -> null
-            }
-        )
+            invalidUsernameMsg =
+                when {
+                  username.isBlank() -> "Username cannot be empty"
+                  username.length > 20 -> "Username cannot exceed 20 characters"
+                  usernameList.contains(username) && currentUserName != username ->
+                      "Username is already taken"
+                  else -> null
+                })
   }
 
   fun setDescription(description: String) {

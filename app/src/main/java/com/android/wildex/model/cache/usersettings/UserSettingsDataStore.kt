@@ -1,54 +1,58 @@
 package com.android.wildex.model.cache.usersettings
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.utils.Id
+import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 import kotlinx.coroutines.flow.first
 
 val Context.userSettingsDataStore by preferencesDataStore(name = "user_settings_cache")
 
 /** Preference keys for user settings. */
 object UserSettingsPreferencesKey {
-  val ENABLE_NOTIFICATIONS = booleanPreferencesKey("enable_notifications")
-  val APPEARANCE_MODE = intPreferencesKey("appearance_mode")
+  fun enableNotificationsKey(userId: Id) = booleanPreferencesKey("enable_notifications_${userId}")
+
+  fun appearanceMode(userId: Id) = intPreferencesKey("appearance_mode_${userId}")
 }
 
 /** Implementation of IUserSettingsCache using DataStore for persistent storage. */
 class UserSettingsCache(private val context: Context) : IUserSettingsCache {
-  override suspend fun initializeUserSettings() {
-    setEnableNotification(true)
-    setAppearanceMode(AppearanceMode.AUTOMATIC)
+  override suspend fun initializeUserSettings(userId: Id) {
+    setEnableNotification(userId, true)
+    setAppearanceMode(userId, AppearanceMode.AUTOMATIC)
   }
 
-  override suspend fun getEnableNotification(): Boolean? {
-    val preferences: Preferences = context.userSettingsDataStore.data.first()
-    return preferences[UserSettingsPreferencesKey.ENABLE_NOTIFICATIONS]
-  }
-
-  override suspend fun setEnableNotification(enable: Boolean) {
-    context.userSettingsDataStore.edit { preferences ->
-      preferences[UserSettingsPreferencesKey.ENABLE_NOTIFICATIONS] = enable
-    }
-  }
-
-  override suspend fun getAppearanceMode(): AppearanceMode? {
+  override suspend fun getEnableNotification(userId: Id): Boolean? {
     val preferences = context.userSettingsDataStore.data.first()
-    return preferences[UserSettingsPreferencesKey.APPEARANCE_MODE]?.let {
-      AppearanceMode.entries[it]
-    }
+    return preferences[UserSettingsPreferencesKey.enableNotificationsKey(userId)]
   }
 
-  override suspend fun setAppearanceMode(mode: AppearanceMode) {
+  override suspend fun setEnableNotification(userId: Id, enable: Boolean) {
     context.userSettingsDataStore.edit { preferences ->
-      preferences[UserSettingsPreferencesKey.APPEARANCE_MODE] = mode.ordinal
+      preferences[UserSettingsPreferencesKey.enableNotificationsKey(userId)] = enable
     }
   }
 
-  override suspend fun clear() {
-    context.userSettingsDataStore.edit { it.clear() }
+  override suspend fun getAppearanceMode(userId: Id): AppearanceMode? {
+    val preferences = context.userSettingsDataStore.data.first()
+    val modeInt = preferences[UserSettingsPreferencesKey.appearanceMode(userId)]
+    return modeInt?.let { AppearanceMode.entries[modeInt] }
+  }
+
+  override suspend fun setAppearanceMode(userId: Id, mode: AppearanceMode) {
+    context.userSettingsDataStore.edit { preferences ->
+      preferences[UserSettingsPreferencesKey.appearanceMode(userId)] = mode.ordinal
+    }
+  }
+
+  override suspend fun clear(userId: Id) {
+    context.userSettingsDataStore.edit { preferences ->
+      preferences.remove(UserSettingsPreferencesKey.enableNotificationsKey(userId))
+      preferences.remove(UserSettingsPreferencesKey.appearanceMode(userId))
+    }
   }
 }

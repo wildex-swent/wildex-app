@@ -174,7 +174,7 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
       repository.initializeUserSettings(user1.userId)
 
       assertTrue(repository.getEnableNotification(user1.userId))
-      assertTrue(userSettingsCache.getEnableNotification()!!)
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
 
       val doc =
           FirebaseEmulator.firestore
@@ -191,10 +191,10 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     runTest {
       repository.initializeUserSettings(user1.userId)
       assertTrue(repository.getEnableNotification(user1.userId))
-      assertTrue(userSettingsCache.getEnableNotification()!!)
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
 
       repository.setEnableNotification(user1.userId, false)
-      assertFalse(userSettingsCache.getEnableNotification()!!)
+      assertFalse(userSettingsCache.getEnableNotification(user1.userId)!!)
     }
   }
 
@@ -203,7 +203,7 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     runTest {
       repository.initializeUserSettings(user1.userId)
       assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
-      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode())
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
 
       val doc =
           FirebaseEmulator.firestore
@@ -220,10 +220,10 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     runTest {
       repository.initializeUserSettings(user1.userId)
       assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
-      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode())
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
 
       repository.setAppearanceMode(user1.userId, AppearanceMode.DARK)
-      assertEquals(AppearanceMode.DARK, userSettingsCache.getAppearanceMode())
+      assertEquals(AppearanceMode.DARK, userSettingsCache.getAppearanceMode(user1.userId))
     }
   }
 
@@ -232,13 +232,13 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     runTest {
       repository.initializeUserSettings(user1.userId)
       assertTrue(repository.getEnableNotification(user1.userId))
-      assertTrue(userSettingsCache.getEnableNotification()!!)
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
       assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
-      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode())
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
 
       repository.deleteUserSettings(user1.userId)
-      assertNull(userSettingsCache.getEnableNotification())
-      assertNull(userSettingsCache.getAppearanceMode())
+      assertNull(userSettingsCache.getEnableNotification(user1.userId))
+      assertNull(userSettingsCache.getAppearanceMode(user1.userId))
     }
   }
 }

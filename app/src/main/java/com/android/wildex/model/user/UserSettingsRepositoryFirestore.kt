@@ -22,7 +22,7 @@ class UserSettingsRepositoryFirestore(
   }
 
   override suspend fun getEnableNotification(userId: String): Boolean {
-    cache.getEnableNotification()?.let {
+    cache.getEnableNotification(userId)?.let {
       return it
     }
 
@@ -32,7 +32,7 @@ class UserSettingsRepositoryFirestore(
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
     val enable = userSettings?.enableNotifications ?: true
 
-    cache.setEnableNotification(enable)
+    cache.setEnableNotification(userId, enable)
     return enable
   }
 
@@ -41,11 +41,11 @@ class UserSettingsRepositoryFirestore(
     ensureDocumentExists(docRef, userId)
 
     docRef.update("enableNotifications", enable).await()
-    cache.setEnableNotification(enable)
+    cache.setEnableNotification(userId, enable)
   }
 
   override suspend fun getAppearanceMode(userId: String): AppearanceMode {
-    cache.getAppearanceMode()?.let {
+    cache.getAppearanceMode(userId)?.let {
       return it
     }
 
@@ -55,7 +55,7 @@ class UserSettingsRepositoryFirestore(
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
     val mode = userSettings?.appearanceMode ?: AppearanceMode.AUTOMATIC
 
-    cache.setAppearanceMode(mode)
+    cache.setAppearanceMode(userId, mode)
     return mode
   }
 
@@ -64,7 +64,7 @@ class UserSettingsRepositoryFirestore(
     ensureDocumentExists(docRef, userId)
 
     docRef.update("appearanceMode", mode).await()
-    cache.setAppearanceMode(mode)
+    cache.setAppearanceMode(userId, mode)
   }
 
   override suspend fun deleteUserSettings(userId: Id) {
@@ -72,7 +72,7 @@ class UserSettingsRepositoryFirestore(
     ensureDocumentExists(docRef, userId)
 
     docRef.delete().await()
-    cache.clear()
+    cache.clear(userId)
   }
 
   /**

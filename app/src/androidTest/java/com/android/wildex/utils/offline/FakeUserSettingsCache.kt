@@ -2,36 +2,36 @@ package com.android.wildex.utils.offline
 
 import com.android.wildex.model.cache.usersettings.IUserSettingsCache
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.utils.Id
 
 /** A fake implementation of IUserSettingsCache for testing purposes. */
 class FakeUserSettingsCache : IUserSettingsCache {
-  private var enableNotifications: Boolean? = null
-  private var appearanceMode: AppearanceMode? = null
+  private val enableNotificationsMap = mutableMapOf<Id, Boolean>()
+  private val appearanceModeMap = mutableMapOf<Id, AppearanceMode>()
 
-  init {
-    enableNotifications = null
-    appearanceMode = null
+  override suspend fun initializeUserSettings(userId: Id) {
+    enableNotificationsMap[userId] = true
+    appearanceModeMap[userId] = AppearanceMode.AUTOMATIC
   }
 
-  override suspend fun initializeUserSettings() {
-    enableNotifications = true
-    appearanceMode = AppearanceMode.AUTOMATIC
+  override suspend fun getEnableNotification(userId: Id): Boolean? {
+    return enableNotificationsMap[userId]
   }
 
-  override suspend fun getEnableNotification(): Boolean? = enableNotifications
-
-  override suspend fun setEnableNotification(enable: Boolean) {
-    enableNotifications = enable
+  override suspend fun setEnableNotification(userId: Id, enable: Boolean) {
+    enableNotificationsMap[userId] = enable
   }
 
-  override suspend fun getAppearanceMode(): AppearanceMode? = appearanceMode
-
-  override suspend fun setAppearanceMode(mode: AppearanceMode) {
-    appearanceMode = mode
+  override suspend fun getAppearanceMode(userId: Id): AppearanceMode? {
+    return appearanceModeMap[userId]
   }
 
-  override suspend fun clear() {
-    enableNotifications = null
-    appearanceMode = null
+  override suspend fun setAppearanceMode(userId: Id, mode: AppearanceMode) {
+    appearanceModeMap[userId] = mode
+  }
+
+  override suspend fun clear(userId: Id) {
+    enableNotificationsMap.remove(userId)
+    appearanceModeMap.remove(userId)
   }
 }

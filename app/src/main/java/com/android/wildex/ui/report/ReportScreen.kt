@@ -271,16 +271,21 @@ private fun ReportItem(
 ) {
   val author = reportState.author
   val statusColor = if (reportState.assigned) colorScheme.primary else colorScheme.error
+  val statusTextColor = if (reportState.assigned) colorScheme.onPrimary else colorScheme.onError
   val pagerState = rememberPagerState(pageCount = { 2 })
-
   Card(
-      shape = RoundedCornerShape(0.dp),
-      colors = CardDefaults.cardColors(containerColor = colorScheme.background),
+      shape = RoundedCornerShape(20.dp),
+      colors =
+          CardDefaults.cardColors(
+              containerColor = colorScheme.surface,
+          ),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
       modifier =
           Modifier.fillMaxWidth()
+              .padding(horizontal = 12.dp, vertical = 6.dp)
               .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "full")),
   ) {
-    // Header: Profile picture + report author + date
+    // Header: Profile picture + report author + date + status pill
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -300,7 +305,7 @@ private fun ReportItem(
           onProfile = onProfileClick,
       )
       Spacer(modifier = Modifier.width(10.dp))
-      Column {
+      Column(modifier = Modifier.weight(1f)) {
         // Author
         Text(
             text =
@@ -312,7 +317,7 @@ private fun ReportItem(
                       author.username
                     },
             style = typography.titleMedium,
-            color = colorScheme.onBackground,
+            color = colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -320,20 +325,39 @@ private fun ReportItem(
         Text(
             text = reportState.date,
             style = typography.labelSmall,
-            color = colorScheme.onBackground,
+            color = colorScheme.onSurfaceVariant,
+        )
+      }
+      Spacer(modifier = Modifier.width(8.dp))
+      // Status pill (Assigned / Open)
+      Card(
+          shape = RoundedCornerShape(50),
+          colors = CardDefaults.cardColors(containerColor = statusColor),
+      ) {
+        Text(
+            text =
+                if (reportState.assigned) {
+                  LocalContext.current.getString(R.string.report_assigned)
+                } else {
+                  LocalContext.current.getString(R.string.report_open)
+                },
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = statusTextColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
       }
     }
-
     // Image and map
     ReportSlider(
         reportState = reportState,
         onReportClick = { onReportClick(reportState.reportId) },
         pagerState = pagerState,
     )
-
+    // Slider indicators
     Row(
-        modifier = Modifier.padding(top = 5.dp).align(Alignment.CenterHorizontally),
+        modifier = Modifier.padding(top = 8.dp).align(Alignment.CenterHorizontally),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -341,71 +365,44 @@ private fun ReportItem(
       Spacer(modifier = Modifier.width(5.dp))
       SlideState(1, pagerState.currentPage)
     }
-
-    // Location and Status
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    // Description + Location chip
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-      // Location
-      Box(
-          modifier = Modifier.fillMaxWidth(0.5f),
-          contentAlignment = Alignment.Center,
+      // Description
+      ExpandableTextCore(
+          text = reportState.description,
+          collapsedLines = 4,
+      )
+      // Location chip
+      Row(
+          verticalAlignment = Alignment.CenterVertically,
       ) {
         Row(
-            horizontalArrangement = Arrangement.Center,
+            modifier =
+                Modifier.clip(RoundedCornerShape(50))
+                    .background(colorScheme.surfaceVariant)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Icon(
               imageVector = Icons.Default.LocationOn,
               contentDescription = "Location",
               tint = colorScheme.primary,
+              modifier = Modifier.size(16.dp),
           )
-          Spacer(Modifier.width(4.dp))
+          Spacer(Modifier.width(6.dp))
           Text(
               text = reportState.location.generalName,
               style = typography.labelMedium,
-              color = colorScheme.primary,
+              color = colorScheme.onSurface,
               maxLines = 1,
               softWrap = true,
               overflow = TextOverflow.Ellipsis,
           )
         }
       }
-      // Status
-      Box(
-          modifier = Modifier.fillMaxWidth(1f),
-          contentAlignment = Alignment.Center,
-      ) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = statusColor),
-        ) {
-          Text(
-              text =
-                  if (reportState.assigned) {
-                    LocalContext.current.getString(R.string.report_assigned)
-                  } else {
-                    LocalContext.current.getString(R.string.report_open)
-                  },
-              modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-              style = typography.titleLarge,
-              color = colorScheme.onBackground,
-              maxLines = 1,
-              softWrap = true,
-              overflow = TextOverflow.Ellipsis,
-          )
-        }
-      }
-    }
-
-    // Description
-    Column(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-    ) {
-      ExpandableTextCore(
-          text = reportState.description,
-          collapsedLines = 4,
-      )
     }
   }
   Spacer(modifier = Modifier.height(6.dp))

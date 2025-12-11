@@ -85,12 +85,7 @@ private val defaultUser: SimpleUser =
 class ReportScreenViewModel(
     private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
-    private val currentUserId: Id =
-        try {
-          Firebase.auth.uid
-        } catch (_: Exception) {
-          defaultUser.userId
-        } ?: defaultUser.userId,
+    private val currentUserId: Id = Firebase.auth.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(ReportScreenUIState())
   val uiState: StateFlow<ReportScreenUIState> = _uiState.asStateFlow()
@@ -107,24 +102,12 @@ class ReportScreenViewModel(
    */
   private suspend fun updateUIState() {
     try {
-      val currentUser =
-          try {
-            userRepository.getSimpleUser(currentUserId)
-          } catch (e: Exception) {
-            handleException("Error loading current user data", e)
-            defaultUser
-          }
-
+      val currentUser = userRepository.getSimpleUser(currentUserId)
       _uiState.value = _uiState.value.copy(currentUser = currentUser)
 
       val reports =
-          try {
-            if (currentUser.userType == UserType.PROFESSIONAL) reportRepository.getAllReports()
-            else reportRepository.getAllReportsByAuthor(currentUserId)
-          } catch (e: Exception) {
-            handleException("Error loading reports", e)
-            emptyList()
-          }
+          if (currentUser.userType == UserType.PROFESSIONAL) reportRepository.getAllReports()
+          else reportRepository.getAllReportsByAuthor(currentUserId)
 
       val reportUIStates = reportsToReportUIStates(reports)
 
@@ -158,7 +141,7 @@ class ReportScreenViewModel(
   /** Builds a [ReportUIState] for a single report or null if something goes wrong. */
   private suspend fun buildReportUiStateOrNull(report: Report): ReportUIState? {
     return try {
-      val author = loadAuthorOrDefault(report)
+      val author = userRepository.getSimpleUser(report.authorId)
 
       ReportUIState(
           reportId = report.reportId,
@@ -172,19 +155,6 @@ class ReportScreenViewModel(
     } catch (e: Exception) {
       handleException("Error building UI state for report ${report.reportId}", e)
       null
-    }
-  }
-
-  /** Loads the author for a report, falling back to [defaultUser] on failure. */
-  private suspend fun loadAuthorOrDefault(report: Report): SimpleUser {
-    return try {
-      userRepository.getSimpleUser(report.authorId)
-    } catch (e: Exception) {
-      handleException(
-          "Error loading author ${report.authorId} user data for report ${report.reportId}",
-          e,
-      )
-      defaultUser
     }
   }
 

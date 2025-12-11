@@ -243,8 +243,7 @@ class ReportScreenViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertNotNull(state.errorMsg)
-      assertTrue(state.errorMsg!!.contains("Error loading current user data"))
+      assertEquals("Failed to update UI state: Error getting user", state.errorMsg)
     }
   }
 
@@ -257,8 +256,7 @@ class ReportScreenViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertNotNull(state.errorMsg)
-      assertTrue(state.errorMsg!!.contains("Error loading reports"))
+      assertEquals("Failed to update UI state: Failed to load reports", state.errorMsg)
     }
   }
 

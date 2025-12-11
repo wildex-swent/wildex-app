@@ -664,9 +664,6 @@ fun AppearanceModeOption(
             SettingsScreenTestTags.LIGHT_MODE_BUTTON,
             SettingsScreenTestTags.DARK_MODE_BUTTON,
         )
-    val unCheckedIcons =
-        listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
-    val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
     SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(4.6f))) {
@@ -686,15 +683,7 @@ fun AppearanceModeOption(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically,
           ) {
-            Icon(
-                imageVector =
-                    if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
-                contentDescription = option,
-                tint =
-                    if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-            )
-
+            AppearanceModeOptionIcon(index, selectedIndex, option)
             Spacer(modifier = Modifier.width(2.dp))
             AppearanceModeOptionText(option, index, selectedIndex)
           }
@@ -702,6 +691,18 @@ fun AppearanceModeOption(
       }
     }
   }
+}
+
+@Composable
+private fun AppearanceModeOptionIcon(index: Int, selectedIndex: Int, option: String) {
+  val unCheckedIcons =
+      listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
+  val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
+  Icon(
+      imageVector = if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
+      contentDescription = option,
+      tint = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
+      modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
 }
 
 /**

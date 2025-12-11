@@ -4,9 +4,11 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserSettingsRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeUserSettingsCache
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -22,6 +24,9 @@ import org.junit.Test
 class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_COLLECTION_PATH) {
 
   private var repository = UserAchievementsRepositoryFirestore(FirebaseEmulator.firestore)
+  private val userSettingsCache = FakeUserSettingsCache()
+  private var userSettingsRepository =
+      UserSettingsRepositoryFirestore(FirebaseEmulator.firestore, userSettingsCache)
   private val testUserId = "testUserId"
 
   private suspend fun getUsersCount(): Int = super.getCount()
@@ -44,7 +49,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
               country = "",
           ))
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(testUserId)
-      RepositoryProvider.userSettingsRepository.initializeUserSettings(testUserId)
+      userSettingsRepository.initializeUserSettings(testUserId)
     }
   }
 

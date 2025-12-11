@@ -1,6 +1,7 @@
 package com.android.wildex.model.user
 
 import android.util.Log
+import com.android.wildex.model.cache.user.IUserCache
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,16 +10,29 @@ import kotlinx.coroutines.tasks.await
 private const val USERS_COLLECTION_PATH = "users"
 private const val TAG = "UserRepositoryFirestore"
 
-class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
+class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cache: IUserCache) :
+    UserRepository {
 
   override suspend fun getUser(userId: Id): User {
+    cache.getUser(userId)?.let {
+      return it
+    }
+
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
-    return documentToUser(document)
-        ?: throw Exception("UserRepositoryFirestore: User $userId not found")
+
+    val user =
+        documentToUser(document)
+            ?: throw Exception("UserRepositoryFirestore: User $userId not found")
+
+    cache.saveUser(user)
+    return user
   }
 
   override suspend fun getAllUsers(): List<User> {
+    cache.getAllUsers()?.let {
+      return it
+    }
     val collection = db.collection(USERS_COLLECTION_PATH).get().await()
     val users = mutableListOf<User>()
     for (document in collection.documents) {
@@ -29,10 +43,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         Log.e(TAG, "UserRepositoryFirestore: error converting document ${document.id} to User")
       }
     }
+    cache.saveUsers(users)
     return users
   }
 
   override suspend fun getSimpleUser(userId: Id): SimpleUser {
+    cache.getUser(userId)?.let {
+      return SimpleUser(
+          userId = it.userId,
+          username = it.username,
+          profilePictureURL = it.profilePictureURL,
+          userType = it.userType)
+    }
+
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     return documentToSimpleUser(document)
@@ -46,6 +69,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       "UserRepositoryFirestore: A User with userId '${user.userId}' already exists."
     }
     documentId.set(user).await()
+    cache.saveUser(user)
   }
 
   override suspend fun editUser(userId: Id, newUser: User) {
@@ -53,6 +77,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     val document = documentId.get().await()
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     documentId.set(newUser).await()
+    cache.deleteUser(userId)
+    cache.saveUser(newUser)
   }
 
   override suspend fun deleteUser(userId: Id) {
@@ -61,6 +87,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     documentId.delete().await()
+    cache.deleteUser(userId)
   }
 
   /**
@@ -99,7 +126,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           profilePictureURL = profilePictureURL,
           userType = userType,
           creationDate = creationDate,
-          country = country)
+          country = country,
+      )
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null
@@ -123,7 +151,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           userId = id,
           username = username,
           profilePictureURL = profilePictureURL,
-          userType = userType)
+          userType = userType,
+      )
     } catch (e: Exception) {
       Log.e(TAG, "documentToSimpleUser: error converting document ${document.id}", e)
       null

@@ -53,7 +53,7 @@ fun InfiniteWaveAnimation() {
             animationSpec =
                 infiniteRepeatable(
                     animation = tween(durationMillis = fillDuration, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart))
+                    repeatMode = RepeatMode.Reverse))
 
     val waterColor = if (wave) colorScheme.primary else colorScheme.background
     val backgroundColor = if (wave) colorScheme.background else colorScheme.primary

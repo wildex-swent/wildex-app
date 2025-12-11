@@ -18,17 +18,15 @@ class UserCache(private val context: Context) : IUserCache {
   }
 
   override suspend fun saveUser(user: User) {
-    context.userDataStore.updateData {
-      it.toBuilder().putUsers(user.userId, user.toProto()).build()
+    if (getUser(user.userId) == null) {
+      context.userDataStore.updateData {
+        it.toBuilder().putUsers(user.userId, user.toProto()).build()
+      }
     }
   }
 
   override suspend fun saveUsers(users: List<User>) {
-    context.userDataStore.updateData {
-      val builder = it.toBuilder()
-      users.forEach { user -> builder.putUsers(user.userId, user.toProto()) }
-      builder.build()
-    }
+    users.forEach { saveUser(it) }
   }
 
   override suspend fun deleteUser(userId: Id) {

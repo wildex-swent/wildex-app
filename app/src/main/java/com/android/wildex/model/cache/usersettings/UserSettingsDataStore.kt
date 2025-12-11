@@ -10,11 +10,13 @@ import kotlinx.coroutines.flow.first
 
 val Context.userSettingsDataStore by preferencesDataStore(name = "user_settings_cache")
 
+/** Preference keys for user settings. */
 object UserSettingsPreferencesKey {
   val ENABLE_NOTIFICATIONS = booleanPreferencesKey("enable_notifications")
   val APPEARANCE_MODE = intPreferencesKey("appearance_mode")
 }
 
+/** Implementation of IUserSettingsCache using DataStore for persistent storage. */
 class UserSettingsCache(private val context: Context) : IUserSettingsCache {
   override suspend fun getEnableNotification(): Boolean? {
     val preferences = context.userSettingsDataStore.data.first()

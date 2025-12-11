@@ -3,6 +3,7 @@ package com.android.wildex.utils.offline
 import com.android.wildex.model.cache.usersettings.IUserSettingsCache
 import com.android.wildex.model.user.AppearanceMode
 
+/** A fake implementation of IUserSettingsCache for testing purposes. */
 class FakeUserSettingsCache : IUserSettingsCache {
   private var enableNotifications: Boolean? = null
   private var appearanceMode: AppearanceMode? = null

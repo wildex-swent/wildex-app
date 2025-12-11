@@ -12,6 +12,7 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -298,6 +299,73 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
       }
 
       assertEquals(users, repository.getAllUsers())
+    }
+  }
+
+  @Test
+  fun getAllUsersSavesAllToCache() {
+    runTest {
+      repository.addUser(user1)
+      repository.addUser(user2)
+      repository.addUser(user3)
+
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document(user2.userId)
+          .update("username", "tampered")
+          .await()
+
+      val cached = userCache.getUser(user2.userId)
+      assertEquals(user2.username, cached!!.username)
+    }
+  }
+
+  @Test
+  fun getSimpleUserUsesCachedFullUser() {
+    runTest {
+      repository.addUser(user1)
+      assertEquals(user1, userCache.getUser(user1.userId))
+
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document(user1.userId)
+          .update("username", "tampered")
+          .await()
+
+      val simpleUser =
+          SimpleUser(
+              userId = user1.userId,
+              username = user1.username,
+              profilePictureURL = user1.profilePictureURL,
+              userType = user1.userType)
+      assertEquals(simpleUser, repository.getSimpleUser(user1.userId))
+    }
+  }
+
+  @Test
+  fun editUserUpdatesCache() {
+    runTest {
+      repository.addUser(user1)
+
+      val newUser = user1.copy(username = "newUsername", bio = "new bio")
+
+      repository.editUser(user1.userId, newUser)
+      val cached = userCache.getUser(user1.userId)
+      assertEquals(newUser, cached)
+    }
+  }
+
+  @Test
+  fun deleteUserClearsCacheEntry() {
+    runTest {
+      repository.addUser(user1)
+      assertEquals(user1, userCache.getUser(user1.userId))
+
+      repository.deleteUser(user1.userId)
+      assertNull(userCache.getUser(user1.userId))
+      val exception = runCatching { repository.getUser(user1.userId) }.exceptionOrNull()
+      assertTrue(exception is IllegalArgumentException)
+      assertEquals("UserRepositoryFirestore: User ${user1.userId} not found", exception?.message)
     }
   }
 }

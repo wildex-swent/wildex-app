@@ -113,7 +113,7 @@ fun CameraScreen(
                 modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
             )
         uiState.isLoading && uiState.animalDetectResponse != null ->
-          UploadingAnimation(forPost = true)
+            UploadingAnimation(forPost = true)
         uiState.isLoading -> LoadingScreen()
         uiState.animalDetectResponse != null ->
             PostCreationScreen(

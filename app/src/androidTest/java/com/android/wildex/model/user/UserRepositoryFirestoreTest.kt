@@ -3,6 +3,7 @@ package com.android.wildex.model.user
 import android.util.Log
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeUserCache
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.util.Calendar
@@ -17,7 +18,8 @@ import org.junit.Test
 const val USERS_COLLECTION_PATH = "users"
 
 class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
-  private var repository = UserRepositoryFirestore(Firebase.firestore)
+  private val userCache = FakeUserCache()
+  private var repository = UserRepositoryFirestore(Firebase.firestore, userCache)
 
   @Before
   override fun setUp() {
@@ -256,5 +258,46 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
 
     val u = repository.getUser(id)
     assertEquals(UserType.REGULAR, u.userType)
+  }
+
+  @Test
+  fun getUserUsesCacheAfterFirstFetch() {
+    runTest {
+      repository.addUser(user1)
+      assertEquals(user1, repository.getUser(user1.userId))
+      assertEquals(user1, userCache.getUser(user1.userId))
+
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document(user1.userId)
+          .update("username", "tampered")
+          .await()
+
+      val retrieved = repository.getUser(user1.userId)
+      assertEquals(user1.username, retrieved.username)
+    }
+  }
+
+  @Test
+  fun getAllUsersUsesCacheAfterFetch() {
+    runTest {
+      repository.addUser(user1)
+      repository.addUser(user2)
+      repository.addUser(user3)
+      val users = listOf(user1, user2, user3)
+      val retrieved = repository.getAllUsers()
+      assertEquals(users, retrieved)
+      assertEquals(users, userCache.getAllUsers())
+
+      retrieved.forEach { user ->
+        FirebaseEmulator.firestore
+            .collection(USERS_COLLECTION_PATH)
+            .document(user.userId)
+            .update("username", "tampered")
+            .await()
+      }
+
+      assertEquals(users, repository.getAllUsers())
+    }
   }
 }

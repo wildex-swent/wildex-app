@@ -2,6 +2,7 @@ package com.android.wildex.model.user
 
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeUserCache
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -10,8 +11,10 @@ import org.junit.Test
 
 class UserFriendsRepositoryFirestoreTest : FirestoreTest(USER_ANIMALS_COLLECTION_PATH) {
 
-  private var repository = UserFriendsRepositoryFirestore(FirebaseEmulator.firestore)
-  private var userRepository = UserRepositoryFirestore(FirebaseEmulator.firestore)
+  private val userCache = FakeUserCache()
+  private var userRepository = UserRepositoryFirestore(FirebaseEmulator.firestore, userCache)
+  private var repository =
+      UserFriendsRepositoryFirestore(FirebaseEmulator.firestore, userRepository)
 
   @Test
   fun initializeUserFriendsWhenNoUserExists() = runTest {

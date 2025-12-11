@@ -166,7 +166,8 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
                 latitude = it["latitude"] as? Double ?: 0.0,
                 longitude = it["longitude"] as? Double ?: 0.0,
                 name = it["name"] as? String ?: "",
-            )
+                specificName = it["specificName"] as? String ?: "",
+                generalName = it["generalName"] as? String ?: "")
           }
       val date =
           document.getTimestamp(ReportsFields.DATE)

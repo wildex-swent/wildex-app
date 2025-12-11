@@ -347,6 +347,37 @@ class PinsOverlayTest {
     assertTrue(baseCache.isEmpty())
   }
 
+  @Test
+  fun renderStackClusterPin_producesBitmap_andHandlesLargeCounts() {
+    val small =
+        renderStackClusterPin(
+            count = 3,
+            borderColor = Color.RED,
+            scale = 1f,
+        )
+    val big =
+        renderStackClusterPin(
+            count = 123,
+            borderColor = Color.BLUE,
+            scale = 1f,
+        )
+    try {
+      assertTrue(small.width > 0)
+      assertTrue(small.height > 0)
+      assertTrue(big.width > 0)
+      assertTrue(big.height > 0)
+      assertEquals(small.width, big.width)
+      assertEquals(small.height, big.height)
+      val centerX = big.width / 2
+      val centerY = big.height / 2
+      val centerPixel = big.getPixel(centerX, centerY)
+      assertTrue(Color.alpha(centerPixel) > 0)
+    } finally {
+      small.recycle()
+      big.recycle()
+    }
+  }
+
   private fun mockPointAnnotation(): PointAnnotation {
     val annotation = mockk<PointAnnotation>(relaxed = true)
     var lastBitmap: Bitmap? = null

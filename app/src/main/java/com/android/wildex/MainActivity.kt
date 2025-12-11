@@ -54,6 +54,7 @@ import com.android.wildex.ui.navigation.BottomNavigationMenu
 import com.android.wildex.ui.navigation.NavigationActions
 import com.android.wildex.ui.navigation.Screen
 import com.android.wildex.ui.navigation.Tab
+import com.android.wildex.ui.notification.NotificationScreen
 import com.android.wildex.ui.post.PostDetailsScreen
 import com.android.wildex.ui.profile.EditProfileScreen
 import com.android.wildex.ui.profile.ProfileScreen
@@ -197,6 +198,19 @@ fun WildexApp(
 
     // Location Picker
     locationPickerComposable(navigationActions, navController)
+
+    // Notifications
+    notificationsComposable(navigationActions)
+  }
+}
+
+private fun NavGraphBuilder.notificationsComposable(navigationActions: NavigationActions) {
+  composable(Screen.Notifications.route) {
+    NotificationScreen(
+        onGoBack = { navigationActions.goBack() },
+        onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onNotificationClick = { navigationActions.navigateTo(Screen.fromString(it)) },
+    )
   }
 }
 
@@ -204,10 +218,7 @@ private fun NavGraphBuilder.submitFormComposable(navigationActions: NavigationAc
   composable(Screen.SubmitReport.route) { backStackEntry ->
     val savedStateHandle = backStackEntry.savedStateHandle
     val serializedLocationFlow = remember {
-      savedStateHandle.getStateFlow<Location?>(
-          LOCATION_PICKER_RESULT_KEY,
-          null,
-      )
+      savedStateHandle.getStateFlow<Location?>(LOCATION_PICKER_RESULT_KEY, null)
     }
     val pickedLocation by serializedLocationFlow.collectAsStateWithLifecycle()
 
@@ -339,6 +350,7 @@ private fun NavGraphBuilder.reportComposable(
           if (currentUserId != null) BottomNavigation(Tab.Report, navigationActions, currentUserId)
         },
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onCurrentProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
         onReportClick = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
         onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
     )
@@ -364,17 +376,16 @@ private fun NavGraphBuilder.collectionComposable(
 ) {
   composable(Screen.Collection.PATH) { backStackEntry ->
     val userId = backStackEntry.arguments?.getString("userUid")
+    val isCurrentUser = userId == currentUserId
     if (userId != null) {
       CollectionScreen(
           userUid = userId,
           onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
-          onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
           onGoBack = { navigationActions.goBack() },
+          onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
           bottomBar = {
-            if (userId == currentUserId)
-                BottomNavigation(Tab.Collection, navigationActions, currentUserId)
-          },
-      )
+            if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
+          })
     }
   }
 }
@@ -400,12 +411,21 @@ private fun NavGraphBuilder.cameraComposable(
     navigationActions: NavigationActions,
     currentUserId: Id?,
 ) {
-  composable(Screen.Camera.route) {
+
+  composable(Screen.Camera.route) { backStackEntry ->
+    val savedStateHandle = backStackEntry.savedStateHandle
+    val serializedLocationFlow = remember {
+      savedStateHandle.getStateFlow<Location?>(LOCATION_PICKER_RESULT_KEY, null)
+    }
+    val pickedLocation by serializedLocationFlow.collectAsStateWithLifecycle()
     CameraScreen(
         bottomBar = {
           if (currentUserId != null) BottomNavigation(Tab.Camera, navigationActions, currentUserId)
         },
         onPost = { navigationActions.navigateTo(Screen.Home) },
+        onPickLocation = { navigationActions.navigateTo(Screen.LocationPicker) },
+        serializedLocation = pickedLocation,
+        onPickedLocationConsumed = { savedStateHandle[LOCATION_PICKER_RESULT_KEY] = null },
     )
   }
 }
@@ -445,6 +465,10 @@ private fun NavGraphBuilder.homeComposable(
         },
         onPostClick = { navigationActions.navigateTo(Screen.PostDetails(it)) },
         onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(it)) },
+        onCurrentProfilePictureClick = {
+          navigationActions.navigateTo(Screen.Profile(currentUserId!!))
+        },
+        onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
     )
   }
 }

@@ -27,7 +27,7 @@ private val defaultUser: SimpleUser =
 
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,
-    val isUserOwner: Boolean = false,
+    val isUserOwner: Boolean = true,
     val animals: List<AnimalState> = emptyList(),
     val isLoading: Boolean = false,
     val isError: Boolean = false,
@@ -58,6 +58,7 @@ class CollectionScreenViewModel(
   private suspend fun updateUIState(userUid: String) {
     try {
       val user = userRepository.getSimpleUser(userUid)
+      _uiState.value = _uiState.value.copy(user = user, isUserOwner = userUid == currentUserId)
       val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { it.animalId }
       val animals = animalRepository.getAllAnimals()
       val animalStates =
@@ -74,8 +75,6 @@ class CollectionScreenViewModel(
               .sortedBy { !it.isUnlocked }
       _uiState.value =
           _uiState.value.copy(
-              user = user,
-              isUserOwner = userUid == currentUserId,
               animals = animalStates,
               isLoading = false,
               errorMsg = null,

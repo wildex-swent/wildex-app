@@ -97,10 +97,7 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
     Column(
         modifier =
             Modifier.align(Alignment.Center)
-                .background(
-                    colorScheme.primaryContainer.copy(alpha = 0.6f),
-                    RoundedCornerShape(20.dp),
-                )
+                .background(colorScheme.background.copy(0.8f), RoundedCornerShape(20.dp))
                 .padding(bottom = 20.dp, start = 30.dp, end = 30.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -134,7 +131,7 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
               Modifier.fillMaxWidth(.94f)
                   .height(6.dp)
                   .clip(RoundedCornerShape(3.dp))
-                  .background(colorScheme.primaryContainer.copy(alpha = 0.5f))
+                  .background(colorScheme.onBackground.copy(0.5f))
                   .testTag(DetectingScreenTestTags.DETECTING_SCREEN_LOADING_BAR)) {
             Box(
                 modifier =
@@ -148,11 +145,9 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
                             Brush.horizontalGradient(
                                 colors =
                                     listOf(
-                                        colorScheme.primaryContainer,
+                                        colorScheme.tertiary,
                                         colorScheme.primary,
-                                        colorScheme.onPrimaryContainer,
-                                        colorScheme.primary,
-                                        colorScheme.primaryContainer,
+                                        colorScheme.tertiary,
                                     )),
                             shape = RoundedCornerShape(3.dp),
                         ))

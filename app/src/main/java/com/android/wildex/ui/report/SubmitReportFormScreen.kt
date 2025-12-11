@@ -69,6 +69,7 @@ fun SubmitReportFormScreen(
     onCameraClick: () -> Unit,
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
+    onClear: () -> Unit = {},
     onPickLocation: () -> Unit = {},
 ) {
   val context = LocalContext.current
@@ -82,6 +83,7 @@ fun SubmitReportFormScreen(
         uiState = uiState,
         onDescriptionChange = onDescriptionChange,
         onSubmitClick = onSubmitClick,
+        onClear = onClear,
         onPickLocation = onPickLocation,
     )
   } else {
@@ -106,6 +108,7 @@ fun SubmitReportFormScreenContent(
     uiState: SubmitReportUiState,
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
+    onClear: () -> Unit = {},
     onPickLocation: () -> Unit = {},
 ) {
   Column(
@@ -182,7 +185,7 @@ fun SubmitReportFormScreenContent(
         modifier = Modifier.testTag(SubmitReportFormScreenTestTags.LOCATION_SELECTOR),
         locationName = uiState.location?.name,
         onClick = onPickLocation,
-    )
+        onClear = onClear)
 
     Spacer(modifier = Modifier.height(32.dp))
 

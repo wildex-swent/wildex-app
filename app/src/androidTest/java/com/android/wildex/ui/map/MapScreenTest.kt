@@ -12,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -21,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
@@ -74,7 +74,8 @@ class MapScreenTest {
           location = Location(46.5197, 6.6323, "Lausanne"),
           description = "A nice post",
           date = Timestamp.now(),
-          animalId = "fox")
+          animalId = "fox",
+      )
   private val report1 =
       Report(
           reportId = "r1",
@@ -84,6 +85,14 @@ class MapScreenTest {
           description = "Injured animal",
           authorId = "u2",
           assigneeId = "u1",
+      )
+  private val animal =
+      Animal(
+          animalId = "fox",
+          name = "Fox",
+          species = "Vulpes vulpes",
+          pictureURL = "",
+          description = "A small to medium-sized omnivorous mammal.",
       )
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -113,6 +122,7 @@ class MapScreenTest {
       userRepository.addUser(user2)
       postsRepository.addPost(post1)
       reportRepository.addReport(report1)
+      animalRepository.addAnimal(animal)
     }
     viewModel =
         MapScreenViewModel(
@@ -162,7 +172,8 @@ class MapScreenTest {
         onReport = onReport,
         onDismiss = onDismiss,
         onToggleLike = onToggleLike,
-        isCurrentUser = true)
+        isCurrentUser = true,
+    )
   }
 
   private fun node(tag: String, unmerged: Boolean = false) =
@@ -180,11 +191,11 @@ class MapScreenTest {
     node(MapContentTestTags.TAB_SWITCHER).assertIsDisplayed()
     node(MapContentTestTags.FAB_RECENTER).assertIsDisplayed()
     node(MapContentTestTags.MAP_CANVAS).assertIsDisplayed()
-    node(MapContentTestTags.MAP_PINS).assertIsDisplayed()
+    node(MapContentTestTags.MAP_PINS).assertDoesNotExist()
     node(MapContentTestTags.REFRESH).assertIsDisplayed()
     node(MapContentTestTags.BACK_BUTTON).assertIsDisplayed()
     node(MapContentTestTags.REFRESH_SPINNER, unmerged = true).assertIsDisplayed()
-    node(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()
+    node(MapContentTestTags.SELECTION_CARD).assertDoesNotExist()
   }
 
   @Test
@@ -196,11 +207,13 @@ class MapScreenTest {
         requireNotNull(viewModel.uiState.value.pins.firstOrNull { it is MapPin.PostPin }?.id)
     viewModel.onPinSelected(postPinId)
     composeTestRule.waitForIdle()
-    val before = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
+    val before =
+        (viewModel.uiState.value.selected.firstOrNull() as? PinDetails.PostDetails)?.likeCount
     requireNotNull(before)
     node(MapContentTestTags.SELECTION_LIKE_BUTTON).assertIsDisplayed().performClick()
     composeTestRule.waitForIdle()
-    val after = (viewModel.uiState.value.selected as? PinDetails.PostDetails)?.likeCount
+    val after =
+        (viewModel.uiState.value.selected.firstOrNull() as? PinDetails.PostDetails)?.likeCount
     requireNotNull(after)
     assert(before != after)
     node(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
@@ -222,7 +235,7 @@ class MapScreenTest {
     node(MapContentTestTags.SELECTION_CARD).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_CLOSE).assertIsDisplayed().performClick()
     composeTestRule.waitForIdle()
-    node(MapContentTestTags.SELECTION_CARD).assertIsNotDisplayed()
+    node(MapContentTestTags.SELECTION_CARD).assertDoesNotExist()
   }
 
   @Test
@@ -335,7 +348,8 @@ class MapScreenTest {
             likedByMe = false,
             animalName = "fox",
             likeCount = 0,
-            commentCount = 0)
+            commentCount = 0,
+        )
     setSelectionCard(
         selection = details,
         tab = MapTab.Posts,
@@ -380,7 +394,8 @@ class MapScreenTest {
             likedByMe = true,
             animalName = "owl",
             likeCount = 0,
-            commentCount = 0)
+            commentCount = 0,
+        )
     setSelectionCard(selection = details, tab = MapTab.MyPosts)
     nodeText("You saw an Owl", substring = true).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_LOCATION).assertIsDisplayed()
@@ -408,7 +423,8 @@ class MapScreenTest {
             onReport = {},
             onDismiss = {},
             onToggleLike = {},
-            isCurrentUser = true)
+            isCurrentUser = true,
+        )
       }
     }
     composeTestRule.onNodeWithTag(MapContentTestTags.SELECTION_CARD).assertDoesNotExist()
@@ -427,5 +443,49 @@ class MapScreenTest {
     }
     node(MapContentTestTags.BACK_BUTTON).assertIsDisplayed().performClick()
     assert(clicked)
+  }
+
+  @Test
+  fun selectionBottomCard_clusterPager_showsLabel_and_prev_next_callbacks_fire() {
+    var nextCount = 0
+    var prevCount = 0
+    val details =
+        PinDetails.PostDetails(
+            post = post1,
+            author =
+                SimpleUser(
+                    userId = user1.userId,
+                    username = user1.username,
+                    profilePictureURL = user1.profilePictureURL,
+                    userType = user1.userType,
+                ),
+            likedByMe = false,
+            animalName = "fox",
+            likeCount = 0,
+            commentCount = 0,
+        )
+    compose {
+      SelectionBottomCard(
+          modifier = Modifier.testTag(MapContentTestTags.SELECTION_CARD),
+          selection = details,
+          activeTab = MapTab.Posts,
+          onPost = {},
+          onReport = {},
+          onDismiss = {},
+          onToggleLike = {},
+          isCurrentUser = true,
+          groupSize = 3,
+          groupIndex = 1,
+          onNext = { nextCount++ },
+          onPrev = { prevCount++ },
+      )
+    }
+    node(MapContentTestTags.SELECTION_PAGER).assertIsDisplayed()
+    node(MapContentTestTags.SELECTION_PAGER_LABEL).assertIsDisplayed()
+    nodeText("2 / 3").assertIsDisplayed()
+    node(MapContentTestTags.SELECTION_PAGER_NEXT).assertIsDisplayed().performClick()
+    node(MapContentTestTags.SELECTION_PAGER_PREV).assertIsDisplayed().performClick()
+    assert(nextCount == 1)
+    assert(prevCount == 1)
   }
 }

@@ -40,7 +40,7 @@ class ReportScreenViewModelTest {
       Report(
           reportId = "report1",
           imageURL = "https://example.com/report_pic1",
-          location = Location(50.0, 8.0, "Test Location 1"),
+          location = Location(50.0, 8.0, "Test Location 1", "Test Location 1", "Test Location 1"),
           date = Timestamp.now(),
           description = "Test report 1",
           authorId = "user1",
@@ -51,7 +51,7 @@ class ReportScreenViewModelTest {
       Report(
           reportId = "report2",
           imageURL = "https://example.com/report_pic2",
-          location = Location(80.0, 10.0, "Test Location 2"),
+          location = Location(80.0, 10.0, "Test Location 2", "Test Location 2", "Test Location 2"),
           date = Timestamp.now(),
           description = "Test report 2",
           authorId = "user2",
@@ -62,7 +62,8 @@ class ReportScreenViewModelTest {
       Report(
           reportId = "report3",
           imageURL = "https://example.com/report_pic3",
-          location = Location(100.0, 100.0, "Test Location 3"),
+          location =
+              Location(100.0, 100.0, "Test Location 3", "Test Location 3", "Test Location 3"),
           date = Timestamp.now(),
           description = "Test report 3",
           authorId = "user2",

@@ -35,7 +35,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
@@ -177,7 +176,7 @@ fun UserSearchBar(userIndex: UserIndex, onResultClick: (Id) -> Unit, currentUser
                     onProfile = onResultClick,
                 )
               },
-              colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+              colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
               modifier =
                   Modifier.testTag(SearchBarTestTags.testTagForResult(user.userId))
                       .clickable {

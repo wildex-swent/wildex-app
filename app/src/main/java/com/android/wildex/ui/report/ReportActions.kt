@@ -106,9 +106,9 @@ fun ReportDetailsActionRow(
               isActionInProgress = isActionInProgress,
               colors =
                   ButtonDefaults.outlinedButtonColors(
-                      contentColor = colorScheme.tertiary,
+                      contentColor = colorScheme.onBackground,
                   ),
-              border = BorderStroke(1.dp, colorScheme.tertiary),
+              border = BorderStroke(1.dp, colorScheme.onBackground),
           )
         }
       }
@@ -133,9 +133,9 @@ fun ReportDetailsActionRow(
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_CANCEL),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.tertiary,
+                        contentColor = colorScheme.onBackground,
                     ),
-                border = BorderStroke(1.dp, colorScheme.tertiary),
+                border = BorderStroke(1.dp, colorScheme.onBackground),
             )
           }
           !hasAssignee -> {
@@ -170,9 +170,9 @@ fun ReportDetailsActionRow(
                 modifier = Modifier.weight(1f).testTag(ReportActionsTestTags.ACTION_UNSELFASSIGN),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.tertiary,
+                        contentColor = colorScheme.onBackground,
                     ),
-                border = BorderStroke(1.dp, colorScheme.tertiary),
+                border = BorderStroke(1.dp, colorScheme.onBackground),
             )
           }
           isCreatedByCurrentUser -> {
@@ -183,9 +183,9 @@ fun ReportDetailsActionRow(
                 modifier = Modifier.fillMaxWidth().testTag(ReportActionsTestTags.ACTION_CANCEL),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
-                        contentColor = colorScheme.tertiary,
+                        contentColor = colorScheme.onBackground,
                     ),
-                border = BorderStroke(1.dp, colorScheme.tertiary),
+                border = BorderStroke(1.dp, colorScheme.onBackground),
             )
           }
         }

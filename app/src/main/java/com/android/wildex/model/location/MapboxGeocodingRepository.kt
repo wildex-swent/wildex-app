@@ -19,7 +19,7 @@ class MapboxGeocodingRepository(
     private val baseURL: String = "https://api.mapbox.com",
 ) : GeocodingRepository {
 
-  override suspend fun reverseGeocode(latitude: Double, longitude: Double): String? =
+  override suspend fun reverseGeocode(latitude: Double, longitude: Double): Location? =
       withContext(dispatcher) {
         val base = baseURL.toHttpUrl()
         val url =
@@ -38,7 +38,15 @@ class MapboxGeocodingRepository(
               okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return@use null
                 val body = response.body?.string() ?: return@use null
-                parseFirstPlaceName(body)
+                val name = parseFirstPlaceName(body) ?: return@use null
+                val addressParts = name.trim().split(',')
+                if (addressParts.size > 1) {
+                  val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
+                  val generalAddress = addressParts.takeLast(1).first()
+                  Location(latitude, longitude, name, specificAddress, generalAddress)
+                } else {
+                  Location(latitude, longitude, name)
+                }
               }
             }
             .getOrNull()
@@ -112,7 +120,6 @@ class MapboxGeocodingRepository(
     if (features.length() == 0) return null
     val first = features.optJSONObject(0) ?: return null
     val properties = first.optJSONObject("properties") ?: return null
-
     return properties.getBestName()
   }
 
@@ -178,10 +185,18 @@ class MapboxGeocodingRepository(
     val latitude = coordinates.optDouble(1)
     if (longitude.isNaN() || latitude.isNaN()) return null
 
+    val addressParts = name.trim().split(",")
+    if (addressParts.isEmpty()) return Location(latitude, longitude, name)
+
+    val generalAddress = addressParts.takeLast(1).first()
+    val specificAddress = addressParts.take(addressParts.size - 1).joinToString(", ")
+
     return Location(
         latitude = latitude,
         longitude = longitude,
         name = name,
+        specificName = specificAddress,
+        generalName = generalAddress,
     )
   }
 }

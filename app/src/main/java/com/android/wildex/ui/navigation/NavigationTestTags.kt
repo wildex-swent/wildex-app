@@ -2,6 +2,9 @@ package com.android.wildex.ui.navigation
 
 object NavigationTestTags {
   const val BOTTOM_NAVIGATION_MENU = "BottomNavigationMenu"
+  const val TOP_BAR_TITLE = "top_bar_title"
+  const val NOTIFICATION_BELL = "notification_bell"
+  const val TOP_BAR_PROFILE_PICTURE = "top_bar_profile_picture"
   const val HOME_TAB = "HomeTab"
   const val MAP_TAB = "MapTab"
   const val CAMERA_TAB = "CameraTab"

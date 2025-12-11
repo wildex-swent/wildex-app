@@ -114,6 +114,8 @@ class ReportScreenViewModel(
             defaultUser
           }
 
+      _uiState.value = _uiState.value.copy(currentUser = currentUser)
+
       val reports =
           try {
             if (currentUser.userType == UserType.PROFESSIONAL) reportRepository.getAllReports()
@@ -128,7 +130,6 @@ class ReportScreenViewModel(
       _uiState.value =
           _uiState.value.copy(
               reports = reportUIStates,
-              currentUser = currentUser,
               isLoading = false,
               isRefreshing = false,
               isError = false,
@@ -162,7 +163,7 @@ class ReportScreenViewModel(
       ReportUIState(
           reportId = report.reportId,
           imageURL = report.imageURL,
-          location = report.location.name,
+          location = report.location.generalName,
           date = formatDate(report.date),
           description = report.description,
           author = author,

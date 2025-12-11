@@ -136,11 +136,11 @@ class HomeScreenViewModel(
   private suspend fun updateUIState() {
     try {
       AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
-      val postStates = fetchPosts()
       val user = userRepository.getSimpleUser(currentUserId)
+      _uiState.value = _uiState.value.copy(currentUser = user)
+      val postStates = fetchPosts()
       _uiState.value =
           _uiState.value.copy(
-              currentUser = user,
               postStates = postStates,
               isRefreshing = false,
               isLoading = false,

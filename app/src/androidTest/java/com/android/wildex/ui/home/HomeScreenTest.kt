@@ -29,6 +29,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
@@ -61,7 +62,7 @@ class HomeScreenTest {
           authorId = "poster0",
           pictureURL =
               "https://img.freepik.com/premium-photo/fun-unique-cartoon-profile-picture-that-represents-your-style-personality_1283595-14213.jpg",
-          location = Location(0.0, 0.0, "Casablanca"),
+          location = Location(0.0, 0.0, "Casablanca", "Casablanca", "Casablanca"),
           description = "Description 1",
           date = Timestamp.now(),
           animalId = "a1",
@@ -177,13 +178,12 @@ class HomeScreenTest {
       }
     }
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(HomeScreenTestTags.TITLE)
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertIsDisplayed()
-        .onChildren()
-        .assertAny(hasText("Wildex"))
+        .assertTextEquals("Wildex")
     composeTestRule.onNodeWithTag(HomeScreenTestTags.NO_POST_ICON).assertIsDisplayed()
 
     composeTestRule
@@ -223,8 +223,8 @@ class HomeScreenTest {
     }
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
 
     // Ensure each post is brought into view before asserting
     scrollToPost(fullPost.postId)
@@ -320,18 +320,55 @@ class HomeScreenTest {
   }
 
   @Test
-  fun profilePictureClick_invokesCallback() {
+  fun currentProfilePictureClick_invokesCallback() {
     fakeObserver.setOnline(true)
     var profileClicked = false
 
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = true })
+        HomeScreen(homeScreenVM, onCurrentProfilePictureClick = { profileClicked = true })
       }
     }
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.PROFILE_PICTURE).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).performClick()
     assert(profileClicked)
+  }
+
+  @Test
+  fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    val fullPost2 = fullPost.copy(postId = "post2", authorId = "lakaka")
+    runBlocking {
+      postRepository.addPost(fullPost)
+      userRepository.addUser(
+          User(
+              userId = "lakaka",
+              username = "testuser",
+              name = "Test",
+              surname = "User",
+              bio = "This is a test user.",
+              profilePictureURL =
+                  "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+              userType = UserType.REGULAR,
+              creationDate = Timestamp.now(),
+              country = "Testland",
+          ))
+      postRepository.addPost(fullPost2)
+      homeScreenVM.refreshUIState()
+    }
+    var profileClicked = ""
+
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        HomeScreen(homeScreenVM, onProfilePictureClick = { profileClicked = it })
+      }
+    }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.authorPictureTag("uid")).performClick()
+    assert(profileClicked == "poster0")
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.authorPictureTag("post2")).performClick()
+    assert(profileClicked == "lakaka")
   }
 
   @Test
@@ -377,7 +414,7 @@ class HomeScreenTest {
         HomeScreen(homeScreenVM, onNotificationClick = { notificationClicked = true })
       }
     }
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).performClick()
     assert(notificationClicked)
   }
 

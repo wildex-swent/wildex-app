@@ -14,10 +14,8 @@ import androidx.camera.lifecycle.awaitInstance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +36,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.android.wildex.model.LocalConnectivityObserver
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +79,8 @@ fun CameraPreviewScreen(
   val cameraRef = remember { mutableStateOf<Camera?>(null) }
   val cameraSelector = remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
   val zoomRatio = remember { mutableFloatStateOf(1f) }
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   // Initialize camera
   LaunchedEffect(cameraSelector.value) {
@@ -116,6 +119,7 @@ fun CameraPreviewScreen(
             Modifier.align(Alignment.BottomCenter)
                 .padding(start = 60.dp, end = 60.dp, bottom = 40.dp),
         zoomValue = zoomRatio.floatValue,
+        isOnline = isOnline,
     )
   }
 }
@@ -149,6 +153,7 @@ private fun CameraControls(
     onUploadClick: () -> Unit,
     zoomValue: Float = 1.0f,
     modifier: Modifier,
+    isOnline: Boolean,
 ) {
   Column(
       modifier = modifier.fillMaxWidth(),
@@ -161,27 +166,29 @@ private fun CameraControls(
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
       // Upload button - left side
-      UploadButton(
-          onClick = onUploadClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON),
-      )
-
+      if (isOnline) {
+        UploadButton(
+            onClick = onUploadClick,
+            modifier =
+                Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_UPLOAD_BUTTON)
+                    .align(Alignment.CenterStart),
+        )
+      }
       // Capture button - main action (larger)
       CaptureButton(
           onClick = onCaptureClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON),
+          modifier =
+              Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_CAPTURE_BUTTON)
+                  .align(Alignment.Center),
       )
-
       // Switch button - right side
       SwitchButton(
           onClick = onSwitchClick,
-          modifier = Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON),
+          modifier =
+              Modifier.testTag(CameraPreviewScreenTestTags.CAMERA_PREVIEW_SWITCH_BUTTON)
+                  .align(Alignment.CenterEnd),
       )
     }
   }

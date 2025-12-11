@@ -2,23 +2,19 @@ package com.android.wildex.ui.camera
 
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -28,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.animaldetector.AnimalDetectResponse
+import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.utils.location.LocationSelector
 import kotlin.math.ceil
 
 object PostCreationScreenTestTags {
@@ -37,7 +35,7 @@ object PostCreationScreenTestTags {
   const val POST_CREATION_SCREEN_SPECIES_NAME = "post_creation_screen_species_name"
   const val POST_CREATION_SCREEN_CONFIDENCE = "post_creation_screen_confidence"
   const val POST_CREATION_SCREEN_DESCRIPTION_FIELD = "post_creation_screen_description_field"
-  const val POST_CREATION_SCREEN_LOCATION_TOGGLE = "post_creation_screen_location_toggle"
+  const val POST_CREATION_SCREEN_LOCATION_PICK = "post_creation_screen_location_toggle"
   const val POST_CREATION_SCREEN_CANCEL_BUTTON = "post_creation_screen_cancel_button"
   const val POST_CREATION_SCREEN_CONFIRM_BUTTON = "post_creation_screen_confirm_button"
 }
@@ -47,13 +45,14 @@ object PostCreationScreenTestTags {
 fun PostCreationScreen(
     description: String,
     onDescriptionChange: (String) -> Unit,
-    useLocation: Boolean,
-    onLocationToggle: (Boolean) -> Unit,
     photoUri: Uri,
     detectionResponse: AnimalDetectResponse,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
+    onPickLocation: () -> Unit,
+    location: Location?,
     modifier: Modifier = Modifier,
+    onClear: () -> Unit = {},
 ) {
   val maxCharacters = 500
   val animalName = detectionResponse.animalType
@@ -85,7 +84,7 @@ fun PostCreationScreen(
                       .fillMaxHeight(0.3f)
                       .background(
                           Brush.verticalGradient(
-                              0f to Color.Transparent,
+                              0f to colorScheme.tertiary,
                               1f to colorScheme.surface,
                           )))
 
@@ -198,40 +197,14 @@ fun PostCreationScreen(
                 )
               },
           )
-          // Location toggle
-          Row(
+          // Location
+          LocationSelector(
               modifier =
-                  Modifier.fillMaxWidth()
-                      .clip(RoundedCornerShape(12.dp))
-                      .clickable { onLocationToggle(!useLocation) }
-                      .testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.SpaceBetween,
-          ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-              Icon(
-                  imageVector = Icons.Default.LocationOn,
-                  contentDescription = null,
-                  tint = colorScheme.primary,
-              )
-              Column {
-                Text(
-                    text = stringResource(R.string.share_location),
-                    style = typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = stringResource(R.string.share_location_description),
-                    style = typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                )
-              }
-            }
-            Checkbox(checked = useLocation, onCheckedChange = onLocationToggle)
-          }
+                  Modifier.testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_PICK),
+              locationName = location?.name,
+              onClick = onPickLocation,
+              onClear = onClear,
+              fraction = 1f)
 
           // Action buttons
           Row(

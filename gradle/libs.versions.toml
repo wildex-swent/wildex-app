@@ -59,10 +59,6 @@ lottie = "6.4.0"
 playServicesLocation = "21.0.1"
 material3 = "1.4.0"
 
-# DataStore
-datastore = "1.2.0"
-datastore-preferences = "1.2.0"
-
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -136,9 +132,6 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
-
-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore-preferences" }
-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

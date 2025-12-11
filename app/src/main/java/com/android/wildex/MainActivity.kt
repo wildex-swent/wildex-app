@@ -82,6 +82,7 @@ object AppTheme {
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    RepositoryProvider.init(this)
     createNotificationGroups()
     createNotificationChannels()
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN

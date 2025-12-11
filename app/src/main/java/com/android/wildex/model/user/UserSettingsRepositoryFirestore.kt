@@ -1,5 +1,6 @@
 package com.android.wildex.model.user
 
+import com.android.wildex.model.cache.usersettings.IUserSettingsCache
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -7,7 +8,10 @@ import kotlinx.coroutines.tasks.await
 
 const val USER_SETTINGS_COLLECTION_PATH = "userSettings"
 
-class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserSettingsRepository {
+class UserSettingsRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val cache: IUserSettingsCache
+) : UserSettingsRepository {
 
   private val collection = db.collection(USER_SETTINGS_COLLECTION_PATH)
 
@@ -18,11 +22,18 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
   }
 
   override suspend fun getEnableNotification(userId: String): Boolean {
+    cache.getEnableNotification()?.let {
+      return it
+    }
+
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
 
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
-    return userSettings?.enableNotifications ?: true
+    val enable = userSettings?.enableNotifications ?: true
+
+    cache.setEnableNotification(enable)
+    return enable
   }
 
   override suspend fun setEnableNotification(userId: String, enable: Boolean) {
@@ -30,14 +41,22 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     ensureDocumentExists(docRef, userId)
 
     docRef.update("enableNotifications", enable).await()
+    cache.setEnableNotification(enable)
   }
 
   override suspend fun getAppearanceMode(userId: String): AppearanceMode {
+    cache.getAppearanceMode()?.let {
+      return it
+    }
+
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
 
     val userSettings = docRef.get().await().toObject(UserSettings::class.java)
-    return userSettings?.appearanceMode ?: AppearanceMode.AUTOMATIC
+    val mode = userSettings?.appearanceMode ?: AppearanceMode.AUTOMATIC
+
+    cache.setAppearanceMode(mode)
+    return mode
   }
 
   override suspend fun setAppearanceMode(userId: String, mode: AppearanceMode) {
@@ -45,6 +64,7 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     ensureDocumentExists(docRef, userId)
 
     docRef.update("appearanceMode", mode).await()
+    cache.setAppearanceMode(mode)
   }
 
   override suspend fun deleteUserSettings(userId: Id) {
@@ -52,6 +72,7 @@ class UserSettingsRepositoryFirestore(private val db: FirebaseFirestore) : UserS
     ensureDocumentExists(docRef, userId)
 
     docRef.delete().await()
+    cache.clear()
   }
 
   /**

@@ -1,7 +1,7 @@
 package com.android.wildex.ui.notification
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.android.wildex.R
@@ -19,6 +20,7 @@ import com.android.wildex.R
 @Composable
 fun NotificationTopBar(onGoBack: () -> Unit) {
   val cs = colorScheme
+  val context = LocalContext.current
   CenterAlignedTopAppBar(
       title = {
         Text(
@@ -34,8 +36,8 @@ fun NotificationTopBar(onGoBack: () -> Unit) {
             onClick = { onGoBack() },
         ) {
           Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
+              imageVector = Icons.Default.ChevronLeft,
+              contentDescription = context.getString(R.string.back),
               tint = cs.onBackground,
           )
         }

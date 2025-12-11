@@ -19,7 +19,6 @@ class UserSettingsRepositoryFirestore(
     val docRef = collection.document(userId)
     ensureDocumentDoesNotExist(docRef, userId)
     docRef.set(UserSettings(userId = userId)).await()
-    cache.initializeUserSettings()
   }
 
   override suspend fun getEnableNotification(userId: String): Boolean {

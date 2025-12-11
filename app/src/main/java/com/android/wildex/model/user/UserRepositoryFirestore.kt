@@ -53,8 +53,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           userId = it.userId,
           username = it.username,
           profilePictureURL = it.profilePictureURL,
-          userType = it.userType,
-      )
+          userType = it.userType)
     }
 
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()

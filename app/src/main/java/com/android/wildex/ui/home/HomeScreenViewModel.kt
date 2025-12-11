@@ -24,6 +24,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import java.text.Normalizer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,17 +80,19 @@ data class PostState(
 /**
  * Represents the filters that can be applied to the posts to display in the HomeScreen.
  *
+ * @property fromAuthor The user whose posts we want to see
+ * @property fromPlace The name of the place where we want the posts to be from
+ * @property ofAnimal The name of the animal we want to see in the posts
  * @property onlyFriendsPosts True to only see the posts of the user friends, false to see
  *   everyone's posts
- * @property ofAnimal The name of the animal we want to see in the posts
- * @property fromPlace The name of the place where we want the posts to be from
- * @property fromAuthor The user whose posts we want to see
+ * @property onlyMyPosts True to only see the current user's posts, false to see everyone's posts
  */
 data class PostsFilters(
-    val onlyFriendsPosts: Boolean = false,
-    val ofAnimal: String? = null,
+    val fromAuthor: String? = null,
     val fromPlace: String? = null,
-    val fromAuthor: SimpleUser? = null
+    val ofAnimal: String? = null,
+    val onlyFriendsPosts: Boolean = false,
+    val onlyMyPosts: Boolean = false,
 )
 
 /**
@@ -231,19 +234,22 @@ class HomeScreenViewModel(
 
   /** Sets new posts filters in the UI state. */
   fun setPostsFilter(
-      onlyFriendsPosts: Boolean = _uiState.value.postsFilters.onlyFriendsPosts,
-      ofAnimal: String? = _uiState.value.postsFilters.ofAnimal,
+      fromAuthor: String? = _uiState.value.postsFilters.fromAuthor,
       fromPlace: String? = _uiState.value.postsFilters.fromPlace,
-      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor
+      ofAnimal: String? = _uiState.value.postsFilters.ofAnimal,
+      onlyFriendsPosts: Boolean = _uiState.value.postsFilters.onlyFriendsPosts,
+      onlyMyPosts: Boolean = _uiState.value.postsFilters.onlyMyPosts,
   ) {
     _uiState.value =
         _uiState.value.copy(
             postsFilters =
                 PostsFilters(
-                    onlyFriendsPosts = onlyFriendsPosts,
-                    ofAnimal = ofAnimal,
+                    fromAuthor = fromAuthor,
                     fromPlace = fromPlace,
-                    fromAuthor = fromAuthor))
+                    ofAnimal = ofAnimal,
+                    onlyFriendsPosts = onlyFriendsPosts,
+                    onlyMyPosts = onlyMyPosts,
+                ))
   }
 
   /**
@@ -256,6 +262,38 @@ class HomeScreenViewModel(
   fun filterPosts(postStates: List<PostState>): List<PostState> {
     var filteredPostStates = postStates
 
+    val fromAuthor = _uiState.value.postsFilters.fromAuthor
+    if (fromAuthor != null) {
+      val formatedFromAuthor = formatString(fromAuthor)
+      filteredPostStates =
+          filteredPostStates.filter {
+            val formatedUsername = formatString(it.author.username)
+            formatedUsername.contains(formatedFromAuthor) ||
+                formatedFromAuthor.contains(formatedUsername)
+          }
+    }
+
+    val fromPlace = _uiState.value.postsFilters.fromPlace
+    if (fromPlace != null) {
+      val formatedFromPlace = formatString(fromPlace)
+      filteredPostStates =
+          filteredPostStates.filter {
+            val formatedName = formatString(it.post.location?.name ?: "")
+            formatedName.contains(formatedFromPlace) || formatedFromPlace.contains(formatedName)
+          }
+    }
+
+    val ofAnimal = _uiState.value.postsFilters.ofAnimal
+    if (ofAnimal != null) {
+      val formatedOfAnimal = formatString(ofAnimal)
+      filteredPostStates =
+          filteredPostStates.filter {
+            val formatedAnimalName = formatString(it.animalName)
+            formatedAnimalName.contains(formatedOfAnimal) ||
+                formatedOfAnimal.contains(formatedAnimalName)
+          }
+    }
+
     if (_uiState.value.postsFilters.onlyFriendsPosts) {
       val friendIds = runBlocking {
         userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId }
@@ -264,23 +302,17 @@ class HomeScreenViewModel(
       filteredPostStates = filteredPostStates.filter { friendIds.contains(it.author.userId) }
     }
 
-    if (_uiState.value.postsFilters.ofAnimal != null) {
-      filteredPostStates =
-          filteredPostStates.filter { it.animalName == _uiState.value.postsFilters.ofAnimal }
-    }
-
-    if (_uiState.value.postsFilters.fromPlace != null) {
-      filteredPostStates =
-          filteredPostStates.filter {
-            it.post.location?.name == _uiState.value.postsFilters.fromPlace
-          }
-    }
-
-    if (_uiState.value.postsFilters.fromAuthor != null) {
-      filteredPostStates =
-          filteredPostStates.filter { it.author == _uiState.value.postsFilters.fromAuthor }
+    if (_uiState.value.postsFilters.onlyMyPosts) {
+      filteredPostStates = filteredPostStates.filter { it.author.userId == currentUserId }
     }
 
     return filteredPostStates.sortedByDescending { it.post.date }
   }
+}
+
+private fun formatString(string: String): String {
+  return Normalizer.normalize(string, Normalizer.Form.NFD)
+      .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+      .lowercase()
+      .replace("\\s+".toRegex(), "")
 }

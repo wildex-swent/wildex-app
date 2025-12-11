@@ -34,19 +34,27 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -173,8 +181,10 @@ fun HomeScreen(
         uiState.isLoading -> LoadingScreen()
         postStates.isEmpty() -> NoPostsView()
         else -> {
+          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
+
           PostsView(
-              postStates = postStates,
+              postStates = filteredPostStates,
               onProfilePictureClick = onProfilePictureClick,
               onPostLike = homeScreenViewModel::toggleLike,
               onPostClick = onPostClick,
@@ -182,7 +192,250 @@ fun HomeScreen(
         }
       }
     }
+
+    OpenFiltersButton(homeScreenViewModel = homeScreenViewModel)
   }
+}
+
+/**
+ * Displays a FloatingActionButton that opens the Filters Manager when clicked
+ *
+ * @param homeScreenViewModel the view model of the screen
+ */
+@Composable
+fun OpenFiltersButton(
+    homeScreenViewModel: HomeScreenViewModel = viewModel(),
+) {
+  val uiState by homeScreenViewModel.uiState.collectAsState()
+  val cs = colorScheme
+
+  var showFilters by remember { mutableStateOf(false) }
+
+  var fromAuthor: String? by remember { mutableStateOf(null) }
+  var fromPlace: String? by remember { mutableStateOf(null) }
+  var ofAnimal: String? by remember { mutableStateOf(null) }
+  var onlyFriendsPosts by remember { mutableStateOf(false) }
+  var onlyMyPosts by remember { mutableStateOf(false) }
+
+  Box(modifier = Modifier.fillMaxSize()) {
+    FloatingActionButton(
+        onClick = { showFilters = true },
+        modifier =
+            Modifier.align(Alignment.BottomEnd)
+                .padding(bottom = 75.dp, end = 15.dp)
+                .clip(shape = RoundedCornerShape(100)),
+        containerColor = cs.background,
+        contentColor = cs.onBackground,
+    ) {
+      Icon(
+          imageVector = Icons.Default.Search,
+          contentDescription = "Filter",
+          modifier = Modifier.size(25.dp),
+      )
+    }
+
+    if (showFilters) {
+      FiltersManager(
+          postsFilters =
+              PostsFilters(
+                  fromAuthor = fromAuthor,
+                  fromPlace = fromPlace,
+                  ofAnimal = ofAnimal,
+                  onlyFriendsPosts = onlyFriendsPosts,
+                  onlyMyPosts = onlyMyPosts,
+              ),
+          onFromAuthorChange = { fromAuthor = it },
+          onFromPlaceChange = { fromPlace = it },
+          onOfAnimalChange = { ofAnimal = it },
+          onOnlyFriendsPostsChange = {
+            onlyFriendsPosts = it
+            if (onlyFriendsPosts && onlyMyPosts) {
+              onlyMyPosts = false
+            }
+          },
+          onOnlyMyPostsChange = {
+            onlyMyPosts = it
+            if (onlyFriendsPosts && onlyMyPosts) {
+              onlyFriendsPosts = false
+            }
+          },
+          onDismissRequest = {
+            fromAuthor = uiState.postsFilters.fromAuthor
+            fromPlace = uiState.postsFilters.fromPlace
+            ofAnimal = uiState.postsFilters.ofAnimal
+            onlyFriendsPosts = uiState.postsFilters.onlyFriendsPosts
+            onlyMyPosts = uiState.postsFilters.onlyMyPosts
+
+            showFilters = false
+          },
+          onApply = {
+            if (ofAnimal == "") {
+              ofAnimal = null
+            }
+            if (fromPlace == "") {
+              fromPlace = null
+            }
+            if (fromAuthor == "") {
+              fromAuthor = null
+            }
+
+            homeScreenViewModel.setPostsFilter(
+                fromPlace = fromPlace,
+                fromAuthor = fromAuthor,
+                ofAnimal = ofAnimal,
+                onlyFriendsPosts = onlyFriendsPosts,
+                onlyMyPosts = onlyMyPosts,
+            )
+
+            showFilters = false
+          },
+          onReset = {
+            fromAuthor = null
+            fromPlace = null
+            ofAnimal = null
+            onlyFriendsPosts = false
+            onlyMyPosts = false
+
+            homeScreenViewModel.setPostsFilter(
+                fromAuthor = null,
+                fromPlace = null,
+                ofAnimal = null,
+                onlyFriendsPosts = false,
+                onlyMyPosts = false,
+            )
+
+            showFilters = false
+          },
+      )
+    }
+  }
+}
+
+/**
+ * Displays the Filters Manager to interact with the 4 filters: fromAuthor, fromPlace, ofAnimal,
+ * onlyFriendsPosts and onlyMyPosts.
+ *
+ * @param postsFilters the values of the filters
+ * @param onFromAuthorChange the function to apply when the value of the fromAuthor filter is
+ *   modified
+ * @param onFromPlaceChange the function to apply when the value of the fromPlace filter is modified
+ * @param onOfAnimalChange the function to apply when the value of the ofAnimal filter is modified
+ * @param onOnlyFriendsPostsChange the function to apply when the value of the onlyFriendsPosts
+ *   filter is modified
+ * @param onOnlyFriendsPostsChange the function to apply when the value of the onlyFriendsPosts
+ *   filter is modified
+ * @param onDismissRequest the function to apply when the user quits the Filters Managers
+ * @param onApply the function to apply when the user applies new filters
+ * @param onReset the function to apply when the user resets the filters
+ */
+@Composable
+private fun FiltersManager(
+    postsFilters: PostsFilters,
+    onFromAuthorChange: (String?) -> Unit,
+    onFromPlaceChange: (String?) -> Unit,
+    onOfAnimalChange: (String?) -> Unit,
+    onOnlyFriendsPostsChange: (Boolean) -> Unit,
+    onOnlyMyPostsChange: (Boolean) -> Unit,
+    onDismissRequest: () -> Unit,
+    onApply: () -> Unit,
+    onReset: () -> Unit,
+) {
+  val cs = colorScheme
+
+  AlertDialog(
+      containerColor = cs.background,
+      iconContentColor = cs.onBackground,
+      titleContentColor = cs.onBackground,
+      textContentColor = cs.onBackground,
+      onDismissRequest = onDismissRequest,
+      title = {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+          Text("Filters Manager")
+        }
+      },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          FilterTextField(
+              value = postsFilters.fromAuthor,
+              onValueChange = onFromAuthorChange,
+              filterName = "Author",
+          )
+
+          FilterTextField(
+              value = postsFilters.fromPlace,
+              onValueChange = onFromPlaceChange,
+              filterName = "Location",
+          )
+
+          FilterTextField(
+              value = postsFilters.ofAnimal,
+              onValueChange = onOfAnimalChange,
+              filterName = "Animal",
+          )
+
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Text("See only my friends posts")
+            Switch(
+                checked = postsFilters.onlyFriendsPosts,
+                onCheckedChange = onOnlyFriendsPostsChange,
+            )
+          }
+
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Text("See only my posts")
+            Switch(
+                checked = postsFilters.onlyMyPosts,
+                onCheckedChange = onOnlyMyPostsChange,
+            )
+          }
+        }
+      },
+      confirmButton = { TextButton(onClick = onApply) { Text("Apply") } },
+      dismissButton = { TextButton(onClick = onReset) { Text("Reset") } },
+  )
+}
+
+/**
+ * Displays a mutable text field for a filter
+ *
+ * @param value the value of the filter
+ * @param onValueChange the function to apply when the value of the filter is modified
+ * @param filterName the name of the filter
+ */
+@Composable
+private fun FilterTextField(
+    value: String?,
+    onValueChange: (String?) -> Unit,
+    filterName: String,
+) {
+  OutlinedTextField(
+      value = value ?: "",
+      onValueChange = { onValueChange(it) },
+      label = { Text("$filterName Name") },
+      singleLine = true,
+      modifier = Modifier.fillMaxWidth(),
+      trailingIcon = {
+        if (value != null) {
+          IconButton(onClick = { onValueChange(null) }) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Clear $filterName",
+            )
+          }
+        }
+      },
+  )
 }
 
 /** Displays a placeholder view when there are no posts available. */

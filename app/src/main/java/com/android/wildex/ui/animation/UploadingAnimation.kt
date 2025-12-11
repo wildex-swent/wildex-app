@@ -1,27 +1,31 @@
 package com.android.wildex.ui.animation
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
@@ -29,33 +33,29 @@ import kotlin.random.Random
 import kotlin.random.nextInt
 
 private val animalRes = listOf(
-  R.drawable.gorilla,
-  R.drawable.dog,
-  R.drawable.dog_face,
-  R.drawable.monkey,
-  R.drawable.orangutan,
-  R.drawable.poodle,
-  R.drawable.wolf,
-  R.drawable.baby_chick,
-  R.drawable.crocodile,
-  R.drawable.dolphin,
-  R.drawable.eagle,
-  R.drawable.duck,
-  R.drawable.fox,
-  R.drawable.giraffe,
-  R.drawable.goat,
-  R.drawable.kangaroo,
-  R.drawable.lion,
-  R.drawable.lizard,
-  R.drawable.lobster,
-  R.drawable.rooster,
-  R.drawable.shark,
-  R.drawable.snake,
-  R.drawable.squid,
-  R.drawable.tiger,
-  R.drawable.tropical_fish,
-  R.drawable.turtle,
-  R.drawable.whale,
+  R.drawable.icons8_cat,
+  R.drawable.icons8_dog,
+  R.drawable.icons8_ray,
+  R.drawable.icons8_crab,
+  R.drawable.icons8_fish,
+  R.drawable.icons8_butterfly,
+  R.drawable.icons8_camel,
+  R.drawable.icons8_chinchilla,
+  R.drawable.icons8_heron,
+  R.drawable.icons8_horse,
+  R.drawable.icons8_jaguar,
+  R.drawable.icons8_mouse,
+  R.drawable.icons8_panda,
+  R.drawable.icons8_seagull
+)
+
+private val colors = listOf(
+  Color(0xFFE26D5C),
+  Color(0xFFFFB30F),
+  Color(0xFFC84630),
+  Color(0xFF995D81),
+  Color(0xFF9381FF),
+  Color(0xFFFF4000)
 )
 
 private data class FlyingAnimal(
@@ -67,7 +67,8 @@ private data class FlyingAnimal(
   val finalRotation: Float,
   val speed: Int,
   val delay: Int,
-  val size: Float
+  val size: Float,
+  val color: Color
 )
 
 private fun createRandomFlyingAnimal(screenWidth: Float, screenHeight: Float, animalSize: Float): FlyingAnimal{
@@ -78,9 +79,10 @@ private fun createRandomFlyingAnimal(screenWidth: Float, screenHeight: Float, an
     finalPositionY = -animalSize,
     initialRotation = Random.nextInt(-360..360).toFloat(),
     finalRotation = Random.nextInt(-360..360).toFloat(),
-    speed = Random.nextInt(3000..7000),
-    delay = Random.nextInt(0..20000),
-    size = animalSize
+    speed = Random.nextInt(2000..5000),
+    delay = Random.nextInt(0..5000),
+    size = animalSize,
+    color = colors.random()
   )
 }
 
@@ -94,8 +96,9 @@ private fun FlyingAnimalAnimation(
     initialValue = flyingAnimal.initialPositionY,
     targetValue = flyingAnimal.finalPositionY,
     animationSpec = infiniteRepeatable(
-      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = flyingAnimal.delay, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
+      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = 1000, easing = LinearEasing),
+      repeatMode = RepeatMode.Restart,
+      initialStartOffset = StartOffset(flyingAnimal.delay)
     )
   )
 
@@ -103,13 +106,15 @@ private fun FlyingAnimalAnimation(
     initialValue = flyingAnimal.initialRotation,
     targetValue = flyingAnimal.finalRotation,
     animationSpec = infiniteRepeatable(
-      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = flyingAnimal.delay, easing = LinearEasing),
-      repeatMode = RepeatMode.Reverse
+      animation = tween(durationMillis = flyingAnimal.speed, delayMillis = 1000, easing = LinearEasing),
+      repeatMode = RepeatMode.Reverse,
+      initialStartOffset = StartOffset(flyingAnimal.delay)
     )
   )
 
   Image(
     painter = painterResource(id = flyingAnimal.animal),
+    colorFilter = ColorFilter.tint(flyingAnimal.color),
     contentDescription = null,
     modifier = Modifier
       .offset(x = flyingAnimal.positionX.dp, y = posY.dp)
@@ -126,15 +131,27 @@ fun UploadingAnimation() {
   val screenHeight = LocalConfiguration.current.screenHeightDp.dp.value
   val animalSizes = listOf(screenWidth / 7, screenWidth / 8, screenWidth / 9, screenWidth / 10)
   val flyingAnimals = mutableListOf<FlyingAnimal>()
-  (1..200).forEach{ _ ->
+  (1..50).forEach{ _ ->
     flyingAnimals.add(createRandomFlyingAnimal(screenWidth, screenHeight, animalSizes.random()))
   }
 
   Box(
-    modifier = Modifier.fillMaxSize()
+    modifier = Modifier.fillMaxSize().padding(PaddingValues(0.dp)),
   ) {
+    WaterFillBackground()
     flyingAnimals.forEach {
       FlyingAnimalAnimation(it, it.size.dp)
+    }
+    Box(
+      modifier = Modifier.fillMaxSize(),
+      contentAlignment = Alignment.Center
+    ){
+      Text(
+        text = "Sharing your new post...",
+        style = typography.titleLarge,
+        color = colorScheme.onBackground,
+        modifier = Modifier.padding(horizontal = 30.dp)
+      )
     }
   }
 }

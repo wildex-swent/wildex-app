@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.animation.UploadingAnimation
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -68,11 +69,13 @@ fun CameraScreen(
         }
       }
 
-  Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) {
+  Scaffold(bottomBar = { if (!uiState.isLoading) bottomBar }, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) {
       innerPadding ->
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.padding(innerPadding).fillMaxSize(),
+        modifier = Modifier
+          .padding(innerPadding)
+          .fillMaxSize(),
     ) {
       when {
         uiState.currentImageUri == null && hasCameraPermission -> {
@@ -99,6 +102,7 @@ fun CameraScreen(
                 photoUri = uiState.currentImageUri!!,
                 modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
             )
+        uiState.isLoading && uiState.animalDetectResponse != null -> UploadingAnimation()
         uiState.isLoading -> LoadingScreen()
         uiState.animalDetectResponse != null ->
             PostCreationScreen(

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_package = "com.android.wildex.datastore";
+option java_multiple_files = true;
+
+message UserCacheStorage {
+    map<string, UserProto> users = 1;
+}
+
+message UserProto {
+    string user_id = 1;
+    string user_name = 2;
+    string name = 3;
+    string surname = 4;
+    string bio = 5;
+    string profile_picture_url = 6;
+    UserTypeProto user_type = 7;
+    int64 creation_date = 8;
+    string country = 9;
+}
+
+enum UserTypeProto {
+    REGULAR = 0;
+    PROFESSIONAL = 1;
+}

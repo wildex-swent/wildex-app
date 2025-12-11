@@ -14,28 +14,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
-import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.sin
 
-/**
- * Fullscreen water animation
- * - water fills from bottom to top over 4 seconds
- * - wave oscillates as it fills
- * - calls onFilled() when water is 80% full
- *
- */
+/** Animation of a wave going infinitely up the screen. It changes color after every iteration. */
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun WaterFillBackground() {
+fun InfiniteWaveAnimation() {
   BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
     val infiniteTransition = rememberInfiniteTransition()
     val fillDuration = 3000
@@ -46,9 +37,8 @@ fun WaterFillBackground() {
     LaunchedEffect(Unit) {
       while (true) {
         level.animateTo(
-          targetValue = 1.2f,
-          animationSpec = tween(durationMillis = fillDuration, easing = LinearEasing)
-        )
+            targetValue = 1.2f,
+            animationSpec = tween(durationMillis = fillDuration, easing = LinearEasing))
 
         level.snapTo(-0.2f)
 
@@ -56,14 +46,14 @@ fun WaterFillBackground() {
       }
     }
 
-    val phase by infiniteTransition.animateFloat(
-      initialValue = 0f,
-      targetValue = 3f,
-      animationSpec = infiniteRepeatable(
-        animation = tween(durationMillis = fillDuration, easing = LinearEasing),
-        repeatMode = RepeatMode.Restart
-      )
-    )
+    val phase by
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 3f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(durationMillis = fillDuration, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart))
 
     val waterColor = if (wave) colorScheme.primary else colorScheme.background
     val backgroundColor = if (wave) colorScheme.background else colorScheme.primary
@@ -80,38 +70,39 @@ fun WaterFillBackground() {
       val currentPhase = phase * 2f * PI.toFloat()
 
       val wavePath =
-        Path().apply {
-          moveTo(0f, h)
-          lineTo(0f, baseY)
+          Path().apply {
+            moveTo(0f, h)
+            lineTo(0f, baseY)
 
-          val steps = 80
-          for (i in 0..steps) {
-            val x = i / steps.toFloat() * w
-            val y = baseY + sin((x / wavelength) * 2f * PI.toFloat() + currentPhase) * amplitude
-            lineTo(x, y)
+            val steps = 80
+            for (i in 0..steps) {
+              val x = i / steps.toFloat() * w
+              val y = baseY + sin((x / wavelength) * 2f * PI.toFloat() + currentPhase) * amplitude
+              lineTo(x, y)
+            }
+
+            lineTo(w, h)
+            close()
           }
 
-          lineTo(w, h)
-          close()
-        }
-
-      val backgroundPath = Path().apply {
-        moveTo(0f, h)
-        lineTo(0f, 0f)
-        lineTo(w, 0f)
-        lineTo(w, h)
-        close()
-      }
+      val backgroundPath =
+          Path().apply {
+            moveTo(0f, h)
+            lineTo(0f, 0f)
+            lineTo(w, 0f)
+            lineTo(w, h)
+            close()
+          }
 
       drawPath(
-        path = backgroundPath,
-        color = backgroundColor,
+          path = backgroundPath,
+          color = backgroundColor,
       )
 
       // Fill everything with water below the wave
       drawPath(
-        path = wavePath,
-        color = waterColor,
+          path = wavePath,
+          color = waterColor,
       )
     }
   }

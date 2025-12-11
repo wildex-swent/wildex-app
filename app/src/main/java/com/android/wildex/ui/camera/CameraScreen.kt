@@ -69,66 +69,66 @@ fun CameraScreen(
         }
       }
 
-  Scaffold(bottomBar = { if (!uiState.isLoading) bottomBar }, modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) {
-      innerPadding ->
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-          .padding(innerPadding)
-          .fillMaxSize(),
-    ) {
-      when {
-        uiState.currentImageUri == null && hasCameraPermission -> {
-          CameraPreviewScreen(
-              onPhotoTaken = {
-                cameraScreenViewModel.updateImageUri(it)
-                if (isOnline) cameraScreenViewModel.detectAnimalImage(it, context)
-                else cameraScreenViewModel.enterOfflinePreview(it)
-              },
-              onUploadClick = { imagePickerLauncher.launch("image/*") },
-              modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
-          )
+  Scaffold(
+      bottomBar = { if (!uiState.isLoading) bottomBar },
+      modifier = Modifier.testTag(NavigationTestTags.CAMERA_SCREEN)) { innerPadding ->
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
+        ) {
+          when {
+            uiState.currentImageUri == null && hasCameraPermission -> {
+              CameraPreviewScreen(
+                  onPhotoTaken = {
+                    cameraScreenViewModel.updateImageUri(it)
+                    if (isOnline) cameraScreenViewModel.detectAnimalImage(it, context)
+                    else cameraScreenViewModel.enterOfflinePreview(it)
+                  },
+                  onUploadClick = { imagePickerLauncher.launch("image/*") },
+                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PREVIEW_SCREEN),
+              )
+            }
+            uiState.currentImageUri == null && !hasCameraPermission -> {
+              CameraPermissionScreen(
+                  onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
+                  onUploadClick = { imagePickerLauncher.launch("image/*") },
+                  modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
+                  permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
+                  extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
+            }
+            uiState.isDetecting ->
+                DetectingScreen(
+                    photoUri = uiState.currentImageUri!!,
+                    modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
+                )
+            uiState.isLoading && uiState.animalDetectResponse != null ->
+                UploadingAnimation(forPost = true)
+            uiState.isLoading -> LoadingScreen()
+            uiState.animalDetectResponse != null ->
+                PostCreationScreen(
+                    description = uiState.description,
+                    onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
+                    useLocation = uiState.addLocation,
+                    onLocationToggle = {
+                      if (!hasLocationPermission) locationPermissionState.launchPermissionRequest()
+                      else cameraScreenViewModel.toggleAddLocation()
+                    },
+                    photoUri = uiState.currentImageUri!!,
+                    detectionResponse = uiState.animalDetectResponse!!,
+                    onConfirm = {
+                      cameraScreenViewModel.createPost(context = context, onPost = onPost)
+                    },
+                    onCancel = { cameraScreenViewModel.resetState() },
+                    modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
+                )
+            uiState.isSavingOffline ->
+                SaveToGalleryScreen(
+                    photoUri = uiState.currentImageUri!!,
+                    onSave = { cameraScreenViewModel.saveImageToGallery(context) },
+                    onDiscard = { cameraScreenViewModel.resetState() },
+                    modifier = Modifier.testTag(CameraScreenTestTags.SAVE_TO_GALLERY_SCREEN),
+                )
+          }
         }
-        uiState.currentImageUri == null && !hasCameraPermission -> {
-          CameraPermissionScreen(
-              onRequestPermission = { cameraPermissionState.launchPermissionRequest() },
-              onUploadClick = { imagePickerLauncher.launch("image/*") },
-              modifier = Modifier.testTag(CameraScreenTestTags.CAMERA_PERMISSION_SCREEN),
-              permissionRequestMsg = context.getString(R.string.camera_permission_msg_1),
-              extraRequestMsg = context.getString(R.string.camera_permission_msg_2))
-        }
-        uiState.isDetecting ->
-            DetectingScreen(
-                photoUri = uiState.currentImageUri!!,
-                modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
-            )
-        uiState.isLoading && uiState.animalDetectResponse != null -> UploadingAnimation()
-        uiState.isLoading -> LoadingScreen()
-        uiState.animalDetectResponse != null ->
-            PostCreationScreen(
-                description = uiState.description,
-                onDescriptionChange = { cameraScreenViewModel.updateDescription(it) },
-                useLocation = uiState.addLocation,
-                onLocationToggle = {
-                  if (!hasLocationPermission) locationPermissionState.launchPermissionRequest()
-                  else cameraScreenViewModel.toggleAddLocation()
-                },
-                photoUri = uiState.currentImageUri!!,
-                detectionResponse = uiState.animalDetectResponse!!,
-                onConfirm = {
-                  cameraScreenViewModel.createPost(context = context, onPost = onPost)
-                },
-                onCancel = { cameraScreenViewModel.resetState() },
-                modifier = Modifier.testTag(CameraScreenTestTags.POST_CREATION_SCREEN),
-            )
-        uiState.isSavingOffline ->
-            SaveToGalleryScreen(
-                photoUri = uiState.currentImageUri!!,
-                onSave = { cameraScreenViewModel.saveImageToGallery(context) },
-                onDiscard = { cameraScreenViewModel.resetState() },
-                modifier = Modifier.testTag(CameraScreenTestTags.SAVE_TO_GALLERY_SCREEN),
-            )
       }
-    }
-  }
 }

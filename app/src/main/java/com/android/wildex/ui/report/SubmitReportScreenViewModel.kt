@@ -1,6 +1,5 @@
 package com.android.wildex.ui.report
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +9,6 @@ import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
@@ -53,60 +51,48 @@ class SubmitReportScreenViewModel(
   private val _uiState = MutableStateFlow(SubmitReportUiState())
   val uiState: StateFlow<SubmitReportUiState> = _uiState.asStateFlow()
 
+  /**
+   * Called when the user updates the description text.
+   *
+   * @param description The new description text.
+   */
   fun updateDescription(description: String) {
     _uiState.value = _uiState.value.copy(description = description)
   }
 
+  /**
+   * Called when the user selects or changes the image for the report.
+   *
+   * @param imageUri The URI of the selected image.
+   */
   fun updateImage(imageUri: Uri?) {
     _uiState.value = _uiState.value.copy(imageUri = imageUri)
   }
 
+  /**
+   * Called when the user picks a location from the LocationPickerScreen.
+   *
+   * @param picked The location selected by the user.
+   */
+  fun updateLocation(picked: Location) {
+    _uiState.value = _uiState.value.copy(location = picked, hasPickedLocation = true)
+  }
+
+  /** Called when the user picks a location from the LocationPickerScreen. */
+  fun clearLocation() {
+    _uiState.value = _uiState.value.copy(location = null, hasPickedLocation = false)
+  }
+
+  /** Clears any existing error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
-  /** Called when the user picks a location from the LocationPickerScreen. */
-  fun onLocationPicked(picked: Location) {
-    _uiState.value =
-        _uiState.value.copy(
-            location =
-                Location(
-                    latitude = picked.latitude,
-                    longitude = picked.longitude,
-                    name = picked.name,
-                ),
-            hasPickedLocation = true,
-        )
-  }
-
-  @SuppressLint("MissingPermission")
-  fun fetchUserLocation(locationClient: FusedLocationProviderClient) {
-    viewModelScope.launch {
-      try {
-        locationClient.lastLocation
-            .addOnSuccessListener { loc ->
-              if (loc != null) {
-                _uiState.value =
-                    _uiState.value.copy(
-                        location =
-                            Location(
-                                latitude = loc.latitude,
-                                longitude = loc.longitude,
-                                name = _uiState.value.location?.name ?: "Unknown",
-                            ))
-              } else {
-                setError("Unable to fetch current location.")
-              }
-            }
-            .addOnFailureListener {
-              setError("Failed to get location: ${it.message}. Please enable GPS.")
-            }
-      } catch (e: Exception) {
-        setError("Error fetching location: ${e.message}")
-      }
-    }
-  }
-
+  /**
+   * Submits the report with the current UI state data.
+   *
+   * @param onSuccess A callback function to be invoked upon successful submission.
+   */
   fun submitReport(onSuccess: () -> Unit) {
     val currentState = _uiState.value
 
@@ -120,7 +106,7 @@ class SubmitReportScreenViewModel(
         return
       }
       currentState.location == null -> {
-        setError("Location permission is required to submit a report.")
+        setError("Location is required to submit a report.")
         return
       }
     }
@@ -160,10 +146,16 @@ class SubmitReportScreenViewModel(
     }
   }
 
+  /**
+   * Sets an error message in the UI state.
+   *
+   * @param message The error message to be set.
+   */
   private fun setError(message: String) {
     _uiState.value = _uiState.value.copy(errorMsg = message)
   }
 
+  /** Resets the UI state to its initial values upon successful report submission. */
   private fun resetUiStateOnSuccess() {
     _uiState.value = SubmitReportUiState()
   }

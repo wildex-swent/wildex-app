@@ -175,7 +175,7 @@ class CollectionScreenViewModelTest {
   fun viewModel_initializes_default_UI_state() {
     val initialState = viewModel.uiState.value
     Assert.assertEquals(initialState.user, defaultUser)
-    Assert.assertFalse(initialState.isUserOwner)
+    Assert.assertTrue(initialState.isUserOwner)
     Assert.assertTrue(initialState.animals.isEmpty())
     Assert.assertFalse(initialState.isLoading)
     Assert.assertFalse(initialState.isError)

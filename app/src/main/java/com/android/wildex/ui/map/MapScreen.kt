@@ -33,8 +33,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.map.clusterPinsForZoom
+import com.android.wildex.model.map.stackSameLocationPins
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
@@ -54,6 +56,7 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 /* ---------- Test tags ---------- */
@@ -79,6 +82,11 @@ object MapContentTestTags {
   const val REPORT_ASSIGNED_ROW = "MapScreen/SelectionCard/ReportAssignedRow"
 
   const val BACK_BUTTON = "MapScreen/BackButton"
+
+  const val SELECTION_PAGER = "MapScreen/SelectionPager"
+  const val SELECTION_PAGER_PREV = "MapScreen/SelectionPager/Prev"
+  const val SELECTION_PAGER_NEXT = "MapScreen/SelectionPager/Next"
+  const val SELECTION_PAGER_LABEL = "MapScreen/SelectionPager/Label"
 
   fun getPinTag(tab: MapTab): String = "MapTabSwitcher-${tab.name}"
 }
@@ -164,14 +172,15 @@ fun MapScreen(
     var styleTab by remember { mutableStateOf(uiState.activeTab) }
     var currentZoom by remember { mutableDoubleStateOf(12.0) }
     val zoomBand = currentZoom.roundToInt()
+    val stackedPins = remember(uiState.pins) { stackSameLocationPins(uiState.pins) }
     val pinsForDisplay =
-        remember(uiState.pins, styleTab, zoomBand) {
+        remember(stackedPins, isMapReady, styleTab, zoomBand) {
           if (!isMapReady) {
             // So this is just to avoid clustering before the map is ready
-            uiState.pins
+            stackedPins
           } else {
             clusterPinsForZoom(
-                pins = uiState.pins,
+                pins = stackedPins,
                 zoomBand = zoomBand,
             )
           }
@@ -185,7 +194,7 @@ fun MapScreen(
       val target = Point.fromLngLat(loc.longitude, loc.latitude)
       val zoom =
           when {
-            uiState.selected != null -> 18.0
+            uiState.selected.isNotEmpty() -> max(18.0, cameraState.zoom)
             // to no force a zoom-out.
             cameraState.center.latitude() == target.latitude() &&
                 cameraState.center.longitude() == target.longitude() -> cameraState.zoom
@@ -226,6 +235,9 @@ fun MapScreen(
 
     LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
     val showLoading = uiState.isLoading || !isMapReady
+    val selected = uiState.selected
+    val selectedIndex = uiState.selectedIndex
+    val currentSelection: PinDetails? = selected.getOrNull(selectedIndex)
 
     Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
       // 1) map
@@ -240,7 +252,7 @@ fun MapScreen(
           centerCoordinates = uiState.centerCoordinates,
       )
 
-      if (!LocalSkipWorkerThread.current) {
+      if (!LocalSkipWorkerThread.current && (isMapReady && mapView != null)) {
         // 2) pins
         PinsOverlay(
             modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
@@ -248,12 +260,22 @@ fun MapScreen(
             pins = pinsForDisplay,
             currentTab = styleTab,
             selectedId =
-                when (val s = uiState.selected) {
-                  is PinDetails.PostDetails -> s.post.postId
-                  is PinDetails.ReportDetails -> s.report.reportId
-                  else -> null
+                if (selected.size == 1) {
+                  when (val s = currentSelection) {
+                    is PinDetails.PostDetails -> s.post.postId
+                    is PinDetails.ReportDetails -> s.report.reportId
+                    else -> null
+                  }
+                } else {
+                  null
                 },
-            onPinClick = { id -> viewModel.onPinSelected(id) },
+            onPinClick = { id ->
+              val pin = pinsForDisplay.firstOrNull { it.id == id } ?: return@PinsOverlay
+              when (pin) {
+                is MapPin.ClusterPin -> viewModel.onClusterPinClicked(pin)
+                else -> viewModel.onPinSelected(id)
+              }
+            },
         )
       }
       // 3) tap to clear
@@ -283,7 +305,8 @@ fun MapScreen(
             activeTab = uiState.activeTab,
             availableTabs = uiState.availableTabs,
             onTabSelected = { viewModel.onTabSelected(it, userId) },
-            isCurrentUser = isCurrentUser)
+            isCurrentUser = isCurrentUser,
+        )
       }
 
       // 5) map controls: refresh + recenter
@@ -313,7 +336,7 @@ fun MapScreen(
                   .padding(12.dp)
                   .fillMaxWidth()
                   .testTag(MapContentTestTags.SELECTION_CARD),
-          selection = uiState.selected,
+          selection = currentSelection,
           activeTab = uiState.activeTab,
           onPost = onPost,
           onReport = onReport,
@@ -321,6 +344,10 @@ fun MapScreen(
           onToggleLike = viewModel::toggleLike,
           onProfile = onProfile,
           isCurrentUser = isCurrentUser,
+          groupSize = selected.size,
+          groupIndex = selectedIndex,
+          onNext = { viewModel.selectNext() },
+          onPrev = { viewModel.selectPrev() },
       )
 
       // I know it's a weird placement mais the idea is to have the error overlay above the refresh

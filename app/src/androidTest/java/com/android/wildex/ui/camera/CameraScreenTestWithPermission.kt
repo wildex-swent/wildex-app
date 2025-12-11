@@ -251,10 +251,14 @@ class CameraScreenTestWithPermission {
   @Test
   fun postCreationScreen_inputsLocation() {
     fakeObserver.setOnline(true)
+    var pickLocationCalled = false
     val mockUri = mockk<Uri>()
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        CameraScreen(cameraScreenViewModel = viewModel)
+        CameraScreen(
+            cameraScreenViewModel = viewModel,
+            onPickLocation = { pickLocationCalled = true },
+        )
       }
     }
     composeTestRule.waitForIdle()
@@ -262,15 +266,10 @@ class CameraScreenTestWithPermission {
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
+        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_PICK)
         .performScrollTo()
         .performClick()
-    assert(viewModel.uiState.value.addLocation)
-    composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
-        .performScrollTo()
-        .performClick()
-    assert(!viewModel.uiState.value.addLocation)
+    assert(pickLocationCalled)
   }
 
   // ========== LOADING SCREEN TESTS ===============
@@ -379,13 +378,19 @@ class CameraScreenTestWithPermission {
     fakeObserver.setOnline(true)
     val mockUri = Uri.EMPTY
     var onPostCalled = false
+    val vm = spyk(viewModel)
+    every { vm.createPost(any(), any()) } answers
+        {
+          val callback = secondArg<() -> Unit>()
+          callback()
+        }
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        CameraScreen(cameraScreenViewModel = viewModel) { onPostCalled = true }
+        CameraScreen(cameraScreenViewModel = vm, onPost = { onPostCalled = true })
       }
     }
     composeTestRule.waitForIdle()
-    runBlocking { viewModel.detectAnimalImage(mockUri, composeTestRule.activity) }
+    runBlocking { vm.detectAnimalImage(mockUri, composeTestRule.activity) }
     composeTestRule.waitForIdle()
     assertPostCreationScreenIsDisplayed()
     composeTestRule
@@ -540,7 +545,7 @@ class CameraScreenTestWithPermission {
         .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_TOGGLE)
+        .onNodeWithTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_LOCATION_PICK)
         .performScrollTo()
         .assertIsDisplayed()
     composeTestRule

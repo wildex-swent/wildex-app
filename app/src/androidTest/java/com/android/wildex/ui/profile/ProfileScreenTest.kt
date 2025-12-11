@@ -195,8 +195,8 @@ class ProfileScreenTest {
       UpdateUserAchievementsUseCase(userAchievementsRepository = achRepo)
 
   /** Helper to create a list of fake achievements. */
-  private fun fakeAchievements(count: Int = 5): List<Achievement> =
-      (1..count).map { i ->
+  private fun fakeAchievements(): List<Achievement> =
+      (1..5).map { i ->
         Achievement(
             achievementId = "a$i",
             name = "A$i",
@@ -359,7 +359,7 @@ class ProfileScreenTest {
             state = defaultViewModel.uiState.collectAsState().value,
         )
         ProfileDescription()
-        ProfileAchievements(ownerProfile = true)
+        ProfileAchievements()
         ProfileMap()
       }
     }
@@ -376,15 +376,13 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_carousel_navigation_and_cta_visibility() {
-    val items = fakeAchievements(5)
-    val owner = mutableStateOf(true)
+    val items = fakeAchievements()
     var ownerClicks = 0
 
     composeRule.setContent {
       ProfileAchievements(
           id = "user-x",
           onAchievements = { if (it == "user-x") ownerClicks++ },
-          ownerProfile = owner.value,
           listAchievement = items,
       )
     }
@@ -424,10 +422,6 @@ class ProfileScreenTest {
         .assertExists()
         .performClick()
     Assert.assertEquals(1, ownerClicks)
-
-    composeRule.runOnUiThread { owner.value = false }
-
-    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
   }
 
   @Test
@@ -450,7 +444,7 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun achievements_cta_hidden_for_non_owner_still_when_used_in_content() {
+  fun achievements_cta_visible_for_non_owner_still_when_used_in_content() {
     composeRule.setContent {
       ProfileContent(
           user = sampleUser,
@@ -462,7 +456,7 @@ class ProfileScreenTest {
           onFriends = {},
       )
     }
-    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(0)
+    composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(1)
   }
 
   @Test

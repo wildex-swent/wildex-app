@@ -87,7 +87,7 @@ class SubmitReportScreenTest {
     viewModel.updateDescription("some description")
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
 
-    viewModel.onLocationPicked(Location(0.0, 0.0, "Paris"))
+    viewModel.updateLocation(Location(0.0, 0.0, "Paris"))
     composeTestRule.onNodeWithTag(SubmitReportFormScreenTestTags.SUBMIT_BUTTON).assertIsNotEnabled()
 
     viewModel.updateImage(Uri.parse("content://sample/image.jpg"))

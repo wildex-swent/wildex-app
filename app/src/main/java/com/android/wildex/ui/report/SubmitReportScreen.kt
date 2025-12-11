@@ -118,7 +118,7 @@ fun SubmitReportScreenContent(
 
   LaunchedEffect(serializedLocation) {
     if (serializedLocation != null) {
-      viewModel.onLocationPicked(serializedLocation)
+      viewModel.updateLocation(serializedLocation)
       onPickedLocationConsumed()
     }
   }
@@ -156,7 +156,7 @@ fun SubmitReportScreenContent(
             onDescriptionChange = viewModel::updateDescription,
             onSubmitClick = { viewModel.submitReport(onSubmitted) },
             onPickLocation = onPickLocation,
-        )
+            onClear = { viewModel.clearLocation() })
       }
     }
   }

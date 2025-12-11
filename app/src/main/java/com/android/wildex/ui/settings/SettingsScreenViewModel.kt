@@ -131,9 +131,12 @@ class SettingsScreenViewModel(
     }
   }
 
-  fun signOut(onSignOut: () -> Unit) {
+  fun signOut(isOnline: Boolean, onSignOut: () -> Unit) {
     viewModelScope.launch {
-      userTokensRepository.deleteTokenOfUser(currentUserId, userTokensRepository.getCurrentToken())
+      if (isOnline) {
+        userTokensRepository.deleteTokenOfUser(
+            currentUserId, userTokensRepository.getCurrentToken())
+      }
       authRepository
           .signOut()
           .fold(

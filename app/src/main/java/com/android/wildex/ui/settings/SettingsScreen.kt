@@ -139,7 +139,9 @@ fun SettingsScreen(
       floatingActionButton = {
         Column {
           FloatingActionButton(
-              onClick = { settingsScreenViewModel.signOut { onAccountDeleteOrSignOut() } },
+              onClick = {
+                settingsScreenViewModel.signOut(isOnline) { onAccountDeleteOrSignOut() }
+              },
               shape = RoundedCornerShape(16.dp),
               containerColor = colorScheme.background,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),

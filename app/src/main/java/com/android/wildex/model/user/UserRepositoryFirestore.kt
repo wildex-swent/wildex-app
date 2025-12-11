@@ -53,8 +53,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           userId = it.userId,
           username = it.username,
           profilePictureURL = it.profilePictureURL,
-          userType = it.userType,
-      )
+          userType = it.userType)
     }
 
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
@@ -130,8 +129,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           profilePictureURL = profilePictureURL,
           userType = userType,
           creationDate = creationDate,
-          country = country,
-      )
+          country = country)
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null
@@ -155,8 +153,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           userId = id,
           username = username,
           profilePictureURL = profilePictureURL,
-          userType = userType,
-      )
+          userType = userType)
     } catch (e: Exception) {
       Log.e(TAG, "documentToSimpleUser: error converting document ${document.id}", e)
       null

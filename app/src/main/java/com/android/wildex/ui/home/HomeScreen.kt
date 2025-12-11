@@ -100,6 +100,20 @@ object HomeScreenTestTags {
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
   const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
+  const val OPEN_FILTERS_MANAGER = "HomeScreenOpenFiltersManager"
+  const val FILTERS_MANAGER = "HomeScreenFiltersManager"
+  const val FILTERS_MANAGER_APPLY = "HomeScreenFiltersManagerApply"
+  const val FILTERS_MANAGER_RESET = "HomeScreenFiltersManagerReset"
+  const val FILTERS_MANAGER_FROM_AUTHOR = "HomeScreenFiltersManagerFromAuthor"
+  const val FILTERS_MANAGER_FROM_PLACE = "HomeScreenFiltersManagerFromPlace"
+  const val FILTERS_MANAGER_OF_ANIMAL = "HomeScreenFiltersManagerOfAnimal"
+  const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS = "HomeScreenFiltersManagerOnlyFriendsPosts"
+  const val FILTERS_MANAGER_ONLY_MY_POSTS = "HomeScreenFiltersManagerOnlyMyPosts"
+  const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS_TEXT = "HomeScreenFiltersManagerOnlyFriendsPostsText"
+  const val FILTERS_MANAGER_ONLY_MY_POSTS_TEXT = "HomeScreenFiltersManagerOnlyMyPostsText"
+  const val FILTERS_MANAGER_FROM_AUTHOR_CROSS = "HomeScreenFiltersManagerFromAuthorCross"
+  const val FILTERS_MANAGER_FROM_PLACE_CROSS = "HomeScreenFiltersManagerFromPlaceCross"
+  const val FILTERS_MANAGER_OF_ANIMAL_CROSS = "HomeScreenFiltersManagerOfAnimalCross"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -229,7 +243,8 @@ fun OpenFiltersButton(
         modifier =
             Modifier.align(Alignment.BottomEnd)
                 .padding(bottom = 75.dp, end = 15.dp)
-                .clip(shape = RoundedCornerShape(100)),
+                .clip(shape = RoundedCornerShape(100))
+                .testTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER),
         containerColor = cs.background,
         contentColor = cs.onBackground,
     ) {
@@ -349,6 +364,7 @@ private fun FiltersManager(
   val cs = colorScheme
 
   AlertDialog(
+      modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER),
       containerColor = cs.background,
       iconContentColor = cs.onBackground,
       titleContentColor = cs.onBackground,
@@ -368,18 +384,24 @@ private fun FiltersManager(
               value = postsFilters.fromAuthor,
               onValueChange = onFromAuthorChange,
               filterName = "Author",
+              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR),
+              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR_CROSS),
           )
 
           FilterTextField(
               value = postsFilters.fromPlace,
               onValueChange = onFromPlaceChange,
               filterName = "Location",
+              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE),
+              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE_CROSS),
           )
 
           FilterTextField(
               value = postsFilters.ofAnimal,
               onValueChange = onOfAnimalChange,
               filterName = "Animal",
+              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL),
+              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL_CROSS),
           )
 
           Row(
@@ -387,8 +409,13 @@ private fun FiltersManager(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically,
           ) {
-            Text("See only my friends posts")
+            Text(
+                modifier =
+                    Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS_TEXT),
+                text = "See only my friends posts",
+            )
             Switch(
+                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS),
                 checked = postsFilters.onlyFriendsPosts,
                 onCheckedChange = onOnlyFriendsPostsChange,
             )
@@ -399,16 +426,34 @@ private fun FiltersManager(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically,
           ) {
-            Text("See only my posts")
+            Text(
+                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS_TEXT),
+                text = "See only my posts",
+            )
             Switch(
+                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS),
                 checked = postsFilters.onlyMyPosts,
                 onCheckedChange = onOnlyMyPostsChange,
             )
           }
         }
       },
-      confirmButton = { TextButton(onClick = onApply) { Text("Apply") } },
-      dismissButton = { TextButton(onClick = onReset) { Text("Reset") } },
+      confirmButton = {
+        TextButton(
+            onClick = onApply,
+            modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_APPLY),
+        ) {
+          Text("Apply")
+        }
+      },
+      dismissButton = {
+        TextButton(
+            onClick = onReset,
+            modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_RESET),
+        ) {
+          Text("Reset")
+        }
+      },
   )
 }
 
@@ -424,16 +469,18 @@ private fun FilterTextField(
     value: String?,
     onValueChange: (String?) -> Unit,
     filterName: String,
+    modifier1: Modifier,
+    modifier2: Modifier,
 ) {
   OutlinedTextField(
       value = value ?: "",
       onValueChange = { onValueChange(it) },
       label = { Text("$filterName Name") },
       singleLine = true,
-      modifier = Modifier.fillMaxWidth(),
+      modifier = modifier1.fillMaxWidth(),
       trailingIcon = {
         if (value != null) {
-          IconButton(onClick = { onValueChange(null) }) {
+          IconButton(modifier = modifier2, onClick = { onValueChange(null) }) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Clear $filterName",

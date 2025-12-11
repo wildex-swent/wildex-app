@@ -94,6 +94,23 @@ import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * Represents the set of functions to apply when one the filter is modified
+ *
+ * @property onFromAuthorChange the onChange function for the fromAuthor filter
+ * @property onFromPlaceChange the onChange function for the fromPlace filter
+ * @property onOfAnimalChange the onChange function for the ofAnimal filter
+ * @property onOnlyFriendsPostsChange the onChange function for the onlyFriendsPosts filter
+ * @property onOnlyMyPostsChange the onChange function for the onlyMyPosts filter
+ */
+data class OnFilterChange(
+    val onFromAuthorChange: (String?) -> Unit,
+    val onFromPlaceChange: (String?) -> Unit,
+    val onOfAnimalChange: (String?) -> Unit,
+    val onOnlyFriendsPostsChange: (Boolean) -> Unit,
+    val onOnlyMyPostsChange: (Boolean) -> Unit,
+)
+
 /** Test tag constants used for UI testing of HomeScreen components. */
 object HomeScreenTestTags {
   const val NO_POST_ICON = "HomeScreenNoPost"
@@ -111,9 +128,6 @@ object HomeScreenTestTags {
   const val FILTERS_MANAGER_ONLY_MY_POSTS = "HomeScreenFiltersManagerOnlyMyPosts"
   const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS_TEXT = "HomeScreenFiltersManagerOnlyFriendsPostsText"
   const val FILTERS_MANAGER_ONLY_MY_POSTS_TEXT = "HomeScreenFiltersManagerOnlyMyPostsText"
-  const val FILTERS_MANAGER_FROM_AUTHOR_CROSS = "HomeScreenFiltersManagerFromAuthorCross"
-  const val FILTERS_MANAGER_FROM_PLACE_CROSS = "HomeScreenFiltersManagerFromPlaceCross"
-  const val FILTERS_MANAGER_OF_ANIMAL_CROSS = "HomeScreenFiltersManagerOfAnimalCross"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -265,21 +279,24 @@ fun OpenFiltersButton(
                   onlyFriendsPosts = onlyFriendsPosts,
                   onlyMyPosts = onlyMyPosts,
               ),
-          onFromAuthorChange = { fromAuthor = it },
-          onFromPlaceChange = { fromPlace = it },
-          onOfAnimalChange = { ofAnimal = it },
-          onOnlyFriendsPostsChange = {
-            onlyFriendsPosts = it
-            if (onlyFriendsPosts && onlyMyPosts) {
-              onlyMyPosts = false
-            }
-          },
-          onOnlyMyPostsChange = {
-            onlyMyPosts = it
-            if (onlyFriendsPosts && onlyMyPosts) {
-              onlyFriendsPosts = false
-            }
-          },
+          onFilterChange =
+              OnFilterChange(
+                  onFromAuthorChange = { fromAuthor = it },
+                  onFromPlaceChange = { fromPlace = it },
+                  onOfAnimalChange = { ofAnimal = it },
+                  onOnlyFriendsPostsChange = {
+                    onlyFriendsPosts = it
+                    if (onlyFriendsPosts && onlyMyPosts) {
+                      onlyMyPosts = false
+                    }
+                  },
+                  onOnlyMyPostsChange = {
+                    onlyMyPosts = it
+                    if (onlyFriendsPosts && onlyMyPosts) {
+                      onlyFriendsPosts = false
+                    }
+                  },
+              ),
           onDismissRequest = {
             fromAuthor = uiState.postsFilters.fromAuthor
             fromPlace = uiState.postsFilters.fromPlace
@@ -290,15 +307,9 @@ fun OpenFiltersButton(
             showFilters = false
           },
           onApply = {
-            if (ofAnimal == "") {
-              ofAnimal = null
-            }
-            if (fromPlace == "") {
-              fromPlace = null
-            }
-            if (fromAuthor == "") {
-              fromAuthor = null
-            }
+            ofAnimal = getNullIfEmpty(ofAnimal)
+            fromPlace = getNullIfEmpty(fromPlace)
+            fromAuthor = getNullIfEmpty(fromAuthor)
 
             homeScreenViewModel.setPostsFilter(
                 fromPlace = fromPlace,
@@ -333,18 +344,21 @@ fun OpenFiltersButton(
 }
 
 /**
+ * Helper function that checks if the filter is an empty string, if it's the case the filter becomes
+ * null
+ *
+ * @param value the value of the filter
+ */
+fun getNullIfEmpty(value: String?): String? {
+  return if (value.isNullOrEmpty()) null else value
+}
+
+/**
  * Displays the Filters Manager to interact with the 4 filters: fromAuthor, fromPlace, ofAnimal,
  * onlyFriendsPosts and onlyMyPosts.
  *
  * @param postsFilters the values of the filters
- * @param onFromAuthorChange the function to apply when the value of the fromAuthor filter is
- *   modified
- * @param onFromPlaceChange the function to apply when the value of the fromPlace filter is modified
- * @param onOfAnimalChange the function to apply when the value of the ofAnimal filter is modified
- * @param onOnlyFriendsPostsChange the function to apply when the value of the onlyFriendsPosts
- *   filter is modified
- * @param onOnlyFriendsPostsChange the function to apply when the value of the onlyFriendsPosts
- *   filter is modified
+ * @param onFilterChange the functions to apply when the value of the different filters are modified
  * @param onDismissRequest the function to apply when the user quits the Filters Managers
  * @param onApply the function to apply when the user applies new filters
  * @param onReset the function to apply when the user resets the filters
@@ -352,11 +366,7 @@ fun OpenFiltersButton(
 @Composable
 private fun FiltersManager(
     postsFilters: PostsFilters,
-    onFromAuthorChange: (String?) -> Unit,
-    onFromPlaceChange: (String?) -> Unit,
-    onOfAnimalChange: (String?) -> Unit,
-    onOnlyFriendsPostsChange: (Boolean) -> Unit,
-    onOnlyMyPostsChange: (Boolean) -> Unit,
+    onFilterChange: OnFilterChange,
     onDismissRequest: () -> Unit,
     onApply: () -> Unit,
     onReset: () -> Unit,
@@ -382,26 +392,23 @@ private fun FiltersManager(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
           FilterTextField(
               value = postsFilters.fromAuthor,
-              onValueChange = onFromAuthorChange,
+              onValueChange = onFilterChange.onFromAuthorChange,
               filterName = "Author",
-              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR),
-              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR_CROSS),
+              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR),
           )
 
           FilterTextField(
               value = postsFilters.fromPlace,
-              onValueChange = onFromPlaceChange,
+              onValueChange = onFilterChange.onFromPlaceChange,
               filterName = "Location",
-              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE),
-              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE_CROSS),
+              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE),
           )
 
           FilterTextField(
               value = postsFilters.ofAnimal,
-              onValueChange = onOfAnimalChange,
+              onValueChange = onFilterChange.onOfAnimalChange,
               filterName = "Animal",
-              modifier1 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL),
-              modifier2 = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL_CROSS),
+              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL),
           )
 
           Row(
@@ -417,7 +424,7 @@ private fun FiltersManager(
             Switch(
                 modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS),
                 checked = postsFilters.onlyFriendsPosts,
-                onCheckedChange = onOnlyFriendsPostsChange,
+                onCheckedChange = onFilterChange.onOnlyFriendsPostsChange,
             )
           }
 
@@ -433,7 +440,7 @@ private fun FiltersManager(
             Switch(
                 modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS),
                 checked = postsFilters.onlyMyPosts,
-                onCheckedChange = onOnlyMyPostsChange,
+                onCheckedChange = onFilterChange.onOnlyMyPostsChange,
             )
           }
         }
@@ -469,18 +476,17 @@ private fun FilterTextField(
     value: String?,
     onValueChange: (String?) -> Unit,
     filterName: String,
-    modifier1: Modifier,
-    modifier2: Modifier,
+    modifier: Modifier,
 ) {
   OutlinedTextField(
       value = value ?: "",
       onValueChange = { onValueChange(it) },
       label = { Text("$filterName Name") },
       singleLine = true,
-      modifier = modifier1.fillMaxWidth(),
+      modifier = modifier.fillMaxWidth(),
       trailingIcon = {
         if (value != null) {
-          IconButton(modifier = modifier2, onClick = { onValueChange(null) }) {
+          IconButton(onClick = { onValueChange(null) }) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Clear $filterName",

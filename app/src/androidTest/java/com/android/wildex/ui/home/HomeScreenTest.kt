@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -781,5 +783,64 @@ class HomeScreenTest {
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+  }
+
+  @Test
+  fun openFiltersManagerOpensTheManager() {
+    composeTestRule.setContent { OpenFiltersButton() }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).assertIsDisplayed()
+  }
+
+  @Test
+  fun applyFiltersButtonWorks() {
+    composeTestRule.setContent { OpenFiltersButton() }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+        .performTextInput("NewAuthorFilter")
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE)
+        .performTextInput("NewLocationFilter")
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS)
+        .performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_APPLY).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun resetFiltersButtonWorks() {
+    composeTestRule.setContent { OpenFiltersButton() }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+        .performTextInput("NewAuthorFilter")
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE)
+        .performTextInput("NewLocationFilter")
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS)
+        .performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_RESET).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun toggleOnlyMyPostsSwitch() {
+    composeTestRule.setContent { OpenFiltersButton() }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).assertIsOn()
   }
 }

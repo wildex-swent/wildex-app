@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,10 +44,13 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
@@ -63,16 +67,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -80,22 +88,26 @@ import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.StaticMiniMap
+import com.android.wildex.ui.social.UserIndex
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Represents the set of functions to apply when one the filter is modified
+ * Represents the set of onChange functions for every filter
  *
  * @property onFromAuthorChange the onChange function for the fromAuthor filter
  * @property onFromPlaceChange the onChange function for the fromPlace filter
@@ -126,8 +138,6 @@ object HomeScreenTestTags {
   const val FILTERS_MANAGER_OF_ANIMAL = "HomeScreenFiltersManagerOfAnimal"
   const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS = "HomeScreenFiltersManagerOnlyFriendsPosts"
   const val FILTERS_MANAGER_ONLY_MY_POSTS = "HomeScreenFiltersManagerOnlyMyPosts"
-  const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS_TEXT = "HomeScreenFiltersManagerOnlyFriendsPostsText"
-  const val FILTERS_MANAGER_ONLY_MY_POSTS_TEXT = "HomeScreenFiltersManagerOnlyMyPostsText"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -213,16 +223,19 @@ fun HomeScreen(
       when {
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
-        postStates.isEmpty() -> NoPostsView()
         else -> {
           val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
 
-          PostsView(
-              postStates = filteredPostStates,
-              onProfilePictureClick = onProfilePictureClick,
-              onPostLike = homeScreenViewModel::toggleLike,
-              onPostClick = onPostClick,
-          )
+          when {
+            filteredPostStates.isEmpty() -> NoPostsView()
+            else ->
+                PostsView(
+                    postStates = filteredPostStates,
+                    onProfilePictureClick = onProfilePictureClick,
+                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostClick = onPostClick,
+                )
+          }
         }
       }
     }
@@ -245,11 +258,11 @@ fun OpenFiltersButton(
 
   var showFilters by remember { mutableStateOf(false) }
 
-  var fromAuthor: String? by remember { mutableStateOf(null) }
-  var fromPlace: String? by remember { mutableStateOf(null) }
-  var ofAnimal: String? by remember { mutableStateOf(null) }
-  var onlyFriendsPosts by remember { mutableStateOf(false) }
-  var onlyMyPosts by remember { mutableStateOf(false) }
+  var fromAuthor: String? by remember { mutableStateOf(uiState.postsFilters.fromAuthor) }
+  var fromPlace: String? by remember { mutableStateOf(uiState.postsFilters.fromPlace) }
+  var ofAnimal: String? by remember { mutableStateOf(uiState.postsFilters.ofAnimal) }
+  var onlyFriendsPosts by remember { mutableStateOf(uiState.postsFilters.onlyFriendsPosts) }
+  var onlyMyPosts by remember { mutableStateOf(uiState.postsFilters.onlyMyPosts) }
 
   Box(modifier = Modifier.fillMaxSize()) {
     FloatingActionButton(
@@ -349,7 +362,7 @@ fun OpenFiltersButton(
  *
  * @param value the value of the filter
  */
-fun getNullIfEmpty(value: String?): String? {
+private fun getNullIfEmpty(value: String?): String? {
   return if (value.isNullOrEmpty()) null else value
 }
 
@@ -371,7 +384,23 @@ private fun FiltersManager(
     onApply: () -> Unit,
     onReset: () -> Unit,
 ) {
-  val cs = colorScheme
+  val cs: ColorScheme = colorScheme
+  val userIndex =
+      UserIndex(
+          searchDataProvider =
+              SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)))
+
+  var expanded by rememberSaveable { mutableStateOf(false) }
+  var matchingUsers by remember { mutableStateOf(emptyList<User>()) }
+
+  LaunchedEffect(postsFilters.fromAuthor) {
+    matchingUsers =
+        when {
+          !postsFilters.fromAuthor.isNullOrEmpty() ->
+              userIndex.usersMatching(postsFilters.fromAuthor, limit = 10)
+          else -> emptyList()
+        }
+  }
 
   AlertDialog(
       modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER),
@@ -381,34 +410,76 @@ private fun FiltersManager(
       textContentColor = cs.onBackground,
       onDismissRequest = onDismissRequest,
       title = {
-        Box(
+        Text(
+            text = stringResource(R.string.filters_title),
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-        ) {
-          Text("Filters Manager")
-        }
+            textAlign = TextAlign.Center)
       },
       text = {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column() {
           FilterTextField(
               value = postsFilters.fromAuthor,
-              onValueChange = onFilterChange.onFromAuthorChange,
-              filterName = "Author",
-              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR),
-          )
+              onValueChange = {
+                onFilterChange.onFromAuthorChange(it)
+                expanded = true
+              },
+              filterName = stringResource(R.string.author),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR).onFocusChanged {
+                    expanded = true
+                  })
+
+          if (expanded && matchingUsers.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.heightIn(max = (4 * 56).dp)) {
+              items(count = matchingUsers.size) { index ->
+                val user = matchingUsers[index]
+                ListItem(
+                    headlineContent = {
+                      Text(user.name + " " + user.surname, style = typography.bodyLarge)
+                    },
+                    supportingContent = {
+                      Text(text = user.username, style = typography.bodyMedium)
+                    },
+                    leadingContent = {
+                      ClickableProfilePicture(
+                          modifier = Modifier.size(45.dp),
+                          profileId = user.userId,
+                          profilePictureURL = user.profilePictureURL,
+                          profileUserType = user.userType,
+                          onProfile = {
+                            onFilterChange.onFromAuthorChange(user.username)
+                            expanded = false
+                          },
+                      )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
+                    modifier =
+                        Modifier.fillMaxWidth().clickable {
+                          onFilterChange.onFromAuthorChange(user.username)
+                          expanded = false
+                        })
+              }
+            }
+          }
 
           FilterTextField(
               value = postsFilters.fromPlace,
               onValueChange = onFilterChange.onFromPlaceChange,
-              filterName = "Location",
-              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE),
+              filterName = stringResource(R.string.location),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE).onFocusChanged {
+                    expanded = false
+                  },
           )
 
           FilterTextField(
               value = postsFilters.ofAnimal,
               onValueChange = onFilterChange.onOfAnimalChange,
-              filterName = "Animal",
-              modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL),
+              filterName = stringResource(R.string.animal),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL).onFocusChanged {
+                    expanded = false
+                  },
           )
 
           Row(
@@ -417,14 +488,15 @@ private fun FiltersManager(
               verticalAlignment = Alignment.CenterVertically,
           ) {
             Text(
-                modifier =
-                    Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS_TEXT),
-                text = "See only my friends posts",
+                text = stringResource(R.string.onlyFriendsPosts),
             )
             Switch(
                 modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS),
                 checked = postsFilters.onlyFriendsPosts,
-                onCheckedChange = onFilterChange.onOnlyFriendsPostsChange,
+                onCheckedChange = {
+                  onFilterChange.onOnlyFriendsPostsChange(it)
+                  expanded = false
+                },
             )
           }
 
@@ -434,13 +506,15 @@ private fun FiltersManager(
               verticalAlignment = Alignment.CenterVertically,
           ) {
             Text(
-                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS_TEXT),
-                text = "See only my posts",
+                text = stringResource(R.string.onlyMyPosts),
             )
             Switch(
                 modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS),
                 checked = postsFilters.onlyMyPosts,
-                onCheckedChange = onFilterChange.onOnlyMyPostsChange,
+                onCheckedChange = {
+                  onFilterChange.onOnlyMyPostsChange(it)
+                  expanded = false
+                },
             )
           }
         }
@@ -450,7 +524,9 @@ private fun FiltersManager(
             onClick = onApply,
             modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_APPLY),
         ) {
-          Text("Apply")
+          Text(
+              text = stringResource(R.string.apply),
+          )
         }
       },
       dismissButton = {
@@ -458,7 +534,9 @@ private fun FiltersManager(
             onClick = onReset,
             modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_RESET),
         ) {
-          Text("Reset")
+          Text(
+              text = stringResource(R.string.reset),
+          )
         }
       },
   )
@@ -513,7 +591,7 @@ fun NoPostsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = LocalContext.current.getString(R.string.no_nearby_posts),
+        text = LocalContext.current.getString(R.string.no_posts),
         color = colorScheme.onBackground,
         style = typography.titleLarge,
         maxLines = 2,

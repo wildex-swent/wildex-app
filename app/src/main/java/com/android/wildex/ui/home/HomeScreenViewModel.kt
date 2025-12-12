@@ -146,7 +146,8 @@ class HomeScreenViewModel(
               isLoading = false,
               errorMsg = null,
               isError = false,
-              postsFilters = PostsFilters())
+          )
+      // postsFilters = PostsFilters())
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -260,59 +261,65 @@ class HomeScreenViewModel(
    * @return The sorted list of [PostState].
    */
   fun filterPosts(postStates: List<PostState>): List<PostState> {
-    var filteredPostStates = postStates
+    val fromAuthor = _uiState.value.postsFilters.fromAuthor?.let { formatString(it) }
+    val fromPlace = _uiState.value.postsFilters.fromPlace?.let { formatString(it) }
+    val ofAnimal = _uiState.value.postsFilters.ofAnimal?.let { formatString(it) }
+    val onlyFriendsPosts = _uiState.value.postsFilters.onlyFriendsPosts
+    val onlyMyPosts = _uiState.value.postsFilters.onlyMyPosts
 
-    val fromAuthor = _uiState.value.postsFilters.fromAuthor
-    if (fromAuthor != null) {
-      val formatedFromAuthor = formatString(fromAuthor)
-      filteredPostStates =
-          filteredPostStates.filter {
-            val formatedUsername = formatString(it.author.username)
-            formatedUsername.contains(formatedFromAuthor) ||
-                formatedFromAuthor.contains(formatedUsername)
-          }
-    }
+    val filteredPostStates =
+        postStates
+            .filter { postState ->
+              val fromAuthorCondition =
+                  fromAuthor?.let { it == formatString(postState.author.username) } ?: true
 
-    val fromPlace = _uiState.value.postsFilters.fromPlace
-    if (fromPlace != null) {
-      val formatedFromPlace = formatString(fromPlace)
-      filteredPostStates =
-          filteredPostStates.filter {
-            val formatedName = formatString(it.post.location?.name ?: "")
-            formatedName.contains(formatedFromPlace) || formatedFromPlace.contains(formatedName)
-          }
-    }
+              val fromPlaceCondition =
+                  fromPlace?.let {
+                    val name = formatString(postState.post.location?.name ?: "")
+                    postState.post.location != null &&
+                        postState.post.location.name.isNotEmpty() &&
+                        (name.contains(it) || it.contains(name))
+                  } ?: true
 
-    val ofAnimal = _uiState.value.postsFilters.ofAnimal
-    if (ofAnimal != null) {
-      val formatedOfAnimal = formatString(ofAnimal)
-      filteredPostStates =
-          filteredPostStates.filter {
-            val formatedAnimalName = formatString(it.animalName)
-            formatedAnimalName.contains(formatedOfAnimal) ||
-                formatedOfAnimal.contains(formatedAnimalName)
-          }
-    }
+              val ofAnimalCondition =
+                  ofAnimal?.let {
+                    val animalName = formatString(postState.animalName)
+                    animalName.contains(it)
+                  } ?: true
 
-    if (_uiState.value.postsFilters.onlyFriendsPosts) {
-      val friendIds = runBlocking {
-        userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId }
-      }
+              val onlyFriendsPostsCondition =
+                  if (onlyFriendsPosts) {
+                    val friendsId = runBlocking {
+                      userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId }
+                    }
+                    friendsId.contains(postState.author.userId)
+                  } else true
 
-      filteredPostStates = filteredPostStates.filter { friendIds.contains(it.author.userId) }
-    }
+              val onlyMyPostsCondition =
+                  if (onlyMyPosts) postState.author.userId == currentUserId else true
 
-    if (_uiState.value.postsFilters.onlyMyPosts) {
-      filteredPostStates = filteredPostStates.filter { it.author.userId == currentUserId }
-    }
+              fromAuthorCondition &&
+                  fromPlaceCondition &&
+                  ofAnimalCondition &&
+                  onlyFriendsPostsCondition &&
+                  onlyMyPostsCondition
+            }
+            .sortedByDescending { it.post.date }
 
-    return filteredPostStates.sortedByDescending { it.post.date }
+    return filteredPostStates
   }
-}
 
-private fun formatString(string: String): String {
-  return Normalizer.normalize(string, Normalizer.Form.NFD)
-      .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-      .lowercase()
-      .replace("\\s+".toRegex(), "")
+  /**
+   * Helper function that formats a string by removing accents, converting it to lowercase, and
+   * removing whitespaces
+   *
+   * @param string The string to format
+   * @return The formated string
+   */
+  private fun formatString(string: String): String {
+    return Normalizer.normalize(string, Normalizer.Form.NFD)
+        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+        .lowercase()
+        .replace("\\s+".toRegex(), "")
+  }
 }

@@ -505,20 +505,6 @@ class HomeScreenViewModelTest {
     assertEquals(expected, actual)
   }
 
-  /*@Test
-  fun filterPostsByMeWorks() {
-      viewModel.setPostsFilter(onlyMyPosts = true)
-
-      val postStates = listOf(postState1, postState2)
-
-      val actual = viewModel.filterPosts(postStates = postStates)
-
-      //Assert.assertEquals(postState1, postState2)
-
-      Assert.assertEquals(1, actual.size)
-      assertTrue(actual.contains(postState1))
-  }*/
-
   @Test
   fun filterPostsByFriendsWorks() {
     coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(user1)

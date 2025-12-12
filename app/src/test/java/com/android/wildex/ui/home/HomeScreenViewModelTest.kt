@@ -485,25 +485,14 @@ class HomeScreenViewModelTest {
         onlyFriendsPosts = true,
         ofAnimal = "NewAnimalFilter",
         fromPlace = "NewPlaceFilter",
-        fromAuthor =
-            SimpleUser(
-                userId = "NewUserIdFilter",
-                username = "NewUsernameFilter",
-                profilePictureURL = "NewURLFilter",
-                userType = UserType.REGULAR))
+        fromAuthor = "NewUsernameFilter")
 
     val state = viewModel.uiState.value
 
     assertTrue(state.postsFilters.onlyFriendsPosts)
     assertEquals("NewAnimalFilter", state.postsFilters.ofAnimal)
     assertEquals("NewPlaceFilter", state.postsFilters.fromPlace)
-    assertEquals(
-        SimpleUser(
-            userId = "NewUserIdFilter",
-            username = "NewUsernameFilter",
-            profilePictureURL = "NewURLFilter",
-            userType = UserType.REGULAR),
-        state.postsFilters.fromAuthor)
+    assertEquals("NewUsernameFilter", state.postsFilters.fromAuthor)
   }
 
   @Test
@@ -556,7 +545,7 @@ class HomeScreenViewModelTest {
 
   @Test
   fun filterPostsByAuthorWorks() {
-    viewModel.setPostsFilter(fromAuthor = postState1.author)
+    viewModel.setPostsFilter(fromAuthor = postState1.author.username)
 
     val postStates = listOf(postState1, postState2)
 

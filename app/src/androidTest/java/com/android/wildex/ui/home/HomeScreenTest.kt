@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
@@ -939,7 +940,7 @@ class HomeScreenTest {
 
     composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
 
-    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).isNotDisplayed()
 
     assertEquals("John", homeScreenVM.uiState.value.postsFilters.fromAuthor)
     assertEquals(null, homeScreenVM.uiState.value.postsFilters.fromPlace)

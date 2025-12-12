@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
-import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 import kotlinx.coroutines.flow.first
 
 val Context.userSettingsDataStore by preferencesDataStore(name = "user_settings_cache")

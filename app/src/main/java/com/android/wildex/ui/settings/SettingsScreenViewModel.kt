@@ -44,11 +44,16 @@ class SettingsScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(notificationPermissionEnabled: Boolean) {
     try {
-      val notificationsEnabled = userSettingsRepository.getEnableNotification(currentUserId)
       val appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val userType = userRepository.getUser(currentUserId).userType
+      val notificationsEnabled =
+          if (!notificationPermissionEnabled) {
+            userSettingsRepository.setEnableNotification(currentUserId, false)
+            false
+          } else userSettingsRepository.getEnableNotification(currentUserId)
+
       _uiState.value =
           _uiState.value.copy(
               appearanceMode = appearanceMode,
@@ -64,9 +69,9 @@ class SettingsScreenViewModel(
     }
   }
 
-  fun loadUIState() {
+  fun loadUIState(notificationPermissionEnabled: Boolean) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(notificationPermissionEnabled) }
   }
 
   /**

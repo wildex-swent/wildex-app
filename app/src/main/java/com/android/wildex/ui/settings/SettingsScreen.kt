@@ -1,5 +1,10 @@
 package com.android.wildex.ui.settings
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +68,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -76,6 +82,10 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
 object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
@@ -96,6 +106,9 @@ object SettingsScreenTestTags {
   const val LIGHT_MODE_BUTTON = "light_mode_button"
   const val DARK_MODE_BUTTON = "dark_mode_button"
   const val SCREEN_TITLE = "settings_screen_title"
+  const val NOTIFICATIONS_SETTING_DIALOG = "notification_setting_dialog"
+  const val NOTIFICATIONS_SETTING_DIALOG_CONFIRM = "notification_setting_dialog_confirm"
+  const val NOTIFICATIONS_SETTING_DIALOG_CANCEL = "notification_setting_dialog_cancel"
 }
 
 /**
@@ -109,7 +122,7 @@ object SettingsScreenTestTags {
  * @param onAccountDeleteOrSignOut callback function called when the user wants to delete his
  *   account or sign out, so that he is taken back to the authentication screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     settingsScreenViewModel: SettingsScreenViewModel = viewModel(),
@@ -119,13 +132,24 @@ fun SettingsScreen(
 ) {
   val uiState by settingsScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
-  val screenWidth = LocalWindowInfo.current.containerSize.width.dp
   var showDeletionValidation by remember { mutableStateOf(false) }
+  var showSettingsDialog by remember { mutableStateOf(false) }
   val connectivityObserver = LocalConnectivityObserver.current
   val isOnline by connectivityObserver.isOnline.collectAsState()
 
-  LaunchedEffect(Unit) { settingsScreenViewModel.loadUIState() }
+  val validSdk = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+  val notifPermissionLauncher =
+      if (validSdk)
+          rememberPermissionState(
+              permission = Manifest.permission.POST_NOTIFICATIONS,
+              onPermissionResult = { settingsScreenViewModel.setNotificationsEnabled(it) },
+          )
+      else null
+  val notifPermissionStatus = notifPermissionLauncher?.status
+
+  LaunchedEffect(Unit) {
+    settingsScreenViewModel.loadUIState(notifPermissionStatus?.isGranted ?: true)
+  }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -137,7 +161,12 @@ fun SettingsScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SETTINGS_SCREEN),
       topBar = { SettingsScreenTopBar(onGoBack) },
       floatingActionButton = {
-        Column {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(LocalWindowInfo.current.containerSize.width.dp / 40, 16.dp),
+        ) {
           FloatingActionButton(
               onClick = {
                 settingsScreenViewModel.signOut(isOnline) { onAccountDeleteOrSignOut() }
@@ -146,9 +175,7 @@ fun SettingsScreen(
               containerColor = colorScheme.background,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
-                  Modifier.padding(bottom = 16.dp)
-                      .padding(horizontal = screenWidth / 40)
-                      .fillMaxWidth()
+                  Modifier.fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON),
@@ -169,9 +196,7 @@ fun SettingsScreen(
               containerColor = colorScheme.primary,
               elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
               modifier =
-                  Modifier.padding(bottom = 16.dp)
-                      .padding(horizontal = screenWidth / 40)
-                      .fillMaxWidth()
+                  Modifier.fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
                       .height(55.dp)
                       .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON),
@@ -192,13 +217,21 @@ fun SettingsScreen(
       uiState.isLoading -> LoadingScreen()
       else -> {
         SettingsContent(
-            screenHeight,
-            screenWidth,
-            onEditProfileClick,
-            paddingValues,
-            uiState,
-            settingsScreenViewModel,
-            isOnline = isOnline)
+            onEditProfileClick = onEditProfileClick,
+            paddingValues = paddingValues,
+            uiState = uiState,
+            setAppearanceMode = { settingsScreenViewModel.setAppearanceMode(it) },
+            setUserType = { settingsScreenViewModel.setUserType(it) },
+            setNotificationsEnabled = {
+              if (notifPermissionStatus == null || notifPermissionStatus.isGranted)
+                  settingsScreenViewModel.setNotificationsEnabled(it)
+              else if (!notifPermissionStatus.shouldShowRationale)
+                  notifPermissionLauncher.launchPermissionRequest()
+              else showSettingsDialog = true
+            },
+            isOnline = isOnline,
+            onOfflineClick = { settingsScreenViewModel.onOfflineClick() },
+        )
         if (showDeletionValidation) {
           AlertDialog(
               onDismissRequest = { showDeletionValidation = false },
@@ -241,35 +274,78 @@ fun SettingsScreen(
                 }
               },
           )
-        }
+        } else if (showSettingsDialog) SettingsPermissionDialog { showSettingsDialog = false }
       }
     }
   }
 }
 
 /**
+ * Dialog prompting the user to go to the app settings to enable notifications.
+ *
+ * @param dismissDialog callback function to be called when the user dismisses the dialog
+ */
+@Composable
+fun SettingsPermissionDialog(dismissDialog: () -> Unit) {
+  val context = LocalContext.current
+  AlertDialog(
+      onDismissRequest = dismissDialog,
+      title = { Text(stringResource(R.string.permission_required)) },
+      text = { Text(stringResource(R.string.enable_in_settings)) },
+      confirmButton = {
+        TextButton(
+            modifier =
+                Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG_CONFIRM),
+            onClick = {
+              dismissDialog()
+              context.startActivity(
+                  Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                  })
+            },
+        ) {
+          Text(stringResource(R.string.open_settings))
+        }
+      },
+      dismissButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG_CANCEL),
+            onClick = dismissDialog,
+        ) {
+          Text(stringResource(R.string.cancel))
+        }
+      },
+      containerColor = colorScheme.background,
+      tonalElevation = 2.dp,
+      modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG),
+  )
+}
+
+/**
  * Container Composable for the actual settings available to the user (appearance, notifications,
  * user status, edit profile)
  *
- * @param screenHeight height in Dp of the device's screen, allows dynamic positioning
- * @param screenWidth width in Dp of the device's screen
  * @param onEditProfileClick callback function to be called when clicking on the Edit Profile
  *   setting
  * @param paddingValues padding values of the scaffold passed down to the column
  * @param uiState settings UI state, containing info on the current notification enablement status,
  *   the current user status and the current appearance mode
- * @param settingsScreenViewModel ViewModel in charge of updating the UI state and linking the
- *   screen to the repositories
+ * @param setNotificationsEnabled callback function to be called when the user wants to enable or
+ *   disable notifications
+ * @param setUserType callback function to be called when the user wants to change his status
+ * @param setAppearanceMode callback function to be called when the user wants to change his
+ *   appearance mode
  */
 @Composable
 fun SettingsContent(
-    screenHeight: Dp,
-    screenWidth: Dp,
     onEditProfileClick: () -> Unit,
     paddingValues: PaddingValues,
     uiState: SettingsUIState,
-    settingsScreenViewModel: SettingsScreenViewModel,
-    isOnline: Boolean
+    setAppearanceMode: (AppearanceMode) -> Unit = {},
+    setUserType: (UserType) -> Unit = {},
+    setNotificationsEnabled: (Boolean) -> Unit = {},
+    isOnline: Boolean,
+    onOfflineClick: () -> Unit,
 ) {
   val groupButtonsColors =
       SegmentedButtonColors(
@@ -286,6 +362,8 @@ fun SettingsContent(
           disabledInactiveContentColor = Color(1),
           disabledInactiveBorderColor = Color(1),
       )
+  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
+  val screenWidth = LocalWindowInfo.current.containerSize.width.dp
 
   LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
     val settingHeight = screenHeight / 34
@@ -296,7 +374,8 @@ fun SettingsContent(
           settingHeight = settingHeight,
           onEditProfileClick = onEditProfileClick,
           isOnline = isOnline,
-          settingsScreenViewModel = settingsScreenViewModel)
+          onOfflineClick = onOfflineClick,
+      )
       SettingsDivider()
     }
     item {
@@ -304,10 +383,10 @@ fun SettingsContent(
           paddingHorizontal = paddingHorizontal,
           settingHeight = settingHeight,
           currentNotificationState = uiState.notificationsEnabled,
+          onNotificationStateChanged = { setNotificationsEnabled(it) },
           isOnline = isOnline,
-          settingsScreenViewModel = settingsScreenViewModel) { newState ->
-            settingsScreenViewModel.setNotificationsEnabled(newState)
-          }
+          onOfflineClick = onOfflineClick,
+      )
       SettingsDivider()
     }
     item {
@@ -317,19 +396,10 @@ fun SettingsContent(
           screenWidth = screenWidth,
           currentUserStatus = uiState.userType,
           groupButtonsColors = groupButtonsColors,
-          onUserStatusChanged = { newUserStatusString ->
-            val newUserType =
-                when (newUserStatusString) {
-                  "Regular" -> UserType.REGULAR
-                  "Professional" -> UserType.PROFESSIONAL
-                  else ->
-                      throw IllegalArgumentException(
-                          "The new user Type [$newUserStatusString] is not recognized")
-                }
-            settingsScreenViewModel.setUserType(newUserType)
-          },
+          onUserStatusChanged = { setUserType(it) },
           isOnline = isOnline,
-          settingsScreenViewModel = settingsScreenViewModel)
+          onOfflineClick = onOfflineClick,
+      )
       SettingsDivider()
     }
     item {
@@ -338,22 +408,14 @@ fun SettingsContent(
           screenWidth = screenWidth,
           settingHeight = settingHeight,
           currentAppearanceMode = uiState.appearanceMode,
-          onAppearanceModeChanged = { newAppearanceModeString ->
-            val newAppearanceMode =
-                when (newAppearanceModeString) {
-                  "Auto" -> AppearanceMode.AUTOMATIC
-                  "Light" -> AppearanceMode.LIGHT
-                  "Dark" -> AppearanceMode.DARK
-                  else ->
-                      throw IllegalArgumentException(
-                          "The new appearance mode [$newAppearanceModeString] is not recognized")
-                }
-            settingsScreenViewModel.setAppearanceMode(newAppearanceMode)
-            AppTheme.appearanceMode = newAppearanceMode
+          onAppearanceModeChanged = {
+            setAppearanceMode(it)
+            AppTheme.appearanceMode = it
           },
           groupButtonsColors = groupButtonsColors,
           isOnline = isOnline,
-          settingsScreenViewModel = settingsScreenViewModel)
+          onOfflineClick = onOfflineClick,
+      )
       SettingsDivider()
     }
   }
@@ -470,7 +532,7 @@ fun EditProfileOption(
     settingHeight: Dp,
     onEditProfileClick: () -> Unit = {},
     isOnline: Boolean,
-    settingsScreenViewModel: SettingsScreenViewModel
+    onOfflineClick: () -> Unit,
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
@@ -480,9 +542,7 @@ fun EditProfileOption(
       settingName = LocalContext.current.getString(R.string.edit_profile),
   ) {
     IconButton(
-        onClick = {
-          if (isOnline) onEditProfileClick() else settingsScreenViewModel.onOfflineClick()
-        },
+        onClick = { if (isOnline) onEditProfileClick() else onOfflineClick() },
         modifier = Modifier.testTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON),
     ) {
       Icon(
@@ -508,9 +568,9 @@ fun NotificationOption(
     paddingHorizontal: Dp,
     settingHeight: Dp,
     currentNotificationState: Boolean,
+    onNotificationStateChanged: (Boolean) -> Unit,
     isOnline: Boolean,
-    settingsScreenViewModel: SettingsScreenViewModel,
-    onNotificationStateChanged: (Boolean) -> Unit
+    onOfflineClick: () -> Unit,
 ) {
   SettingTemplate(
       settingHeight = settingHeight,
@@ -541,9 +601,7 @@ fun NotificationOption(
                 Color(1),
                 Color(1),
             ),
-        onCheckedChange = {
-          if (isOnline) onNotificationStateChanged(it) else settingsScreenViewModel.onOfflineClick()
-        },
+        onCheckedChange = { if (isOnline) onNotificationStateChanged(it) else onOfflineClick() },
         thumbContent = {
           if (currentNotificationState) {
             Icon(
@@ -575,15 +633,16 @@ fun UserStatusOption(
     settingHeight: Dp,
     screenWidth: Dp,
     currentUserStatus: UserType,
-    onUserStatusChanged: (String) -> Unit,
+    onUserStatusChanged: (UserType) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
     isOnline: Boolean,
-    settingsScreenViewModel: SettingsScreenViewModel
+    onOfflineClick: () -> Unit,
 ) {
+  val context = LocalContext.current
   val options =
       listOf(
-          LocalContext.current.getString(R.string.regular_status),
-          LocalContext.current.getString(R.string.professional_status),
+          context.getString(R.string.regular_status),
+          context.getString(R.string.professional_status),
       )
   val testTags =
       listOf(
@@ -597,15 +656,24 @@ fun UserStatusOption(
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
       icon = Icons.Outlined.Person,
-      settingName = LocalContext.current.getString(R.string.user_status),
+      settingName = context.getString(R.string.user_status),
   ) {
     SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(5))) {
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             onClick = {
-              if (isOnline) onUserStatusChanged(option)
-              else settingsScreenViewModel.onOfflineClick()
+              if (isOnline) {
+                val userType =
+                    when (option) {
+                      context.getString(R.string.regular_status) -> UserType.REGULAR
+                      context.getString(R.string.professional_status) -> UserType.PROFESSIONAL
+                      else ->
+                          throw IllegalArgumentException(
+                              "The user type [$option] is not recognized")
+                    }
+                onUserStatusChanged(userType)
+              } else onOfflineClick()
             },
             selected = selectedIndex == index,
             colors = groupButtonsColors,
@@ -642,23 +710,24 @@ fun AppearanceModeOption(
     screenWidth: Dp,
     settingHeight: Dp,
     currentAppearanceMode: AppearanceMode,
-    onAppearanceModeChanged: (String) -> Unit,
+    onAppearanceModeChanged: (AppearanceMode) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
     isOnline: Boolean,
-    settingsScreenViewModel: SettingsScreenViewModel
+    onOfflineClick: () -> Unit,
 ) {
+  val context = LocalContext.current
   SettingTemplate(
       settingHeight = settingHeight,
       paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.APPEARANCE_MODE_SETTING,
       icon = Icons.Outlined.LightMode,
-      settingName = LocalContext.current.getString(R.string.appearance),
+      settingName = context.getString(R.string.appearance),
   ) {
     val options =
         listOf(
-            LocalContext.current.getString(R.string.system_default),
-            LocalContext.current.getString(R.string.light_mode),
-            LocalContext.current.getString(R.string.dark_mode),
+            context.getString(R.string.system_default),
+            context.getString(R.string.light_mode),
+            context.getString(R.string.dark_mode),
         )
     val testTags =
         listOf(
@@ -666,15 +735,31 @@ fun AppearanceModeOption(
             SettingsScreenTestTags.LIGHT_MODE_BUTTON,
             SettingsScreenTestTags.DARK_MODE_BUTTON,
         )
+    val unCheckedIcons =
+        listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
+    val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
     SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(4.6f))) {
       options.forEachIndexed { index, option ->
+        val vectorTintPair =
+            if (index == selectedIndex) Pair(checkedIcons[index], colorScheme.onPrimary)
+            else Pair(unCheckedIcons[index], colorScheme.onBackground)
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             onClick = {
-              if (isOnline) onAppearanceModeChanged(option)
-              else settingsScreenViewModel.onOfflineClick()
+              if (isOnline) {
+                val appearanceMode =
+                    when (option) {
+                      context.getString(R.string.system_default) -> AppearanceMode.AUTOMATIC
+                      context.getString(R.string.light_mode) -> AppearanceMode.LIGHT
+                      context.getString(R.string.dark_mode) -> AppearanceMode.DARK
+                      else ->
+                          throw IllegalArgumentException(
+                              "The appearance mode [$option] is not recognized")
+                    }
+                onAppearanceModeChanged(appearanceMode)
+              } else onOfflineClick()
             },
             selected = index == selectedIndex,
             modifier = Modifier.height(35.dp).testTag(testTags[index]),
@@ -685,7 +770,13 @@ fun AppearanceModeOption(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically,
           ) {
-            AppearanceModeOptionIcon(index, selectedIndex, option)
+            Icon(
+                imageVector = vectorTintPair.first,
+                contentDescription = option,
+                tint = vectorTintPair.second,
+                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
+            )
+
             Spacer(modifier = Modifier.width(2.dp))
             AppearanceModeOptionText(option, index, selectedIndex)
           }
@@ -693,18 +784,6 @@ fun AppearanceModeOption(
       }
     }
   }
-}
-
-@Composable
-private fun AppearanceModeOptionIcon(index: Int, selectedIndex: Int, option: String) {
-  val unCheckedIcons =
-      listOf(Icons.Outlined.Autorenew, Icons.Outlined.LightMode, Icons.Outlined.DarkMode)
-  val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
-  Icon(
-      imageVector = if (index == selectedIndex) checkedIcons[index] else unCheckedIcons[index],
-      contentDescription = option,
-      tint = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-      modifier = Modifier.size(SegmentedButtonDefaults.IconSize))
 }
 
 /**

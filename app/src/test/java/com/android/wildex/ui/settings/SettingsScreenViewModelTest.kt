@@ -21,6 +21,7 @@ import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
@@ -129,6 +130,7 @@ class SettingsScreenViewModelTest {
     coEvery { userSettingsRepository.getAppearanceMode("currentUserId") } returns
         AppearanceMode.DARK
     coEvery { userSettingsRepository.getEnableNotification("otherUserId") } returns true
+    coEvery { userSettingsRepository.setEnableNotification(any(), any()) } just Runs
     coEvery { userSettingsRepository.getAppearanceMode("otherUserId") } returns AppearanceMode.LIGHT
     coEvery { userAnimalsRepository.deleteUserAnimals("currentUserId") } just Runs
     coEvery { userAchievementsRepository.deleteUserAchievements("currentUserId") } just Runs
@@ -153,7 +155,7 @@ class SettingsScreenViewModelTest {
           {
             deferred.await()
           }
-      viewModel.loadUIState()
+      viewModel.loadUIState(true)
       assertTrue(viewModel.uiState.value.isLoading)
       deferred.complete(AppearanceMode.DARK)
       advanceUntilIdle()
@@ -175,7 +177,7 @@ class SettingsScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { userSettingsRepository.getAppearanceMode("currentUserId") } throws
           RuntimeException("boom")
-      viewModel.loadUIState()
+      viewModel.loadUIState(true)
       advanceUntilIdle()
       assertNotNull(viewModel.uiState.value.errorMsg)
 
@@ -188,7 +190,7 @@ class SettingsScreenViewModelTest {
   fun setNotificationsEnabled_updates_notificationsEnabled_in_UI_state() {
     mainDispatcherRule.runTest {
       coEvery { userSettingsRepository.setEnableNotification("currentUserId", true) } coAnswers {}
-      viewModel.loadUIState()
+      viewModel.loadUIState(true)
       viewModel.setNotificationsEnabled(true)
       advanceUntilIdle()
       val updatedState = viewModel.uiState.value
@@ -202,7 +204,7 @@ class SettingsScreenViewModelTest {
       coEvery {
         userSettingsRepository.setAppearanceMode("currentUserId", AppearanceMode.LIGHT)
       } coAnswers {}
-      viewModel.loadUIState()
+      viewModel.loadUIState(true)
       viewModel.setAppearanceMode(AppearanceMode.LIGHT)
       advanceUntilIdle()
       val updatedState = viewModel.uiState.value
@@ -215,7 +217,7 @@ class SettingsScreenViewModelTest {
     mainDispatcherRule.runTest {
       val updatedUser = u1.copy(userType = UserType.PROFESSIONAL)
       coEvery { userRepository.editUser("currentUserId", updatedUser) } coAnswers {}
-      viewModel.loadUIState()
+      viewModel.loadUIState(true)
       viewModel.setUserType(UserType.PROFESSIONAL)
       advanceUntilIdle()
 
@@ -234,6 +236,17 @@ class SettingsScreenViewModelTest {
       assertEquals(
           "This action is not supported offline. Check your connection and try again.",
           viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun notificationEnabled_setsToFalse_whenNoPermission() {
+    mainDispatcherRule.runTest {
+      viewModel.loadUIState(false)
+      advanceUntilIdle()
+
+      assertFalse(viewModel.uiState.value.notificationsEnabled)
+      coVerify { userSettingsRepository.setEnableNotification("currentUserId", false) }
     }
   }
 }

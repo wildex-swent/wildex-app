@@ -129,10 +129,12 @@ object HomeScreenTestTags {
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
   const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
+
   const val OPEN_FILTERS_MANAGER = "HomeScreenOpenFiltersManager"
   const val FILTERS_MANAGER = "HomeScreenFiltersManager"
   const val FILTERS_MANAGER_APPLY = "HomeScreenFiltersManagerApply"
   const val FILTERS_MANAGER_RESET = "HomeScreenFiltersManagerReset"
+
   const val FILTERS_MANAGER_FROM_AUTHOR = "HomeScreenFiltersManagerFromAuthor"
   const val FILTERS_MANAGER_FROM_PLACE = "HomeScreenFiltersManagerFromPlace"
   const val FILTERS_MANAGER_OF_ANIMAL = "HomeScreenFiltersManagerOfAnimal"
@@ -357,16 +359,6 @@ fun OpenFiltersButton(
 }
 
 /**
- * Helper function that checks if the filter is an empty string, if it's the case the filter becomes
- * null
- *
- * @param value the value of the filter
- */
-private fun getNullIfEmpty(value: String?): String? {
-  return if (value.isNullOrEmpty()) null else value
-}
-
-/**
  * Displays the Filters Manager to interact with the 4 filters: fromAuthor, fromPlace, ofAnimal,
  * onlyFriendsPosts and onlyMyPosts.
  *
@@ -377,7 +369,7 @@ private fun getNullIfEmpty(value: String?): String? {
  * @param onReset the function to apply when the user resets the filters
  */
 @Composable
-private fun FiltersManager(
+fun FiltersManager(
     postsFilters: PostsFilters,
     onFilterChange: OnFilterChange,
     onDismissRequest: () -> Unit,
@@ -971,4 +963,14 @@ private fun String.startsWithVowel(): Boolean {
       lower.startsWith("i") ||
       lower.startsWith("o") ||
       lower.startsWith("u")
+}
+
+/**
+ * Helper function that checks if the filter is an empty string, if it's the case the filter becomes
+ * null
+ *
+ * @param value the value of the filter
+ */
+private fun getNullIfEmpty(value: String?): String? {
+  return if (value.isNullOrEmpty()) null else value
 }

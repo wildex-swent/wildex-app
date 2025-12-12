@@ -295,8 +295,7 @@ class HomeScreenViewModel(
                     friendsId.contains(postState.author.userId)
                   } else true
 
-              val onlyMyPostsCondition =
-                  if (onlyMyPosts) postState.author.userId == currentUserId else true
+              val onlyMyPostsCondition = !onlyMyPosts || postState.author.userId == currentUserId
 
               fromAuthorCondition &&
                   fromPlaceCondition &&

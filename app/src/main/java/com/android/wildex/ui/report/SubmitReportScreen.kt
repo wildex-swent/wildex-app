@@ -31,7 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Location
-import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.animation.UploadingAnimation
 import com.android.wildex.ui.camera.CameraPermissionScreen
 import com.android.wildex.ui.camera.CameraPreviewScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
@@ -147,7 +147,7 @@ fun SubmitReportScreenContent(
         )
       }
       uiState.isSubmitting -> {
-        LoadingScreen()
+        UploadingAnimation(forPost = false)
       }
       else -> {
         SubmitReportFormScreen(

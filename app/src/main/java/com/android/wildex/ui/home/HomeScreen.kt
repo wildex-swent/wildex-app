@@ -53,21 +53,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
@@ -82,6 +83,7 @@ import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLike
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -238,7 +240,7 @@ fun PostsView(
       verticalArrangement = Arrangement.spacedBy(2.dp),
       contentPadding = PaddingValues(vertical = 2.dp),
   ) {
-    items(postStates.size) { index ->
+    items(count = postStates.size, key = { index -> postStates[index].post.postId }) { index ->
       PostItem(
           postState = postStates[index],
           isOnline = isOnline,
@@ -415,80 +417,88 @@ private fun PostSlider(
     onToggleLike: () -> Unit,
     pagerState: PagerState,
 ) {
-  var imageMeasurableHeight by remember { mutableIntStateOf(0) }
-  val imageDpHeight = with(LocalDensity.current) { imageMeasurableHeight.toDp() }
+  var imageHeight by
+      rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it?.dp })) {
+        mutableStateOf<Dp?>(null)
+      }
+  val context = LocalContext.current
+  val density = LocalDensity.current
   HorizontalPager(
       state = pagerState,
-      modifier =
-          Modifier.fillMaxWidth()
-              .height(LocalWindowInfo.current.containerSize.height.dp / 6)
-              .testTag(HomeScreenTestTags.sliderTag(post.postId)),
+      modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.sliderTag(post.postId)),
   ) { page ->
     when (page) {
       0 -> {
-        AsyncImage(
-            model = post.pictureURL,
-            contentDescription = "Post picture",
+        ImageWithDoubleTapLike(
+            pictureURL = post.pictureURL,
+            likedByCurrentUser = liked,
             modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.imageTag(post.postId)).clickable {
-                  onPostClick()
+                Modifier.testTag(HomeScreenTestTags.imageTag(post.postId)).onGloballyPositioned {
+                    coordinates ->
+                  val heightPx = coordinates.size.height
+                  val h = with(density) { heightPx.toDp() }
+                  if (h > 0.dp) imageHeight = h
                 },
-            contentScale = ContentScale.Crop,
+            onTap = { onPostClick() },
+            onDoubleTap = onToggleLike,
         )
       }
       1 -> {
         val loc = post.location!!
-        val context = LocalContext.current
         val isDark =
             when (AppTheme.appearanceMode) {
               AppearanceMode.DARK -> true
               AppearanceMode.LIGHT -> false
               AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
             }
-        Box(
-            modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+        imageHeight?.let { height ->
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .height(height)
+                      .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
               OfflineAwareMiniMap(
-                  modifier = Modifier.matchParentSize(),
-                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                  styleUri = context.getString(R.string.map_style),
-                  styleImportId = context.getString(R.string.map_standard_import),
-                  isDark = isDark,
-                  fallbackZoom = 2.0,
-              )
-              if (loc.specificName.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(colorScheme.onBackground)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                ) {
-                  Icon(
-                      imageVector = Icons.Filled.Place,
-                      contentDescription = "Country Icon",
-                      tint = colorScheme.background,
-                      modifier = Modifier.size(16.dp),
-                  )
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Text(
-                      modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                      text = loc.specificName,
-                      style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                      color = colorScheme.background,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis,
-                  )
+                    modifier = Modifier.matchParentSize(),
+                    pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                    styleUri = context.getString(R.string.map_style),
+                    styleImportId = context.getString(R.string.map_standard_import),
+                    isDark = isDark,
+                    fallbackZoom = 2.0,
+                )
+                if (loc.specificName.isNotEmpty()) {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier =
+                          Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                              .clip(RoundedCornerShape(20.dp))
+                              .background(colorScheme.onBackground)
+                              .padding(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = "Country Icon",
+                        tint = colorScheme.background,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                        text = loc.specificName,
+                        style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = colorScheme.background,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                  }
                 }
+                Box(
+                    modifier =
+                        Modifier.matchParentSize()
+                            .clickable { onPostClick() }
+                            .background(colorScheme.tertiary)
+                            .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
               }
-              Box(
-                  modifier =
-                      Modifier.matchParentSize()
-                          .clickable { onPostClick() }
-                          .background(colorScheme.tertiary)
-                          .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
-            }
+        }
       }
     }
   }

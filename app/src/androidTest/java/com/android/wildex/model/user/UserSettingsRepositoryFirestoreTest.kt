@@ -2,16 +2,21 @@ package com.android.wildex.model.user
 
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeUserSettingsCache
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 private const val USER_SETTINGS_COLLECTION_PATH = "userSettings"
 
 class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTION_PATH) {
-  private var repository = UserSettingsRepositoryFirestore(FirebaseEmulator.firestore)
+  private val userSettingsCache = FakeUserSettingsCache()
+  private var repository =
+      UserSettingsRepositoryFirestore(FirebaseEmulator.firestore, userSettingsCache)
 
   private suspend fun getUsersCount(): Int = super.getCount()
 
@@ -161,5 +166,79 @@ class UserSettingsRepositoryFirestoreTest : FirestoreTest(USER_SETTINGS_COLLECTI
     }
 
     assertTrue(exceptionThrown)
+  }
+
+  @Test
+  fun getEnableNotificationsUsesCacheAfterFirstFetch() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+
+      assertTrue(repository.getEnableNotification(user1.userId))
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
+
+      val doc =
+          FirebaseEmulator.firestore
+              .collection(USER_SETTINGS_COLLECTION_PATH)
+              .document(user1.userId)
+      doc.update("enableNotifications", false).await()
+
+      assertTrue(repository.getEnableNotification(user1.userId))
+    }
+  }
+
+  @Test
+  fun setEnableNotificationsUpdatesCache() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+      assertTrue(repository.getEnableNotification(user1.userId))
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
+
+      repository.setEnableNotification(user1.userId, false)
+      assertFalse(userSettingsCache.getEnableNotification(user1.userId)!!)
+    }
+  }
+
+  @Test
+  fun getAppearanceModeUsesCacheAfterFirstFetch() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+      assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
+
+      val doc =
+          FirebaseEmulator.firestore
+              .collection(USER_SETTINGS_COLLECTION_PATH)
+              .document(user1.userId)
+      doc.update("appearanceMode", AppearanceMode.DARK).await()
+
+      assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
+    }
+  }
+
+  @Test
+  fun setAppearanceModeUpdatesCache() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+      assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
+
+      repository.setAppearanceMode(user1.userId, AppearanceMode.DARK)
+      assertEquals(AppearanceMode.DARK, userSettingsCache.getAppearanceMode(user1.userId))
+    }
+  }
+
+  @Test
+  fun deleteUserSettingsClearsTheCache() {
+    runTest {
+      repository.initializeUserSettings(user1.userId)
+      assertTrue(repository.getEnableNotification(user1.userId))
+      assertTrue(userSettingsCache.getEnableNotification(user1.userId)!!)
+      assertEquals(AppearanceMode.AUTOMATIC, repository.getAppearanceMode(user1.userId))
+      assertEquals(AppearanceMode.AUTOMATIC, userSettingsCache.getAppearanceMode(user1.userId))
+
+      repository.deleteUserSettings(user1.userId)
+      assertNull(userSettingsCache.getEnableNotification(user1.userId))
+      assertNull(userSettingsCache.getAppearanceMode(user1.userId))
+    }
   }
 }

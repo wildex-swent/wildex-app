@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 import com.android.wildex.ui.LoadingScreenTestTags
@@ -146,7 +147,9 @@ private fun FlyingAnimalAnimation(flyingAnimal: FlyingAnimal) {
       colorFilter = ColorFilter.tint(flyingAnimal.color),
       contentDescription = null,
       modifier =
-          Modifier.offset(x = flyingAnimal.positionX.dp, y = posY.dp)
+          Modifier.offset {
+                IntOffset(x = flyingAnimal.positionX.dp.roundToPx(), y = posY.dp.roundToPx())
+              }
               .graphicsLayer(rotationZ = rotation)
               .size(flyingAnimal.size.dp))
 }

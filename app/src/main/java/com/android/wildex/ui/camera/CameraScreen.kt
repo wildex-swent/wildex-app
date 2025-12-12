@@ -67,9 +67,6 @@ fun CameraScreen(
   val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
   val hasCameraPermission = cameraPermissionState.status.isGranted
 
-  val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
-  val hasLocationPermission = locationPermissionState.status.isGranted
-
   val imagePickerLauncher =
       rememberLauncherForActivityResult(
           contract = ActivityResultContracts.GetContent(),

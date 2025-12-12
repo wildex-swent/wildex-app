@@ -49,6 +49,7 @@ fun User.toProto(): UserProto {
           })
       .setCreationDate(this.creationDate.seconds)
       .setCountry(this.country)
+      .setLastUpdated(System.currentTimeMillis())
       .build()
 }
 

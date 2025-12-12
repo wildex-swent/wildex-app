@@ -46,15 +46,17 @@ import com.google.firebase.storage.ktx.storage
 /** Provides a single instance of all the repository in the app. */
 object RepositoryProvider {
   private lateinit var appContext: Context
+  private lateinit var connectivityObserver: ConnectivityObserver
 
   fun init(context: Context) {
     appContext = context.applicationContext
+    connectivityObserver = DefaultConnectivityObserver(appContext)
   }
 
   val authRepository: AuthRepository by lazy { AuthRepositoryFirebase(Firebase.auth) }
   val postRepository: PostsRepository by lazy { PostsRepositoryFirestore(Firebase.firestore) }
   val userRepository: UserRepository by lazy {
-    val cache = UserCache(appContext)
+    val cache = UserCache(appContext, connectivityObserver)
     UserRepositoryFirestore(Firebase.firestore, cache)
   }
   val likeRepository: LikeRepository by lazy { LikeRepositoryFirestore(Firebase.firestore) }

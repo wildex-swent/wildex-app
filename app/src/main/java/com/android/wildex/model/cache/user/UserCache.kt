@@ -1,27 +1,54 @@
 package com.android.wildex.model.cache.user
 
 import android.content.Context
+import com.android.wildex.model.ConnectivityObserver
 import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
-class UserCache(private val context: Context) : IUserCache {
+private const val STALE_DURATION_MS = 10 * 60 * 1000L // 10 minutes
+
+class UserCache(
+    private val context: Context,
+    private val connectivityObserver: ConnectivityObserver,
+) : IUserCache {
+  private fun isStale(lastUpdated: Long): Boolean {
+    val isOnline = connectivityObserver.isOnline.value
+    val currentTime = System.currentTimeMillis()
+    val stale = (currentTime - lastUpdated) > STALE_DURATION_MS
+    return isOnline && stale
+  }
+
   override suspend fun getUser(userId: Id): User? {
-    return context.userDataStore.data.map { it.usersMap[userId]?.toUser() }.firstOrNull()
+    return context.userDataStore.data
+        .map {
+          val cached = it.usersMap[userId]
+          if (cached != null && !isStale(cached.lastUpdated)) {
+            cached.toUser()
+          } else {
+            null
+          }
+        }
+        .firstOrNull()
   }
 
   override suspend fun getAllUsers(): List<User>? {
     return context.userDataStore.data
-        .map { proto -> proto.usersMap.values.map { it.toUser() } }
+        .map { proto ->
+          val users = proto.usersMap.values
+          if (users.all { !isStale(it.lastUpdated) }) {
+            users.map { it.toUser() }
+          } else {
+            null
+          }
+        }
         .firstOrNull()
   }
 
   override suspend fun saveUser(user: User) {
-    if (getUser(user.userId) == null) {
-      context.userDataStore.updateData {
-        it.toBuilder().putUsers(user.userId, user.toProto()).build()
-      }
+    context.userDataStore.updateData {
+      it.toBuilder().putUsers(user.userId, user.toProto()).build()
     }
   }
 

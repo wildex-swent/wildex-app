@@ -17,6 +17,7 @@ message UserProto {
     UserTypeProto user_type = 7;
     int64 creation_date = 8;
     string country = 9;
+    int64 last_updated = 10;
 }
 
 enum UserTypeProto {

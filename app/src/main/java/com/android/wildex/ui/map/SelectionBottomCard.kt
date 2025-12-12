@@ -464,9 +464,10 @@ private fun ReportSelectionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-      val assigned = !details.report.assigneeId.isNullOrBlank() && details.assignee != null
+      val assignee = details.assignee
       val bg =
-          if (assigned) cs.onBackground.copy(alpha = 0.08f) else cs.onBackground.copy(alpha = 0.12f)
+          if (assignee != null) cs.onBackground.copy(alpha = 0.08f)
+          else cs.onBackground.copy(alpha = 0.12f)
       val fg = cs.background
 
       Surface(
@@ -475,7 +476,7 @@ private fun ReportSelectionCard(
           contentColor = fg,
           modifier = Modifier.weight(1f).wrapContentWidth(),
       ) {
-        if (!assigned) {
+        if (assignee == null) {
           Text(
               text = context.current.getString(R.string.map_not_assigned),
               modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -500,7 +501,7 @@ private fun ReportSelectionCard(
             AsyncImage(
                 model =
                     ImageRequest.Builder(LocalContext.current)
-                        .data(details.assignee?.profilePictureURL)
+                        .data(details.assignee.profilePictureURL)
                         .build(),
                 contentDescription = "Assignee",
                 contentScale = ContentScale.Crop,
@@ -508,8 +509,7 @@ private fun ReportSelectionCard(
             )
 
             Text(
-                text =
-                    details.assignee?.username ?: context.current.getString(R.string.map_unknown),
+                text = details.assignee.username,
                 style = typography.bodySmall,
                 color = cs.primary,
                 fontWeight = FontWeight.Bold,

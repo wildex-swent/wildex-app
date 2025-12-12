@@ -45,6 +45,9 @@
     <string name="dark_mode">Dark</string>
     <string name="system_default">Auto</string>
     <string name="sign_out">Sign out</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="enable_in_settings">Notification permission is required. Please enable it in Settings.</string>
+    <string name="open_settings">Open Settings</string>
 
     <!-- Friend screen -->
     <string name="friends_tab_title">Friends</string>
@@ -218,7 +221,6 @@
     <string name="post_details_final_delete_post">Delete</string>
     <string name="post_details_cancel_delete_post">Cancel</string>
     <string name="post_details_delete_comment">Delete comment</string>
-
 
     <!-- Post details actions screen -->
     <string name="post_details_actions_google_maps">Open in Google Maps</string>

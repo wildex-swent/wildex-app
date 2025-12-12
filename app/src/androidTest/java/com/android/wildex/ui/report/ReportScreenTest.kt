@@ -6,6 +6,8 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
+import com.android.wildex.BuildConfig
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
@@ -18,6 +20,7 @@ import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
+import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -36,13 +39,14 @@ class ReportScreenTest {
 
   @Before
   fun setup() = runBlocking {
+    MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     // create reports
     val report1 =
         Report(
             reportId = "reportId1",
             imageURL =
                 "https://leesbird.com/wp-content/uploads/2012/01/ring-billed-gull-imm-injured-wing-1c.jpg",
-            location = Location(0.3, 0.3),
+            location = Location(0.3, 0.3, "location1"),
             date = Timestamp.now(),
             description = "description1",
             authorId = "user2",
@@ -182,6 +186,28 @@ class ReportScreenTest {
   }
 
   @Test
+  fun submitReportClick_invokesCallback() {
+    fakeObserver.setOnline(true)
+    var submitReportClicked = false
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(
+            reportScreenViewModel = reportScreenViewModel,
+            onSubmitReportClick = { submitReportClicked = true },
+        )
+      }
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON).performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .performClick()
+    assert(submitReportClicked)
+  }
+
+  @Test
   fun testTagsAreCorrectlySetWhenReports() {
     fakeObserver.setOnline(true)
     composeRule.setContent {
@@ -213,6 +239,23 @@ class ReportScreenTest {
     composeRule
         .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
         .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .assertIsNotDisplayed()
   }
 
   @Test
@@ -277,5 +320,43 @@ class ReportScreenTest {
     composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
     composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
+  }
+
+  @Test
+  fun reportSlider_works() {
+    fakeObserver.setOnline(true)
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ReportScreen(reportScreenViewModel = reportScreenViewModel)
+      }
+    }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag(ReportScreenTestTags.PULL_TO_REFRESH).assertIsDisplayed()
+    composeRule.onNodeWithTag(ReportScreenTestTags.REPORT_LIST).assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId1", "full"))
+        .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForReport("reportId1", "image"), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForReport("reportId1", "map"), useUnmergedTree = true)
+        .assertIsNotDisplayed()
+
+    composeRule
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForReport("reportId1", "slider"), useUnmergedTree = true)
+        .performScrollToIndex(1)
+
+    composeRule
+        .onNodeWithTag(
+            ReportScreenTestTags.testTagForReport("reportId1", "map"), useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

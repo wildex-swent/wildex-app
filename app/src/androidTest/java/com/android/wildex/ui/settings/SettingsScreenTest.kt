@@ -1,20 +1,26 @@
 package com.android.wildex.ui.settings
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.usecase.user.DeleteUserUseCase
 import com.android.wildex.utils.FakeAuthRepository
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,7 +45,7 @@ class SettingsScreenTest {
   private val commentsRepository = LocalRepositories.commentRepository
   private val likesRepository = LocalRepositories.likeRepository
   private val notificationRepository = LocalRepositories.notificationRepository
-
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private val authRepository = FakeAuthRepository()
 
   private lateinit var userSettingsScreenVM: SettingsScreenViewModel
@@ -86,7 +92,8 @@ class SettingsScreenTest {
                     likeRepository = likesRepository,
                     commentRepository = commentsRepository,
                     reportRepository = reportsRepository,
-                    notificationRepository = notificationRepository),
+                    notificationRepository = notificationRepository,
+                ),
         )
   }
 
@@ -97,13 +104,16 @@ class SettingsScreenTest {
 
   @Test
   fun initialState_displaysCorrectly() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING).assertIsDisplayed()
@@ -119,15 +129,18 @@ class SettingsScreenTest {
 
   @Test
   fun goBackClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var goBackInvoked = false
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = { goBackInvoked = true },
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = { goBackInvoked = true },
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -136,15 +149,18 @@ class SettingsScreenTest {
 
   @Test
   fun editProfileClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var editProfileInvoked = false
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = { editProfileInvoked = true },
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = { editProfileInvoked = true },
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON).performClick()
@@ -153,15 +169,18 @@ class SettingsScreenTest {
 
   @Test
   fun notificationToggle_invokesNotificationStateChange() {
+    fakeObserver.setOnline(true)
     val initialState = userSettingsScreenVM.uiState.value.notificationsEnabled
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE).performClick()
@@ -171,15 +190,18 @@ class SettingsScreenTest {
 
   @Test
   fun userStatusChange_invokesUserStatusChange() {
+    fakeObserver.setOnline(true)
     val initialStatus = userSettingsScreenVM.uiState.value.userType
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule
@@ -191,15 +213,18 @@ class SettingsScreenTest {
 
   @Test
   fun appearanceModeChange_invokesAppearanceModeModification() {
+    fakeObserver.setOnline(true)
     val initialState = userSettingsScreenVM.uiState.value.appearanceMode
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.LIGHT_MODE_BUTTON).performClick()
@@ -217,15 +242,18 @@ class SettingsScreenTest {
 
   @Test
   fun signOutClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var signOutInvoked = false
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { signOutInvoked = true },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = { signOutInvoked = true },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.SIGN_OUT_BUTTON).performClick()
@@ -234,13 +262,16 @@ class SettingsScreenTest {
 
   @Test
   fun deleteAccountClick_displaysPopup() {
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = {},
+        )
+      }
     }
 
     composeTestRule
@@ -255,15 +286,18 @@ class SettingsScreenTest {
 
   @Test
   fun confirmDeleteAccount_invokesCallback() {
+    fakeObserver.setOnline(true)
     var accountDeletionInvoked = false
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
+        )
+      }
     }
 
     composeTestRule
@@ -280,15 +314,18 @@ class SettingsScreenTest {
 
   @Test
   fun cancelDeleteAccount_hidesPopup_and_doesNotInvokeCallback() {
+    fakeObserver.setOnline(true)
     var accountDeletionInvoked = false
 
     composeTestRule.setContent {
-      SettingsScreen(
-          settingsScreenViewModel = userSettingsScreenVM,
-          onGoBack = {},
-          onEditProfileClick = {},
-          onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = {},
+            onEditProfileClick = {},
+            onAccountDeleteOrSignOut = { accountDeletionInvoked = true },
+        )
+      }
     }
 
     composeTestRule
@@ -301,5 +338,152 @@ class SettingsScreenTest {
         .assertIsDisplayed()
         .performClick()
     assert(!accountDeletionInvoked)
+  }
+
+  @Test
+  fun onGoBackEnabledOffline() {
+    fakeObserver.setOnline(false)
+    var goBackInvoked = false
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onGoBack = { goBackInvoked = true },
+        )
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.GO_BACK_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    assertTrue(goBackInvoked)
+  }
+
+  @Test
+  fun signOutEnabledOffline() {
+    fakeObserver.setOnline(false)
+    var signOutInvoked = false
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onAccountDeleteOrSignOut = { signOutInvoked = true },
+        )
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    assertTrue(signOutInvoked)
+  }
+
+  @Test
+  fun deleteAccountDisabledOffline() {
+    fakeObserver.setOnline(false)
+    var deleteAccountInvoked = false
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onAccountDeleteOrSignOut = { deleteAccountInvoked = true },
+        )
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON)
+        .assertIsNotDisplayed()
+    assertFalse(deleteAccountInvoked)
+  }
+
+  @Test
+  fun editProfileDisabledOffline() {
+    fakeObserver.setOnline(false)
+    var editProfileInvoked = false
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(
+            settingsScreenViewModel = userSettingsScreenVM,
+            onEditProfileClick = { editProfileInvoked = true })
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    assertFalse(editProfileInvoked)
+  }
+
+  @Test
+  fun notificationsToggleDisabledOffline() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(settingsScreenViewModel = userSettingsScreenVM)
+      }
+    }
+    val oldState = userSettingsScreenVM.uiState.value.notificationsEnabled
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_TOGGLE).performClick()
+    val newState = userSettingsScreenVM.uiState.value.notificationsEnabled
+    assertEquals(oldState, newState)
+  }
+
+  @Test
+  fun userStatusChangeDisabledOffline() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(settingsScreenViewModel = userSettingsScreenVM)
+      }
+    }
+    val oldState = userSettingsScreenVM.uiState.value.userType
+    when (oldState) {
+      UserType.REGULAR -> {
+        composeTestRule
+            .onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
+            .performClick()
+      }
+      UserType.PROFESSIONAL -> {
+        composeTestRule
+            .onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON)
+            .performClick()
+      }
+    }
+    val newState = userSettingsScreenVM.uiState.value.userType
+    assertEquals(oldState, newState)
+  }
+
+  @Test
+  fun appearanceChangeDisabledOffline() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SettingsScreen(settingsScreenViewModel = userSettingsScreenVM)
+      }
+    }
+    val oldState = userSettingsScreenVM.uiState.value.appearanceMode
+    when (oldState) {
+      AppearanceMode.AUTOMATIC -> {
+        composeTestRule.onNodeWithTag(SettingsScreenTestTags.LIGHT_MODE_BUTTON).performClick()
+      }
+      AppearanceMode.LIGHT -> {
+        composeTestRule.onNodeWithTag(SettingsScreenTestTags.DARK_MODE_BUTTON).performClick()
+      }
+      AppearanceMode.DARK -> {
+        composeTestRule.onNodeWithTag(SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON).performClick()
+      }
+    }
+    val newState = userSettingsScreenVM.uiState.value.appearanceMode
+    assertEquals(oldState, newState)
   }
 }

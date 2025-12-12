@@ -131,9 +131,12 @@ class SettingsScreenViewModel(
     }
   }
 
-  fun signOut(onSignOut: () -> Unit) {
+  fun signOut(isOnline: Boolean, onSignOut: () -> Unit) {
     viewModelScope.launch {
-      userTokensRepository.deleteTokenOfUser(currentUserId, userTokensRepository.getCurrentToken())
+      if (isOnline) {
+        userTokensRepository.deleteTokenOfUser(
+            currentUserId, userTokensRepository.getCurrentToken())
+      }
       authRepository
           .signOut()
           .fold(
@@ -141,6 +144,10 @@ class SettingsScreenViewModel(
               onFailure = { setErrorMsg(it.localizedMessage ?: "Failed to sign out.") },
           )
     }
+  }
+
+  fun onOfflineClick() {
+    setErrorMsg("This action is not supported offline. Check your connection and try again.")
   }
 
   /** Clears any existing error message from the UI state. */

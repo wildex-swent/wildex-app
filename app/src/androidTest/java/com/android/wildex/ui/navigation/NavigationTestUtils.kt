@@ -376,7 +376,8 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {
-    performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT)
+    performClickOnTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+    performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON)
   }
 
   fun ComposeTestRule.navigateBackFromSubmitReport() {

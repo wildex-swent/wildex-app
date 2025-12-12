@@ -69,6 +69,7 @@ class EditProfileViewModelTest {
   @Test
   fun loadUIState_success_populatesFields() =
       mainDispatcherRule.runTest {
+        coEvery { userRepository.getAllUsers() } returns listOf(u1)
         coEvery { userRepository.getUser("uid-1") } returns u1
         viewModel.loadUIState()
         advanceUntilIdle()
@@ -85,7 +86,15 @@ class EditProfileViewModelTest {
   @Test
   fun loadUIState_error_setsError() =
       mainDispatcherRule.runTest {
-        coEvery { userRepository.getUser("uid-1") } throws RuntimeException("boom")
+        coEvery { userRepository.getAllUsers() } returns emptyList()
+
+        var calls = 0
+        coEvery { userRepository.getUser("uid-1") } answers
+            {
+              calls++
+              if (calls == 1) u1 else throw RuntimeException("boom")
+            }
+
         viewModel.loadUIState()
         advanceUntilIdle()
         val s = viewModel.uiState.value

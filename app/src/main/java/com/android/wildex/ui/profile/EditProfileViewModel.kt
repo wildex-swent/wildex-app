@@ -50,9 +50,16 @@ class EditProfileViewModel(
   private val _uiState = MutableStateFlow(EditProfileUIState())
   val uiState: StateFlow<EditProfileUIState> = _uiState.asStateFlow()
 
+  private var usernameList: List<String> = emptyList()
+  private var currentUserName: String = ""
+
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch {
+      usernameList = userRepository.getAllUsers().map { it.username }
+      currentUserName = userRepository.getUser(currentUserId).username
+      updateUIState()
+    }
   }
 
   private suspend fun updateUIState() {
@@ -150,8 +157,14 @@ class EditProfileViewModel(
     _uiState.value =
         _uiState.value.copy(
             username = username,
-            invalidUsernameMsg = if (username.isBlank()) "Username cannot be empty" else null,
-        )
+            invalidUsernameMsg =
+                when {
+                  username.isBlank() -> "Username cannot be empty"
+                  username.length > 20 -> "Username cannot exceed 20 characters"
+                  usernameList.contains(username) && currentUserName != username ->
+                      "Username is already taken"
+                  else -> null
+                })
   }
 
   fun setDescription(description: String) {

@@ -11,7 +11,6 @@ import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
 import io.mockk.Runs
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -179,7 +178,11 @@ class ReportScreenViewModelTest {
       val actualReportImageUrls = state.reports.map { it.imageURL }
       assertEquals(expectedReportImageUrls, actualReportImageUrls)
 
-      val expectedReportLocations = listOf("Test Location 2", "Test Location 3")
+      val expectedReportLocations =
+          listOf(
+              Location(80.0, 10.0, "Test Location 2", "Test Location 2", "Test Location 2"),
+              Location(100.0, 100.0, "Test Location 3", "Test Location 3", "Test Location 3"),
+          )
       val actualReportLocations = state.reports.map { it.location }
       assertEquals(expectedReportLocations, actualReportLocations)
 
@@ -191,8 +194,8 @@ class ReportScreenViewModelTest {
       val actualReportAuthors = state.reports.map { it.author }
       assertEquals(expectedReportAuthors, actualReportAuthors)
 
-      val expectedReportAssignees = listOf("", "user3name")
-      val actualReportAssignees = state.reports.map { it.assigneeUsername }
+      val expectedReportAssignees = listOf(false, true)
+      val actualReportAssignees = state.reports.map { it.assigned }
       assertEquals(expectedReportAssignees, actualReportAssignees)
 
       assertEquals(simpleUser2, state.currentUser)
@@ -223,52 +226,6 @@ class ReportScreenViewModelTest {
   }
 
   @Test
-  fun cancelReport_calls_repository() {
-    mainDispatcherRule.runTest {
-      viewModel.loadUIState()
-      viewModel.cancelReport("report2")
-      advanceUntilIdle()
-
-      coVerify { reportRepository.deleteReport("report2") }
-    }
-  }
-
-  @Test
-  fun selfAssignReport_calls_repository() {
-    mainDispatcherRule.runTest {
-      viewModel.loadUIState()
-      viewModel.selfAssignReport("report2")
-      advanceUntilIdle()
-
-      coVerify { reportRepository.getReport("report2") }
-      coVerify { reportRepository.editReport("report2", report2.copy(assigneeId = "user3")) }
-    }
-  }
-
-  @Test
-  fun unselfAssignReport_calls_repository() {
-    mainDispatcherRule.runTest {
-      viewModel.loadUIState()
-      viewModel.unselfAssignReport("report2")
-      advanceUntilIdle()
-
-      coVerify { reportRepository.getReport("report2") }
-      coVerify { reportRepository.editReport("report2", report2.copy(assigneeId = null)) }
-    }
-  }
-
-  @Test
-  fun resolveReport_calls_repository() {
-    mainDispatcherRule.runTest {
-      viewModel.loadUIState()
-      viewModel.resolveReport("report3")
-      advanceUntilIdle()
-
-      coVerify { reportRepository.deleteReport("report3") }
-    }
-  }
-
-  @Test
   fun clearErrorMsg_sets_errorMsg_to_null() =
       mainDispatcherRule.runTest {
         viewModel.loadUIState()
@@ -286,8 +243,7 @@ class ReportScreenViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertNotNull(state.errorMsg)
-      assertTrue(state.errorMsg!!.contains("Error loading current user data"))
+      assertEquals("Failed to update UI state: Error getting user", state.errorMsg)
     }
   }
 
@@ -300,8 +256,7 @@ class ReportScreenViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
-      assertNotNull(state.errorMsg)
-      assertTrue(state.errorMsg!!.contains("Error loading reports"))
+      assertEquals("Failed to update UI state: Failed to load reports", state.errorMsg)
     }
   }
 

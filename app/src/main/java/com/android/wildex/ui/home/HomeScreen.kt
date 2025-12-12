@@ -34,10 +34,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -82,6 +81,7 @@ import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -297,7 +297,13 @@ fun PostItem(
     )
 
     // Image
-    PostSlider(post = post, onPostClick = { onPostClick(post.postId) }, pagerState)
+    PostSlider(
+        post = post,
+        liked = liked,
+        onPostClick = { onPostClick(post.postId) },
+        onToggleLike = onToggleLike,
+        pagerState = pagerState,
+    )
 
     // Actions: likes & comments & location
     PostActions(
@@ -402,7 +408,15 @@ private fun PostHeader(
  * @param onPostClick The action when the user clicks on the post, to see its details.
  */
 @Composable
-private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerState) {
+private fun PostSlider(
+    post: Post,
+    liked: Boolean,
+    onPostClick: () -> Unit,
+    onToggleLike: () -> Unit,
+    pagerState: PagerState,
+) {
+  var imageMeasurableHeight by remember { mutableIntStateOf(0) }
+  val imageDpHeight = with(LocalDensity.current) { imageMeasurableHeight.toDp() }
   HorizontalPager(
       state = pagerState,
       modifier =
@@ -518,17 +532,13 @@ private fun PostActions(
   ) {
     // Likes
     Row(
-        modifier =
-            Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
-              onToggleLike()
-            },
+        modifier = Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(
-          imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-          contentDescription = "Likes",
-          modifier = Modifier.size(30.dp),
-          tint = if (liked) colorScheme.primary else colorScheme.onBackground,
+      AnimatedLikeButton(
+          likedByCurrentUser = liked,
+          onToggleLike = onToggleLike,
+          iconSize = 28.dp,
       )
       Spacer(Modifier.width(6.dp))
       Text(
@@ -570,7 +580,7 @@ private fun PostActions(
       Icon(
           imageVector = Icons.AutoMirrored.Outlined.Chat,
           contentDescription = "Comments",
-          modifier = Modifier.size(25.dp),
+          modifier = Modifier.size(28.dp),
           tint = colorScheme.onBackground,
       )
       Spacer(Modifier.width(6.dp))

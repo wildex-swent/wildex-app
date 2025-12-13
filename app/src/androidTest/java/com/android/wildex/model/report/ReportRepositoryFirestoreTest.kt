@@ -1,18 +1,20 @@
 package com.android.wildex.model.report
 
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeReportCache
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 private const val REPORTS_COLLECTION_PATH = "reports"
 
 class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
-
-  private var repository = ReportRepositoryFirestore(Firebase.firestore)
+  private val reportCache = FakeReportCache()
+  private var repository = ReportRepositoryFirestore(Firebase.firestore, reportCache)
 
   @Test
   fun getNewReportIdReturnsUniqueIds() = runTest {
@@ -292,4 +294,133 @@ class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
     assertTrue(remainingReports.all { it.authorId != report1.authorId })
     assertEquals(listOf(report2), remainingReports)
   }
+
+  @Test
+  fun getReportUsesCacheWhenAvailable() = runTest {
+    // No Firestore documents added on purpose.
+    // Fill only the cache.
+    reportCache.saveReport(report1)
+
+    val report = repository.getReport(report1.reportId)
+
+    // If cache wasn't used, this would throw "Report not found"
+    assertEquals(report1, report)
+  }
+
+  @Test
+  fun getAllReportsUsesCacheWhenAvailable() = runTest {
+    // Cache contains 2 reports; Firestore collection is empty.
+    reportCache.saveReports(listOf(report1, report2))
+
+    val reports = repository.getAllReports()
+
+    assertEquals(2, reports.size)
+    assertEquals(report1, reports[0])
+    assertEquals(report2, reports[1])
+  }
+
+  @Test
+  fun getAllReportsByAuthorUsesCacheWhenAvailable() = runTest {
+    val authorId = "authorCache"
+    val reportA = report1.copy(reportId = "reportA", authorId = authorId)
+    val reportB = report2.copy(reportId = "reportB", authorId = "otherAuthor")
+
+    // Only cache is populated
+    reportCache.saveReports(listOf(reportA, reportB))
+
+    val reports = repository.getAllReportsByAuthor(authorId)
+
+    assertEquals(1, reports.size)
+    assertEquals(authorId, reports[0].authorId)
+    assertEquals(reportA, reports[0])
+  }
+
+  @Test
+  fun getAllReportsByAssigneeUsesCacheWhenAvailable() = runTest {
+    val assigneeId = "assigneeCache"
+    val reportA = report1.copy(reportId = "reportA", assigneeId = assigneeId)
+    val reportB = report2.copy(reportId = "reportB", assigneeId = "otherAssignee")
+
+    reportCache.saveReports(listOf(reportA, reportB))
+
+    val reports = repository.getAllReportsByAssignee(assigneeId)
+
+    assertEquals(1, reports.size)
+    assertEquals(assigneeId, reports[0].assigneeId)
+    assertEquals(reportA, reports[0])
+  }
+
+  @Test
+  fun addReportSavesReportInCache() = runTest {
+    repository.addReport(report1)
+
+    val cached = reportCache.getReport(report1.reportId)
+
+    assertEquals(report1, cached)
+  }
+
+  @Test
+  fun editReportUpdatesCache() = runTest {
+    repository.addReport(report1)
+
+    val updated = report1.copy(description = "updated description")
+    repository.editReport(report1.reportId, updated)
+
+    val cached = reportCache.getReport(report1.reportId)
+
+    // reportId must stay the same, other fields updated
+    assertEquals(report1.reportId, cached?.reportId)
+    assertEquals("updated description", cached?.description)
+  }
+
+  @Test
+  fun deleteReportRemovesFromCache() = runTest {
+    repository.addReport(report1)
+
+    // ensure it's cached
+    assertEquals(report1, reportCache.getReport(report1.reportId))
+
+    repository.deleteReport(report1.reportId)
+
+    val cached = reportCache.getReport(report1.reportId)
+    assertNull(cached)
+  }
+
+  @Test
+  fun deleteReportsByUserAlsoDeletesFromCache() = runTest {
+    val r1 = report1
+    val r2 = report2
+    val r3 = report2.copy(authorId = r1.authorId, reportId = "reportId3")
+
+    repository.addReport(r1)
+    repository.addReport(r2)
+    repository.addReport(r3)
+
+    // cache should now have 3 reports
+    assertEquals(3, reportCache.getAllReports()!!.size)
+
+    repository.deleteReportsByUser(r1.authorId)
+
+    val cachedRemaining = reportCache.getAllReports()!!
+
+    // only reports not authored by r1 remain in cache
+    assertTrue(cachedRemaining.none { it.authorId == r1.authorId })
+    assertEquals(1, cachedRemaining.size)
+    assertEquals(r2, cachedRemaining[0])
+  }
+
+  @Test
+  fun refreshCacheClearsAllCachedReports() = runTest {
+    repository.addReport(report1)
+    repository.addReport(report2)
+
+    // cache should not be empty
+    assertTrue(reportCache.getAllReports()!!.isNotEmpty())
+
+    repository.refreshCache()
+
+    val cached = reportCache.getAllReports()!!
+    assertTrue(cached.isEmpty())
+  }
+
 }

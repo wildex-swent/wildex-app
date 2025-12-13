@@ -16,8 +16,7 @@ class UserCache(
   private fun isStale(lastUpdated: Long): Boolean {
     val isOnline = connectivityObserver.isOnline.value
     val currentTime = System.currentTimeMillis()
-    val stale = (currentTime - lastUpdated) > STALE_DURATION_MS
-    return isOnline && stale
+    return isOnline && (currentTime - lastUpdated) > STALE_DURATION_MS
   }
 
   override suspend fun getUser(userId: Id): User? {

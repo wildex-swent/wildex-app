@@ -173,10 +173,15 @@ class HomeScreenViewModel(
           async {
             try {
               val author = userRepository.getSimpleUser(post.authorId)
-              val isLiked = likeRepository.getLikeForPost(post.postId) != null
+              val isLiked =
+                  runCatching { likeRepository.getLikeForPost(post.postId) != null }
+                      .getOrDefault(false)
               val animalName = animalRepository.getAnimal(post.animalId).name
-              val likeCount = likeRepository.getLikesForPost(post.postId).size
-              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
+              val likeCount =
+                  runCatching { likeRepository.getLikesForPost(post.postId).size }.getOrDefault(0)
+              val commentCount =
+                  runCatching { commentRepository.getAllCommentsByPost(post.postId).size }
+                      .getOrDefault(0)
 
               PostState(
                   post = post,
@@ -200,7 +205,11 @@ class HomeScreenViewModel(
    *
    * @param postId The unique identifier of the post to toggle like status.
    */
-  fun toggleLike(postId: Id) {
+  fun toggleLike(postId: Id, isOnline: Boolean = true) {
+    if (!isOnline) {
+      setErrorMsg("You are currently offline\nYou can not like or unlike posts :/")
+      return
+    }
     viewModelScope.launch {
       val like = likeRepository.getLikeForPost(postId)
       if (like != null) {

@@ -4,6 +4,7 @@ import android.util.Log
 import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakePostsCache
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -20,7 +21,9 @@ import org.junit.Test
 const val POSTS_COLLECTION_PATH = "posts"
 
 class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
-  private var repository = PostsRepositoryFirestore(Firebase.firestore)
+  private val postCache = FakePostsCache()
+
+  private var repository = PostsRepositoryFirestore(Firebase.firestore, postCache)
 
   @Before
   override fun setUp() {

@@ -158,7 +158,8 @@ fun HomeScreen(
             user,
             context.getString(R.string.app_name),
             onNotificationClick,
-            onCurrentProfilePictureClick)
+            onCurrentProfilePictureClick,
+        )
       },
       bottomBar = bottomBar,
       modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
@@ -181,8 +182,9 @@ fun HomeScreen(
         else -> {
           PostsView(
               postStates = postStates,
+              isOnline = isOnline,
               onProfilePictureClick = onProfilePictureClick,
-              onPostLike = homeScreenViewModel::toggleLike,
+              onPostLike = { homeScreenViewModel.toggleLike(it, isOnline) },
               onPostClick = onPostClick,
           )
         }
@@ -226,6 +228,7 @@ fun NoPostsView() {
 @Composable
 fun PostsView(
     postStates: List<PostState>,
+    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -238,6 +241,7 @@ fun PostsView(
     items(postStates.size) { index ->
       PostItem(
           postState = postStates[index],
+          isOnline = isOnline,
           onProfilePictureClick = onProfilePictureClick,
           onPostLike = onPostLike,
           onPostClick = onPostClick,
@@ -256,6 +260,7 @@ fun PostsView(
 @Composable
 fun PostItem(
     postState: PostState,
+    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -271,8 +276,10 @@ fun PostItem(
   var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
 
   val onToggleLike: () -> Unit = {
-    liked = !liked
-    likeCount = if (liked) likeCount + 1 else likeCount - 1
+    if (isOnline) {
+      liked = !liked
+      likeCount = if (liked) likeCount + 1 else likeCount - 1
+    }
     onPostLike(post.postId)
   }
 

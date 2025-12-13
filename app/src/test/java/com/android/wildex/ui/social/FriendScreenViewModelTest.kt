@@ -138,6 +138,7 @@ class FriendScreenViewModelTest {
     coEvery { userRepository.getUser(u2.userId) } returns u2
     coEvery { userRepository.getUser(u3.userId) } returns u3
     coEvery { userRepository.getUser(u4.userId) } returns u4
+    coEvery { userRepository.refreshCache() } coAnswers {}
 
     coEvery { userFriendsRepository.getAllFriendsOfUser("currentUserId") } coAnswers
         {

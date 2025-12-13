@@ -10,6 +10,8 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepository
 import com.android.wildex.model.animaldetector.AnimalInfoRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.cache.user.UserCache
+import com.android.wildex.model.cache.user.userDataStore
 import com.android.wildex.model.cache.usersettings.UserSettingsCache
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepositoryFirestore
@@ -45,14 +47,19 @@ import com.google.firebase.storage.ktx.storage
 /** Provides a single instance of all the repository in the app. */
 object RepositoryProvider {
   private lateinit var appContext: Context
+  private lateinit var connectivityObserver: ConnectivityObserver
 
   fun init(context: Context) {
     appContext = context.applicationContext
+    connectivityObserver = DefaultConnectivityObserver(appContext)
   }
 
   val authRepository: AuthRepository by lazy { AuthRepositoryFirebase(Firebase.auth) }
   val postRepository: PostsRepository by lazy { PostsRepositoryFirestore(Firebase.firestore) }
-  val userRepository: UserRepository by lazy { UserRepositoryFirestore(Firebase.firestore) }
+  val userRepository: UserRepository by lazy {
+    val cache = UserCache(appContext.userDataStore, connectivityObserver)
+    UserRepositoryFirestore(Firebase.firestore, cache)
+  }
   val likeRepository: LikeRepository by lazy { LikeRepositoryFirestore(Firebase.firestore) }
   val reportRepository: ReportRepository by lazy { ReportRepositoryFirestore(Firebase.firestore) }
 

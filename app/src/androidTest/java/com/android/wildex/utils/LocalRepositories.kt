@@ -216,6 +216,8 @@ object LocalRepositories {
     override fun clear() {
       listOfUsers.clear()
     }
+
+    override suspend fun refreshCache() {}
   }
 
   open class CommentRepositoryImpl() : CommentRepository, ClearableRepository {

@@ -90,7 +90,7 @@ class PostDetailsScreenViewModel(
 
   fun refreshPostDetails(postId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updatePostDetails(postId) }
+    viewModelScope.launch { updatePostDetails(postId, calledFromRefresh = true) }
   }
 
   fun loadPostDetails(postId: Id) {
@@ -98,8 +98,11 @@ class PostDetailsScreenViewModel(
     viewModelScope.launch { updatePostDetails(postId) }
   }
 
-  private suspend fun updatePostDetails(postId: Id) {
+  private suspend fun updatePostDetails(postId: Id, calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+      }
       val post = postRepository.getPost(postId)
       val simpleAuthor = userRepository.getSimpleUser(post.authorId)
       val comments = commentRepository.getAllCommentsByPost(postId).sortedByDescending { it.date }

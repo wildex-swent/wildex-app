@@ -51,4 +51,7 @@ interface UserRepository {
    * @throws Exception if the User is not found
    */
   suspend fun deleteUser(userId: Id)
+
+  /** Clears the user cache. */
+  suspend fun refreshCache()
 }

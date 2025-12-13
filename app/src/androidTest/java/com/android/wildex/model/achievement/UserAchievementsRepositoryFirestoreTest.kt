@@ -4,10 +4,12 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.User
+import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserSettingsRepositoryFirestore
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeUserCache
 import com.android.wildex.utils.offline.FakeUserSettingsCache
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
@@ -25,8 +27,10 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
 
   private var repository = UserAchievementsRepositoryFirestore(FirebaseEmulator.firestore)
   private val userSettingsCache = FakeUserSettingsCache()
+  private val userCache = FakeUserCache()
   private var userSettingsRepository =
       UserSettingsRepositoryFirestore(FirebaseEmulator.firestore, userSettingsCache)
+  private val userRepository = UserRepositoryFirestore(FirebaseEmulator.firestore, userCache)
   private val testUserId = "testUserId"
 
   private suspend fun getUsersCount(): Int = super.getCount()
@@ -36,7 +40,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
     super.setUp()
 
     runBlocking {
-      RepositoryProvider.userRepository.addUser(
+      userRepository.addUser(
           User(
               userId = testUserId,
               username = "",

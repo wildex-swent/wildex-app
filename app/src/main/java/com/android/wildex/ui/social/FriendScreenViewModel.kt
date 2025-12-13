@@ -79,8 +79,11 @@ class FriendScreenViewModel(
    *
    * @param userId the user whose friend list we want to fetch
    */
-  private suspend fun updateUIState(userId: Id) {
+  private suspend fun updateUIState(userId: Id, calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+      }
       val isCurrentUser = userId == currentUserId
       val userFriends = userFriendsRepository.getAllFriendsOfUser(userId)
       val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
@@ -155,7 +158,7 @@ class FriendScreenViewModel(
    */
   fun refreshUIState(userId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState(userId) }
+    viewModelScope.launch { updateUIState(userId, calledFromRefresh = true) }
   }
 
   /**

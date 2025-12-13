@@ -368,4 +368,18 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
       assertEquals("UserRepositoryFirestore: User ${user1.userId} not found", exception?.message)
     }
   }
+
+  @Test
+  fun refreshCacheClearsAllCacheEntries() {
+    runTest {
+      repository.addUser(user1)
+      repository.addUser(user2)
+      assertEquals(user1, userCache.getUser(user1.userId))
+      assertEquals(user2, userCache.getUser(user2.userId))
+
+      repository.refreshCache()
+      assertNull(userCache.getUser(user1.userId))
+      assertNull(userCache.getUser(user2.userId))
+    }
+  }
 }

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_package = "com.android.wildex.datastore";
+option java_multiple_files = true;
+
+message ReportCacheStorage {
+    map<string, ReportProto> reports = 1;
+}
+
+message ReportProto {
+    string report_id = 1;
+    string image_url = 2;
+    LocationProto location = 3;
+    int64 date = 4;
+    string description = 5;
+    string author_id = 6;
+    string assignee_id = 7;
+    int64 last_updated = 8;
+}
+
+message LocationProto {
+    double latitude = 1;
+    double longitude = 2;
+    string name = 3;
+    string specific_name = 4;
+    string generale_name = 5;
+}

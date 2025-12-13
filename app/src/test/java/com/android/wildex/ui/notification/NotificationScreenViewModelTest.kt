@@ -125,15 +125,17 @@ class NotificationScreenViewModelTest {
         coEvery { notificationRepository.getAllNotificationsForUser("uid-1") } returns
             listOf(sampleNotification)
         coEvery { userRepository.getSimpleUser(sampleAuthor.userId) } returns sampleAuthor
+        coEvery { userRepository.refreshCache() } just Runs
 
         viewModel.refreshUIState()
         advanceUntilIdle()
 
         val s = viewModel.uiState.value
         assertEquals(1, s.notifications.size)
+
         coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         coVerify(exactly = 1) { userRepository.getSimpleUser(sampleAuthor.userId) }
-        confirmVerified(notificationRepository, userRepository)
+        confirmVerified(notificationRepository)
       }
 
   @Test

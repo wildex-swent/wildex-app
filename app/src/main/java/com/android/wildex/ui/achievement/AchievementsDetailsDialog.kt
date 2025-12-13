@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -61,6 +62,7 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
                 contentDescription = achievement.name,
                 modifier =
                     Modifier.align(Alignment.Center)
+                        .fillMaxSize(.6f)
                         .testTag(AchievementsScreenTestTags.DETAILS_IMAGE),
             )
             IconButton(

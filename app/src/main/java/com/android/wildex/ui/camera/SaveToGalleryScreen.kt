@@ -1,6 +1,5 @@
 package com.android.wildex.ui.camera
 
-import android.Manifest
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,8 +32,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 
 object SaveToGalleryScreenTestTags {
   const val DISCARD_BUTTON = "save_to_gallery_discard_button"
@@ -59,14 +56,6 @@ fun SaveToGalleryScreen(
     modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
-
-  val writePermissionState =
-      rememberPermissionState(
-          Manifest.permission.WRITE_EXTERNAL_STORAGE,
-          onPermissionResult = { if (it) onSave() },
-      )
-  val hasWritePermission = writePermissionState.status.isGranted
-
   var showSaveDialog by remember { mutableStateOf(false) }
   var showDiscardDialog by remember { mutableStateOf(false) }
 
@@ -114,18 +103,20 @@ fun SaveToGalleryScreen(
           TextButton(
               onClick = {
                 showSaveDialog = false
-                if (hasWritePermission) onSave() else writePermissionState.launchPermissionRequest()
+                onSave()
               },
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.SAVE_TEXT_THIRD)) {
-                Text(text = context.getString(R.string.save_to_gallery_third))
-              }
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.SAVE_TEXT_THIRD),
+          ) {
+            Text(text = context.getString(R.string.save_to_gallery_third))
+          }
         },
         dismissButton = {
           TextButton(
               onClick = { showSaveDialog = false },
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.SAVE_CANCEL)) {
-                Text(text = context.getString(R.string.cancel))
-              }
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.SAVE_CANCEL),
+          ) {
+            Text(text = context.getString(R.string.cancel))
+          }
         },
     )
   }
@@ -137,12 +128,14 @@ fun SaveToGalleryScreen(
           Text(
               text = context.getString(R.string.discard_picture_first),
               fontWeight = FontWeight.Bold,
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_FIRST))
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_FIRST),
+          )
         },
         text = {
           Text(
               text = context.getString(R.string.discard_picture_second),
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_SECOND))
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_SECOND),
+          )
         },
         confirmButton = {
           TextButton(
@@ -150,16 +143,18 @@ fun SaveToGalleryScreen(
                 showDiscardDialog = false
                 onDiscard()
               },
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_THIRD)) {
-                Text(context.getString(R.string.discard_picture_third))
-              }
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_TEXT_THIRD),
+          ) {
+            Text(context.getString(R.string.discard_picture_third))
+          }
         },
         dismissButton = {
           TextButton(
               onClick = { showDiscardDialog = false },
-              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_CANCEL)) {
-                Text(context.getString(R.string.cancel))
-              }
+              modifier = Modifier.testTag(SaveToGalleryScreenTestTags.DISCARD_CANCEL),
+          ) {
+            Text(context.getString(R.string.cancel))
+          }
         },
     )
   }

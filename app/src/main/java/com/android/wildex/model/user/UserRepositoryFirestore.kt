@@ -53,7 +53,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           userId = it.userId,
           username = it.username,
           profilePictureURL = it.profilePictureURL,
-          userType = it.userType)
+          userType = it.userType,
+      )
     }
 
     val document = db.collection(USERS_COLLECTION_PATH).document(userId).get().await()
@@ -88,6 +89,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
     documentId.delete().await()
     cache.deleteUser(userId)
+  }
+
+  override suspend fun refreshCache() {
+    cache.clearAll()
   }
 
   /**

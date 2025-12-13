@@ -175,6 +175,8 @@ object LocalRepositories {
     override fun clear() {
       mapUserToSettings.clear()
     }
+
+    override suspend fun refreshCache() {}
   }
 
   open class UserRepositoryImpl() : UserRepository, ClearableRepository {
@@ -216,6 +218,8 @@ object LocalRepositories {
     override fun clear() {
       listOfUsers.clear()
     }
+
+    override suspend fun refreshCache() {}
   }
 
   open class CommentRepositoryImpl() : CommentRepository, ClearableRepository {

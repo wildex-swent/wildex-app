@@ -1,5 +1,6 @@
 package com.android.wildex.model.report
 
+import com.android.wildex.model.cache.report.IReportCache
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.google.firebase.firestore.DocumentReference
@@ -19,7 +20,10 @@ private object ReportsFields {
 }
 
 /** Represents a repository that manages Report items. */
-class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepository {
+class ReportRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val cache: IReportCache
+) : ReportRepository {
 
   private val collection = db.collection(REPORTS_COLLECTION_PATH)
 
@@ -38,7 +42,14 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
    * @return A list of all [Report] items.
    */
   override suspend fun getAllReports(): List<Report> {
-    return collection.get().await().documents.mapNotNull { documentToReport(it) }
+    cache.getAllReports()?.let {
+      return it
+    }
+
+    val reports = collection.get().await().documents.mapNotNull { documentToReport(it) }
+
+    cache.saveReports(reports)
+    return reports
   }
 
   /**
@@ -48,12 +59,20 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
    * @return A list of [Report] items associated with the specified author.
    */
   override suspend fun getAllReportsByAuthor(authorId: Id): List<Report> {
-    return collection
-        .whereEqualTo(ReportsFields.AUTHOR_ID, authorId)
-        .get()
-        .await()
-        .documents
-        .mapNotNull { documentToReport(it) }
+    cache.getAllReportsByAuthor(authorId)?.let {
+      return it
+    }
+
+    val reports =
+        collection
+            .whereEqualTo(ReportsFields.AUTHOR_ID, authorId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { documentToReport(it) }
+
+    cache.saveReports(reports)
+    return reports
   }
 
   /**
@@ -64,12 +83,19 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
    * @return A list of [Report] items associated with the specified assignee.
    */
   override suspend fun getAllReportsByAssignee(assigneeId: Id?): List<Report> {
-    return collection
-        .whereEqualTo(ReportsFields.ASSIGNEE_ID, assigneeId)
-        .get()
-        .await()
-        .documents
-        .mapNotNull { documentToReport(it) }
+    cache.getAllReportsByAssignee(assigneeId)?.let {
+      return it
+    }
+    val reports =
+        collection
+            .whereEqualTo(ReportsFields.ASSIGNEE_ID, assigneeId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { documentToReport(it) }
+
+    cache.saveReports(reports)
+    return reports
   }
 
   /**
@@ -79,8 +105,16 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
    * @return The [Report] item associated with the identifier.
    */
   override suspend fun getReport(reportId: Id): Report {
-    return documentToReport(collection.document(reportId).get().await())
-        ?: throw IllegalArgumentException("Report not found")
+    cache.getReport(reportId)?.let {
+      return it
+    }
+
+    val report =
+        documentToReport(collection.document(reportId).get().await())
+            ?: throw IllegalArgumentException("Report not found")
+
+    cache.saveReport(report)
+    return report
   }
 
   /**
@@ -92,6 +126,7 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
     val docRef = collection.document(report.reportId)
     ensureDocumentDoesNotExist(docRef, report.reportId)
     docRef.set(report).await()
+    cache.saveReport(report)
   }
 
   /**
@@ -103,7 +138,8 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
   override suspend fun editReport(reportId: Id, newValue: Report) {
     val docRef = collection.document(reportId)
     ensureDocumentExists(docRef, reportId)
-    docRef.set(newValue).await()
+    docRef.set(newValue.copy(reportId = reportId)).await()
+    cache.saveReport(newValue.copy(reportId = reportId))
   }
 
   /**
@@ -115,13 +151,19 @@ class ReportRepositoryFirestore(private val db: FirebaseFirestore) : ReportRepos
     val docRef = collection.document(reportId)
     ensureDocumentExists(docRef, reportId)
     docRef.delete().await()
+    cache.deleteReport(reportId)
   }
 
   override suspend fun deleteReportsByUser(userId: Id) {
     collection.whereEqualTo("authorId", userId).get().await().documents.forEach {
       it.reference.delete().await()
     }
+    cache.deleteReportByAuthor(userId)
   }
+
+    override suspend fun refreshCache() {
+        cache.clearAll()
+    }
 
   /**
    * Ensures no Report item in the document reference has a specific reportId.

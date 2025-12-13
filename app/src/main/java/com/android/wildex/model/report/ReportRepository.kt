@@ -31,4 +31,7 @@ interface ReportRepository {
 
   /** Deletes all Report items made by a specific user. */
   suspend fun deleteReportsByUser(userId: Id)
+
+  /** Clears the report cache. */
+  suspend fun refreshCache()
 }

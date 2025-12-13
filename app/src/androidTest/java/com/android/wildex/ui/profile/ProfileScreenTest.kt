@@ -469,6 +469,8 @@ class ProfileScreenTest {
             fetchSignal.await()
             return super.getUser(userId)
           }
+
+          override suspend fun refreshCache() {}
         }
     runBlocking {
       delayedUsersRepo.addUser(user = sampleUser)

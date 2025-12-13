@@ -130,8 +130,11 @@ class HomeScreenViewModel(
    * Also manages [HomeUIState.isLoading], [HomeUIState.isRefreshing], [HomeUIState.isError] and
    * [HomeUIState.errorMsg] to allow UI feedback.
    */
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+      }
       AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val user = userRepository.getSimpleUser(currentUserId)
       _uiState.value = _uiState.value.copy(currentUser = user)
@@ -157,7 +160,7 @@ class HomeScreenViewModel(
 
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(calledFromRefresh = true) }
   }
 
   /**

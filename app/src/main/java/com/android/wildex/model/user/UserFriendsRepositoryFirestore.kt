@@ -9,7 +9,10 @@ import kotlinx.coroutines.tasks.await
 const val USER_FRIENDS_COLLECTION_PATH = "userFriends"
 
 /** Represents a repository that manages UserFriends items. */
-class UserFriendsRepositoryFirestore(private val db: FirebaseFirestore) : UserFriendsRepository {
+class UserFriendsRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val userRepository: UserRepository = RepositoryProvider.userRepository
+) : UserFriendsRepository {
 
   private val collection = db.collection(USER_FRIENDS_COLLECTION_PATH)
 
@@ -34,8 +37,7 @@ class UserFriendsRepositoryFirestore(private val db: FirebaseFirestore) : UserFr
     ensureDocumentExists(docRef, userId)
 
     val userFriends = docRef.get().await().toObject(UserFriends::class.java)
-    val friends =
-        userFriends?.friendsId?.map { RepositoryProvider.userRepository.getUser(it) } ?: emptyList()
+    val friends = userFriends?.friendsId?.map { userRepository.getUser(it) } ?: emptyList()
 
     return friends
   }

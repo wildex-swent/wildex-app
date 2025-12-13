@@ -53,8 +53,11 @@ class NotificationScreenViewModel(
     viewModelScope.launch { updateUIState() }
   }
 
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+      }
       _uiState.value =
           _uiState.value.copy(
               notifications = fetchNotifications(),
@@ -95,7 +98,7 @@ class NotificationScreenViewModel(
 
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(calledFromRefresh = true) }
   }
 
   private fun setErrorMsg(msg: String) {

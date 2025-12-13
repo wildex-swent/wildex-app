@@ -100,8 +100,11 @@ class ReportScreenViewModel(
    * Updates the UI state by fetching reports and the current user. Updates [_uiState] with new
    * values.
    */
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+      }
       val currentUser = userRepository.getSimpleUser(currentUserId)
       _uiState.value = _uiState.value.copy(currentUser = currentUser)
 
@@ -126,7 +129,7 @@ class ReportScreenViewModel(
   /** Refreshes the UI state by updating reports and the current user. */
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(calledFromRefresh = true) }
   }
 
   /** Converts reports to [ReportUIState] objects with author data. */

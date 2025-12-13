@@ -1,6 +1,7 @@
 package com.android.wildex.model.cache.user
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import com.android.wildex.datastore.UserCacheStorage
 import com.android.wildex.model.ConnectivityObserver
 import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.map
 private const val STALE_DURATION_MS = 10 * 60 * 1000L // 10 minutes
 
 class UserCache(
-    private val context: Context,
+    private val userDataStore: DataStore<UserCacheStorage>,
     private val connectivityObserver: ConnectivityObserver,
 ) : IUserCache {
   private fun isStale(lastUpdated: Long): Boolean {
@@ -20,7 +21,7 @@ class UserCache(
   }
 
   override suspend fun getUser(userId: Id): User? {
-    return context.userDataStore.data
+    return userDataStore.data
         .map {
           val cached = it.usersMap[userId]
           if (cached != null && !isStale(cached.lastUpdated)) {
@@ -33,10 +34,10 @@ class UserCache(
   }
 
   override suspend fun getAllUsers(): List<User>? {
-    return context.userDataStore.data
+    return userDataStore.data
         .map { proto ->
           val users = proto.usersMap.values
-          if (users.all { !isStale(it.lastUpdated) }) {
+          if (users.isNotEmpty() && users.all { !isStale(it.lastUpdated) }) {
             users.map { it.toUser() }
           } else {
             null
@@ -46,9 +47,7 @@ class UserCache(
   }
 
   override suspend fun saveUser(user: User) {
-    context.userDataStore.updateData {
-      it.toBuilder().putUsers(user.userId, user.toProto()).build()
-    }
+    userDataStore.updateData { it.toBuilder().putUsers(user.userId, user.toProto()).build() }
   }
 
   override suspend fun saveUsers(users: List<User>) {
@@ -56,10 +55,10 @@ class UserCache(
   }
 
   override suspend fun deleteUser(userId: Id) {
-    context.userDataStore.updateData { it.toBuilder().removeUsers(userId).build() }
+    userDataStore.updateData { it.toBuilder().removeUsers(userId).build() }
   }
 
   override suspend fun clearAll() {
-    context.userDataStore.updateData { it.toBuilder().clearUsers().build() }
+    userDataStore.updateData { it.toBuilder().clearUsers().build() }
   }
 }

@@ -1,19 +1,15 @@
 package com.android.wildex.model.user
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
-import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.datastore.UserCacheStorage
 import com.android.wildex.datastore.UserProto
 import com.android.wildex.model.cache.user.UserCache
 import com.android.wildex.model.cache.user.UserCacheSerializer
 import com.android.wildex.model.cache.user.toProto
-import com.android.wildex.model.cache.user.userDataStore
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
 import com.android.wildex.utils.offline.FakeConnectivityObserver
-import com.android.wildex.utils.offline.TestContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
@@ -29,9 +25,8 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class PleaseBeWorkingTest : FirestoreTest(USERS_COLLECTION_PATH) {
+class UserCacheTest : FirestoreTest(USERS_COLLECTION_PATH) {
   private lateinit var dataStore: DataStore<UserCacheStorage>
-  private lateinit var context: Context
   private lateinit var connectivityObserver: FakeConnectivityObserver
   private lateinit var cache: UserCache
   private lateinit var db: FirebaseFirestore
@@ -55,14 +50,12 @@ class PleaseBeWorkingTest : FirestoreTest(USERS_COLLECTION_PATH) {
   override fun setUp() {
     super.setUp()
     runTest {
-      val appContext = ApplicationProvider.getApplicationContext<Context>()
       dataStore =
           DataStoreFactory.create(serializer = UserCacheSerializer, scope = testScope) {
             File.createTempFile("usercache", ".pb")
           }
-      context = TestContext(dataStore, appContext)
       connectivityObserver = FakeConnectivityObserver(initial = true)
-      cache = UserCache(context, connectivityObserver)
+      cache = UserCache(dataStore, connectivityObserver)
       db = FirebaseEmulator.firestore
       userRepository = UserRepositoryFirestore(db, cache)
     }
@@ -100,7 +93,7 @@ class PleaseBeWorkingTest : FirestoreTest(USERS_COLLECTION_PATH) {
               .setLastUpdated(staleTime)
               .build()
 
-      context.userDataStore.updateData { it.toBuilder().putUsers(user.userId, staleProto).build() }
+      dataStore.updateData { it.toBuilder().putUsers(user.userId, staleProto).build() }
       assertNull(cache.getUser(user.userId))
 
       val result = userRepository.getUser(user.userId)
@@ -116,7 +109,7 @@ class PleaseBeWorkingTest : FirestoreTest(USERS_COLLECTION_PATH) {
       val freshTime = System.currentTimeMillis() - (5 * 60 * 1000L)
       val freshProto = user.toProto().toBuilder().setLastUpdated(freshTime).build()
 
-      context.userDataStore.updateData { it.toBuilder().putUsers(user.userId, freshProto).build() }
+      dataStore.updateData { it.toBuilder().putUsers(user.userId, freshProto).build() }
 
       assertEquals(user, cache.getUser(user.userId))
       assertEquals(user, userRepository.getUser(user.userId))

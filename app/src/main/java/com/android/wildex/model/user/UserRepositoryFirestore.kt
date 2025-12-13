@@ -77,9 +77,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
     val documentId = db.collection(USERS_COLLECTION_PATH).document(userId)
     val document = documentId.get().await()
     require(document.exists()) { "UserRepositoryFirestore: User $userId not found" }
-    documentId.set(newUser).await()
-    cache.deleteUser(userId)
-    cache.saveUser(newUser)
+    documentId.set(newUser.copy(userId = userId)).await()
+    cache.saveUser(newUser.copy(userId = userId))
   }
 
   override suspend fun deleteUser(userId: Id) {

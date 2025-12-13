@@ -5,33 +5,33 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
 
 class FakeUserCache : IUserCache {
-  val setOfUsers = mutableSetOf<User>()
+  val cache = mutableMapOf<Id, User>()
 
   init {
-    setOfUsers.clear()
+    cache.clear()
   }
 
   override suspend fun getUser(userId: Id): User? {
-    return setOfUsers.find { it.userId == userId }
+    return cache[userId]
   }
 
   override suspend fun getAllUsers(): List<User>? {
-    return setOfUsers.toList()
+    return cache.values.toList()
   }
 
   override suspend fun saveUser(user: User) {
-    setOfUsers.add(user)
+    cache.put(user.userId, user)
   }
 
   override suspend fun saveUsers(users: List<User>) {
-    users.forEach { setOfUsers.add(it) }
+    users.forEach { saveUser(it) }
   }
 
   override suspend fun deleteUser(userId: Id) {
-    setOfUsers.removeIf { it.userId == userId }
+    cache.remove(userId)
   }
 
   override suspend fun clearAll() {
-    setOfUsers.clear()
+    cache.clear()
   }
 }

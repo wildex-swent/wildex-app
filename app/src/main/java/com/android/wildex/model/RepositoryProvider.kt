@@ -11,6 +11,7 @@ import com.android.wildex.model.animaldetector.AnimalInfoRepositoryHttp
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
 import com.android.wildex.model.cache.user.UserCache
+import com.android.wildex.model.cache.user.userDataStore
 import com.android.wildex.model.cache.usersettings.UserSettingsCache
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepositoryFirestore
@@ -56,7 +57,7 @@ object RepositoryProvider {
   val authRepository: AuthRepository by lazy { AuthRepositoryFirebase(Firebase.auth) }
   val postRepository: PostsRepository by lazy { PostsRepositoryFirestore(Firebase.firestore) }
   val userRepository: UserRepository by lazy {
-    val cache = UserCache(appContext, connectivityObserver)
+    val cache = UserCache(appContext.userDataStore, connectivityObserver)
     UserRepositoryFirestore(Firebase.firestore, cache)
   }
   val likeRepository: LikeRepository by lazy { LikeRepositoryFirestore(Firebase.firestore) }

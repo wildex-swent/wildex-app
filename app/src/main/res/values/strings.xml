@@ -141,6 +141,10 @@
     <string name="submitting">Submitting…</string>
     <string name="submitted">Submit!</string>
 
+    <!-- Uploading Animation -->
+    <string name="post_upload">Adding your sighting to the wilderness…</string>
+    <string name="report_upload">Publishing your report…</string>
+
     <!-- Report screen -->
     <string name="report_title_regular">My Reports</string>
     <string name="report_title_professional">Reports</string>

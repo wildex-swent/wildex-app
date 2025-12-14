@@ -21,6 +21,7 @@ import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.animation.UploadingAnimation
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -108,6 +109,8 @@ fun CameraScreen(
                 photoUri = uiState.currentImageUri!!,
                 modifier = Modifier.testTag(CameraScreenTestTags.DETECTING_SCREEN),
             )
+        uiState.isLoading && uiState.animalDetectResponse != null ->
+            UploadingAnimation(forPost = true)
         uiState.isLoading -> LoadingScreen()
         uiState.animalDetectResponse != null ->
             PostCreationScreen(

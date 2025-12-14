@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -11,6 +12,8 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotDisplayed
+import androidx.compose.ui.test.isOff
+import androidx.compose.ui.test.isOn
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
@@ -949,4 +952,123 @@ class HomeScreenTest {
     assertTrue(homeScreenVM.uiState.value.postsFilters.onlyFriendsPosts)
     assertFalse(homeScreenVM.uiState.value.postsFilters.onlyMyPosts)
   }
+
+  @Test
+  fun testFilterValuesInFiltersManager() {
+    val fromAuthor: String? by mutableStateOf("John")
+    val fromPlace: String? by mutableStateOf("EPFL")
+    val ofAnimal: String? by mutableStateOf("Cat")
+    val onlyFriendsPosts by mutableStateOf(true)
+    val onlyMyPosts by mutableStateOf(false)
+
+    composeTestRule.setContent {
+      FiltersManager(
+          postsFilters =
+              PostsFilters(
+                  fromAuthor = fromAuthor,
+                  fromPlace = fromPlace,
+                  ofAnimal = ofAnimal,
+                  onlyFriendsPosts = onlyFriendsPosts,
+                  onlyMyPosts = onlyMyPosts),
+          onFilterChange =
+              OnFilterChange(
+                  onFromAuthorChange = {},
+                  onFromPlaceChange = {},
+                  onOfAnimalChange = {},
+                  onOnlyFriendsPostsChange = {},
+                  onOnlyMyPostsChange = {},
+              ),
+          onDismissRequest = {},
+          onApply = {},
+          onReset = {},
+      )
+    }
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+        .assert(hasText("John"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE)
+        .assert(hasText("EPFL"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL)
+        .assert(hasText("Cat"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS)
+        .assert(isOn())
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).assert(isOff())
+  }
+
+  /*@Test
+  fun testDisplayMatchingUsers() {
+      val matchingUsers = runBlocking {
+          listOf(
+              userRepository.getUser("currentUserId-1"),
+              userRepository.getUser("poster0")
+          )
+      }
+
+      var fromAuthor: String? by mutableStateOf(null)
+      val expanded by mutableStateOf(true)
+
+      composeTestRule.setContent {
+          FiltersManager(
+              postsFilters = PostsFilters(fromAuthor = fromAuthor),
+              onFilterChange = OnFilterChange(
+                  onFromAuthorChange = { fromAuthor = it },
+                  onFromPlaceChange = {},
+                  onOfAnimalChange = {},
+                  onOnlyFriendsPostsChange = {},
+                  onOnlyMyPostsChange = {}
+              ),
+              onDismissRequest = {},
+              onApply = {},
+              onReset = {},
+          )
+
+          // Simulate matching users
+          LazyColumn(modifier = Modifier.heightIn(max = (4 * 56).dp)) {
+              items(count = matchingUsers.size) { index ->
+                  val user = matchingUsers[index]
+                  ListItem(
+                      headlineContent = {
+                          Text("${user.name} ${user.surname}", style = typography.bodyLarge)
+                      },
+                      supportingContent = {
+                          Text(text = user.username, style = typography.bodyMedium)
+                      },
+                      leadingContent = {
+                          ClickableProfilePicture(
+                              modifier = Modifier.size(45.dp),
+                              profileId = user.userId,
+                              profilePictureURL = user.profilePictureURL,
+                              profileUserType = user.userType,
+                              onProfile = {
+                                  // Simulate the profile click action
+                                  fromAuthor = user.username
+                                  expanded = false
+                              }
+                          )
+                      },
+                      colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
+                      modifier = Modifier.fillMaxWidth().clickable {
+                          fromAuthor = user.username
+                          expanded = false
+                      }
+                  )
+              }
+          }
+      }
+
+      // Assert: Ensure that the matching users are displayed
+      composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+      composeTestRule.onNodeWithText("johndoe").assertIsDisplayed()
+      composeTestRule.onNodeWithText("Jane Smith").assertIsDisplayed()
+      composeTestRule.onNodeWithText("janesmith").assertIsDisplayed()
+  }*/
+
 }

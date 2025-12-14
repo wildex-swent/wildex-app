@@ -9,6 +9,7 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 private const val USER_ANIMALS_COLLECTION_PATH = "userAnimals"
@@ -248,5 +249,88 @@ class UserAnimalsRepositoryFirestoreTest : FirestoreTest(USER_ANIMALS_COLLECTION
     }
 
     assertTrue(exceptionThrown)
+  }
+
+  @Test
+  fun getAllAnimalsByUserUsesCacheWhenPresent() {
+    runTest {
+      animalRepository.addAnimal(animal1)
+      animalRepository.addAnimal(animal2)
+      val cached =
+          UserAnimals(
+              userId = user1.userId,
+              animalsId = listOf(animal1.animalId, animal2.animalId),
+              animalsCount = 2)
+      userAnimalsCache.saveUserAnimals(cached)
+
+      val animals = repository.getAllAnimalsByUser(user1.userId)
+      assertEquals(2, animals.size)
+      assertTrue(animals.contains(animal1))
+      assertTrue(animals.contains(animal2))
+    }
+  }
+
+  @Test
+  fun getAnimalsCountOfUserUsesCacheWhenPresent() {
+    runTest {
+      val cached = UserAnimals(userId = user1.userId, animalsId = listOf(), animalsCount = 0)
+      userAnimalsCache.saveUserAnimals(cached)
+      assertEquals(0, repository.getAnimalsCountOfUser(user1.userId))
+    }
+  }
+
+  @Test
+  fun addAnimalToUserAnimalsDoesNotDuplicateAnimal() {
+    runTest {
+      animalRepository.addAnimal(animal1)
+      repository.initializeUserAnimals(user1.userId)
+      repository.addAnimalToUserAnimals(user1.userId, animal1.animalId)
+      repository.addAnimalToUserAnimals(user1.userId, animal1.animalId)
+
+      assertEquals(1, repository.getAllAnimalsByUser(user1.userId).size)
+      assertEquals(1, repository.getAnimalsCountOfUser(user1.userId))
+    }
+  }
+
+  @Test
+  fun deleteAnimalToUserAnimalsDoesNothingIfAnimalMissing() {
+    runTest {
+      animalRepository.addAnimal(animal1)
+      animalRepository.addAnimal(animal2)
+      repository.initializeUserAnimals(user1.userId)
+      repository.addAnimalToUserAnimals(user1.userId, animal1.animalId)
+      repository.addAnimalToUserAnimals(user1.userId, animal2.animalId)
+      repository.deleteAnimalToUserAnimals(user1.userId, animal1.animalId)
+      repository.deleteAnimalToUserAnimals(user1.userId, animal1.animalId)
+
+      assertEquals(1, repository.getAllAnimalsByUser(user1.userId).size)
+      assertEquals(1, repository.getAnimalsCountOfUser(user1.userId))
+    }
+  }
+
+  @Test
+  fun getAllAnimalByUserSavesResultToCache() {
+    runTest {
+      animalRepository.addAnimal(animal1)
+      repository.initializeUserAnimals(user1.userId)
+      repository.addAnimalToUserAnimals(user1.userId, animal1.animalId)
+      userAnimalsCache.clearAll()
+
+      repository.getAllAnimalsByUser(user1.userId)
+      val cached = userAnimalsCache.getUserAnimals(user1.userId)
+      assertEquals(1, cached?.animalsCount)
+      assertTrue(cached?.animalsId?.contains(animal1.animalId) == true)
+    }
+  }
+
+  @Test
+  fun refreshCacheClearsUSerAnimalsCache() {
+    runTest {
+      val cached =
+          UserAnimals(userId = user1.userId, animalsId = listOf(animal1.animalId), animalsCount = 1)
+      userAnimalsCache.saveUserAnimals(cached)
+      repository.refreshCache()
+      assertNull(userAnimalsCache.getUserAnimals(user1.userId))
+    }
   }
 }

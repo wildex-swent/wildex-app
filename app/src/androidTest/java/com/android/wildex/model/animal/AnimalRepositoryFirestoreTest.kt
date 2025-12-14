@@ -10,10 +10,11 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
-const val ANIMAL_COLLECTION_PATH = "animal"
+const val ANIMAL_COLLECTION_PATH = "animals"
 
 class AnimalRepositoryFirestoreTest : FirestoreTest(ANIMAL_COLLECTION_PATH) {
   private val animalCache = FakeAnimalCache()
@@ -114,5 +115,96 @@ class AnimalRepositoryFirestoreTest : FirestoreTest(ANIMAL_COLLECTION_PATH) {
 
     val animals = repository.getAllAnimals()
     assertTrue(animals.isEmpty())
+  }
+
+  @Test
+  fun getAnimalUsesCacheAfterFirstFetch() {
+    runTest {
+      repository.addAnimal(animal1)
+      assertEquals(animal1, repository.getAnimal(animal1.animalId))
+
+      Firebase.firestore
+          .collection(ANIMAL_COLLECTION_PATH)
+          .document(animal1.animalId)
+          .update("name", "tampered")
+          .await()
+
+      assertEquals(animal1.name, repository.getAnimal(animal1.animalId).name)
+    }
+  }
+
+  @Test
+  fun getAllAnimalsUsesCacheWhenAvailable() {
+    runTest {
+      repository.addAnimal(animal1)
+      repository.addAnimal(animal2)
+      val first = repository.getAllAnimals()
+      assertEquals(2, first.size)
+
+      Firebase.firestore
+          .collection(ANIMAL_COLLECTION_PATH)
+          .document(animal1.animalId)
+          .update("name", "tampered")
+          .await()
+      val second = repository.getAllAnimals()
+      assertEquals(first, second)
+    }
+  }
+
+  @Test
+  fun refreshCacheClearsAnimalCache() {
+    runTest {
+      repository.addAnimal(animal1)
+      assertEquals(animal1, repository.getAnimal(animal1.animalId))
+      repository.refreshCache()
+      assertNull(animalCache.getAnimal(animal1.animalId))
+      assertEquals(animal1, repository.getAnimal(animal1.animalId))
+    }
+  }
+
+  @Test
+  fun addAnimalWithExistingNameIsIgnored() {
+    runTest {
+      repository.addAnimal(animal1)
+      repository.addAnimal(animal1.copy(animalId = "differentId", pictureURL = "differentURL"))
+      val animals = repository.getAllAnimals()
+      assertEquals(1, animals.size)
+      assertEquals(animal1, animals.first())
+    }
+  }
+
+  @Test
+  fun addAnimalWhenAnimalExistsQueryFailsDoesNotCrash() {
+    runTest {
+      val badRepo =
+          AnimalRepositoryFirestore(Firebase.firestore.collection("abc").firestore, animalCache)
+      badRepo.addAnimal(animal1)
+      assertTrue(badRepo.getAllAnimals().isNotEmpty())
+    }
+  }
+
+  @Test
+  fun convertToAnimalWhenDocumentThrowsExceptionReturnsNull() {
+    runTest {
+      Firebase.firestore
+          .collection(ANIMAL_COLLECTION_PATH)
+          .document("badAnimal")
+          .set(mapOf("name" to 123))
+          .await()
+      assertTrue(repository.getAllAnimals().isEmpty())
+    }
+  }
+
+  @Test
+  fun getAnimalWithMissingRequiredFieldReturnsNotFound() {
+    runTest {
+      Firebase.firestore
+          .collection(ANIMAL_COLLECTION_PATH)
+          .document("missingFields")
+          .set(mapOf("name" to "n", "pictureURL" to "url"))
+          .await()
+      val exception = runCatching { repository.getAnimal("missingFields") }.exceptionOrNull()
+      assertTrue(exception is IllegalArgumentException)
+    }
   }
 }

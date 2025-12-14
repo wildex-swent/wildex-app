@@ -80,7 +80,6 @@ import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
-import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.mapbox.geojson.Point
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -152,75 +151,42 @@ fun ReportScreen(
         )
       },
   ) { innerPadding ->
-    if (isOnline) {
-      ReportScreenContent(
-          innerPadding = innerPadding,
-          uiState = uiState,
-          reportScreenViewModel = reportScreenViewModel,
-          context = context,
-          onProfileClick = onProfileClick,
-          onReportClick = onReportClick,
-          onSubmitReportClick = onSubmitReportClick,
-      )
-    } else {
-      OfflineScreen(innerPadding = innerPadding)
-    }
-  }
-}
+    val pullState = rememberPullToRefreshState()
 
-/**
- * Displays the content of the report screen for when the user is online.
- *
- * @param innerPadding The padding values for the inner content.
- * @param uiState The UI state of the report screen.
- * @param reportScreenViewModel The view model for the report screen.
- * @param context The context of the application.
- * @param onProfileClick The function to be called when a profile picture is clicked.
- * @param onReportClick The function to be called when a report is clicked.
- * @param onSubmitReportClick The function to be called when the submit report button is clicked.
- */
-@Composable
-private fun ReportScreenContent(
-    innerPadding: PaddingValues,
-    uiState: ReportScreenUIState,
-    reportScreenViewModel: ReportScreenViewModel,
-    context: Context,
-    onProfileClick: (Id) -> Unit,
-    onReportClick: (Id) -> Unit,
-    onSubmitReportClick: () -> Unit,
-) {
-  val pullState = rememberPullToRefreshState()
-
-  Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-    PullToRefreshBox(
-        state = pullState,
-        isRefreshing = uiState.isRefreshing,
-        onRefresh = { reportScreenViewModel.refreshUIState() },
-        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
-    ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.reports.isEmpty() -> NoReportsView()
-        else -> {
-          ReportsView(
-              reports = uiState.reports,
-              userId = uiState.currentUser.userId,
-              onProfileClick = onProfileClick,
-              onReportClick = onReportClick,
-          )
+    Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+      PullToRefreshBox(
+          state = pullState,
+          isRefreshing = uiState.isRefreshing,
+          onRefresh = {
+            if (isOnline) reportScreenViewModel.refreshUIState()
+            else reportScreenViewModel.refreshOffline()
+          },
+          modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
+      ) {
+        when {
+          uiState.isError -> LoadingFail()
+          uiState.isLoading -> LoadingScreen()
+          uiState.reports.isEmpty() -> NoReportsView()
+          else -> {
+            ReportsView(
+                reports = uiState.reports,
+                userId = uiState.currentUser.userId,
+                onProfileClick = onProfileClick,
+                onReportClick = onReportClick,
+            )
+          }
         }
       }
+      // Hidden buttons
+      Box(
+          modifier =
+              Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp, vertical = 8.dp)) {
+            ReportScreenButtons(
+                onSubmitReportClick = onSubmitReportClick,
+                context = context,
+            )
+          }
     }
-    // Hidden buttons
-    Box(
-        modifier =
-            Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp, vertical = 8.dp)) {
-          ReportScreenButtons(
-              onSubmitReportClick = onSubmitReportClick,
-              context = context,
-          )
-        }
   }
 }
 

@@ -89,7 +89,7 @@ class CollectionScreenViewModel(
               isRefreshing = false)
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load collection.")
-      _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
+      _uiState.value = _uiState.value.copy(isLoading = false, isError = true, isRefreshing = false)
     }
   }
 

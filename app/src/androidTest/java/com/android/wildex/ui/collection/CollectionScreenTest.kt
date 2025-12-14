@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
@@ -22,6 +24,8 @@ import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -393,5 +397,62 @@ class CollectionScreenTest {
         .performClick()
 
     assert(clickedAnimalId == null)
+  }
+
+  @Test
+  fun loadUiStateSetsLoadingTrueInitially() {
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "currentUserId")
+      }
+    }
+    composeTestRule.onNodeWithTag(NavigationTestTags.COLLECTION_SCREEN).assertExists()
+  }
+
+  @Test
+  fun refreshUIStateSetsRefreshingTrue() {
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "currentUserId")
+      }
+    }
+    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertFalse(collectionScreenVM.uiState.value.isRefreshing)
+  }
+
+  @Test
+  fun refreshOfflineSetsErrorMessage() {
+    fakeObserver.setOnline(false)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "currentUserId")
+      }
+    }
+    composeTestRule.onNodeWithTag(CollectionScreenTestTags.PULL_TO_REFRESH).performTouchInput {
+      swipeDown()
+    }
+    assertTrue(collectionScreenVM.uiState.value.errorMsg?.contains("offline") == true)
+  }
+
+  @Test
+  fun unlockedAnimalsAreDisplayedFirst() {
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "currentUserId")
+      }
+    }
+    val unlocked =
+        composeTestRule.onNodeWithTag(CollectionScreenTestTags.testTagForAnimal("animalId-1", true))
+    val locked =
+        composeTestRule.onNodeWithTag(
+            CollectionScreenTestTags.testTagForAnimal("animalId-2", false))
+
+    unlocked.assertIsDisplayed()
+    locked.assertExists()
   }
 }

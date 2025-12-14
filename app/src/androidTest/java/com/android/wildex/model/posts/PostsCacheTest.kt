@@ -34,6 +34,7 @@ class PostCacheTest : FirestoreTest(POSTS_COLLECTION_PATH) {
   private lateinit var db: FirebaseFirestore
   private lateinit var postRepository: PostsRepositoryFirestore
   private val testScope = TestScope(UnconfinedTestDispatcher())
+  private val staleTime = System.currentTimeMillis() - (20 * 60 * 1000L)
 
   private val post =
       Post(
@@ -45,6 +46,19 @@ class PostCacheTest : FirestoreTest(POSTS_COLLECTION_PATH) {
           date = Timestamp(Date(0)),
           animalId = "animal_456",
       )
+  private val postA1 =
+      Post(
+          postId = "p1",
+          authorId = "authorA",
+          pictureURL = "url1",
+          location = null,
+          description = "d1",
+          date = Timestamp(Date(0)),
+          animalId = "animal1",
+      )
+
+  private val postA2 = postA1.copy(postId = "p2", description = "d2")
+  private val postB1 = postA1.copy(postId = "p3", authorId = "authorB")
 
   @Before
   override fun setUp() {
@@ -115,5 +129,95 @@ class PostCacheTest : FirestoreTest(POSTS_COLLECTION_PATH) {
       assertEquals(post, cache.getPost(post.postId))
       assertEquals(post, postRepository.getPost(post.postId))
     }
+  }
+
+  @Test
+  fun offlineAndEmptyCache_getAllPostsByAuthorReturnsEmptyList() = runTest {
+    connectivityObserver.setOnline(false)
+    cache.clearAll()
+
+    val result = cache.getAllPostsByAuthor("authorA")
+    assertEquals(emptyList<Post>(), result)
+  }
+
+  @Test
+  fun onlineAndNoMatchingPosts_getAllPostsByAuthorReturnsNull() = runTest {
+    connectivityObserver.setOnline(true)
+    cache.savePosts(listOf(postB1))
+
+    val result = cache.getAllPostsByAuthor("authorA")
+    assertNull(result)
+  }
+
+  @Test
+  fun getAllPostsByAuthorReturnsOnlyMatchingPosts_whenFreshAndOnline() = runTest {
+    connectivityObserver.setOnline(true)
+    cache.savePosts(listOf(postA1, postA2, postB1))
+
+    val result = cache.getAllPostsByAuthor("authorA")
+    assertEquals(2, result?.size)
+    assertEquals(setOf("p1", "p2"), result?.map { it.postId }?.toSet())
+  }
+
+  @Test
+  fun onlineAndStaleMatchingPosts_getAllPostsByAuthorReturnsNull() = runTest {
+    connectivityObserver.setOnline(true)
+
+    val staleProtoA1 = postA1.toProto().toBuilder().setLastUpdated(staleTime).build()
+    dataStore.updateData { it.toBuilder().putPosts(postA1.postId, staleProtoA1).build() }
+
+    val result = cache.getAllPostsByAuthor("authorA")
+    assertNull(result)
+  }
+
+  @Test
+  fun deletePostsByUserRemovesAllMatchingPosts() = runTest {
+    connectivityObserver.setOnline(true)
+    cache.savePosts(listOf(postA1, postA2, postB1))
+
+    cache.deletePostsByUser("authorA")
+
+    val remaining = cache.getAllPosts()
+    assertEquals(1, remaining?.size)
+    assertEquals("authorB", remaining?.first()?.authorId)
+  }
+
+  @Test
+  fun savePostThenDeletePostRemovesIt() = runTest {
+    connectivityObserver.setOnline(true)
+
+    cache.savePost(postA1)
+    assertEquals(postA1, cache.getPost(postA1.postId))
+
+    cache.deletePost(postA1.postId)
+    assertNull(cache.getPost(postA1.postId))
+  }
+
+  @Test
+  fun clearAllRemovesEverything() = runTest {
+    connectivityObserver.setOnline(true)
+    cache.savePosts(listOf(postA1, postB1))
+
+    cache.clearAll()
+
+    assertNull(cache.getAllPosts())
+  }
+
+  @Test
+  fun getAllPosts_offlineAndEmptyCacheReturnsEmptyList() = runTest {
+    connectivityObserver.setOnline(false)
+    cache.clearAll()
+
+    assertEquals(emptyList<Post>(), cache.getAllPosts())
+  }
+
+  @Test
+  fun getAllPosts_onlineAndStaleCacheReturnsNull() = runTest {
+    connectivityObserver.setOnline(true)
+
+    val staleProto = postA1.toProto().toBuilder().setLastUpdated(staleTime).build()
+    dataStore.updateData { it.toBuilder().putPosts(postA1.postId, staleProto).build() }
+
+    assertNull(cache.getAllPosts())
   }
 }

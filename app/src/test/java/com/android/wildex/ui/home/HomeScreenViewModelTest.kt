@@ -184,6 +184,7 @@ class HomeScreenViewModelTest {
     coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
+
     coEvery { userRepository.refreshCache() } coAnswers {}
     coEvery { likeRepository.getLikeForPost("p1") } returns null
     coEvery { likeRepository.getLikeForPost("p2") } returns null

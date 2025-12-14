@@ -16,7 +16,6 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.navigation.NavigationTestTags
-import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp

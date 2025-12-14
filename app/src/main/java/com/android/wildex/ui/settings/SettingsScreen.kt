@@ -10,22 +10,23 @@ import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.Autorenew
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -54,7 +56,6 @@ import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,13 +68,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
@@ -164,9 +163,7 @@ fun SettingsScreen(
       floatingActionButton = {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(LocalWindowInfo.current.containerSize.width.dp / 40, 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
         ) {
           FloatingActionButton(
               onClick = {
@@ -178,14 +175,12 @@ fun SettingsScreen(
               modifier =
                   Modifier.fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
-                      .height(55.dp)
                       .testTag(SettingsScreenTestTags.SIGN_OUT_BUTTON),
           ) {
             Text(
                 text = context.getString(R.string.sign_out),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = colorScheme.onBackground,
-                modifier = Modifier.padding(horizontal = 30.dp),
             )
           }
           FloatingActionButton(
@@ -199,14 +194,12 @@ fun SettingsScreen(
               modifier =
                   Modifier.fillMaxWidth()
                       .border(2.dp, colorScheme.primary, RoundedCornerShape(16.dp))
-                      .height(55.dp)
                       .testTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON),
           ) {
             Text(
                 text = context.getString(R.string.delete_account),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = colorScheme.onPrimary,
-                modifier = Modifier.padding(horizontal = 30.dp),
             )
           }
         }
@@ -355,17 +348,11 @@ fun SettingsContent(
           disabledInactiveContentColor = Color(1),
           disabledInactiveBorderColor = Color(1),
       )
-  val screenHeight = LocalWindowInfo.current.containerSize.height.dp
-  val screenWidth = LocalWindowInfo.current.containerSize.width.dp
   val notifPermissionStatus = notifPermissionState?.status
 
   LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-    val settingHeight = screenHeight / 34
-    val paddingHorizontal = screenWidth / 55
     item {
       EditProfileOption(
-          paddingHorizontal = paddingHorizontal,
-          settingHeight = settingHeight,
           onEditProfileClick = onEditProfileClick,
           isOnline = isOnline,
           onOfflineClick = { viewModel.onOfflineClick() },
@@ -374,8 +361,6 @@ fun SettingsContent(
     }
     item {
       NotificationOption(
-          paddingHorizontal = paddingHorizontal,
-          settingHeight = settingHeight,
           currentNotificationState = uiState.notificationsEnabled,
           onNotificationStateChanged = {
             if (notifPermissionStatus == null || notifPermissionStatus.isGranted)
@@ -391,8 +376,6 @@ fun SettingsContent(
     }
     item {
       UserStatusOption(
-          settingHeight = settingHeight,
-          screenWidth = screenWidth,
           currentUserStatus = uiState.userType,
           groupButtonsColors = groupButtonsColors,
           onUserStatusChanged = { viewModel.setUserType(it) },
@@ -403,9 +386,6 @@ fun SettingsContent(
     }
     item {
       AppearanceModeOption(
-          paddingHorizontal = paddingHorizontal,
-          screenWidth = screenWidth,
-          settingHeight = settingHeight,
           currentAppearanceMode = uiState.appearanceMode,
           onAppearanceModeChanged = {
             viewModel.setAppearanceMode(it)
@@ -429,21 +409,21 @@ fun SettingsContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreenTopBar(onGoBack: () -> Unit) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
         Text(
             modifier = Modifier.testTag(SettingsScreenTestTags.SCREEN_TITLE),
-            text = LocalContext.current.getString(R.string.settings),
+            text = stringResource(R.string.settings),
             style = typography.titleLarge,
         )
       },
       navigationIcon = {
         IconButton(
-            onClick = { onGoBack() },
+            onClick = onGoBack,
             modifier = Modifier.testTag(SettingsScreenTestTags.GO_BACK_BUTTON),
         ) {
           Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              imageVector = Icons.Default.ChevronLeft,
               contentDescription = "Go Back",
               tint = colorScheme.onBackground,
           )
@@ -472,10 +452,6 @@ fun SettingsDivider() {
  * - a title, i.e. the setting's subject
  * - an interactable element allowing to change the setting's value
  *
- * @param settingHeight height of a setting component, depending on the current device's screen
- *   height
- * @param paddingHorizontal padding to be applied horizontally around the Row, depending on the
- *   current device's screen width
  * @param icon icon to display at the start of the Row, representing the setting's subject
  * @param settingName title of the setting
  * @param interactableElement interactable component, placed at the end of the row, that allows
@@ -483,34 +459,35 @@ fun SettingsDivider() {
  */
 @Composable
 fun SettingTemplate(
-    settingHeight: Dp,
-    paddingHorizontal: Dp,
-    testTag: String = "",
+    testTag: String,
     icon: ImageVector,
     settingName: String,
-    interactableElement: @Composable (() -> Unit),
+    interactableElement: @Composable () -> Unit,
 ) {
-  Row(
+  FlowRow(
       modifier =
           Modifier.fillMaxWidth()
-              .height(settingHeight)
-              .padding(horizontal = paddingHorizontal)
-              .testTag(testTag),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.Start,
+              .testTag(testTag)
+              .wrapContentHeight()
+              .padding(horizontal = 12.dp, vertical = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      itemVerticalAlignment = Alignment.CenterVertically,
   ) {
-    Icon(
-        imageVector = icon,
-        contentDescription = settingName,
-        tint = colorScheme.onBackground,
-        modifier = Modifier.padding(end = paddingHorizontal),
-    )
-    Text(
-        text = settingName,
-        color = colorScheme.onBackground,
-        style = typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-        modifier = Modifier.weight(1f),
-    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Icon(
+          imageVector = icon,
+          contentDescription = settingName,
+          tint = colorScheme.onBackground,
+      )
+      Text(
+          text = settingName,
+          color = colorScheme.onBackground,
+          style = typography.titleSmall,
+          maxLines = 1,
+          modifier = Modifier.padding(horizontal = 6.dp),
+      )
+    }
     interactableElement()
   }
 }
@@ -519,23 +496,19 @@ fun SettingTemplate(
  * Edit Profile option that redirects you to the EditProfileScreen when you click on the
  * interactable component
  *
- * @param paddingHorizontal padding to be applied horizontally around the setting's content
- * @param settingHeight height of the edit profile component
  * @param onEditProfileClick callback function to be called when the user clicks on the interactable
  *   component of the setting
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param onOfflineClick callback function to be called when the user is offline
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileOption(
-    paddingHorizontal: Dp,
-    settingHeight: Dp,
     onEditProfileClick: () -> Unit = {},
     isOnline: Boolean,
     onOfflineClick: () -> Unit,
 ) {
   SettingTemplate(
-      settingHeight = settingHeight,
-      paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.EDIT_PROFILE_SETTING,
       icon = Icons.Outlined.Edit,
       settingName = LocalContext.current.getString(R.string.edit_profile),
@@ -556,24 +529,20 @@ fun EditProfileOption(
 /**
  * Notification setting, allowing the user to turn notifications on and off
  *
- * @param paddingHorizontal padding to be applied horizontally around the setting's content
- * @param settingHeight height of the notification component
  * @param currentNotificationState current setting value of the logged in user
  * @param onNotificationStateChanged callback function to be called when the user turns the
  *   notifications on or off
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param onOfflineClick callback function to be called when the user is offline
  */
 @Composable
 fun NotificationOption(
-    paddingHorizontal: Dp,
-    settingHeight: Dp,
     currentNotificationState: Boolean,
     onNotificationStateChanged: (Boolean) -> Unit,
     isOnline: Boolean,
     onOfflineClick: () -> Unit,
 ) {
   SettingTemplate(
-      settingHeight = settingHeight,
-      paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.NOTIFICATIONS_SETTING,
       icon = Icons.Outlined.Notifications,
       settingName = LocalContext.current.getString(R.string.notifications),
@@ -618,24 +587,21 @@ fun NotificationOption(
  * User Status setting, allowing the user to change his status from regular to professional, or the
  * opposite
  *
- * @param settingHeight height of the user status component
- * @param screenWidth width of the current device's screen
  * @param currentUserStatus current user status of the logged in user
  * @param onUserStatusChanged callback function to be called when the user changes his status
  * @param groupButtonsColors colors to be applied to the interactable element, so that it follows
  *   the application's theme
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param onOfflineClick callback function to be called when the user is offline
  */
 @Composable
 fun UserStatusOption(
-    settingHeight: Dp,
-    screenWidth: Dp,
     currentUserStatus: UserType,
     onUserStatusChanged: (UserType) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
     isOnline: Boolean,
     onOfflineClick: () -> Unit,
 ) {
-  val paddingHorizontal = screenWidth / 55
   val context = LocalContext.current
   val options =
       listOf(
@@ -650,13 +616,11 @@ fun UserStatusOption(
   val selectedIndex = UserType.entries.indexOf(currentUserStatus)
 
   SettingTemplate(
-      settingHeight = settingHeight,
-      paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
       icon = Icons.Outlined.Person,
       settingName = context.getString(R.string.user_status),
   ) {
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(5))) {
+    SingleChoiceSegmentedButtonRow {
       options.forEachIndexed { index, option ->
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
@@ -668,13 +632,15 @@ fun UserStatusOption(
             },
             selected = selectedIndex == index,
             colors = groupButtonsColors,
-            modifier = Modifier.height(35.dp).testTag(testTags[index]),
+            modifier = Modifier.testTag(testTags[index]),
         ) {
           Text(
               text = option,
               color =
                   if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-              style = typography.bodySmall.copy(fontSize = 9.sp),
+              style = typography.bodySmall,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
           )
         }
       }
@@ -693,20 +659,16 @@ private fun getUserType(option: String, context: Context): UserType =
  * Appearance mode setting, allowing the user to change the appearance of the app. The user can
  * choose between light and dark mode, or the system's automatic choice of appearance.
  *
- * @param paddingHorizontal padding to be applied horizontally around the setting's content
- * @param screenWidth width of the current device's screen
- * @param settingHeight height of the appearance mode component
  * @param currentAppearanceMode current appearance mode defined in the user's UserSettings
  * @param onAppearanceModeChanged callback function to be called when the user wants to change the
  *   app's appearance mode
  * @param groupButtonsColors colors to be applied to the interactable component, so that it follows
  *   the application's theme
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param onOfflineClick callback function to be called when the user is offline
  */
 @Composable
 fun AppearanceModeOption(
-    paddingHorizontal: Dp,
-    screenWidth: Dp,
-    settingHeight: Dp,
     currentAppearanceMode: AppearanceMode,
     onAppearanceModeChanged: (AppearanceMode) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
@@ -715,8 +677,6 @@ fun AppearanceModeOption(
 ) {
   val context = LocalContext.current
   SettingTemplate(
-      settingHeight = settingHeight,
-      paddingHorizontal = paddingHorizontal,
       testTag = SettingsScreenTestTags.APPEARANCE_MODE_SETTING,
       icon = Icons.Outlined.LightMode,
       settingName = context.getString(R.string.appearance),
@@ -738,7 +698,7 @@ fun AppearanceModeOption(
     val checkedIcons = listOf(Icons.Filled.Autorenew, Icons.Filled.LightMode, Icons.Filled.DarkMode)
     val selectedIndex = AppearanceMode.entries.indexOf(currentAppearanceMode)
 
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(screenWidth.div(4.6f))) {
+    SingleChoiceSegmentedButtonRow {
       options.forEachIndexed { index, option ->
         val vectorTintPair =
             if (index == selectedIndex) Pair(checkedIcons[index], colorScheme.onPrimary)
@@ -752,24 +712,23 @@ fun AppearanceModeOption(
               } else onOfflineClick()
             },
             selected = index == selectedIndex,
-            modifier = Modifier.height(35.dp).testTag(testTags[index]),
-            icon = {},
+            modifier = Modifier.testTag(testTags[index]),
+            icon = {
+              Icon(
+                  imageVector = vectorTintPair.first,
+                  contentDescription = option,
+                  tint = vectorTintPair.second,
+                  modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
+              )
+            },
             colors = groupButtonsColors,
         ) {
-          Row(
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-                imageVector = vectorTintPair.first,
-                contentDescription = option,
-                tint = vectorTintPair.second,
-                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-            )
-
-            Spacer(modifier = Modifier.width(2.dp))
-            AppearanceModeOptionText(option, index, selectedIndex)
-          }
+          Spacer(modifier = Modifier.width(2.dp))
+          Text(
+              text = option,
+              color = vectorTintPair.second,
+              style = typography.bodySmall,
+          )
         }
       }
     }
@@ -783,20 +742,3 @@ private fun getAppearanceMode(option: String, context: Context): AppearanceMode 
       context.getString(R.string.dark_mode) -> AppearanceMode.DARK
       else -> throw IllegalArgumentException("The appearance mode [$option] is not recognized")
     }
-
-/**
- * Displays the text for the appearance mode option.
- *
- * @param option The name of the option.
- * @param index The index of the option.
- * @param selectedIndex The selected index.
- */
-@Composable
-private fun AppearanceModeOptionText(option: String, index: Int, selectedIndex: Int) {
-  Spacer(modifier = Modifier.width(2.dp))
-  Text(
-      text = option,
-      color = if (index == selectedIndex) colorScheme.onPrimary else colorScheme.onBackground,
-      style = typography.bodySmall.copy(fontSize = 9.sp),
-  )
-}

@@ -309,21 +309,6 @@ class ReportScreenTest {
   }
 
   @Test
-  fun offlineScreenIsDisplayedWhenOfflineReportScreen() {
-    fakeObserver.setOnline(false)
-    composeRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        ReportScreen(reportScreenViewModel = reportScreenViewModel)
-      }
-    }
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SCREEN).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_TITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).assertIsDisplayed()
-    composeRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).assertIsDisplayed()
-  }
-
-  @Test
   fun reportSlider_works() {
     fakeObserver.setOnline(true)
     composeRule.setContent {

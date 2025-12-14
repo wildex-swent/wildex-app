@@ -5,9 +5,9 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
-import com.android.wildex.datastore.LocationProto
 import com.android.wildex.datastore.PostCacheStorage
 import com.android.wildex.datastore.PostProto
+import com.android.wildex.model.cache.location.toProto
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.utils.Location
 import com.google.firebase.Timestamp
@@ -69,14 +69,4 @@ fun PostProto.toPost(): Post {
       date = Timestamp(this.date, 0),
       animalId = this.animalId,
   )
-}
-
-fun Location.toProto(): LocationProto {
-  return LocationProto.newBuilder()
-      .setLatitude(this.latitude)
-      .setLongitude(this.longitude)
-      .setName(this.name)
-      .setSpecificName(this.specificName)
-      .setGeneralName(this.generalName)
-      .build()
 }

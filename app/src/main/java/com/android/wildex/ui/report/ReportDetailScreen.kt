@@ -492,8 +492,7 @@ private fun ReportInfoBar(
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-            text =
-                author.username.ifBlank {""},
+            text = author.username.ifBlank { "" },
             style = typography.titleMedium,
             color = colorScheme.onBackground,
             maxLines = 1,

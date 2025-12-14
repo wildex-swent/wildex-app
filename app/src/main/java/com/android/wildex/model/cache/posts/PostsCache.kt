@@ -100,7 +100,11 @@ class PostsCache(
   }
 
   override suspend fun savePosts(posts: List<Post>) {
-    posts.forEach { savePost(it) }
+    postDataStore.updateData { current ->
+      val builder = current.toBuilder()
+      posts.forEach { post -> builder.putPosts(post.postId, post.toProto()) }
+      builder.build()
+    }
   }
 
   override suspend fun deletePost(postId: Id) {

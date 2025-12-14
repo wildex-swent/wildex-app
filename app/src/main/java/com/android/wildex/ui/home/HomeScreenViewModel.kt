@@ -24,6 +24,7 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Represents the UI state of the Home Screen.
@@ -169,22 +172,41 @@ class HomeScreenViewModel(
    * Retrieves posts and converts them to [PostState] objects including like status and author data.
    */
   private suspend fun fetchPosts(): List<PostState> = coroutineScope {
-    postRepository
-        .getAllPosts()
+    val posts = postRepository.getAllPosts()
+
+    val authorMemo = mutableMapOf<Id, Deferred<SimpleUser>>()
+    val animalMemo = mutableMapOf<Id, Deferred<String>>()
+    val authorMutex = Mutex()
+    val animalMutex = Mutex()
+
+    posts
         .map { post ->
           async {
             try {
-              val author = userRepository.getSimpleUser(post.authorId)
+              val authorDeferred =
+                  authorMutex.withLock {
+                    authorMemo.getOrPut(post.authorId) {
+                      async { userRepository.getSimpleUser(post.authorId) }
+                    }
+                  }
+              val animalDeferred =
+                  animalMutex.withLock {
+                    animalMemo.getOrPut(post.animalId) {
+                      async { animalRepository.getAnimal(post.animalId).name }
+                    }
+                  }
+
+              val author = authorDeferred.await()
+              val animalName = animalDeferred.await()
+
               val isLiked =
                   runCatching { likeRepository.getLikeForPost(post.postId) != null }
                       .getOrDefault(false)
-              val animalName = animalRepository.getAnimal(post.animalId).name
               val likeCount =
                   runCatching { likeRepository.getLikesForPost(post.postId).size }.getOrDefault(0)
               val commentCount =
                   runCatching { commentRepository.getAllCommentsByPost(post.postId).size }
                       .getOrDefault(0)
-
               PostState(
                   post = post,
                   author = author,

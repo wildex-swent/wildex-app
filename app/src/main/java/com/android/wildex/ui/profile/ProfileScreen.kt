@@ -175,6 +175,7 @@ fun ProfileScreen(
               onAchievements = onAchievements,
               onCollection = onCollection,
               onMap = onMap,
+              isOnline = isOnline,
               onFriends = onFriends,
               showMap = showMap,
           )
@@ -192,6 +193,7 @@ fun ProfileContent(
     state: ProfileUIState,
     onAchievements: (Id) -> Unit,
     onCollection: (Id) -> Unit,
+    isOnline: Boolean = true,
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
     showMap: Boolean = true,
@@ -204,7 +206,7 @@ fun ProfileContent(
               .verticalScroll(rememberScrollState())
               .testTag(ProfileScreenTestTags.SCROLL)) {
         Spacer(Modifier.height(6.dp))
-        ProfileImageAndName(viewModel = viewModel, state = state)
+        ProfileImageAndName(viewModel = viewModel, state = state, isOnline = isOnline)
 
         Spacer(modifier = Modifier.height(10.dp))
         ProfileDescription(description = user.bio)
@@ -243,7 +245,11 @@ fun ProfileContent(
 
 /** Profile Image And Name Composable */
 @Composable
-fun ProfileImageAndName(viewModel: ProfileScreenViewModel, state: ProfileUIState) {
+fun ProfileImageAndName(
+    viewModel: ProfileScreenViewModel,
+    state: ProfileUIState,
+    isOnline: Boolean = true
+) {
   val name = state.user.name
   val surname = state.user.surname
   val username = state.user.username
@@ -331,7 +337,9 @@ fun ProfileImageAndName(viewModel: ProfileScreenViewModel, state: ProfileUIState
               overflow = TextOverflow.Ellipsis,
           )
         }
-        ProfileFriendInteractable(viewModel, friendStatus, Modifier.weight(1f))
+        if (isOnline) {
+          ProfileFriendInteractable(viewModel, friendStatus, Modifier.weight(1f))
+        }
       }
     }
   }
@@ -654,7 +662,7 @@ fun ReceivedRequestInteractable(
   }
 }
 
-/** Friend Request Button Composable For now, not connected to the backend. */
+/** Friend Request Button Composable */
 @Composable
 fun ProfileFriendInteractable(
     viewModel: ProfileScreenViewModel,

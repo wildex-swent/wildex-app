@@ -8,6 +8,7 @@ import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
@@ -16,6 +17,7 @@ import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.utils.MainDispatcherRule
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -83,7 +85,7 @@ class DeleteUserUseCaseTest {
   fun invokeWhenNoUserExistThrows() {
     mainDispatcherRule.runTest {
       var exceptionThrown = false
-
+      coEvery { userFriendsRepository.getAllFriendsOfUser(userId) } returns emptyList()
       coEvery { userRepository.deleteUser(userId) } throws RuntimeException("bim-boom")
       coEvery { userSettingsRepository.deleteUserSettings(userId) } throws
           RuntimeException("bim-boom")
@@ -112,12 +114,21 @@ class DeleteUserUseCaseTest {
   fun invokeWhenUserExistsIsSuccess() {
     mainDispatcherRule.runTest {
       var exceptionThrown = false
+      val f1 = mockk<User> { every { userId } returns "friend1" }
+      val f2 = mockk<User> { every { userId } returns "friend2" }
 
       coEvery { userRepository.deleteUser(userId) } just Runs
       coEvery { userSettingsRepository.deleteUserSettings(userId) } just Runs
       coEvery { userAnimalsRepository.deleteUserAnimals(userId) } just Runs
       coEvery { userAchievementsRepository.deleteUserAchievements(userId) } just Runs
       coEvery { userFriendsRepository.deleteUserFriendsOfUser(userId) } just Runs
+      coEvery { userFriendsRepository.getAllFriendsOfUser(userId) } returns listOf(f1, f2)
+      coEvery {
+        userFriendsRepository.deleteFriendToUserFriendsOfUser(friendId = userId, userId = "friend1")
+      } just Runs
+      coEvery {
+        userFriendsRepository.deleteFriendToUserFriendsOfUser(friendId = userId, userId = "friend2")
+      } just Runs
       coEvery { friendRequestRepository.deleteAllFriendRequestsOfUser(userId) } just Runs
       coEvery { postsRepository.deletePostsByUser(userId) } just Runs
       coEvery { reportRepository.deleteReportsByUser(userId) } just Runs
@@ -130,7 +141,7 @@ class DeleteUserUseCaseTest {
 
       try {
         useCase(userId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         exceptionThrown = true
       }
 

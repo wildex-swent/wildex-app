@@ -22,7 +22,6 @@ class FakePostsCache : IPostsCache {
   }
 
   override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>? {
-    // Assuming this has the same meaning in your interface
     val posts = cache.values.filter { it.authorId == authorId }
     return posts.ifEmpty { null }
   }

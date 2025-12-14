@@ -47,7 +47,7 @@ data class HomeUIState(
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
-    val postsFilters: PostsFilters = PostsFilters()
+    val postsFilters: PostsFilters = PostsFilters(),
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -89,7 +89,7 @@ data class PostsFilters(
     val onlyFriendsPosts: Boolean = false,
     val ofAnimal: String? = null,
     val fromPlace: String? = null,
-    val fromAuthor: SimpleUser? = null
+    val fromAuthor: SimpleUser? = null,
 )
 
 /**
@@ -134,6 +134,7 @@ class HomeScreenViewModel(
     try {
       if (calledFromRefresh) {
         userRepository.refreshCache()
+        postRepository.refreshCache()
       }
       AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val user = userRepository.getSimpleUser(currentUserId)
@@ -146,7 +147,8 @@ class HomeScreenViewModel(
               isLoading = false,
               errorMsg = null,
               isError = false,
-              postsFilters = PostsFilters())
+              postsFilters = PostsFilters(),
+          )
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -189,7 +191,8 @@ class HomeScreenViewModel(
                   isLiked = isLiked,
                   animalName = animalName,
                   likeCount = likeCount,
-                  commentsCount = commentCount)
+                  commentsCount = commentCount,
+              )
             } catch (_: Exception) {
               null
             }
@@ -246,7 +249,7 @@ class HomeScreenViewModel(
       onlyFriendsPosts: Boolean = _uiState.value.postsFilters.onlyFriendsPosts,
       ofAnimal: String? = _uiState.value.postsFilters.ofAnimal,
       fromPlace: String? = _uiState.value.postsFilters.fromPlace,
-      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor
+      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor,
   ) {
     _uiState.value =
         _uiState.value.copy(
@@ -255,7 +258,8 @@ class HomeScreenViewModel(
                     onlyFriendsPosts = onlyFriendsPosts,
                     ofAnimal = ofAnimal,
                     fromPlace = fromPlace,
-                    fromAuthor = fromAuthor))
+                    fromAuthor = fromAuthor,
+                ))
   }
 
   /**

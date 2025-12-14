@@ -83,6 +83,8 @@ object LocalRepositories {
       listOfPosts.removeIf { it.authorId == userId }
     }
 
+    override suspend fun refreshCache() {}
+
     override fun clear() {
       listOfPosts.clear()
     }

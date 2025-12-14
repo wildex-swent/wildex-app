@@ -1,6 +1,7 @@
 package com.android.wildex.model.cache.posts
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import com.android.wildex.datastore.PostCacheStorage
 import com.android.wildex.model.ConnectivityObserver
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.utils.Id
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.map
 private const val STALE_DURATION_MS = 10 * 60 * 1000L
 
 class PostsCache(
-    private val context: Context,
+    private val postDataStore: DataStore<PostCacheStorage>,
     private val connectivityObserver: ConnectivityObserver,
 ) : IPostsCache {
 
@@ -22,7 +23,7 @@ class PostsCache(
   }
 
   override suspend fun getPost(postId: Id): Post? {
-    return context.postDataStore.data
+    return postDataStore.data
         .map {
           val cached = it.postsMap[postId]
           if (cached != null && !isStale(cached.lastUpdated)) {
@@ -36,7 +37,7 @@ class PostsCache(
 
   override suspend fun getAllPosts(): List<Post>? {
     val posts =
-        context.postDataStore.data
+        postDataStore.data
             .map { proto ->
               val posts = proto.postsMap.values
               if (posts.isNotEmpty() && posts.all { !isStale(it.lastUpdated) }) {
@@ -53,7 +54,7 @@ class PostsCache(
 
   override suspend fun getAllPostsByAuthor(authorId: Id): List<Post>? {
     val posts =
-        context.postDataStore.data
+        postDataStore.data
             .map { proto ->
               val posts = proto.postsMap.values.filter { it.authorId == authorId }
               if (posts.isNotEmpty() && posts.all { !isStale(it.lastUpdated) }) {
@@ -70,7 +71,7 @@ class PostsCache(
 
   override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>? {
     val posts =
-        context.postDataStore.data
+        postDataStore.data
             .map { proto ->
               val posts = proto.postsMap.values.filter { it.authorId == authorId }
               if (posts.isNotEmpty() && posts.all { !isStale(it.lastUpdated) }) {
@@ -86,7 +87,7 @@ class PostsCache(
   }
 
   override suspend fun deletePostsByUser(userId: Id) {
-    context.postDataStore.updateData {
+    postDataStore.updateData {
       val builder = it.toBuilder()
       val postsToDelete = it.postsMap.values.filter { postProto -> postProto.authorId == userId }
       postsToDelete.forEach { postProto -> builder.removePosts(postProto.postId) }
@@ -95,9 +96,7 @@ class PostsCache(
   }
 
   override suspend fun savePost(post: Post) {
-    context.postDataStore.updateData {
-      it.toBuilder().putPosts(post.postId, post.toProto()).build()
-    }
+    postDataStore.updateData { it.toBuilder().putPosts(post.postId, post.toProto()).build() }
   }
 
   override suspend fun savePosts(posts: List<Post>) {
@@ -105,10 +104,10 @@ class PostsCache(
   }
 
   override suspend fun deletePost(postId: Id) {
-    context.postDataStore.updateData { it.toBuilder().removePosts(postId).build() }
+    postDataStore.updateData { it.toBuilder().removePosts(postId).build() }
   }
 
   override suspend fun clearAll() {
-    context.postDataStore.updateData { it.toBuilder().clearPosts().build() }
+    postDataStore.updateData { it.toBuilder().clearPosts().build() }
   }
 }

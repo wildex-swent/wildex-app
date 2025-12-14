@@ -170,6 +170,9 @@ class HomeScreenViewModelTest {
     animalRepository = mockk()
     userSettingsRepository = mockk()
     userFriendsRepository = mockk()
+    coEvery { userRepository.refreshCache() } coAnswers {}
+    coEvery { postsRepository.refreshCache() } coAnswers {}
+
     viewModel =
         HomeScreenViewModel(
             postsRepository,

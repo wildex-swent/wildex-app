@@ -1,6 +1,7 @@
 package com.android.wildex.ui.settings
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -83,6 +84,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
@@ -138,17 +140,16 @@ fun SettingsScreen(
   val isOnline by connectivityObserver.isOnline.collectAsState()
 
   val validSdk = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-  val notifPermissionLauncher =
+  val notifPermissionState =
       if (validSdk)
           rememberPermissionState(
               permission = Manifest.permission.POST_NOTIFICATIONS,
               onPermissionResult = { settingsScreenViewModel.setNotificationsEnabled(it) },
           )
       else null
-  val notifPermissionStatus = notifPermissionLauncher?.status
 
   LaunchedEffect(Unit) {
-    settingsScreenViewModel.loadUIState(notifPermissionStatus?.isGranted ?: true)
+    settingsScreenViewModel.loadUIState(notifPermissionState?.status?.isGranted ?: true)
   }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
@@ -220,17 +221,10 @@ fun SettingsScreen(
             onEditProfileClick = onEditProfileClick,
             paddingValues = paddingValues,
             uiState = uiState,
-            setAppearanceMode = { settingsScreenViewModel.setAppearanceMode(it) },
-            setUserType = { settingsScreenViewModel.setUserType(it) },
-            setNotificationsEnabled = {
-              if (notifPermissionStatus == null || notifPermissionStatus.isGranted)
-                  settingsScreenViewModel.setNotificationsEnabled(it)
-              else if (!notifPermissionStatus.shouldShowRationale)
-                  notifPermissionLauncher.launchPermissionRequest()
-              else showSettingsDialog = true
-            },
             isOnline = isOnline,
-            onOfflineClick = { settingsScreenViewModel.onOfflineClick() },
+            viewModel = settingsScreenViewModel,
+            notifPermissionState = notifPermissionState,
+            showDialog = { showSettingsDialog = true },
         )
         if (showDeletionValidation) {
           AlertDialog(
@@ -330,22 +324,21 @@ fun SettingsPermissionDialog(dismissDialog: () -> Unit) {
  * @param paddingValues padding values of the scaffold passed down to the column
  * @param uiState settings UI state, containing info on the current notification enablement status,
  *   the current user status and the current appearance mode
- * @param setNotificationsEnabled callback function to be called when the user wants to enable or
- *   disable notifications
- * @param setUserType callback function to be called when the user wants to change his status
- * @param setAppearanceMode callback function to be called when the user wants to change his
- *   appearance mode
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param viewModel settings screen view model
+ * @param notifPermissionState permission state of the notification permission
+ * @param showDialog callback function to be called when the user wants to enable notifications
  */
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsContent(
-    onEditProfileClick: () -> Unit,
     paddingValues: PaddingValues,
     uiState: SettingsUIState,
-    setAppearanceMode: (AppearanceMode) -> Unit = {},
-    setUserType: (UserType) -> Unit = {},
-    setNotificationsEnabled: (Boolean) -> Unit = {},
+    onEditProfileClick: () -> Unit,
     isOnline: Boolean,
-    onOfflineClick: () -> Unit,
+    viewModel: SettingsScreenViewModel,
+    notifPermissionState: PermissionState?,
+    showDialog: () -> Unit,
 ) {
   val groupButtonsColors =
       SegmentedButtonColors(
@@ -364,6 +357,7 @@ fun SettingsContent(
       )
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   val screenWidth = LocalWindowInfo.current.containerSize.width.dp
+  val notifPermissionStatus = notifPermissionState?.status
 
   LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
     val settingHeight = screenHeight / 34
@@ -374,7 +368,7 @@ fun SettingsContent(
           settingHeight = settingHeight,
           onEditProfileClick = onEditProfileClick,
           isOnline = isOnline,
-          onOfflineClick = onOfflineClick,
+          onOfflineClick = { viewModel.onOfflineClick() },
       )
       SettingsDivider()
     }
@@ -383,22 +377,27 @@ fun SettingsContent(
           paddingHorizontal = paddingHorizontal,
           settingHeight = settingHeight,
           currentNotificationState = uiState.notificationsEnabled,
-          onNotificationStateChanged = { setNotificationsEnabled(it) },
+          onNotificationStateChanged = {
+            if (notifPermissionStatus == null || notifPermissionStatus.isGranted)
+                viewModel.setNotificationsEnabled(it)
+            else if (!notifPermissionStatus.shouldShowRationale)
+                notifPermissionState.launchPermissionRequest()
+            else showDialog()
+          },
           isOnline = isOnline,
-          onOfflineClick = onOfflineClick,
+          onOfflineClick = { viewModel.onOfflineClick() },
       )
       SettingsDivider()
     }
     item {
       UserStatusOption(
-          paddingHorizontal = paddingHorizontal,
           settingHeight = settingHeight,
           screenWidth = screenWidth,
           currentUserStatus = uiState.userType,
           groupButtonsColors = groupButtonsColors,
-          onUserStatusChanged = { setUserType(it) },
+          onUserStatusChanged = { viewModel.setUserType(it) },
           isOnline = isOnline,
-          onOfflineClick = onOfflineClick,
+          onOfflineClick = { viewModel.onOfflineClick() },
       )
       SettingsDivider()
     }
@@ -409,12 +408,12 @@ fun SettingsContent(
           settingHeight = settingHeight,
           currentAppearanceMode = uiState.appearanceMode,
           onAppearanceModeChanged = {
-            setAppearanceMode(it)
+            viewModel.setAppearanceMode(it)
             AppTheme.appearanceMode = it
           },
           groupButtonsColors = groupButtonsColors,
           isOnline = isOnline,
-          onOfflineClick = onOfflineClick,
+          onOfflineClick = { viewModel.onOfflineClick() },
       )
       SettingsDivider()
     }
@@ -619,7 +618,6 @@ fun NotificationOption(
  * User Status setting, allowing the user to change his status from regular to professional, or the
  * opposite
  *
- * @param paddingHorizontal padding to be applied horizontally around the setting's content
  * @param settingHeight height of the user status component
  * @param screenWidth width of the current device's screen
  * @param currentUserStatus current user status of the logged in user
@@ -629,7 +627,6 @@ fun NotificationOption(
  */
 @Composable
 fun UserStatusOption(
-    paddingHorizontal: Dp,
     settingHeight: Dp,
     screenWidth: Dp,
     currentUserStatus: UserType,
@@ -638,6 +635,7 @@ fun UserStatusOption(
     isOnline: Boolean,
     onOfflineClick: () -> Unit,
 ) {
+  val paddingHorizontal = screenWidth / 55
   val context = LocalContext.current
   val options =
       listOf(
@@ -664,14 +662,7 @@ fun UserStatusOption(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             onClick = {
               if (isOnline) {
-                val userType =
-                    when (option) {
-                      context.getString(R.string.regular_status) -> UserType.REGULAR
-                      context.getString(R.string.professional_status) -> UserType.PROFESSIONAL
-                      else ->
-                          throw IllegalArgumentException(
-                              "The user type [$option] is not recognized")
-                    }
+                val userType = getUserType(option, context)
                 onUserStatusChanged(userType)
               } else onOfflineClick()
             },
@@ -690,6 +681,13 @@ fun UserStatusOption(
     }
   }
 }
+
+private fun getUserType(option: String, context: Context): UserType =
+    when (option) {
+      context.getString(R.string.regular_status) -> UserType.REGULAR
+      context.getString(R.string.professional_status) -> UserType.PROFESSIONAL
+      else -> throw IllegalArgumentException("The user type [$option] is not recognized")
+    }
 
 /**
  * Appearance mode setting, allowing the user to change the appearance of the app. The user can
@@ -749,15 +747,7 @@ fun AppearanceModeOption(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             onClick = {
               if (isOnline) {
-                val appearanceMode =
-                    when (option) {
-                      context.getString(R.string.system_default) -> AppearanceMode.AUTOMATIC
-                      context.getString(R.string.light_mode) -> AppearanceMode.LIGHT
-                      context.getString(R.string.dark_mode) -> AppearanceMode.DARK
-                      else ->
-                          throw IllegalArgumentException(
-                              "The appearance mode [$option] is not recognized")
-                    }
+                val appearanceMode = getAppearanceMode(option, context)
                 onAppearanceModeChanged(appearanceMode)
               } else onOfflineClick()
             },
@@ -785,6 +775,14 @@ fun AppearanceModeOption(
     }
   }
 }
+
+private fun getAppearanceMode(option: String, context: Context): AppearanceMode =
+    when (option) {
+      context.getString(R.string.system_default) -> AppearanceMode.AUTOMATIC
+      context.getString(R.string.light_mode) -> AppearanceMode.LIGHT
+      context.getString(R.string.dark_mode) -> AppearanceMode.DARK
+      else -> throw IllegalArgumentException("The appearance mode [$option] is not recognized")
+    }
 
 /**
  * Displays the text for the appearance mode option.

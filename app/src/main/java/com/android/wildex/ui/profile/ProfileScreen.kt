@@ -237,7 +237,7 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(14.dp))
         if (showMap) {
-          ProfileMap(id = id, onMap = onMap, pins = state.recentPins)
+          ProfileMap(id = id, onMap = onMap, pins = state.recentPins, isOnline = isOnline)
         }
         Spacer(Modifier.height(12.dp))
       }

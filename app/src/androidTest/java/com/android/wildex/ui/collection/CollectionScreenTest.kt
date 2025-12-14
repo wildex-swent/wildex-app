@@ -1,5 +1,6 @@
 package com.android.wildex.ui.collection
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -16,6 +18,7 @@ import com.android.wildex.ui.navigation.BottomNavigationMenu
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.Tab
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -32,6 +35,7 @@ class CollectionScreenTest {
   private val userAnimalsRepository = LocalRepositories.userAnimalsRepository
   private val userRepository = LocalRepositories.userRepository
 
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
   private lateinit var collectionScreenVM: CollectionScreenViewModel
 
   @Before
@@ -47,7 +51,8 @@ class CollectionScreenTest {
                 "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "France"))
+            country = "France",
+        ))
     userRepository.addUser(
         User(
             userId = "otherUserId",
@@ -59,7 +64,8 @@ class CollectionScreenTest {
                 "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "France"))
+            country = "France",
+        ))
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAnimalsRepository.initializeUserAnimals("otherUserId")
 
@@ -83,7 +89,8 @@ class CollectionScreenTest {
                   "https://media.istockphoto.com/id/1796374503/photo/the-lion-king.webp?b=1&s=612x612&w=0&k=20&c=wbgXbIrm_qtaLcDKF6_Ay8d4ECaYQ5t5UVVzYk1WNS4=",
               name = "Lion",
               species = "Panthera leo",
-              description = "King of the Jungle"))
+              description = "King of the Jungle",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-2",
@@ -91,7 +98,8 @@ class CollectionScreenTest {
                   "https://cdn.pixabay.com/photo/2016/02/19/15/46/labrador-retriever-1210559_1280.jpg",
               name = "Labrador",
               species = "Dog",
-              description = "Man's best friend"))
+              description = "Man's best friend",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-3",
@@ -99,14 +107,16 @@ class CollectionScreenTest {
                   "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cat_November_2010-1a.jpg/250px-Cat_November_2010-1a.jpg",
               name = "Tabby Cat",
               species = "Cat",
-              description = "Man's best frenemy"))
+              description = "Man's best frenemy",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-4",
               pictureURL = "https://www.assuropoil.fr/wp-content/uploads/husky-de-siberie.jpg",
               name = "Husky",
               species = "Dog",
-              description = "Biggest howler"))
+              description = "Biggest howler",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-5",
@@ -114,7 +124,8 @@ class CollectionScreenTest {
                   "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg/960px-Gorille_des_plaines_de_l%27ouest_à_l%27Espace_Zoologique.jpg",
               name = "Gorilla",
               species = "Monkey",
-              description = "Donkey Kong's cousin"))
+              description = "Donkey Kong's cousin",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-6",
@@ -122,14 +133,16 @@ class CollectionScreenTest {
                   "https://cdn.britannica.com/35/3635-050-96241EC1/Scarlet-macaw-ara-macao.jpg",
               name = "Ara Macao",
               species = "Bird",
-              description = "Welcome to Rio de Janeiro!"))
+              description = "Welcome to Rio de Janeiro!",
+          ))
       animalRepository.addAnimal(
           Animal(
               animalId = "animalId-7",
               pictureURL = "https://realaquatics.co.uk/cdn/shop/articles/5.png?v=1634043062",
               name = "Blue Whale",
               species = "Cetacean",
-              description = "Biggest mammal on Earth"))
+              description = "Biggest mammal on Earth",
+          ))
 
       userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-1")
       userAnimalsRepository.addAnimalToUserAnimals("currentUserId", "animalId-3")
@@ -152,12 +165,16 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNoAnimalAndCurrentUser() {
+    fakeObserver.setOnline(true)
     clearRepos()
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
+        )
+      }
     }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
@@ -178,8 +195,13 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenNoAnimalAndOtherUser() {
+    fakeObserver.setOnline(true)
     clearRepos()
-    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "otherUserId")
+      }
+    }
     composeTestRule
         .onNodeWithTag(CollectionScreenTestTags.NO_ANIMAL_TEXT)
         .assertIsDisplayed()
@@ -195,13 +217,17 @@ class CollectionScreenTest {
 
   @Test
   fun profilePictureClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var profileClicked = false
 
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          onProfilePictureClick = { profileClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            onProfilePictureClick = { profileClicked = true },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).performClick()
@@ -210,13 +236,17 @@ class CollectionScreenTest {
 
   @Test
   fun notificationClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var notificationClicked = false
 
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          onNotificationClick = { notificationClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            onNotificationClick = { notificationClicked = true },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).performClick()
@@ -225,11 +255,17 @@ class CollectionScreenTest {
 
   @Test
   fun goBackClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var goBackClicked = false
 
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM, userUid = "otherUserId", onGoBack = { goBackClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "otherUserId",
+            onGoBack = { goBackClicked = true },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.GO_BACK_BUTTON).performClick()
@@ -238,12 +274,15 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenAnimalsAndCurrentUser() {
-
+    fakeObserver.setOnline(true)
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsDisplayed()
@@ -276,7 +315,12 @@ class CollectionScreenTest {
 
   @Test
   fun testTagsAreCorrectlySetWhenAnimalsAndOtherUser() {
-    composeTestRule.setContent { CollectionScreen(collectionScreenVM, userUid = "otherUserId") }
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(collectionScreenVM, userUid = "otherUserId")
+      }
+    }
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).assertIsDisplayed()
@@ -304,14 +348,18 @@ class CollectionScreenTest {
 
   @Test
   fun unlockedAnimalClick_invokesCallback() {
+    fakeObserver.setOnline(true)
     var clickedAnimalId: String? = null
 
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          onAnimalClick = { clickedAnimalId = it },
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            onAnimalClick = { clickedAnimalId = it },
+            bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
+        )
+      }
     }
 
     composeTestRule
@@ -323,14 +371,18 @@ class CollectionScreenTest {
 
   @Test
   fun lockedAnimalClick_doesNotInvokeCallback() {
+    fakeObserver.setOnline(true)
     var clickedAnimalId: String? = null
 
     composeTestRule.setContent {
-      CollectionScreen(
-          collectionScreenVM,
-          userUid = "currentUserId",
-          onAnimalClick = { clickedAnimalId = it },
-          bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        CollectionScreen(
+            collectionScreenVM,
+            userUid = "currentUserId",
+            onAnimalClick = { clickedAnimalId = it },
+            bottomBar = { BottomNavigationMenu(selectedTab = Tab.Collection) },
+        )
+      }
     }
 
     composeTestRule.onNodeWithTag(CollectionScreenTestTags.ANIMAL_LIST).performScrollToIndex(3)

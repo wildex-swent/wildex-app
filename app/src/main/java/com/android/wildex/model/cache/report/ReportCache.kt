@@ -74,7 +74,13 @@ class ReportCache(
     val reports =
         reportDataStore.data
             .map { cacheStorage ->
-              val reports = cacheStorage.reportsMap.values.filter { it.assigneeId == assigneeId }
+              val reports =
+                  cacheStorage.reportsMap.values.filter {
+                    when {
+                      assigneeId == null -> it.assigneeId.isBlank()
+                      else -> it.assigneeId == assigneeId
+                    }
+                  }
               if (reports.isNotEmpty() && reports.all { !isStale(it.lastUpdated) }) {
                 reports.map { it.toReport() }
               } else {

@@ -304,7 +304,8 @@ class ReportScreenTest {
         .assertIsNotDisplayed()
     composeRule
         .onNodeWithTag(ReportScreenTestTags.testTagForReport("reportId2", "full"))
-        .assertIsDisplayed()
+        .assertIsNotDisplayed()
+    composeRule.onNodeWithTag(ReportScreenTestTags.NO_REPORT_TEXT).assertIsDisplayed()
   }
 
   @Test

@@ -91,6 +91,7 @@ class ProfileScreenViewModelTest {
     coEvery { userAnimalsRepository.getAnimalsCountOfUser("user_one_2") } returns 3
     coEvery { userFriendsRepository.getFriendsCountOfUser("user_one_2") } returns 4
     coEvery { userRepository.getUser("user_one_2") } returns u2
+    coEvery { userRepository.refreshCache() } coAnswers {}
   }
 
   @Test

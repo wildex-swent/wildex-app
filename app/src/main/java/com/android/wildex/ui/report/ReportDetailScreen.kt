@@ -492,10 +492,7 @@ private fun ReportInfoBar(
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-            text =
-                author.username.ifBlank {
-                  LocalContext.current.getString(R.string.report_details_bar_title)
-                },
+            text = author.username,
             style = typography.titleMedium,
             color = colorScheme.onBackground,
             maxLines = 1,

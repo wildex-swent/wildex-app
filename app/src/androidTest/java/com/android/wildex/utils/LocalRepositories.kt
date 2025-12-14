@@ -497,6 +497,10 @@ object LocalRepositories {
     override fun clear() {
       listOfReports.clear()
     }
+
+    override suspend fun refreshCache() {
+      listOfReports.clear()
+    }
   }
 
   open class StorageRepositoryImpl() : StorageRepository, ClearableRepository {

@@ -158,6 +158,7 @@ class ReportDetailsScreenViewModel(
     try {
       if (calledFromRefresh) {
         userRepository.refreshCache()
+        reportRepository.refreshCache()
       }
       // ------ Fatal errors ------
       val report = reportRepository.getReport(reportId)

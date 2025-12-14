@@ -156,7 +156,6 @@
     <string name="submit_report">Submit Report</string>
 
     <!-- Report details screen -->
-    <string name="report_details_bar_title">Back</string>
     <string name="report_details_resolved_title">Resolved. Thanks for handling the situation.</string>
     <string name="report_details_resolved_message">With everything taken care of, we\'ll take you back to the reports.</string>
     <string name="report_details_canceled_title">Deleted. If the situation evolves, feel free to reach out again.</string>

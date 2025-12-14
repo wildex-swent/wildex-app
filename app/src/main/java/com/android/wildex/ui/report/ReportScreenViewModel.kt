@@ -104,6 +104,7 @@ class ReportScreenViewModel(
     try {
       if (calledFromRefresh) {
         userRepository.refreshCache()
+        reportRepository.refreshCache()
       }
       val currentUser = userRepository.getSimpleUser(currentUserId)
       _uiState.value = _uiState.value.copy(currentUser = currentUser)

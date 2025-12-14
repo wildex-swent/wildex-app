@@ -78,9 +78,9 @@ import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.map.OfflineAwareMiniMap
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
-import com.android.wildex.ui.profile.StaticMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
@@ -434,14 +434,13 @@ private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerSta
         Box(
             modifier =
                 Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-              StaticMiniMap(
+              OfflineAwareMiniMap(
                   modifier = Modifier.matchParentSize(),
                   pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
                   styleUri = context.getString(R.string.map_style),
                   styleImportId = context.getString(R.string.map_standard_import),
                   isDark = isDark,
                   fallbackZoom = 2.0,
-                  context = context,
               )
               if (loc.specificName.isNotEmpty()) {
                 Row(

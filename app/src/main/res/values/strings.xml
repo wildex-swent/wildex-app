@@ -96,6 +96,10 @@
     <string name="map_my_posts">My posts</string>
     <string name="map_reports">Reports</string>
     <string name="cluster_group_position">%1$d / %2$d</string>
+    <string name="map_offline_placeholder_title">Nothing to display</string>
+    <string name="map_offline_placeholder_subtitle">You’re offline and the map never loaded.</string>
+    <string name="map_offline_placeholder_message">Go online briefly to load part of the map.</string>
+    <string name="map_offline_placeholder_hint">  We promise we’re not hiding anything.</string>
 
     <!-- Achievements screen -->
     <string name="achievements">Achievements</string>
@@ -214,6 +218,10 @@
     <string name="offline_subtitle">Please check your internet connection.</string>
     <string name="offline_message">This is not a bug… it\'s a purr-formance issue :O</string>
     <string name="no_discoveries">No discoveries yet, start exploring!</string>
+    <string name="friends_offline_title">Friends not observed</string>
+    <string name="friends_offline_subtitle">Connection unavailable</string>
+    <string name="friends_offline_message">Reconnect to continue tracking your social habitat.</string>
+
 
     <!-- Post details screen -->
     <string name="post_details_delete_post">Delete post</string>

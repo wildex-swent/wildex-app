@@ -30,6 +30,7 @@ import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.map.OfflineAwareMiniMap
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -77,34 +78,34 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
               )
               .testTag(ProfileScreenTestTags.MAP),
       shape = RoundedCornerShape(14.dp),
-      colors = CardDefaults.elevatedCardColors(containerColor = cs.background)) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-        ) {
-          StaticMiniMap(
-              modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp)),
-              pins = pins,
-              styleUri = styleUri,
-              styleImportId = styleImportId,
-              isDark = isDark,
-              context = context,
-          )
-          Button(
-              onClick = { onMap(id) },
-              modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
-              colors =
-                  ButtonDefaults.buttonColors(
-                      containerColor = cs.onBackground,
-                      contentColor = cs.background,
-                  ),
-          ) {
-            Text(
-                text = LocalContext.current.getString(R.string.view_map),
-                style = typography.titleSmall,
-            )
-          }
-        }
+      colors = CardDefaults.elevatedCardColors(containerColor = cs.background),
+  ) {
+    Column(
+        modifier = Modifier.padding(12.dp),
+    ) {
+      OfflineAwareMiniMap(
+          modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp)),
+          pins = pins,
+          styleUri = styleUri,
+          styleImportId = styleImportId,
+          isDark = isDark,
+      )
+      Button(
+          onClick = { onMap(id) },
+          modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
+          colors =
+              ButtonDefaults.buttonColors(
+                  containerColor = cs.onBackground,
+                  contentColor = cs.background,
+              ),
+      ) {
+        Text(
+            text = LocalContext.current.getString(R.string.view_map),
+            style = typography.titleSmall,
+        )
       }
+    }
+  }
 }
 
 /**
@@ -123,6 +124,7 @@ fun StaticMiniMap(
     fallbackCenter: Point = Point.fromLngLat(6.632, 46.519),
     fallbackZoom: Double = 11.0,
     context: Context,
+    mapViewRef: (MapView) -> Unit = {},
 ) {
   val fitPadding = EdgeInsets(30.0, 30.0, 30.0, 30.0)
 
@@ -132,6 +134,7 @@ fun StaticMiniMap(
   Box(modifier) {
     MapboxMap(modifier = Modifier.matchParentSize(), scaleBar = {}, logo = {}, attribution = {}) {
       MapEffect(localPins, isDark, styleUri, styleImportId) { mapView ->
+        mapViewRef(mapView)
         configureStaticGestures(mapView)
 
         val mapboxMap = mapView.mapboxMap

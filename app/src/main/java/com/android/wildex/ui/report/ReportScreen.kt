@@ -69,18 +69,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
-import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.map.OfflineAwareMiniMap
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
-import com.android.wildex.ui.profile.StaticMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
-import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.mapbox.geojson.Point
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -124,8 +122,6 @@ fun ReportScreen(
 ) {
   val context = LocalContext.current
   val uiState by reportScreenViewModel.uiState.collectAsState()
-  val connectivityObserver = LocalConnectivityObserver.current
-  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -148,22 +144,19 @@ fun ReportScreen(
                   UserType.PROFESSIONAL -> stringResource(R.string.report_title_professional)
                 },
             onNotificationClick = onNotificationClick,
-            onProfilePictureClick = onCurrentProfileClick)
+            onProfilePictureClick = onCurrentProfileClick,
+        )
       },
   ) { innerPadding ->
-    if (isOnline) {
-      ReportScreenContent(
-          innerPadding = innerPadding,
-          uiState = uiState,
-          reportScreenViewModel = reportScreenViewModel,
-          context = context,
-          onProfileClick = onProfileClick,
-          onReportClick = onReportClick,
-          onSubmitReportClick = onSubmitReportClick,
-      )
-    } else {
-      OfflineScreen(innerPadding = innerPadding)
-    }
+    ReportScreenContent(
+        innerPadding = innerPadding,
+        uiState = uiState,
+        reportScreenViewModel = reportScreenViewModel,
+        context = context,
+        onProfileClick = onProfileClick,
+        onReportClick = onReportClick,
+        onSubmitReportClick = onSubmitReportClick,
+    )
   }
 }
 
@@ -195,21 +188,22 @@ private fun ReportScreenContent(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = { reportScreenViewModel.refreshUIState() },
-        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            uiState.reports.isEmpty() -> NoReportsView()
-            else -> {
-              ReportsView(
-                  reports = uiState.reports,
-                  userId = uiState.currentUser.userId,
-                  onProfileClick = onProfileClick,
-                  onReportClick = onReportClick,
-              )
-            }
-          }
+        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.reports.isEmpty() -> NoReportsView()
+        else -> {
+          ReportsView(
+              reports = uiState.reports,
+              userId = uiState.currentUser.userId,
+              onProfileClick = onProfileClick,
+              onReportClick = onReportClick,
+          )
         }
+      }
+    }
     // Hidden buttons
     Box(
         modifier =
@@ -451,7 +445,7 @@ private fun ReportSlider(
             modifier =
                 Modifier.fillMaxSize()
                     .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "map"))) {
-              StaticMiniMap(
+              OfflineAwareMiniMap(
                   modifier = Modifier.matchParentSize(),
                   pins =
                       listOf(
@@ -461,7 +455,7 @@ private fun ReportSlider(
                   styleImportId = context.getString(R.string.map_standard_import),
                   isDark = isDark,
                   fallbackZoom = 4.0,
-                  context = context)
+              )
               Row(
                   verticalAlignment = Alignment.CenterVertically,
                   modifier =
@@ -596,7 +590,8 @@ private fun ReportScreenButtons(
           imageVector = Icons.Default.Add,
           contentDescription = "Expand Actions",
           modifier = Modifier.rotate(rotation),
-          tint = colorScheme.primary)
+          tint = colorScheme.primary,
+      )
     }
   }
 }

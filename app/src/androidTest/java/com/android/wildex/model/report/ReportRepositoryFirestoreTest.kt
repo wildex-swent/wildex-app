@@ -422,5 +422,4 @@ class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
     val cached = reportCache.getAllReports()!!
     assertTrue(cached.isEmpty())
   }
-
 }

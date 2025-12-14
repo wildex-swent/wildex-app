@@ -161,9 +161,9 @@ class ReportRepositoryFirestore(
     cache.deleteReportByAuthor(userId)
   }
 
-    override suspend fun refreshCache() {
-        cache.clearAll()
-    }
+  override suspend fun refreshCache() {
+    cache.clearAll()
+  }
 
   /**
    * Ensures no Report item in the document reference has a specific reportId.

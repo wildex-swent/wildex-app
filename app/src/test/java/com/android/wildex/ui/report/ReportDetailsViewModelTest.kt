@@ -101,6 +101,7 @@ class ReportDetailsViewModelTest {
         )
 
     coEvery { reportRepository.getReport(reportId) } returns report
+    coEvery { reportRepository.refreshCache() } coAnswers {}
     coEvery { userRepository.getSimpleUser(currentUserId) } returns currentUser
     coEvery { userRepository.getSimpleUser(authorId) } returns authorUser
     coEvery { userRepository.getSimpleUser(assigneeId) } returns assigneeUser

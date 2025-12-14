@@ -84,7 +84,7 @@ class ProfileScreenViewModel(
    */
   fun refreshUIState(userId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null)
-    viewModelScope.launch { updateUIState(userId) }
+    viewModelScope.launch { updateUIState(userId, calledFromRefresh = true) }
   }
 
   /**
@@ -103,86 +103,90 @@ class ProfileScreenViewModel(
    *
    * @param userId user whose profile we want to load
    */
-  private suspend fun updateUIState(userId: Id) = coroutineScope {
-    if (userId.isBlank()) {
-      setErrorMsg("Empty user id")
-      _uiState.value =
-          _uiState.value.copy(
-              isLoading = false,
-              isRefreshing = false,
-              isUserOwner = false,
-              isError = true,
-          )
-      return@coroutineScope
-    }
-    try {
-      // 1) Load user fast and show something
-      val user = userRepository.getUser(userId)
+  private suspend fun updateUIState(userId: Id, calledFromRefresh: Boolean = false) =
+      coroutineScope {
+        if (calledFromRefresh) {
+          userRepository.refreshCache()
+        }
+        if (userId.isBlank()) {
+          setErrorMsg("Empty user id")
+          _uiState.value =
+              _uiState.value.copy(
+                  isLoading = false,
+                  isRefreshing = false,
+                  isUserOwner = false,
+                  isError = true,
+              )
+          return@coroutineScope
+        }
+        try {
+          // 1) Load user fast and show something
+          val user = userRepository.getUser(userId)
 
-      _uiState.value =
-          _uiState.value.copy(
-              user = user,
-              isUserOwner = (currentUserId != null && user.userId == currentUserId),
-              isLoading = false,
-              isRefreshing = false,
-              isError = false,
-          )
+          _uiState.value =
+              _uiState.value.copy(
+                  user = user,
+                  isUserOwner = (currentUserId != null && user.userId == currentUserId),
+                  isLoading = false,
+                  isRefreshing = false,
+                  isError = false,
+              )
 
-      // 2) In parallel, load heavy stuff AFTER user is visible
-      viewModelScope.launch {
-        val achievements = fetchAchievements(userId)
-        _uiState.value = _uiState.value.copy(achievements = achievements)
-      }
+          // 2) In parallel, load heavy stuff AFTER user is visible
+          viewModelScope.launch {
+            val achievements = fetchAchievements(userId)
+            _uiState.value = _uiState.value.copy(achievements = achievements)
+          }
 
-      viewModelScope.launch {
-        val currentUserId = currentUserId!!
-        val sentRequests =
-            friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map {
-              it.receiverId
+          viewModelScope.launch {
+            val currentUserId = currentUserId!!
+            val sentRequests =
+                friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map {
+                  it.receiverId
+                }
+            val friendsIds = userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId }
+            val receivedRequests =
+                friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map {
+                  it.senderId
+                }
+            when {
+              _uiState.value.isUserOwner ->
+                  _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.IS_CURRENT_USER)
+              friendsIds.contains(currentUserId) ->
+                  _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.FRIEND)
+              sentRequests.contains(_uiState.value.user.userId) ->
+                  _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_SENT)
+              receivedRequests.contains(_uiState.value.user.userId) ->
+                  _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_RECEIVED)
+              else -> _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.NOT_FRIEND)
             }
-        val friendsIds = userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId }
-        val receivedRequests =
-            friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map {
-              it.senderId
-            }
-        when {
-          _uiState.value.isUserOwner ->
-              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.IS_CURRENT_USER)
-          friendsIds.contains(currentUserId) ->
-              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.FRIEND)
-          sentRequests.contains(_uiState.value.user.userId) ->
-              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_SENT)
-          receivedRequests.contains(_uiState.value.user.userId) ->
-              _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.PENDING_RECEIVED)
-          else -> _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.NOT_FRIEND)
+          }
+
+          viewModelScope.launch {
+            val animalsCount = userAnimalsRepository.getAnimalsCountOfUser(userId)
+            _uiState.value = _uiState.value.copy(animalCount = animalsCount)
+          }
+
+          viewModelScope.launch {
+            val friendsCount = userFriendsRepository.getFriendsCountOfUser(userId)
+            _uiState.value = _uiState.value.copy(friendsCount = friendsCount)
+          }
+
+          viewModelScope.launch {
+            val pins = fetchPostPins(userId)
+            _uiState.value = _uiState.value.copy(recentPins = pins)
+          }
+        } catch (e: Exception) {
+          Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
+          setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
+          _uiState.value =
+              _uiState.value.copy(
+                  isError = true,
+                  isLoading = false,
+                  isRefreshing = false,
+              )
         }
       }
-
-      viewModelScope.launch {
-        val animalsCount = userAnimalsRepository.getAnimalsCountOfUser(userId)
-        _uiState.value = _uiState.value.copy(animalCount = animalsCount)
-      }
-
-      viewModelScope.launch {
-        val friendsCount = userFriendsRepository.getFriendsCountOfUser(userId)
-        _uiState.value = _uiState.value.copy(friendsCount = friendsCount)
-      }
-
-      viewModelScope.launch {
-        val pins = fetchPostPins(userId)
-        _uiState.value = _uiState.value.copy(recentPins = pins)
-      }
-    } catch (e: Exception) {
-      Log.e("ProfileScreenViewModel", "Error refreshing UI state", e)
-      setErrorMsg("Unexpected error: ${e.message ?: "unknown"}")
-      _uiState.value =
-          _uiState.value.copy(
-              isError = true,
-              isLoading = false,
-              isRefreshing = false,
-          )
-    }
-  }
 
   /** Clears the error message from the ui state */
   fun clearErrorMsg() {

@@ -5,12 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.datastore.ReportCacheStorage
-import com.android.wildex.datastore.ReportProto
 import com.android.wildex.model.cache.report.ReportCache
 import com.android.wildex.model.cache.report.ReportCacheSerializer
 import com.android.wildex.model.cache.report.reportDataStore
 import com.android.wildex.model.cache.report.toProto
-import com.android.wildex.model.cache.report.toReport
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
@@ -19,6 +17,7 @@ import com.android.wildex.utils.offline.TestContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
+import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.TestScope
@@ -28,7 +27,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import java.util.Date
 
 private const val REPORTS_COLLECTION_PATH = "reports"
 
@@ -43,16 +41,15 @@ class ReportCacheTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
   private val testScope = TestScope(UnconfinedTestDispatcher())
 
   private val testReport =
-    Report(
-      reportId = "reportId1",
-      imageURL = "imageURL1",
-      location = Location(0.3, 0.3),
-      date = Timestamp(Date(0)),
-      description = "description1",
-      authorId = "authorId1",
-      assigneeId = "assigneeId1",
-    )
-
+      Report(
+          reportId = "reportId1",
+          imageURL = "imageURL1",
+          location = Location(0.3, 0.3),
+          date = Timestamp(Date(0)),
+          description = "description1",
+          authorId = "authorId1",
+          assigneeId = "assigneeId1",
+      )
 
   @Before
   override fun setUp() {
@@ -91,22 +88,20 @@ class ReportCacheTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
       reportRepository.addReport(testReport)
 
       db.collection(REPORTS_COLLECTION_PATH)
-        .document(testReport.reportId)
-        .update("description", "FIRESTORE_VALUE")
-        .await()
+          .document(testReport.reportId)
+          .update("description", "FIRESTORE_VALUE")
+          .await()
 
       val staleTime = System.currentTimeMillis() - (20 * 60 * 1000L)
       val staleProto =
-        testReport
-          .copy(description = "CACHED_OLD_VALUE")
-          .toProto()
-          .toBuilder()
-          .setLastUpdated(staleTime)
-          .build()
+          testReport
+              .copy(description = "CACHED_OLD_VALUE")
+              .toProto()
+              .toBuilder()
+              .setLastUpdated(staleTime)
+              .build()
 
-      dataStore.updateData {
-        it.toBuilder().putReports(testReport.reportId, staleProto).build()
-      }
+      dataStore.updateData { it.toBuilder().putReports(testReport.reportId, staleProto).build() }
       assertNull(cache.getReport(testReport.reportId))
 
       val result = reportRepository.getReport(testReport.reportId)

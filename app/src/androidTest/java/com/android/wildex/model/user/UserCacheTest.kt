@@ -44,6 +44,7 @@ class UserCacheTest : FirestoreTest(USERS_COLLECTION_PATH) {
           userType = UserType.REGULAR,
           creationDate = Timestamp(Date(0)),
           country = "CH",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   @Before

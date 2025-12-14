@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,8 @@ import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataUpdater
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
+import com.android.wildex.model.user.USERS_COLLECTION_PATH
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.achievement.AchievementsScreen
@@ -66,6 +69,7 @@ import com.android.wildex.ui.social.FriendScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
 import okhttp3.OkHttpClient
@@ -88,11 +92,12 @@ class MainActivity : ComponentActivity() {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
       CompositionLocalProvider(
-          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)) {
-            WildexTheme(theme = AppTheme.appearanceMode) {
-              Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
-            }
-          }
+          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)
+      ) {
+        WildexTheme(theme = AppTheme.appearanceMode) {
+          Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+        }
+      }
     }
   }
 
@@ -130,14 +135,35 @@ fun WildexApp(
     navController: NavHostController = rememberNavController(),
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
+  var onboardingComplete by remember { mutableStateOf(false) }
+
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
+
+  DisposableEffect(currentUserId) {
+    val listenerRegistration =
+        if (currentUserId != null) {
+          Firebase.firestore
+              .collection(USERS_COLLECTION_PATH)
+              .document(currentUserId!!)
+              .addSnapshotListener { snapshot, error ->
+                if (error == null) {
+                  if (snapshot != null && snapshot.exists()) {
+                    val stage = snapshot.getString("onBoardingStage")
+                    onboardingComplete = stage == OnBoardingStage.COMPLETE.name
+                  }
+                }
+              }
+        } else null
+
+    onDispose { listenerRegistration?.remove() }
+  }
   LaunchedEffect(Unit) {
     SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
   }
 
   val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
-  val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
+  val startDestination = if (!onboardingComplete) Screen.Auth.route else Screen.Home.route
 
   val currentIntent by rememberUpdatedState((context as ComponentActivity).intent)
   LaunchedEffect(currentIntent) {
@@ -287,7 +313,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -483,10 +510,7 @@ private fun NavGraphBuilder.authComposable(
     SignInScreen(
         authViewModel = signInViewModel,
         credentialManager = credentialManager,
-        onSignedIn = {
-          if (it) navigationActions.navigateTo(Screen.EditProfile(true))
-          else navigationActions.navigateTo(Screen.Home)
-        },
+        onSignedIn = { navigationActions.navigateTo(Screen.Home) },
     )
   }
 }

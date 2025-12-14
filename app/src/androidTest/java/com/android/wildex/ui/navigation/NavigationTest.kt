@@ -213,6 +213,7 @@ class NavigationTest : NavigationTestUtils() {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "country2",
+              onBoardingStage = OnBoardingStage.COMPLETE
           )
       RepositoryProvider.userRepository.addUser(user)
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(userId2)

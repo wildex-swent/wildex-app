@@ -2,6 +2,7 @@ package com.android.wildex.usecase.user
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
@@ -39,8 +40,6 @@ class InitializeUserUseCase(
    * @param userId user whose account we want to create
    */
   suspend operator fun invoke(userId: Id) {
-    val user = User(userId, "", "", "", "", "", UserType.REGULAR, Timestamp.now(), "")
-    userRepository.addUser(user)
     userSettingsRepository.initializeUserSettings(userId)
     userAnimalsRepository.initializeUserAnimals(userId)
     userAchievementsRepository.initializeUserAchievements(userId)

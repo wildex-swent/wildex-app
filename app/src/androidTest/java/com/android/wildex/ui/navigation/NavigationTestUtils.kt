@@ -22,6 +22,7 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -124,6 +125,7 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Italy",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   open val user1 =
@@ -137,6 +139,7 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "England",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   open val post0 =

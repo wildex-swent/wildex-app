@@ -149,6 +149,7 @@ class EditProfileViewModel(
                 userType = user.userType,
                 creationDate = user.creationDate,
                 country = _uiState.value.country,
+                onBoardingStage = user.onBoardingStage,
             )
         // Persist user changes
         userRepository.editUser(userId = currentUserId, newUser = newUser)

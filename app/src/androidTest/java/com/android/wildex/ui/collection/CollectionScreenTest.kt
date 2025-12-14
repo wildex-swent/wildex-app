@@ -14,6 +14,7 @@ import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.navigation.BottomNavigationMenu
@@ -56,7 +57,7 @@ class CollectionScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "France",
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userRepository.addUser(
         User(
             userId = "otherUserId",
@@ -69,7 +70,7 @@ class CollectionScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "France",
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAnimalsRepository.initializeUserAnimals("otherUserId")
 

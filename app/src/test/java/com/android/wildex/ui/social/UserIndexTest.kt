@@ -1,6 +1,7 @@
 package com.android.wildex.ui.social
 
 import com.android.wildex.model.social.SearchDataProvider
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -44,7 +45,9 @@ class UserIndexTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""),
+              country = "",
+              onBoardingStage = OnBoardingStage.COMPLETE,
+          ),
           User(
               userId = "2",
               username = "muaddib",
@@ -54,7 +57,9 @@ class UserIndexTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""),
+              country = "",
+              onBoardingStage = OnBoardingStage.COMPLETE,
+          ),
           User(
               userId = "3",
               username = "ainar",
@@ -64,7 +69,9 @@ class UserIndexTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""),
+              country = "",
+              onBoardingStage = OnBoardingStage.COMPLETE,
+          ),
           User(
               userId = "4",
               username = "youssef-9511",
@@ -74,14 +81,18 @@ class UserIndexTest {
               profilePictureURL = "",
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
-              country = ""))
+              country = "",
+              onBoardingStage = OnBoardingStage.COMPLETE,
+          ),
+      )
 
   private val searchData =
       mapOf(
           "jonathan pilemand jona82" to "1",
           "paul atreides muaddib" to "2",
           "rania hida ainar" to "3",
-          "youssef benhayoun youssef-9511" to "4")
+          "youssef benhayoun youssef-9511" to "4",
+      )
 
   private val updatedFlow = MutableStateFlow(false)
 

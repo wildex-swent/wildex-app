@@ -1,25 +1,47 @@
 package com.android.wildex.ui.authentication
 
-import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,25 +53,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.R
+import com.android.wildex.model.user.OnBoardingStage
+import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 import com.android.wildex.ui.theme.WildexBlack
+import com.android.wildex.ui.utils.CountryDropdown
+import kotlinx.coroutines.delay
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -69,7 +99,7 @@ object SignInScreenTestTags {
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: (Boolean) -> Unit = {},
+    onSignedIn: () -> Unit = {},
 ) {
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
@@ -89,50 +119,323 @@ fun SignInScreen(
       containerColor = Color.White,
       content = { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier =
+                Modifier.fillMaxSize().padding(paddingValues).background(colorScheme.background),
+            contentAlignment = Alignment.Center,
         ) {
-          // 1) Water fill background
-          WaterFillBackground(onFilled = { isWaterFull = true })
-
-          // 2) Screen Content
-          Column(
-              modifier = Modifier.fillMaxSize(),
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.Center,
-          ) {
-            LogoAndTagline()
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (uiState.isLoading) {
-              val composition by
-                  rememberLottieComposition(
-                      LottieCompositionSpec.RawRes(R.raw.loading_signin),
+          AnimatedContent(
+              targetState = uiState.onBoardingStage,
+              transitionSpec = {
+                if (initialState == null || targetState!! > initialState!!) {
+                      slideInHorizontally(animationSpec = tween(500)) { it } +
+                          fadeIn(animationSpec = tween(500)) togetherWith
+                          slideOutHorizontally(animationSpec = tween(500)) { -it } +
+                              fadeOut(animationSpec = tween(500))
+                    } else {
+                      slideInHorizontally(animationSpec = tween(500)) { -it } +
+                          fadeIn(animationSpec = tween(500)) togetherWith
+                          slideOutHorizontally(animationSpec = tween(500)) { it } +
+                              fadeOut(animationSpec = tween(500))
+                    }
+                    .using(SizeTransform(clip = false))
+              },
+          ) { stage ->
+            when (stage) {
+              OnBoardingStage.NAMING ->
+                  NamingScreen(
+                      data = uiState.onBoardingData,
+                      updateData = { authViewModel.updateOnBoardingData(it) },
+                      onNext = { authViewModel.goToNextStage() },
+                      canProceed = authViewModel.canProceedFromNaming(),
+                      isLoading = uiState.isLoading,
                   )
-              val progress by
-                  animateLottieCompositionAsState(
-                      composition = composition,
-                      iterations = LottieConstants.IterateForever,
+              OnBoardingStage.OPTIONAL ->
+                  OptionalInfoScreen(
+                      data = uiState.onBoardingData,
+                      updateData = { authViewModel.updateOnBoardingData(it) },
+                      onBack = { authViewModel.goToPreviousStage() },
+                      onNext = { authViewModel.goToNextStage() },
+                      isLoading = uiState.isLoading,
                   )
-
-              LottieAnimation(
-                  composition = composition,
-                  progress = { progress },
-                  modifier = Modifier.size(120.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR),
-              )
-            } else {
-              GoogleSignInButton(
-                  context = context,
-                  appearsOn = isWaterFull,
-                  onSignInClick = {
-                    authViewModel.signIn(context, credentialManager) { onSignedIn(it) }
-                  },
-              )
+              OnBoardingStage.USER_TYPE ->
+                  UserTypeScreen(
+                      data = uiState.onBoardingData,
+                      updateData = { authViewModel.updateOnBoardingData(it) },
+                      onBack = { authViewModel.goToPreviousStage() },
+                      onComplete = { authViewModel.finishRegistration() },
+                      isLoading = uiState.isLoading,
+                  )
+              OnBoardingStage.COMPLETE -> {
+                LaunchedEffect(Unit) {
+                  delay(1000)
+                  onSignedIn()
+                }
+                WelcomeScreen()
+              }
+              else ->
+                  SignInContent(
+                      isLoading = uiState.isLoading,
+                      onSignedIn = { authViewModel.signIn(context, credentialManager) },
+                      paddingValues = paddingValues,
+                      isWaterFull = isWaterFull,
+                      onFilled = { isWaterFull = true },
+                  )
             }
           }
         }
       },
   )
+}
+
+@Composable
+fun WelcomeScreen() {
+  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {}
+}
+
+@Composable
+fun SignInContent(
+    isLoading: Boolean,
+    paddingValues: PaddingValues,
+    isWaterFull: Boolean,
+    onFilled: () -> Unit,
+    onSignedIn: () -> Unit,
+) {
+  Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+    WaterFillBackground(onFilled = onFilled)
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+      LogoAndTagline()
+
+      Spacer(modifier = Modifier.height(10.dp))
+
+      if (isLoading) {
+        val composition by
+            rememberLottieComposition(
+                LottieCompositionSpec.RawRes(R.raw.loading_signin),
+            )
+        val progress by
+            animateLottieCompositionAsState(
+                composition = composition,
+                iterations = LottieConstants.IterateForever,
+            )
+
+        LottieAnimation(
+            composition = composition,
+            progress = { progress },
+            modifier = Modifier.size(120.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR),
+        )
+      } else {
+        GoogleSignInButton(
+            appearsOn = isWaterFull,
+            onSignInClick = onSignedIn,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun NamingScreen(
+    data: OnBoardingData,
+    updateData: (OnBoardingData) -> Unit,
+    onNext: () -> Unit,
+    canProceed: Boolean,
+    isLoading: Boolean,
+) {
+
+  Column(
+      modifier = Modifier.fillMaxSize().padding(24.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Text(
+        text = "Welcome! Let's get started",
+        style = typography.displayMedium,
+        color = colorScheme.onBackground,
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    OutlinedTextField(
+        value = data.name,
+        onValueChange = { updateData(data.copy(name = it)) },
+        label = { Text("First Name *") },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+        value = data.surname,
+        onValueChange = { updateData(data.copy(surname = it)) },
+        label = { Text("Last Name *") },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+        value = data.username,
+        onValueChange = { updateData(data.copy(username = it)) },
+        label = { Text("Username *") },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+        enabled = canProceed && !isLoading,
+        onClick = onNext,
+        modifier = Modifier.padding(start = 8.dp),
+    ) {
+      Text("Next")
+    }
+  }
+}
+
+@Composable
+fun OptionalInfoScreen(
+    data: OnBoardingData,
+    updateData: (OnBoardingData) -> Unit,
+    onNext: () -> Unit,
+    onBack: () -> Unit,
+    isLoading: Boolean,
+) {
+  val pickImageLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { updateData(data.copy(profilePicture = it)) }
+      }
+
+  Column(
+      modifier = Modifier.fillMaxSize().padding(24.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+      AsyncImage(
+          model = data.profilePicture,
+          contentDescription = "Profile picture",
+          modifier =
+              Modifier.width(96.dp)
+                  .aspectRatio(1f)
+                  .clip(CircleShape)
+                  .border(1.dp, colorScheme.outline, CircleShape)
+                  .clickable(onClick = { pickImageLauncher.launch("image/*") }),
+          contentScale = ContentScale.Crop,
+      )
+      Icon(
+          imageVector = Icons.Filled.Create,
+          contentDescription = "Change profile picture",
+          tint = colorScheme.onPrimary,
+          modifier =
+              Modifier.align(Alignment.TopEnd)
+                  .size(20.dp)
+                  .clip(CircleShape)
+                  .background(colorScheme.secondary)
+                  .padding(4.dp),
+      )
+    }
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    CountryDropdown(
+        selectedCountry = data.country,
+        onCountrySelected = { updateData(data.copy(country = it)) },
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+        value = data.bio,
+        onValueChange = { updateData(data.copy(bio = it)) },
+        label = { Text("Bio") },
+        modifier = Modifier.fillMaxWidth().height(120.dp),
+        maxLines = 4,
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+      OutlinedButton(
+          enabled = !isLoading,
+          onClick = onBack,
+          modifier = Modifier.weight(1f).padding(end = 8.dp),
+      ) {
+        Text("Back")
+      }
+
+      Button(
+          enabled = !isLoading,
+          onClick = onNext,
+          modifier = Modifier.weight(1f).padding(start = 8.dp),
+      ) {
+        Text("Next")
+      }
+    }
+  }
+}
+
+@Composable
+fun UserTypeScreen(
+    data: OnBoardingData,
+    updateData: (OnBoardingData) -> Unit,
+    onComplete: () -> Unit,
+    onBack: () -> Unit,
+    isLoading: Boolean,
+) {
+
+  Column(
+      modifier = Modifier.fillMaxSize().padding(24.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Text(
+        text = "Select Account Type",
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Bold,
+        color = colorScheme.onBackground,
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Checkbox(
+        checked = data.userType == UserType.PROFESSIONAL,
+        onCheckedChange = {
+          if (it) updateData(data.copy(userType = UserType.PROFESSIONAL))
+          else updateData(data.copy(userType = UserType.REGULAR))
+        },
+    )
+    Spacer(modifier = Modifier.width(8.dp))
+    Text("User type", style = typography.titleMedium)
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+      OutlinedButton(
+          enabled = !isLoading,
+          onClick = onBack,
+          modifier = Modifier.weight(1f).padding(end = 8.dp),
+      ) {
+        Text("Back")
+      }
+
+      Button(
+          enabled = !isLoading,
+          onClick = onComplete,
+          modifier = Modifier.weight(1f).padding(start = 8.dp),
+      ) {
+        Text("Complete")
+      }
+    }
+  }
 }
 
 /** Composable function displaying the app logo and tagline. */
@@ -170,11 +473,10 @@ fun LogoAndTagline() {
  * Composable function representing the Google Sign-In Button.
  *
  * @param onSignInClick Callback invoked when the sign-in button is clicked.
- * @param context The context of the current state of the application.
  * @param appearsOn Boolean flag to control the appearance animation of the button.
  */
 @Composable
-fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context, appearsOn: Boolean = true) {
+fun GoogleSignInButton(onSignInClick: () -> Unit, appearsOn: Boolean = true) {
   val alpha by
       animateFloatAsState(
           targetValue = if (appearsOn) 1f else 0f,
@@ -198,7 +500,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, context: Context, appearsOn: B
       )
 
       Text(
-          text = context.getString(R.string.sign_in),
+          text = stringResource(R.string.sign_in),
           modifier = Modifier.graphicsLayer(alpha = alpha),
           color = WildexBlack,
           fontSize = 16.sp,

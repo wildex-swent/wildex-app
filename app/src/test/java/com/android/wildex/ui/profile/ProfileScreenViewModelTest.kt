@@ -5,6 +5,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
@@ -55,6 +56,8 @@ class ProfileScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
+          onBoardingStage = OnBoardingStage.COMPLETE
+
       )
 
   private val u2 = u1.copy(userId = "user_one_2", username = "user_one_2")

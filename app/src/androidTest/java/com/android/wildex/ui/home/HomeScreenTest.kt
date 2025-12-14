@@ -32,6 +32,7 @@ import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
@@ -105,6 +106,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         ))
     userRepository.addUser(
         User(
@@ -118,6 +120,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
+            onBoardingStage = OnBoardingStage.COMPLETE
         ))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
@@ -362,6 +365,7 @@ class HomeScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "Testland",
+              onBoardingStage = OnBoardingStage.COMPLETE
           ))
       postRepository.addPost(fullPost2)
       homeScreenVM.refreshUIState()

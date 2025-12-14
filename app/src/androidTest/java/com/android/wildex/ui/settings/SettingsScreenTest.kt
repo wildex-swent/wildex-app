@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.usecase.user.DeleteUserUseCase
@@ -70,6 +71,7 @@ class SettingsScreenTest {
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "France",
+            onBoardingStage = OnBoardingStage.COMPLETE
         ))
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")

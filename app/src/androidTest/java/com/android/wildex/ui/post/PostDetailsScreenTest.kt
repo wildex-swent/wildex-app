@@ -29,6 +29,7 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserRepository
@@ -76,6 +77,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     val author =
         User(
@@ -89,6 +91,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "India",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     val commenter1 =
         User(
@@ -102,6 +105,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     val commenter2 =
         User(
@@ -114,6 +118,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "UK",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     val liker1 =
         User(
@@ -126,6 +131,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Canada",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     val liker2 =
         User(
@@ -138,6 +144,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Australia",
+            onBoardingStage = OnBoardingStage.COMPLETE
         )
     userRepository.addUser(currentUser)
     userRepository.addUser(author)

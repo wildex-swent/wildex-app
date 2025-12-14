@@ -8,6 +8,7 @@ import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
@@ -120,6 +121,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   open val user2 =
@@ -133,6 +135,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   open val user3 =
@@ -146,6 +149,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   open val like1 = Like("like1", postId = post1.postId, userId = user1.userId)

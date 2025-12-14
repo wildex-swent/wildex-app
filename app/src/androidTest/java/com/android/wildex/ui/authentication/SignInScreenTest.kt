@@ -38,6 +38,9 @@ class SignInScreenTest {
 
   @Before
   fun setUp() {
+    assert(FirebaseEmulator.isRunning) {
+      "FirebaseEmulator must be running before using FirestoreTest"
+    }
     fakeCredentialManager = FakeCredentialManager.create("fakeToken")
     fakeRepository = FakeAuthRepository()
     viewModel = SignInViewModel(fakeRepository)
@@ -90,7 +93,7 @@ class SignInScreenTest {
     var clicked = false
     composeTestRule.setContent {
       context = LocalContext.current
-      GoogleSignInButton(context = context, onSignInClick = { clicked = true })
+      GoogleSignInButton(onSignInClick = { clicked = true })
     }
 
     composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).performClick()

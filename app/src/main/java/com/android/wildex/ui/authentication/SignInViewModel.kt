@@ -1,6 +1,8 @@
 package com.android.wildex.ui.authentication
 
 import android.content.Context
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -11,33 +13,44 @@ import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
+import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
+import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Id
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Represents the UI state for authentication.
- *
- * @property isLoading Whether an authentication operation is in progress.
- * @property errorMsg The error message to display, or null if there is no error.
- */
 data class AuthUIState(
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
+    val onBoardingStage: OnBoardingStage? = null,
+    val onBoardingData: OnBoardingData = OnBoardingData(),
+    val invalidNameMsg: String? = null,
+    val invalidSurnameMsg: String? = null,
+    val invalidUsernameMsg: String? = null,
 )
 
-/**
- * ViewModel for the Sign-In view.
- *
- * @property authRepository The repository used to perform authentication operations.
- */
+data class OnBoardingData(
+    val userId: Id = "",
+    val name: String = "",
+    val surname: String = "",
+    val username: String = "",
+    val profilePicture: Uri = "".toUri(),
+    val country: String = "",
+    val bio: String = "",
+    val userType: UserType = UserType.REGULAR,
+)
+
 class SignInViewModel(
     private val authRepository: AuthRepository = RepositoryProvider.authRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
@@ -45,59 +58,84 @@ class SignInViewModel(
         RepositoryProvider.userSettingsRepository,
     private val userTokensRepository: UserTokensRepository =
         RepositoryProvider.userTokensRepository,
+    private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
     private val initializeUserUseCase: InitializeUserUseCase = InitializeUserUseCase(),
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(AuthUIState())
   val uiState: StateFlow<AuthUIState> = _uiState
+  var usernameList: List<String> = emptyList()
 
-  /** Clears the error message of the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
 
-  /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
-  fun signIn(
-      context: Context,
-      credentialManager: CredentialManager,
-      onSignedIn: (Boolean) -> Unit,
-  ) {
+  fun signIn(context: Context, credentialManager: CredentialManager) {
     if (_uiState.value.isLoading) return
-
     _uiState.update { it.copy(isLoading = true, errorMsg = null) }
+
     viewModelScope.launch {
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id))
+                  serverClientId = context.getString(R.string.default_web_client_id)
+              )
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
       try {
         val credential = credentialManager.getCredential(context, signInRequest).credential
-
         authRepository
             .signInWithGoogle(credential)
             .fold(
                 onSuccess = { firebaseUser ->
                   try {
                     val userId = firebaseUser.uid
-                    val isNewUser =
+                    val googlePhotoUrl = firebaseUser.photoUrl?.toString() ?: ""
+                    val displayName = firebaseUser.displayName ?: ""
+
+                    val user =
                         try {
-                          userRepository.getUser(userId)
+                          val user = userRepository.getUser(userId)
                           AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
-                          false
+                          user
                         } catch (_: Exception) {
-                          initializeUserUseCase(userId)
+                          val user =
+                              User(
+                                  userId = userId,
+                                  username = displayName,
+                                  name = "",
+                                  surname = "",
+                                  bio = "",
+                                  profilePictureURL = googlePhotoUrl,
+                                  userType = UserType.REGULAR,
+                                  creationDate = Timestamp.now(),
+                                  country = "",
+                                  onBoardingStage = OnBoardingStage.NAMING,
+                              )
+                          userRepository.addUser(user)
                           AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
-                          true
-                        } finally {
-                          userTokensRepository.addTokenToUser(
-                              userId,
-                              userTokensRepository.getCurrentToken(),
-                          )
+                          user
                         }
-                    _uiState.update { it.copy(isLoading = false, errorMsg = null) }
-                    onSignedIn(isNewUser)
+                    usernameList = userRepository.getAllUsers().map { it.username }
+
+                    _uiState.update {
+                      it.copy(
+                          isLoading = false,
+                          errorMsg = null,
+                          onBoardingStage = user.onBoardingStage,
+                          onBoardingData =
+                              OnBoardingData(
+                                  userId = user.userId,
+                                  name = user.name,
+                                  surname = user.surname,
+                                  username = user.username,
+                                  profilePicture = Uri.parse(user.profilePictureURL),
+                                  country = user.country,
+                                  bio = user.bio,
+                                  userType = user.userType,
+                              ),
+                      )
+                    }
                   } catch (e: Exception) {
                     _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
                   }
@@ -109,7 +147,6 @@ class SignInViewModel(
                 },
             )
       } catch (_: GetCredentialCancellationException) {
-        // User cancelled the sign-in operation
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -117,7 +154,6 @@ class SignInViewModel(
           )
         }
       } catch (e: GetCredentialException) {
-        // Other credential errors
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -125,7 +161,6 @@ class SignInViewModel(
           )
         }
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -133,6 +168,90 @@ class SignInViewModel(
           )
         }
       }
+    }
+  }
+
+  fun updateOnBoardingData(data: OnBoardingData) {
+    _uiState.update {
+      it.copy(
+          onBoardingData = data,
+          invalidNameMsg = if (data.name.isBlank()) "Name cannot be empty" else null,
+          invalidSurnameMsg = if (data.surname.isBlank()) "Surname cannot be empty" else null,
+          invalidUsernameMsg =
+              when {
+                data.username.isBlank() -> "Username cannot be empty"
+                data.username.length > 20 -> "Username cannot exceed 20 characters"
+                usernameList.contains(data.username) -> "Username is already taken"
+                else -> null
+              },
+      )
+    }
+  }
+
+  fun goToNextStage() {
+    val currentStage = _uiState.value.onBoardingStage
+    val nextStage = currentStage?.next() ?: OnBoardingStage.NAMING
+    _uiState.update { it.copy(isLoading = true) }
+    viewModelScope.launch {
+      updateUser()
+      _uiState.update { it.copy(onBoardingStage = nextStage, isLoading = false) }
+    }
+  }
+
+  fun goToPreviousStage() {
+    val currentStage = _uiState.value.onBoardingStage
+    val previousStage = currentStage?.previous() ?: OnBoardingStage.NAMING
+    _uiState.update { it.copy(onBoardingStage = previousStage) }
+  }
+
+  fun canProceedFromNaming(): Boolean {
+    val data = _uiState.value.onBoardingData
+    return data.name.isNotBlank() && data.surname.isNotBlank() && data.username.isNotBlank()
+  }
+
+  fun finishRegistration() {
+    _uiState.update { it.copy(isLoading = true, onBoardingStage = OnBoardingStage.COMPLETE) }
+    viewModelScope.launch {
+      try {
+        val data = _uiState.value.onBoardingData
+        updateUser()
+        // initializeUserUseCase(data.userId)
+        userTokensRepository.addTokenToUser(data.userId, userTokensRepository.getCurrentToken())
+        _uiState.update { it.copy(isLoading = false) }
+      } catch (e: Exception) {
+        _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
+      }
+    }
+  }
+
+  private suspend fun updateUser() {
+    try {
+      val data = _uiState.value.onBoardingData
+      val stage = _uiState.value.onBoardingStage!!
+      val pictureUri = data.profilePicture
+      val profilePictureUrl =
+          if (
+              !pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https")
+          ) // Meaning the user has changed it to a local Uri
+           storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
+          else data.profilePicture.toString() // Still an Url
+      val user =
+          User(
+              userId = data.userId,
+              username = data.username,
+              name = data.name,
+              surname = data.surname,
+              bio = data.bio,
+              profilePictureURL = profilePictureUrl,
+              userType = data.userType,
+              creationDate = Timestamp.now(),
+              country = data.country,
+              onBoardingStage = stage,
+          )
+      userRepository.editUser(user.userId, user)
+      _uiState.update { it.copy(isLoading = false) }
+    } catch (e: Exception) {
+      _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
     }
   }
 }

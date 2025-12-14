@@ -1,6 +1,7 @@
 package com.android.wildex.model.social
 
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.utils.LocalRepositories
@@ -26,7 +27,7 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "")
+          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser2 =
       User(
@@ -38,7 +39,7 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "")
+          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser3 =
       User(
@@ -50,7 +51,7 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "")
+          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser4 =
       User(
@@ -62,7 +63,7 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "")
+          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val userRepository = LocalRepositories.userRepository
 

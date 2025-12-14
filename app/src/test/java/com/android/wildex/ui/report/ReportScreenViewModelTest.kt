@@ -2,6 +2,7 @@ package com.android.wildex.ui.report
 
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
@@ -93,7 +94,9 @@ class ReportScreenViewModelTest {
           profilePictureURL = "user2URL",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France")
+          country = "France",
+                  onBoardingStage = OnBoardingStage.COMPLETE
+      )
 
   private val simpleUser3 =
       SimpleUser(
@@ -112,7 +115,8 @@ class ReportScreenViewModelTest {
           profilePictureURL = "user3URL",
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
-          country = "Germany")
+          country = "Germany",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val defaultUser: SimpleUser =
       SimpleUser(

@@ -12,6 +12,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepositoryFirebase
+import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
@@ -66,17 +68,16 @@ class SignInViewModelTest {
   private lateinit var userFriendsRepository: UserFriendsRepository
   private lateinit var userSettingsRepository: UserSettingsRepository
   private lateinit var userTokensRepository: UserTokensRepository
+  private lateinit var storageRepository: StorageRepository
+
   private val fakeUserIdToken = "fakeUserIdToken"
   private val testDispatcher = StandardTestDispatcher()
 
-  init {
+  @Before
+  fun setUp() {
     assert(FirebaseEmulator.isRunning) {
       "FirebaseEmulator must be running before using FirestoreTest"
     }
-  }
-
-  @Before
-  fun setUp() {
     Dispatchers.setMain(testDispatcher)
     context = ApplicationProvider.getApplicationContext()
     userRepository = LocalRepositories.userRepository
@@ -85,6 +86,7 @@ class SignInViewModelTest {
     userFriendsRepository = LocalRepositories.userFriendsRepository
     userSettingsRepository = LocalRepositories.userSettingsRepository
     userTokensRepository = LocalRepositories.userTokensRepository
+    storageRepository = LocalRepositories.storageRepository
     val initializeUserUseCase =
         InitializeUserUseCase(
             userRepository,
@@ -92,7 +94,8 @@ class SignInViewModelTest {
             userAnimalsRepository,
             userAchievementsRepository,
             userFriendsRepository,
-            userTokensRepository)
+            userTokensRepository,
+        )
     authRepository = mockk(relaxed = true)
     credentialManager = FakeCredentialManager.create("fakeToken")
     viewModel =
@@ -101,6 +104,7 @@ class SignInViewModelTest {
             userRepository,
             userSettingsRepository,
             userTokensRepository,
+            storageRepository,
             initializeUserUseCase,
         )
   }
@@ -131,7 +135,7 @@ class SignInViewModelTest {
           response
       coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
 
-      viewModel.signIn(context, credentialManager) {}
+      viewModel.signIn(context, credentialManager)
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
@@ -160,6 +164,7 @@ class SignInViewModelTest {
                 UserType.REGULAR,
                 Timestamp.now(),
                 "",
+                OnBoardingStage.COMPLETE
             )
 
         userRepository.addUser(user)
@@ -184,7 +189,7 @@ class SignInViewModelTest {
           response
       coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.success(fakeUser)
 
-      viewModel.signIn(context, credentialManager) {}
+      viewModel.signIn(context, credentialManager)
       advanceUntilIdle()
 
       val state = viewModel.uiState.value
@@ -200,7 +205,7 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialCancellationException("user canceled")
 
-    viewModel.signIn(context, credentialManager) {}
+    viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -213,7 +218,7 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialUnknownException("bad credential")
 
-    viewModel.signIn(context, credentialManager) {}
+    viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -232,7 +237,7 @@ class SignInViewModelTest {
     val fakeError = RuntimeException("auth failed")
     coEvery { authRepository.signInWithGoogle(fakeCredential) } returns Result.failure(fakeError)
 
-    viewModel.signIn(context, credentialManager) {}
+    viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -245,7 +250,7 @@ class SignInViewModelTest {
     coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
         GetCredentialUnknownException("test error")
 
-    viewModel.signIn(context, credentialManager) {}
+    viewModel.signIn(context, credentialManager)
     advanceUntilIdle()
 
     viewModel.clearErrorMsg()
@@ -259,7 +264,7 @@ class SignInViewModelTest {
       coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
           RuntimeException("unexpected crash")
 
-      viewModel.signIn(context, credentialManager) {}
+      viewModel.signIn(context, credentialManager)
       advanceUntilIdle()
 
       val state = viewModel.uiState.value

@@ -11,6 +11,7 @@ import com.android.wildex.BuildConfig
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -76,7 +77,8 @@ class ReportScreenTest {
             profilePictureURL = "urlBob1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "USA")
+            country = "USA",
+            onBoardingStage = OnBoardingStage.COMPLETE)
 
     val user2 =
         User(
@@ -88,7 +90,8 @@ class ReportScreenTest {
             profilePictureURL = "urlAlice1",
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
-            country = "England")
+            country = "England",
+            onBoardingStage = OnBoardingStage.COMPLETE)
 
     val user3 =
         User(
@@ -100,7 +103,8 @@ class ReportScreenTest {
             profilePictureURL = "urlCharlie3",
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
-            country = "Germany")
+            country = "Germany",
+            onBoardingStage = OnBoardingStage.COMPLETE)
 
     userRepository.addUser(user1)
     userRepository.addUser(user2)

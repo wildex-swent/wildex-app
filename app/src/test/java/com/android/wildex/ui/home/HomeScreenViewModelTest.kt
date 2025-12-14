@@ -11,6 +11,7 @@ import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserFriendsRepository
@@ -138,7 +139,8 @@ class HomeScreenViewModelTest {
           author = author1,
           animalName = animal1.name,
           likeCount = 1,
-          commentsCount = 1)
+          commentsCount = 1,
+      )
 
   private val postState2 =
       PostState(
@@ -147,7 +149,8 @@ class HomeScreenViewModelTest {
           author = author2,
           animalName = animal2.name,
           likeCount = 1,
-          commentsCount = 1)
+          commentsCount = 1,
+      )
 
   @Before
   fun setUp() {
@@ -224,14 +227,16 @@ class HomeScreenViewModelTest {
                   author = author1,
                   animalName = animal1.name,
                   likeCount = 1,
-                  commentsCount = 1),
+                  commentsCount = 1,
+              ),
               PostState(
                   p2,
                   isLiked = false,
                   author = author2,
                   animalName = animal2.name,
                   likeCount = 1,
-                  commentsCount = 1),
+                  commentsCount = 1,
+              ),
           )
 
       val updatedState = viewModel.uiState.value
@@ -265,14 +270,16 @@ class HomeScreenViewModelTest {
                   author = author1,
                   animalName = animal1.name,
                   likeCount = 1,
-                  commentsCount = 1),
+                  commentsCount = 1,
+              ),
               PostState(
                   p2,
                   isLiked = false,
                   author = author2,
                   animalName = animal2.name,
                   likeCount = 1,
-                  commentsCount = 1),
+                  commentsCount = 1,
+              ),
           )
       val updatedState = viewModel.uiState.value
       assertEquals(expectedStates, updatedState.postStates)
@@ -315,7 +322,8 @@ class HomeScreenViewModelTest {
               animalRepository,
               userSettingsRepository,
               userFriendsRepository,
-              "")
+              "",
+          )
       viewModel.refreshUIState()
       advanceUntilIdle()
 
@@ -377,7 +385,8 @@ class HomeScreenViewModelTest {
                   author = author2,
                   animalName = animal2.name,
                   likeCount = 1,
-                  commentsCount = 1),
+                  commentsCount = 1,
+              ),
           )
       assertEquals(expectedStates, s.postStates)
       assertEquals(u2, s.currentUser)
@@ -444,7 +453,9 @@ class HomeScreenViewModelTest {
                   author = author1,
                   animalName = animal1.name,
                   likeCount = 1,
-                  commentsCount = 1)),
+                  commentsCount = 1,
+              )
+          ),
           s.postStates,
       )
     }
@@ -472,7 +483,8 @@ class HomeScreenViewModelTest {
       assertNull(before.errorMsg)
       assertNotNull(after.errorMsg)
       assertTrue(
-          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/")
+      )
     }
   }
 
@@ -482,7 +494,8 @@ class HomeScreenViewModelTest {
         onlyFriendsPosts = true,
         ofAnimal = "NewAnimalFilter",
         fromPlace = "NewPlaceFilter",
-        fromAuthor = "NewUsernameFilter")
+        fromAuthor = "NewUsernameFilter",
+    )
 
     val state = viewModel.uiState.value
 
@@ -518,7 +531,10 @@ class HomeScreenViewModelTest {
                   profilePictureURL = "url1",
                   userType = UserType.REGULAR,
                   creationDate = Timestamp(0, 0),
-                  country = "country"))
+                  country = "country",
+                  onBoardingStage = OnBoardingStage.COMPLETE,
+              )
+          )
 
       val postState =
           PostState(
@@ -527,7 +543,8 @@ class HomeScreenViewModelTest {
               author = author1,
               animalName = animal1.name,
               likeCount = 1,
-              commentsCount = 1)
+              commentsCount = 1,
+          )
 
       viewModel.loadUIState()
       advanceUntilIdle()

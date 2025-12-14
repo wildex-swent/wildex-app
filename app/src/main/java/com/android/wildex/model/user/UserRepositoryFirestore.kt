@@ -7,7 +7,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-private const val USERS_COLLECTION_PATH = "users"
+const val USERS_COLLECTION_PATH = "users"
 private const val TAG = "UserRepositoryFirestore"
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cache: IUserCache) :
@@ -130,6 +130,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
 
       val creationDate = document.getTimestamp("creationDate") ?: return null
       val country = document.getString("country") ?: ""
+      val onBoardingStageString =
+          document.getString("onBoardingStage") ?: OnBoardingStage.NAMING.name
+      val onBoardingStage =
+          try {
+            OnBoardingStage.valueOf(onBoardingStageString)
+          } catch (_: Exception) {
+            OnBoardingStage.NAMING
+          }
 
       User(
           userId = userId,
@@ -140,7 +148,9 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val cac
           profilePictureURL = profilePictureURL,
           userType = userType,
           creationDate = creationDate,
-          country = country)
+          country = country,
+          onBoardingStage = onBoardingStage,
+      )
     } catch (e: Exception) {
       Log.e(TAG, "documentToUser: error converting document ${document.id} to User", e)
       null

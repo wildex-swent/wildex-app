@@ -2,6 +2,7 @@ package com.android.wildex.ui.profile
 
 import android.net.Uri
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -39,6 +40,7 @@ class EditProfileViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
+          onBoardingStage = OnBoardingStage.COMPLETE
       )
 
   @Before

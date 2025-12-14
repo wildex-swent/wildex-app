@@ -1,6 +1,7 @@
 package com.android.wildex.ui.social
 
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -28,7 +29,8 @@ class UserRecommenderTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "")
+          country = "",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val post =
       Post(

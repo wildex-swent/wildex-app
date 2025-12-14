@@ -37,11 +37,6 @@ fun ReportDetailsTopBar(onGoBack: () -> Unit = {}) {
           )
         }
       },
-      title = {
-        Text(
-            text = LocalContext.current.getString(R.string.report_details_bar_title),
-            style = typography.titleLarge,
-        )
-      },
+      title = {}
   )
 }

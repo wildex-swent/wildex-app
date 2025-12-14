@@ -2,6 +2,7 @@ package com.android.wildex.model.animal
 
 import android.util.Log
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeAnimalCache
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
@@ -15,7 +16,8 @@ import org.junit.Test
 const val ANIMAL_COLLECTION_PATH = "animal"
 
 class AnimalRepositoryFirestoreTest : FirestoreTest(ANIMAL_COLLECTION_PATH) {
-  private var repository = AnimalRepositoryFirestore(Firebase.firestore)
+  private val animalCache = FakeAnimalCache()
+  private var repository = AnimalRepositoryFirestore(Firebase.firestore, animalCache)
 
   @Before
   override fun setUp() {

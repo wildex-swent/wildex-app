@@ -289,6 +289,10 @@ object LocalRepositories {
     override fun clear() {
       listOfAnimals.clear()
     }
+
+    override suspend fun refreshCache() {
+      listOfAnimals.clear()
+    }
   }
 
   open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository) :
@@ -329,6 +333,10 @@ object LocalRepositories {
 
     override fun clear() {
       mapUserToAnimals.forEach { (p0, _) -> mapUserToAnimals[p0] = mutableListOf() }
+    }
+
+    override suspend fun refreshCache() {
+      mapUserToAnimals.clear()
     }
   }
 

@@ -3,6 +3,8 @@ package com.android.wildex.model.user
 import com.android.wildex.model.animal.AnimalRepositoryFirestore
 import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakeAnimalCache
+import com.android.wildex.utils.offline.FakeUserAnimalsCache
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -12,9 +14,11 @@ import org.junit.Test
 private const val USER_ANIMALS_COLLECTION_PATH = "userAnimals"
 
 class UserAnimalsRepositoryFirestoreTest : FirestoreTest(USER_ANIMALS_COLLECTION_PATH) {
-
-  private var repository = UserAnimalsRepositoryFirestore(FirebaseEmulator.firestore)
-  private var animalRepository = AnimalRepositoryFirestore(FirebaseEmulator.firestore)
+  private val animalCache = FakeAnimalCache()
+  private val userAnimalsCache = FakeUserAnimalsCache()
+  private var animalRepository = AnimalRepositoryFirestore(FirebaseEmulator.firestore, animalCache)
+  private var repository =
+      UserAnimalsRepositoryFirestore(FirebaseEmulator.firestore, userAnimalsCache, animalRepository)
 
   private suspend fun getUsersCount(): Int = super.getCount()
 

@@ -382,4 +382,86 @@ class UserRepositoryFirestoreTest : FirestoreTest(USERS_COLLECTION_PATH) {
       assertNull(userCache.getUser(user2.userId))
     }
   }
+
+  @Test
+  fun documentToUserMissingUsernameIsSkippedInGetAllUsers() {
+    runTest {
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document("badUser1")
+          .set(mapOf("creationDate" to fromDate(2024, Calendar.JANUARY, 1)))
+          .await()
+
+      val users = repository.getAllUsers()
+      assertTrue(users.isEmpty())
+    }
+  }
+
+  @Test
+  fun documentToUserMissingCreationDateIsSkippedInGetAllUsers() {
+    runTest {
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document("badUser2")
+          .set(mapOf("username" to "userWithoutDate"))
+          .await()
+
+      val users = repository.getAllUsers()
+      assertTrue(users.isEmpty())
+    }
+  }
+
+  @Test
+  fun documentToUserExceptionInsideParsingReturnsNull() {
+    runTest {
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document("crashyUser")
+          .set(mapOf("username" to "boom", "creationDate" to "this-is-not-a-timestamp"))
+          .await()
+
+      val users = repository.getAllUsers()
+      assertTrue(users.isEmpty())
+    }
+  }
+
+  @Test
+  fun documentToSimpleUSerMissingUsernameReturnsNull() {
+    runTest {
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document("badSimple1")
+          .set(mapOf("profilePictureURL" to "url"))
+          .await()
+
+      val exception = runCatching { repository.getSimpleUser("badSimple1") }.exceptionOrNull()
+
+      assertTrue(exception is Exception)
+    }
+  }
+
+  @Test
+  fun getSimpleUserWithInvalidUserTypeDefaultsToRegular() {
+    runTest {
+      repository.addUser(user1)
+      val id = user1.userId
+      FirebaseEmulator.firestore
+          .collection(USERS_COLLECTION_PATH)
+          .document(id)
+          .set(mapOf("username" to "simple", "userType" to "not-a-valid-user-type"))
+          .await()
+
+      val simple = repository.getSimpleUser(id)
+      assertEquals(UserType.REGULAR, simple.userType)
+    }
+  }
+
+  @Test
+  fun getAllUsersReturnsCachedUsersWithoutFirestoreAccess() {
+    runTest {
+      userCache.saveUsers(listOf(user1, user2))
+      val users = repository.getAllUsers()
+      assertEquals(listOf(user1, user2), users)
+    }
+  }
 }

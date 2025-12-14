@@ -6,6 +6,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -421,5 +422,68 @@ class ReportRepositoryFirestoreTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
 
     val cached = reportCache.getAllReports()!!
     assertTrue(cached.isEmpty())
+  }
+
+  @Test
+  fun documentToReportReturnsNullWhenRequiredFieldIsMissing() {
+    runTest {
+      val docRef = Firebase.firestore.collection(REPORTS_COLLECTION_PATH).document("badDoc")
+
+      docRef
+          .set(
+              mapOf(
+                  "imageURL" to "url",
+                  "location" to mapOf("latitude" to 0.0, "longitude" to 0.0),
+                  "date" to report1.date,
+                  "authorId" to report1.authorId))
+          .await()
+
+      val snapshot = docRef.get().await()
+      val result = repository.documentToReport(snapshot)
+      assertNull(result)
+    }
+  }
+
+  @Test
+  fun documentToReportReturnsNullWhenLocationIsInvalid() {
+    runTest {
+      val docRef = Firebase.firestore.collection(REPORTS_COLLECTION_PATH).document("badLocation")
+
+      docRef
+          .set(
+              mapOf(
+                  "imageURL" to "url",
+                  "location" to "notAMap",
+                  "date" to report1.date,
+                  "description" to "desc",
+                  "authorId" to report1.authorId))
+          .await()
+
+      val snapshot = docRef.get().await()
+      val result = repository.documentToReport(snapshot)
+
+      assertNull(result)
+    }
+  }
+
+  @Test
+  fun getAllReportsByNullAssigneeFromFirestore() {
+    runTest {
+      val unassigned = report1.copy(assigneeId = null)
+      repository.addReport(unassigned)
+      val reports = repository.getAllReportsByAssignee(null)
+      assertEquals(1, reports.size)
+      assertNull(reports.first().assigneeId)
+    }
+  }
+
+  @Test
+  fun ensureDocumentExistsThrowsCorrectMessage() {
+    runTest {
+      val exception = runCatching { repository.deleteReport("nonExistingId") }.exceptionOrNull()
+
+      assertTrue(exception is IllegalArgumentException)
+      assertEquals("A Report with reportId 'nonExistingId' does not exist.", exception?.message)
+    }
   }
 }

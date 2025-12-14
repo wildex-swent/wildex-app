@@ -39,6 +39,7 @@ class ReportCacheTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
   private lateinit var db: FirebaseFirestore
   private lateinit var reportRepository: ReportRepositoryFirestore
   private val testScope = TestScope(UnconfinedTestDispatcher())
+  private val staleTime = System.currentTimeMillis() - (20 * 60 * 1000L)
 
   private val testReport =
       Report(
@@ -92,7 +93,6 @@ class ReportCacheTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
           .update("description", "FIRESTORE_VALUE")
           .await()
 
-      val staleTime = System.currentTimeMillis() - (20 * 60 * 1000L)
       val staleProto =
           testReport
               .copy(description = "CACHED_OLD_VALUE")
@@ -125,6 +125,99 @@ class ReportCacheTest : FirestoreTest(REPORTS_COLLECTION_PATH) {
 
       assertEquals(testReport, cache.getReport(testReport.reportId))
       assertEquals(testReport, reportRepository.getReport(testReport.reportId))
+    }
+  }
+
+  @Test
+  fun offlineAndEmptyCacheReturnsEmptyList() {
+    runTest {
+      connectivityObserver.setOnline(false)
+      cache.clearAll()
+
+      assertEquals(emptyList<Report>(), cache.getAllReports())
+    }
+  }
+
+  @Test
+  fun onlineAndStaleCacheReturnsNull() {
+    runTest {
+      connectivityObserver.setOnline(true)
+      val staleProto = testReport.toProto().toBuilder().setLastUpdated(staleTime).build()
+      dataStore.updateData { it.toBuilder().putReports(testReport.reportId, staleProto).build() }
+
+      assertNull(cache.getAllReports())
+    }
+  }
+
+  @Test
+  fun getAllReportsByAuthorReturnsOnlyMatchingReports() {
+    runTest {
+      connectivityObserver.setOnline(true)
+      val otherReport = testReport.copy(reportId = "r2", authorId = "authorId2")
+      cache.saveReports(listOf(testReport, otherReport))
+
+      val result = cache.getAllReportsByAuthor("authorId1")
+      assertEquals(1, result?.size)
+      assertEquals(testReport, result?.first())
+    }
+  }
+
+  @Test
+  fun getAllReportsByInexistentAssigneeReturnsNull() {
+    runTest {
+      connectivityObserver.setOnline(true)
+      val unassigned = testReport.copy(reportId = "r2", assigneeId = null)
+      cache.saveReports(listOf(testReport, unassigned))
+
+      assertNull(cache.getAllReportsByAssignee("me"))
+    }
+  }
+
+  @Test
+  fun getAllReportsByNullAssigneeReturnsEmptyList() {
+    runTest {
+      connectivityObserver.setOnline(false)
+      val unassigned = testReport.copy(reportId = "r2", assigneeId = null)
+      cache.saveReports(listOf(testReport, unassigned))
+
+      val result = cache.getAllReportsByAssignee(null)
+      assertEquals(1, result?.size)
+      assertEquals(unassigned, result?.first())
+    }
+  }
+
+  @Test
+  fun deleteReportRemovesItFromCache() {
+    runTest {
+      connectivityObserver.setOnline(true)
+      cache.saveReport(testReport)
+      cache.deleteReport(testReport.reportId)
+
+      assertNull(cache.getReport(testReport.reportId))
+    }
+  }
+
+  @Test
+  fun deleteReportByAuthorRemovesAllMatchingReports() {
+    runTest {
+      val otherAuthor = testReport.copy(reportId = "r2", authorId = "other")
+      val otherAuthor2 = otherAuthor.copy(reportId = "r3")
+      cache.saveReports(listOf(testReport, otherAuthor, otherAuthor2))
+      cache.deleteReportByAuthor("other")
+
+      val remaining = cache.getAllReports()
+      assertEquals(1, remaining?.size)
+      assertEquals("authorId1", remaining?.first()?.authorId)
+    }
+  }
+
+  @Test
+  fun clearAllRemovesEverything() {
+    runTest {
+      cache.saveReports(listOf(testReport, report1.copy(reportId = "id3"), report2))
+      cache.clearAll()
+
+      assertNull(cache.getAllReports())
     }
   }
 }

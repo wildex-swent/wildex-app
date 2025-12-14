@@ -23,7 +23,8 @@ private val defaultUser: SimpleUser =
         userId = "defaultUserId",
         username = "defaultUsername",
         profilePictureURL = "",
-        userType = UserType.REGULAR)
+        userType = UserType.REGULAR,
+    )
 
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,
@@ -32,6 +33,7 @@ data class CollectionUIState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMsg: String? = null,
+    val isRefreshing: Boolean = false,
 )
 
 data class AnimalState(
@@ -55,8 +57,13 @@ class CollectionScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<CollectionUIState> = _uiState.asStateFlow()
 
-  private suspend fun updateUIState(userUid: String) {
+  private suspend fun updateUIState(userUid: String, calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        animalRepository.refreshCache()
+        userAnimalsRepository.refreshCache()
+        userRepository.refreshCache()
+      }
       val user = userRepository.getSimpleUser(userUid)
       _uiState.value = _uiState.value.copy(user = user, isUserOwner = userUid == currentUserId)
       val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { it.animalId }
@@ -79,16 +86,25 @@ class CollectionScreenViewModel(
               isLoading = false,
               errorMsg = null,
               isError = false,
-          )
+              isRefreshing = false)
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load collection.")
       _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
     }
   }
 
-  fun loadUIState(userUid: String) {
+  fun loadUIState(userUid: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(userUid) }
+  }
+
+  fun refreshUIState(userId: Id) {
+    _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
+    viewModelScope.launch { updateUIState(userId, calledFromRefresh = true) }
+  }
+
+  fun refreshOffline() {
+    setErrorMsg("You are currently offline\nYou can not refresh for now :/")
   }
 
   /** Clears any existing error message from the UI state. */

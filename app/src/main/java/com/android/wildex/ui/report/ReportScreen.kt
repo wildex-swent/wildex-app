@@ -74,9 +74,9 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
-import com.android.wildex.ui.map.OfflineAwareMiniMap
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
+import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 import com.mapbox.geojson.Point

@@ -1,4 +1,4 @@
-package com.android.wildex.ui.map
+package com.android.wildex.ui.profile
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.android.wildex.model.LocalConnectivityObserver
-import com.android.wildex.ui.profile.StaticMiniMap
+import com.android.wildex.ui.map.OfflineMapPlaceholder
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
 

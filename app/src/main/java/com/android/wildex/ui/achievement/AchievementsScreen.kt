@@ -48,11 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object AchievementsScreenTestTags {
   const val ACHIEVEMENT_GRID = "achievementGrid"
@@ -106,6 +108,8 @@ fun AchievementsScreen(
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   var selectedAchievement by remember { mutableStateOf<AchievementUIState?>(null) }
 
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
@@ -120,83 +124,87 @@ fun AchievementsScreen(
       modifier = Modifier.testTag(NavigationTestTags.ACHIEVEMENTS_SCREEN),
       topBar = { if (!uiState.isLoading) AchievementsTopBar(onGoBack = onGoBack) },
   ) { paddingValues ->
-    when {
-      uiState.isLoading -> LoadingScreen()
-      uiState.isError -> LoadingFail()
-      else -> {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier =
-                Modifier.padding(paddingValues)
-                    .padding(20.dp)
-                    .testTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID),
-        ) {
-          item(span = { GridItemSpan(maxLineSpan) }) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-              AchievementsProgressCard(uiState.overallProgress)
-              Spacer(modifier = Modifier.height(16.dp))
+    if (isOnline) {
+      when {
+        uiState.isLoading -> LoadingScreen()
+        uiState.isError -> LoadingFail()
+        else -> {
+          LazyVerticalGrid(
+              columns = GridCells.Fixed(3),
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+              horizontalArrangement = Arrangement.spacedBy(16.dp),
+              modifier =
+                  Modifier.padding(paddingValues)
+                      .padding(20.dp)
+                      .testTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID),
+          ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+              Column(modifier = Modifier.fillMaxWidth()) {
+                AchievementsProgressCard(uiState.overallProgress)
+                Spacer(modifier = Modifier.height(16.dp))
+                LabeledDivider(
+                    text = context.getString(R.string.unlocked_achievements),
+                    color = colorScheme.onBackground,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+              }
+            }
+            if (uiState.unlocked.isEmpty()) {
+              item(span = { GridItemSpan(maxLineSpan) }) {
+                Column(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(vertical = 32.dp)
+                            .graphicsLayer { alpha = .75f }
+                            .testTag(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                  Icon(
+                      imageVector = Icons.Default.TravelExplore,
+                      contentDescription = null,
+                      tint = colorScheme.primary,
+                      modifier = Modifier.fillMaxWidth(.3f).aspectRatio(1f),
+                  )
+
+                  Text(stringResource(R.string.no_discoveries), color = colorScheme.primary)
+                }
+              }
+            }
+            items(uiState.unlocked) { achievement ->
+              AchievementItem(
+                  achievement = achievement,
+                  isUnlocked = true,
+                  onAchievementClick = { selectedAchievement = achievement },
+              )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+              Spacer(modifier = Modifier.height(8.dp))
               LabeledDivider(
-                  text = context.getString(R.string.unlocked_achievements),
+                  text = context.getString(R.string.to_discover),
                   color = colorScheme.onBackground,
               )
               Spacer(modifier = Modifier.height(8.dp))
             }
-          }
-          if (uiState.unlocked.isEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-              Column(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(vertical = 32.dp)
-                          .graphicsLayer { alpha = .75f }
-                          .testTag(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER),
-                  horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.spacedBy(24.dp),
-              ) {
-                Icon(
-                    imageVector = Icons.Default.TravelExplore,
-                    contentDescription = null,
-                    tint = colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth(.3f).aspectRatio(1f),
-                )
-
-                Text(stringResource(R.string.no_discoveries), color = colorScheme.primary)
-              }
+            items(uiState.locked) { achievement ->
+              AchievementItem(
+                  achievement = achievement,
+                  isUnlocked = false,
+                  onAchievementClick = { selectedAchievement = achievement },
+              )
             }
-          }
-          items(uiState.unlocked) { achievement ->
-            AchievementItem(
-                achievement = achievement,
-                isUnlocked = true,
-                onAchievementClick = { selectedAchievement = achievement },
-            )
-          }
-
-          item(span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(modifier = Modifier.height(8.dp))
-            LabeledDivider(
-                text = context.getString(R.string.to_discover),
-                color = colorScheme.onBackground,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-          }
-          items(uiState.locked) { achievement ->
-            AchievementItem(
-                achievement = achievement,
-                isUnlocked = false,
-                onAchievementClick = { selectedAchievement = achievement },
-            )
           }
         }
       }
-    }
-    selectedAchievement?.let { achievement ->
-      AchievementDetailsDialog(
-          achievement = achievement,
-          onClose = { selectedAchievement = null },
-      )
+      selectedAchievement?.let { achievement ->
+        AchievementDetailsDialog(
+            achievement = achievement,
+            onClose = { selectedAchievement = null },
+        )
+      }
+    } else {
+      OfflineScreen(innerPadding = paddingValues)
     }
   }
 }

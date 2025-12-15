@@ -157,6 +157,16 @@ fun ReportDetailsScreen(
   }
 }
 
+/**
+ * Main content of the report details screen, handling loading, error, and loaded states.
+ *
+ * @param innerPadding The padding values to be applied to the screen content.
+ * @param uiState The UI state of the report details screen.
+ * @param reportDetailsViewModel The ViewModel managing the report details state.
+ * @param onProfile Callback when the user wants to view a profile.
+ * @param reportId The ID of the report to display.
+ * @param onGoBack Callback when the user wants to go back.
+ */
 @Composable
 fun ReportDetailsScreenContent(
     innerPadding: PaddingValues,
@@ -721,32 +731,33 @@ private fun ReportCommentInput(
 
       var text by remember { mutableStateOf("") }
 
-      OutlinedTextField(
-          value = text,
-          enabled = isOnline,
-          onValueChange = { text = it },
-          placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
-          modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
-          shape = RoundedCornerShape(32.dp),
-          singleLine = true,
-          trailingIcon = {
-            IconButton(
-                onClick = {
-                  if (text.isNotBlank()) {
-                    onSend(text)
-                    text = ""
-                  }
-                },
-                modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
-            ) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Send,
-                  contentDescription = "Send comment",
-                  tint = colorScheme.onBackground,
-              )
-            }
-          },
-      )
+      if (isOnline) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
+            modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
+            shape = RoundedCornerShape(32.dp),
+            singleLine = true,
+            trailingIcon = {
+              IconButton(
+                  onClick = {
+                    if (text.isNotBlank()) {
+                      onSend(text)
+                      text = ""
+                    }
+                  },
+                  modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
+              ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send comment",
+                    tint = colorScheme.onBackground,
+                )
+              }
+            },
+        )
+      }
     }
   }
 }

@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -64,6 +65,7 @@ fun ProfileAchievements(
     id: Id = "",
     onAchievements: (Id) -> Unit = {},
     listAchievement: List<Achievement> = emptyList(),
+    isOnline: Boolean = true,
 ) {
   val cs = colorScheme
 
@@ -83,16 +85,19 @@ fun ProfileAchievements(
     ) {
       Column(
           modifier = Modifier.padding(12.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         Text(
-            text = LocalContext.current.getString(R.string.no_achievements),
+            text =
+                if (isOnline) LocalContext.current.getString(R.string.no_achievements)
+                else LocalContext.current.getString(R.string.no_achievements_offline),
             color = cs.onBackground,
             style = typography.titleMedium,
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Button(
             onClick = { onAchievements(id) },
+            enabled = isOnline,
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor = cs.onBackground,
@@ -212,12 +217,12 @@ fun ProfileAchievements(
                       containerColor = cs.onBackground,
                       contentColor = cs.background,
                   ),
-          ) {
-            Text(
-                text = LocalContext.current.getString(R.string.view_achievements),
-                style = typography.titleSmall,
-            )
-          }
+              enabled = isOnline) {
+                Text(
+                    text = LocalContext.current.getString(R.string.view_achievements),
+                    style = typography.titleSmall,
+                )
+              }
         }
   }
 }

@@ -178,6 +178,7 @@ fun ProfileScreen(
               isOnline = isOnline,
               onFriends = onFriends,
               showMap = showMap,
+              isOnline = isOnline,
           )
         }
       }
@@ -197,6 +198,7 @@ fun ProfileContent(
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
     showMap: Boolean = true,
+    isOnline: Boolean = true,
 ) {
   val id = user.userId
 
@@ -233,11 +235,12 @@ fun ProfileContent(
             id = id,
             onAchievements = onAchievements,
             listAchievement = state.achievements,
+            isOnline = isOnline,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
         if (showMap) {
-          ProfileMap(id = id, onMap = onMap, pins = state.recentPins)
+          ProfileMap(id = id, onMap = onMap, pins = state.recentPins, isOnline = isOnline)
         }
         Spacer(Modifier.height(12.dp))
       }

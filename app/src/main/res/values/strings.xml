@@ -22,6 +22,7 @@
     <string name="default_description">No bio yet.</string>
     <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
+    <string name="no_achievements_offline">Out in the wild - back online to see</string>
 
     <!-- Edit Profile screen -->
     <string name="edit_profile_title">Edit Profile</string>
@@ -220,7 +221,7 @@
     <string name="no_discoveries">No discoveries yet, start exploring!</string>
     <string name="friends_offline_title">Friends not observed</string>
     <string name="friends_offline_subtitle">Connection unavailable</string>
-    <string name="friends_offline_message">Reconnect to continue tracking your social habitat.</string>
+    <string name="friends_offline_message">Reconnect to continue tracking social habitats.</string>
 
 
     <!-- Post details screen -->

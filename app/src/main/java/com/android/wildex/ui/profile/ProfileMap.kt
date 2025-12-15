@@ -30,7 +30,6 @@ import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
-import com.android.wildex.ui.map.OfflineAwareMiniMap
 import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -56,7 +55,12 @@ import kotlin.math.*
  * @param pins List of geodetic points to show as pins on the mini-map.
  */
 @Composable
-fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyList()) {
+fun ProfileMap(
+    id: Id = "",
+    onMap: (Id) -> Unit = {},
+    pins: List<Point> = emptyList(),
+    isOnline: Boolean = true
+) {
   val cs = colorScheme
   val context = LocalContext.current
   val styleUri = context.getString(R.string.map_style)
@@ -92,6 +96,7 @@ fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyL
       )
       Button(
           onClick = { onMap(id) },
+          enabled = isOnline,
           modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
           colors =
               ButtonDefaults.buttonColors(

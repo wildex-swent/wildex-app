@@ -60,9 +60,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.offline.OfflineScreen
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -90,6 +92,8 @@ fun EditProfileScreen(
   LaunchedEffect(Unit) { editScreenViewModel.loadUIState() }
   val uiState by editScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   val userLocale = context.resources.configuration.locales[0]
   val countryNames =
       remember(userLocale) {
@@ -120,20 +124,24 @@ fun EditProfileScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.EDIT_PROFILE_SCREEN),
       topBar = { EditProfileTopBar(isNewUser, onGoBack) },
   ) { pd ->
-    when {
-      uiState.isError -> LoadingFail()
-      uiState.isLoading -> LoadingScreen()
-      else ->
-          EditView(
-              editScreenViewModel = editScreenViewModel,
-              onSave = onSave,
-              isNewUser = isNewUser,
-              pd = pd,
-              uiState = uiState,
-              countryNames = countryNames,
-              cs = cs,
-              pickImageLauncher = pickImageLauncher,
-          )
+    if (isOnline) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else ->
+            EditView(
+                editScreenViewModel = editScreenViewModel,
+                onSave = onSave,
+                isNewUser = isNewUser,
+                pd = pd,
+                uiState = uiState,
+                countryNames = countryNames,
+                cs = cs,
+                pickImageLauncher = pickImageLauncher,
+            )
+      }
+    } else {
+      OfflineScreen(innerPadding = pd)
     }
   }
 }

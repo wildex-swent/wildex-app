@@ -485,7 +485,7 @@ fun SettingTemplate(
           color = colorScheme.onBackground,
           style = typography.titleSmall,
           maxLines = 1,
-          modifier = Modifier.padding(horizontal = 6.dp),
+          modifier = Modifier.padding(horizontal = 12.dp),
       )
     }
     interactableElement()

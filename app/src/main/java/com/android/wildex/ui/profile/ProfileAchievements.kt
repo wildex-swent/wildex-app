@@ -51,7 +51,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -83,16 +82,13 @@ fun ProfileAchievements(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = cs.background),
     ) {
-      Column(
-          modifier = Modifier.padding(12.dp),
-      ) {
+      Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.Start) {
         Text(
             text =
                 if (isOnline) LocalContext.current.getString(R.string.no_achievements)
                 else LocalContext.current.getString(R.string.no_achievements_offline),
             color = cs.onBackground,
             style = typography.titleMedium,
-            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Button(
@@ -103,8 +99,7 @@ fun ProfileAchievements(
                     containerColor = cs.onBackground,
                     contentColor = cs.background,
                 ),
-            modifier =
-                Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+            modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
         ) {
           Text(
               text = LocalContext.current.getString(R.string.view_achievements),

@@ -1,6 +1,7 @@
 package com.android.wildex.ui.achievement
 
 import android.content.res.Configuration
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,12 +12,14 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.AppTheme
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -33,6 +36,7 @@ class AchievementsScreenTest {
 
   private lateinit var userAchievementsRepository: FakeUserAchievementsRepository
   private lateinit var viewModel: AchievementsScreenViewModel
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   private val postMaster =
       Achievement(
@@ -134,12 +138,17 @@ class AchievementsScreenTest {
 
   @Test
   fun noArgument_callCheck() {
-    composeTestRule.setContent { AchievementsScreen() }
+    fakeObserver.setOnline(true)
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen()
+      }
+    }
   }
 
   @Test
   fun loadingScreen_shownWhileFetchingAchievements() {
-
+    fakeObserver.setOnline(true)
     val fetchSignal = CompletableDeferred<Unit>()
     userAchievementsRepository.fetchSignal = fetchSignal
     userAchievementsRepository.unlocked = unlockedAchievement
@@ -153,7 +162,9 @@ class AchievementsScreenTest {
       config.uiMode =
           Configuration.UI_MODE_NIGHT_YES or
               (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
-      AchievementsScreen(viewModel = viewModel)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel)
+      }
     }
 
     composeTestRule
@@ -197,6 +208,7 @@ class AchievementsScreenTest {
 
   @Test
   fun loadingFailed_shownWhenError() {
+    fakeObserver.setOnline(true)
     userAchievementsRepository.shouldThrowOnFetch = true
     userAchievementsRepository.unlocked = unlockedAchievement
     userAchievementsRepository.all = achievements
@@ -207,7 +219,9 @@ class AchievementsScreenTest {
       config.uiMode =
           Configuration.UI_MODE_NIGHT_YES or
               (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
-      AchievementsScreen(viewModel = viewModel)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel)
+      }
     }
     composeTestRule
         .onNodeWithTag(LoadingScreenTestTags.LOADING_FAIL, useUnmergedTree = true)
@@ -216,6 +230,7 @@ class AchievementsScreenTest {
 
   @Test
   fun backButton_invokesCallback() {
+    fakeObserver.setOnline(true)
     var backClicked = false
     userAchievementsRepository.unlocked = emptyList()
     userAchievementsRepository.all = emptyList()
@@ -225,7 +240,9 @@ class AchievementsScreenTest {
       config.uiMode =
           Configuration.UI_MODE_NIGHT_NO or
               (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv())
-      AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel, onGoBack = { backClicked = true })
+      }
     }
     composeTestRule.waitForIdle()
 
@@ -237,12 +254,16 @@ class AchievementsScreenTest {
 
   @Test
   fun achievementOpacity_matchesLockedState() {
-
+    fakeObserver.setOnline(true)
     userAchievementsRepository.unlocked = unlockedAchievement
     userAchievementsRepository.all = achievements
     AppTheme.appearanceMode = AppearanceMode.LIGHT
     viewModel.loadUIState("")
-    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
 
     unlockedAchievement.forEach { achievement ->
@@ -278,10 +299,15 @@ class AchievementsScreenTest {
 
   @Test
   fun topBar_displaysCorrectly_AndBackButtonWorks() {
+    fakeObserver.setOnline(true)
     userAchievementsRepository.unlocked = emptyList()
     userAchievementsRepository.all = emptyList()
     var back = 0
-    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel, onGoBack = { ++back }) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel, onGoBack = { ++back })
+      }
+    }
     composeTestRule.waitForIdle()
 
     composeTestRule
@@ -300,10 +326,15 @@ class AchievementsScreenTest {
 
   @Test
   fun clickingAchievementOpensDetailsDialog() {
+    fakeObserver.setOnline(true)
     userAchievementsRepository.unlocked = unlockedAchievement
     userAchievementsRepository.all = achievements
     AppTheme.appearanceMode = AppearanceMode.DARK
-    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel)
+      }
+    }
 
     unlockedAchievement.forEach {
       composeTestRule
@@ -339,10 +370,15 @@ class AchievementsScreenTest {
 
   @Test
   fun emptyAchievements_displayPlaceholder() {
+    fakeObserver.setOnline(true)
     userAchievementsRepository.unlocked = emptyList()
     userAchievementsRepository.all = achievements
 
-    composeTestRule.setContent { AchievementsScreen(viewModel = viewModel) }
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        AchievementsScreen(viewModel = viewModel)
+      }
+    }
     composeTestRule.waitForIdle()
     composeTestRule
         .onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER)

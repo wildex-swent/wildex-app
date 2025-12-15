@@ -7,6 +7,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.ProgressInfo
 import com.android.wildex.model.utils.URL
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -60,6 +61,8 @@ data class AchievementUIState(
 class AchievementsScreenViewModel(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AchievementsUIState(isLoading = true))
   val uiState: StateFlow<AchievementsUIState> = _uiState.asStateFlow()
@@ -75,7 +78,7 @@ class AchievementsScreenViewModel(
       try {
         // 1) Repo calls off-main, in parallel
         val (allAchievements, unlockedAchievements) =
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
               val allDeferred = async { userAchievementsRepository.getAllAchievements() }
               val unlockedDeferred = async {
                 userAchievementsRepository.getAllAchievementsByUser(userId)
@@ -89,7 +92,7 @@ class AchievementsScreenViewModel(
             allAchievements.asSequence().filter { it.achievementId !in unlockedIds }.toList()
 
         val (unlockedUI, lockedUI) =
-            withContext(Dispatchers.Default) {
+            withContext(computeDispatcher) {
               coroutineScope {
                 val unlockedUIDeferred =
                     unlockedAchievements.map { ach ->

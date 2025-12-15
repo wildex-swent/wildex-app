@@ -30,8 +30,8 @@
     <string name="username">Username*</string>
     <string name="next">Next</string>
     <string name="bio">Bio</string>
-    <string name="account_type">Select Account Type</string>
-    <string name="user_type">Choosing to be a professional user will allow you to see animal reports and be assigned to them. Make sure you are eligible.</string>
+    <string name="account_type_title">Select Account Type</string>
+    <string name="user_type_info">Choosing to be a professional user will allow you to see animal reports and be assigned to them. Make sure you are eligible.</string>
     <string name="user_type_setting">You change this anytime in your settings.</string>
     <string name="complete">Complete</string>
     <string name="tag_line">Discover the wild around you</string>

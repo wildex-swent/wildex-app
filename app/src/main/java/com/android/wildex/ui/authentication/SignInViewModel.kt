@@ -77,8 +77,7 @@ class SignInViewModel(
     viewModelScope.launch {
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id)
-              )
+                  serverClientId = context.getString(R.string.default_web_client_id))
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
@@ -91,7 +90,6 @@ class SignInViewModel(
                   try {
                     val userId = firebaseUser.uid
                     val googlePhotoUrl = firebaseUser.photoUrl?.toString() ?: ""
-                    val displayName = firebaseUser.displayName ?: ""
 
                     val user =
                         try {
@@ -100,7 +98,7 @@ class SignInViewModel(
                           val user =
                               User(
                                   userId = userId,
-                                  username = displayName,
+                                  username = "",
                                   name = "",
                                   surname = "",
                                   bio = "",
@@ -194,8 +192,12 @@ class SignInViewModel(
     val nextStage = currentStage?.next() ?: OnBoardingStage.NAMING
     _uiState.update { it.copy(isLoading = true) }
     viewModelScope.launch {
-      updateUser(nextStage)
-      _uiState.update { it.copy(onBoardingStage = nextStage, isLoading = false) }
+      try {
+        updateUser(nextStage)
+        _uiState.update { it.copy(isLoading = false, onBoardingStage = nextStage) }
+      } catch (e: Exception) {
+        _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
+      }
     }
   }
 
@@ -214,9 +216,10 @@ class SignInViewModel(
     _uiState.update { it.copy(isLoading = true) }
     viewModelScope.launch {
       try {
-        val data = _uiState.value.onBoardingData
-        initializeUserUseCase(data.userId)
-        userTokensRepository.addTokenToUser(data.userId, userTokensRepository.getCurrentToken())
+        val userId = _uiState.value.onBoardingData.userId
+        initializeUserUseCase(userId)
+        userTokensRepository.addTokenToUser(userId, userTokensRepository.getCurrentToken())
+        updateUser(OnBoardingStage.COMPLETE)
         _uiState.update { it.copy(isLoading = false, onBoardingStage = OnBoardingStage.COMPLETE) }
       } catch (e: Exception) {
         _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
@@ -225,30 +228,25 @@ class SignInViewModel(
   }
 
   private suspend fun updateUser(newStage: OnBoardingStage) {
-    try {
-      val data = _uiState.value.onBoardingData
-      val pictureUri = data.profilePicture
-      val profilePictureUrl =
-          if (!pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https"))
-              storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
-          else data.profilePicture.toString()
-      val user =
-          User(
-              userId = data.userId,
-              username = data.username,
-              name = data.name,
-              surname = data.surname,
-              bio = data.bio,
-              profilePictureURL = profilePictureUrl,
-              userType = data.userType,
-              creationDate = Timestamp.now(),
-              country = data.country,
-              onBoardingStage = newStage,
-          )
-      userRepository.editUser(user.userId, user)
-      _uiState.update { it.copy(isLoading = false) }
-    } catch (e: Exception) {
-      _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
-    }
+    val data = _uiState.value.onBoardingData
+    val pictureUri = data.profilePicture
+    val profilePictureUrl =
+        if (!pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https"))
+            storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
+        else data.profilePicture.toString()
+    val user =
+        User(
+            userId = data.userId,
+            username = data.username,
+            name = data.name,
+            surname = data.surname,
+            bio = data.bio,
+            profilePictureURL = profilePictureUrl,
+            userType = data.userType,
+            creationDate = Timestamp.now(),
+            country = data.country,
+            onBoardingStage = newStage,
+        )
+    userRepository.editUser(user.userId, user)
   }
 }

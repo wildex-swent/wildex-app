@@ -90,12 +90,11 @@ class MainActivity : ComponentActivity() {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
       CompositionLocalProvider(
-          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)
-      ) {
-        WildexTheme(theme = AppTheme.appearanceMode) {
-          Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
-        }
-      }
+          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)) {
+            WildexTheme(theme = AppTheme.appearanceMode) {
+              Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+            }
+          }
     }
   }
 
@@ -313,8 +312,7 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }
-          ),
+              }),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(

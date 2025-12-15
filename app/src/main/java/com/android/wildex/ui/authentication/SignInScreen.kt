@@ -61,12 +61,15 @@ import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 import com.android.wildex.ui.theme.WildexBlack
 import com.android.wildex.ui.theme.WildexLightSurface
+import kotlinx.coroutines.delay
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_BUTTON = "loginButton"
   const val WELCOME = "welcome"
   const val LOADING_INDICATOR = "loadingIndicator"
+
+  const val WAITING_SCREEN = "waitingScreen"
 }
 
 /**
@@ -96,34 +99,7 @@ fun SignInScreen(
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       containerColor = WildexLightSurface,
-      topBar = {
-        val stage = uiState.onBoardingStage
-        if (stage != null) {
-          val color =
-              if (stage == OnBoardingStage.COMPLETE) colorScheme.primary
-              else colorScheme.onBackground
-          Column(
-              modifier = Modifier.fillMaxWidth().background(colorScheme.background).padding(20.dp),
-              verticalArrangement = Arrangement.spacedBy(6.dp),
-          ) {
-            val currentStep = stage.ordinal
-            val maxSteps = OnBoardingStage.entries.size - 1
-            val progress = currentStep.toFloat() / maxSteps
-            ProgressBar(
-                color = color,
-                trackColor = colorScheme.surface.copy(.6f),
-                progress = progress,
-                modifier = Modifier.fillMaxWidth().height(10.dp),
-            )
-            Text(
-                text = stringResource(R.string.step, currentStep, maxSteps),
-                style = typography.titleMedium,
-                modifier = Modifier.align(Alignment.Start),
-                color = color,
-            )
-          }
-        }
-      },
+      topBar = { SignInTopBar(uiState.onBoardingStage) },
       content = { paddingValues ->
         Box(
             modifier =
@@ -183,12 +159,13 @@ fun SignInScreen(
                       isLoading = uiState.isLoading,
                   )
               OnBoardingStage.AWAITING_COMPLETE -> {
-                LaunchedEffect(Unit) { authViewModel.finishRegistration() }
+                LaunchedEffect(Unit) {
+                  delay(5000)
+                  authViewModel.finishRegistration()
+                }
                 WaitingScreen()
               }
-              else -> {
-                LaunchedEffect(Unit) { authViewModel.goToNextStage() }
-              }
+              else -> {}
             }
           }
         }
@@ -197,9 +174,53 @@ fun SignInScreen(
 }
 
 @Composable
+private fun SignInTopBar(stage: OnBoardingStage?) {
+  if (stage != null && stage != OnBoardingStage.COMPLETE) {
+    val color =
+        if (stage == OnBoardingStage.AWAITING_COMPLETE) colorScheme.primary
+        else colorScheme.onBackground
+    Column(
+        modifier = Modifier.fillMaxWidth().background(colorScheme.background).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+      val currentStep = stage.ordinal + 1
+      val maxSteps = OnBoardingStage.entries.size - 1
+      val progress = currentStep.toFloat() / maxSteps
+      ProgressBar(
+          color = color,
+          trackColor = colorScheme.surface.copy(.6f),
+          progress = progress,
+          modifier = Modifier.fillMaxWidth().height(10.dp),
+      )
+      Text(
+          text = stringResource(R.string.step, currentStep, maxSteps),
+          style = typography.titleMedium,
+          modifier = Modifier.align(Alignment.Start),
+          color = color,
+      )
+    }
+  }
+}
+
+@Composable
 fun WaitingScreen() {
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    Text(text = "Waiting screen", style = typography.titleLarge)
+  Column(
+      modifier = Modifier.fillMaxSize().testTag(SignInScreenTestTags.WAITING_SCREEN),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Text(
+        text = "Initializing user...",
+        style = typography.titleLarge,
+        color = colorScheme.onBackground,
+    )
+    Spacer(modifier = Modifier.height(20.dp))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loader_cat))
+    LottieAnimation(
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+        modifier = Modifier.fillMaxSize(),
+    )
   }
 }
 

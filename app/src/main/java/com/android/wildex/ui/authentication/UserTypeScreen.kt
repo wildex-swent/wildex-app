@@ -21,12 +21,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 import com.android.wildex.model.user.UserType
+
+object UserTypeScreenTestTags {
+  const val USER_TYPE_SCREEN = "user_type_screen"
+  const val SELECT_TITLE = "select_title"
+  const val SELECT_INFO = "select_info"
+  const val SELECT_SETTING_INFO = "select_setting_info"
+  const val CHOICE_BUTTON_ROW = "choice_button_row"
+  const val BACK_BUTTON = "back_button"
+  const val NEXT_BUTTON = "next_button"
+
+  fun buttonTestTag(userType: UserType) = "button_${userType.name}"
+}
 
 @Composable
 fun UserTypeScreen(
@@ -38,17 +51,22 @@ fun UserTypeScreen(
 ) {
 
   Column(
-      modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+      modifier =
+          Modifier.fillMaxSize()
+              .padding(horizontal = 24.dp)
+              .testTag(UserTypeScreenTestTags.USER_TYPE_SCREEN),
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Center) {
-        Text(
-            text = stringResource(R.string.account_type),
-            style = typography.displayMedium,
-            color = colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 70.dp),
-        )
+      verticalArrangement = Arrangement.Center,
+  ) {
+    Text(
+        text = stringResource(R.string.account_type_title),
+        style = typography.displayMedium,
+        color = colorScheme.onBackground,
+        modifier = Modifier.padding(bottom = 70.dp).testTag(UserTypeScreenTestTags.SELECT_TITLE),
+    )
 
-        SingleChoiceSegmentedButtonRow {
+    SingleChoiceSegmentedButtonRow(
+        modifier = Modifier.testTag(UserTypeScreenTestTags.CHOICE_BUTTON_ROW)) {
           UserType.entries.forEachIndexed { index, option ->
             SegmentedButton(
                 shape =
@@ -70,6 +88,7 @@ fun UserTypeScreen(
                         disabledInactiveContentColor = Color(1),
                         disabledInactiveBorderColor = Color(1),
                     ),
+                modifier = Modifier.testTag(UserTypeScreenTestTags.buttonTestTag(option)),
             ) {
               Text(
                   text = option.name.replaceFirstChar { it.uppercaseChar() },
@@ -83,41 +102,44 @@ fun UserTypeScreen(
             }
           }
         }
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(32.dp))
 
-        Column(
-            modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-              Text(
-                  text = stringResource(R.string.user_type),
-                  style = typography.bodyMedium,
-                  color = colorScheme.onBackground,
-                  textAlign = TextAlign.Center,
-              )
-              Text(
-                  text = stringResource(R.string.user_type_setting),
-                  style = typography.bodySmall,
-                  color = colorScheme.onBackground.copy(.7f),
-                  textAlign = TextAlign.Center,
-              )
-            }
-        Spacer(modifier = Modifier.height(32.dp))
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Text(
+          text = stringResource(R.string.user_type_info),
+          style = typography.bodyMedium,
+          color = colorScheme.onBackground,
+          textAlign = TextAlign.Center,
+          modifier = Modifier.fillMaxWidth().testTag(UserTypeScreenTestTags.SELECT_INFO),
+      )
+      Text(
+          text = stringResource(R.string.user_type_setting),
+          style = typography.bodySmall,
+          color = colorScheme.onBackground.copy(.7f),
+          textAlign = TextAlign.Center,
+          modifier = Modifier.fillMaxWidth().testTag(UserTypeScreenTestTags.SELECT_SETTING_INFO),
+      )
+    }
+    Spacer(modifier = Modifier.height(32.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          OutlinedButton(
-              enabled = !isLoading,
-              onClick = onBack,
-              modifier = Modifier.weight(1f).padding(end = 8.dp),
-          ) {
-            Text(stringResource(R.string.back))
-          }
-
-          Button(
-              enabled = !isLoading,
-              onClick = onNext,
-              modifier = Modifier.weight(1f).padding(start = 8.dp),
-          ) {
-            Text(stringResource(R.string.complete))
-          }
-        }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+      OutlinedButton(
+          enabled = !isLoading,
+          onClick = onBack,
+          modifier =
+              Modifier.weight(1f).padding(end = 8.dp).testTag(UserTypeScreenTestTags.BACK_BUTTON),
+      ) {
+        Text(stringResource(R.string.back))
       }
+
+      Button(
+          enabled = !isLoading,
+          onClick = onNext,
+          modifier =
+              Modifier.weight(1f).padding(start = 8.dp).testTag(UserTypeScreenTestTags.NEXT_BUTTON),
+      ) {
+        Text(stringResource(R.string.complete))
+      }
+    }
+  }
 }

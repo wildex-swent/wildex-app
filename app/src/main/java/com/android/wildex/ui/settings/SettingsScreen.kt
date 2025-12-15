@@ -338,6 +338,8 @@ fun DeleteAccountDialog(
           Text(text = context.getString(R.string.cancel), style = typography.bodyMedium)
         }
       },
+      containerColor = colorScheme.background,
+      tonalElevation = 2.dp,
   )
 }
 

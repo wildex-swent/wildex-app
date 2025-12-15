@@ -4,7 +4,6 @@ import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
-import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.utils.Id
@@ -17,7 +16,6 @@ import com.android.wildex.model.utils.Id
  * collection, and a UserTokens collection for notifications.
  */
 class InitializeUserUseCase(
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userAnimalsRepository: UserAnimalsRepository =

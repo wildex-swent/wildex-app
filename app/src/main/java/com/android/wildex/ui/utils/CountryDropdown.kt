@@ -10,6 +10,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -36,6 +38,7 @@ fun CountryDropdown(
     modifier: Modifier = Modifier,
     selectedCountry: String,
     onCountrySelected: (String) -> Unit,
+    fieldShape: Shape = OutlinedTextFieldDefaults.shape,
 ) {
   var expanded by remember { mutableStateOf(false) }
   var searchQuery by remember { mutableStateOf("") }
@@ -76,14 +79,15 @@ fun CountryDropdown(
           searchQuery = it
           if (!expanded) expanded = true
         },
-        label = { Text(stringResource(R.string.country), color = colorScheme.onBackground.copy(.5f)) },
+        label = {
+          Text(stringResource(R.string.country), color = colorScheme.onBackground.copy(.5f))
+        },
         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
         modifier =
-            Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
-                .fillMaxWidth(),
+            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true).fillMaxWidth(),
         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
         singleLine = true,
+        shape = fieldShape,
     )
 
     ExposedDropdownMenu(

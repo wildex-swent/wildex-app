@@ -499,36 +499,42 @@ class HomeScreenViewModelTest {
 
   @Test
   fun filterPostsByFriendsWorks() {
-    coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(
-        User(
-            userId = "author1",
-            username = "author_one",
-            name = "name",
-            surname = "surname",
-            bio = "bio",
-            profilePictureURL = "url1",
-            userType = UserType.REGULAR,
-            creationDate = Timestamp(0, 0),
-            country = "country")
-    )
+    mainDispatcherRule.runTest {
+      coEvery { postsRepository.getAllPosts() } returns listOf(p1)
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns
+          listOf(
+              User(
+                  userId = "author1",
+                  username = "author_one",
+                  name = "name",
+                  surname = "surname",
+                  bio = "bio",
+                  profilePictureURL = "url1",
+                  userType = UserType.REGULAR,
+                  creationDate = Timestamp(0, 0),
+                  country = "country"))
 
-      val postState = PostState(
-          post = p1,
-          isLiked = true,
-          author = author1,
-          animalName = animal1.name,
-          likeCount = 1,
-          commentsCount = 1
-      )
+      val postState =
+          PostState(
+              post = p1,
+              isLiked = true,
+              author = author1,
+              animalName = animal1.name,
+              likeCount = 1,
+              commentsCount = 1)
 
-    viewModel.setPostsFilter(onlyFriendsPosts = true)
+      viewModel.loadUIState()
+      advanceUntilIdle()
+      viewModel.setPostsFilter(onlyFriendsPosts = true)
 
-    val postStates = listOf(postState)
+      val postStates = listOf(postState)
 
-    val actual = viewModel.filterPosts(postStates = postStates)
+      val actual = viewModel.filterPosts(postStates = postStates)
 
-    assertTrue(actual.contains(postState))
-    assertEquals(1, actual.size)
+      assertTrue(actual.contains(postState))
+      assertEquals(1, actual.size)
+    }
   }
 
   @Test

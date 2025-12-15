@@ -134,7 +134,7 @@ object HomeScreenTestTags {
   const val FILTERS_MANAGER = "HomeScreenFiltersManager"
   const val FILTERS_MANAGER_APPLY = "HomeScreenFiltersManagerApply"
   const val FILTERS_MANAGER_RESET = "HomeScreenFiltersManagerReset"
-    const val FILTERS_MANAGER_LAZY_COLUMN = "HomeScreenFiltersManagerLazyColumn"
+  const val FILTERS_MANAGER_LAZY_COLUMN = "HomeScreenFiltersManagerLazyColumn"
 
   const val FILTERS_MANAGER_FROM_AUTHOR = "HomeScreenFiltersManagerFromAuthor"
   const val FILTERS_MANAGER_FROM_PLACE = "HomeScreenFiltersManagerFromPlace"
@@ -424,38 +424,38 @@ fun FiltersManager(
 
           if (expanded && matchingUsers.isNotEmpty()) {
             LazyColumn(
-                modifier = Modifier.heightIn(max = (4 * 56).dp)
-                    .testTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
-            ) {
-              items(count = matchingUsers.size) { index ->
-                val user = matchingUsers[index]
-                ListItem(
-                    headlineContent = {
-                      Text(user.name + " " + user.surname, style = typography.bodyLarge)
-                    },
-                    supportingContent = {
-                      Text(text = user.username, style = typography.bodyMedium)
-                    },
-                    leadingContent = {
-                      ClickableProfilePicture(
-                          modifier = Modifier.size(45.dp),
-                          profileId = user.userId,
-                          profilePictureURL = user.profilePictureURL,
-                          profileUserType = user.userType,
-                          onProfile = {
-                            onFilterChange.onFromAuthorChange(user.username)
-                            expanded = false
-                          },
-                      )
-                    },
-                    colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
-                    modifier =
-                        Modifier.fillMaxWidth().clickable {
-                          onFilterChange.onFromAuthorChange(user.username)
-                          expanded = false
-                        })
-              }
-            }
+                modifier =
+                    Modifier.heightIn(max = (4 * 56).dp)
+                        .testTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)) {
+                  items(count = matchingUsers.size) { index ->
+                    val user = matchingUsers[index]
+                    ListItem(
+                        headlineContent = {
+                          Text(user.name + " " + user.surname, style = typography.bodyLarge)
+                        },
+                        supportingContent = {
+                          Text(text = user.username, style = typography.bodyMedium)
+                        },
+                        leadingContent = {
+                          ClickableProfilePicture(
+                              modifier = Modifier.size(45.dp),
+                              profileId = user.userId,
+                              profilePictureURL = user.profilePictureURL,
+                              profileUserType = user.userType,
+                              onProfile = {
+                                onFilterChange.onFromAuthorChange(user.username)
+                                expanded = false
+                              },
+                          )
+                        },
+                        colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
+                        modifier =
+                            Modifier.fillMaxWidth().clickable {
+                              onFilterChange.onFromAuthorChange(user.username)
+                              expanded = false
+                            })
+                  }
+                }
           }
 
           FilterTextField(

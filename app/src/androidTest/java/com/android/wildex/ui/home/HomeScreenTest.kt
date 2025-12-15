@@ -22,7 +22,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -122,6 +121,7 @@ class HomeScreenTest {
         ))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
+    userFriendsRepository.initializeUserFriends("currentUserId-1")
     animalRepository.addAnimal(
         Animal(
             animalId = "a1",
@@ -976,35 +976,35 @@ class HomeScreenTest {
     composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).assert(isOff())
   }
 
-    /*@Test
-    fun ColumnOfMatchingUsersIsDisplayed() {
-        composeTestRule.setContent {
-            FiltersManager(
-                postsFilters = PostsFilters(),
-                onFilterChange = OnFilterChange(
-                    onFromAuthorChange = {},
-                    onFromPlaceChange = {},
-                    onOfAnimalChange = {},
-                    onOnlyFriendsPostsChange = {},
-                    onOnlyMyPostsChange = {},
-                ),
-                onDismissRequest = {},
-                onApply = {},
-                onReset = {},
-            )
-        }
+  /*@Test
+  fun ColumnOfMatchingUsersIsDisplayed() {
+      composeTestRule.setContent {
+          FiltersManager(
+              postsFilters = PostsFilters(),
+              onFilterChange = OnFilterChange(
+                  onFromAuthorChange = {},
+                  onFromPlaceChange = {},
+                  onOfAnimalChange = {},
+                  onOnlyFriendsPostsChange = {},
+                  onOnlyMyPostsChange = {},
+              ),
+              onDismissRequest = {},
+              onApply = {},
+              onReset = {},
+          )
+      }
 
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
-            .assertIsNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+          .assertIsNotDisplayed()
 
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
-            .performClick()
-            .performTextInput("t")
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+          .performClick()
+          .performTextInput("t")
 
-        composeTestRule
-            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
-            .assertIsDisplayed()
-    }*/
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+          .assertIsDisplayed()
+  }*/
 }

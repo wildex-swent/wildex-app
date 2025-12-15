@@ -55,11 +55,7 @@ import kotlin.math.*
  * @param pins List of geodetic points to show as pins on the mini-map.
  */
 @Composable
-fun ProfileMap(
-    id: Id = "",
-    onMap: (Id) -> Unit = {},
-    pins: List<Point> = emptyList(),
-) {
+fun ProfileMap(id: Id = "", onMap: (Id) -> Unit = {}, pins: List<Point> = emptyList()) {
   val cs = colorScheme
   val context = LocalContext.current
   val styleUri = context.getString(R.string.map_style)

@@ -149,18 +149,6 @@ class HomeScreenViewModelTest {
           likeCount = 1,
           commentsCount = 1)
 
-  private val user1 =
-      User(
-          userId = "author1",
-          username = "author_one",
-          name = "name",
-          surname = "surname",
-          bio = "bio",
-          profilePictureURL = "url1",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp(0, 0),
-          country = "country")
-
   @Before
   fun setUp() {
     postsRepository = mockk()
@@ -511,18 +499,36 @@ class HomeScreenViewModelTest {
 
   @Test
   fun filterPostsByFriendsWorks() {
-    coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(user1)
+    coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(
+        User(
+            userId = "author1",
+            username = "author_one",
+            name = "name",
+            surname = "surname",
+            bio = "bio",
+            profilePictureURL = "url1",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp(0, 0),
+            country = "country")
+    )
+
+      val postState = PostState(
+          post = p1,
+          isLiked = true,
+          author = author1,
+          animalName = animal1.name,
+          likeCount = 1,
+          commentsCount = 1
+      )
 
     viewModel.setPostsFilter(onlyFriendsPosts = true)
 
-    val postStates = listOf(postState1, postState2)
+    val postStates = listOf(postState)
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    assertTrue(actual.isEmpty())
-
-    // assertTrue(actual.contains(postState1))
-    // assertEquals(1, actual.size)
+    assertTrue(actual.contains(postState))
+    assertEquals(1, actual.size)
   }
 
   @Test

@@ -116,11 +116,11 @@ import java.util.Locale
  * @property onOnlyMyPostsChange the onChange function for the onlyMyPosts filter
  */
 data class OnFilterChange(
-    val onFromAuthorChange: (String?) -> Unit,
-    val onFromPlaceChange: (String?) -> Unit,
-    val onOfAnimalChange: (String?) -> Unit,
-    val onOnlyFriendsPostsChange: (Boolean) -> Unit,
-    val onOnlyMyPostsChange: (Boolean) -> Unit,
+    val onFromAuthorChange: (String?) -> Unit = {},
+    val onFromPlaceChange: (String?) -> Unit = {},
+    val onOfAnimalChange: (String?) -> Unit = {},
+    val onOnlyFriendsPostsChange: (Boolean) -> Unit = {},
+    val onOnlyMyPostsChange: (Boolean) -> Unit = {},
 )
 
 /** Test tag constants used for UI testing of HomeScreen components. */
@@ -134,6 +134,7 @@ object HomeScreenTestTags {
   const val FILTERS_MANAGER = "HomeScreenFiltersManager"
   const val FILTERS_MANAGER_APPLY = "HomeScreenFiltersManagerApply"
   const val FILTERS_MANAGER_RESET = "HomeScreenFiltersManagerReset"
+    const val FILTERS_MANAGER_LAZY_COLUMN = "HomeScreenFiltersManagerLazyColumn"
 
   const val FILTERS_MANAGER_FROM_AUTHOR = "HomeScreenFiltersManagerFromAuthor"
   const val FILTERS_MANAGER_FROM_PLACE = "HomeScreenFiltersManagerFromPlace"
@@ -370,11 +371,11 @@ fun OpenFiltersButton(
  */
 @Composable
 fun FiltersManager(
-    postsFilters: PostsFilters,
-    onFilterChange: OnFilterChange,
-    onDismissRequest: () -> Unit,
-    onApply: () -> Unit,
-    onReset: () -> Unit,
+    postsFilters: PostsFilters = PostsFilters(),
+    onFilterChange: OnFilterChange = OnFilterChange(),
+    onDismissRequest: () -> Unit = {},
+    onApply: () -> Unit = {},
+    onReset: () -> Unit = {},
 ) {
   val cs: ColorScheme = colorScheme
   val userIndex =
@@ -422,7 +423,10 @@ fun FiltersManager(
                   })
 
           if (expanded && matchingUsers.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.heightIn(max = (4 * 56).dp)) {
+            LazyColumn(
+                modifier = Modifier.heightIn(max = (4 * 56).dp)
+                    .testTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+            ) {
               items(count = matchingUsers.size) { index ->
                 val user = matchingUsers[index]
                 ListItem(

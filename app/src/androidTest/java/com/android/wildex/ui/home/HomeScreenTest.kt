@@ -22,6 +22,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -830,14 +831,6 @@ class HomeScreenTest {
     composeTestRule.setContent {
       FiltersManager(
           postsFilters = homeScreenVM.uiState.value.postsFilters,
-          onFilterChange =
-              OnFilterChange(
-                  onFromAuthorChange = {},
-                  onFromPlaceChange = {},
-                  onOfAnimalChange = {},
-                  onOnlyFriendsPostsChange = {},
-                  onOnlyMyPostsChange = {}),
-          onDismissRequest = {},
           onApply = {
             homeScreenVM.setPostsFilter(
                 fromPlace = fromPlace,
@@ -884,15 +877,6 @@ class HomeScreenTest {
     composeTestRule.setContent {
       FiltersManager(
           postsFilters = homeScreenVM.uiState.value.postsFilters,
-          onFilterChange =
-              OnFilterChange(
-                  onFromAuthorChange = {},
-                  onFromPlaceChange = {},
-                  onOfAnimalChange = {},
-                  onOnlyFriendsPostsChange = {},
-                  onOnlyMyPostsChange = {}),
-          onDismissRequest = {},
-          onApply = {},
           onReset = {
             fromAuthor = null
             fromPlace = null
@@ -954,7 +938,7 @@ class HomeScreenTest {
   }
 
   @Test
-  fun testFilterValuesInFiltersManager() {
+  fun filterValuesInFiltersManager() {
     val fromAuthor: String? by mutableStateOf("John")
     val fromPlace: String? by mutableStateOf("EPFL")
     val ofAnimal: String? by mutableStateOf("Cat")
@@ -970,17 +954,6 @@ class HomeScreenTest {
                   ofAnimal = ofAnimal,
                   onlyFriendsPosts = onlyFriendsPosts,
                   onlyMyPosts = onlyMyPosts),
-          onFilterChange =
-              OnFilterChange(
-                  onFromAuthorChange = {},
-                  onFromPlaceChange = {},
-                  onOfAnimalChange = {},
-                  onOnlyFriendsPostsChange = {},
-                  onOnlyMyPostsChange = {},
-              ),
-          onDismissRequest = {},
-          onApply = {},
-          onReset = {},
       )
     }
 
@@ -1003,72 +976,35 @@ class HomeScreenTest {
     composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).assert(isOff())
   }
 
-  /*@Test
-  fun testDisplayMatchingUsers() {
-      val matchingUsers = runBlocking {
-          listOf(
-              userRepository.getUser("currentUserId-1"),
-              userRepository.getUser("poster0")
-          )
-      }
+    /*@Test
+    fun ColumnOfMatchingUsersIsDisplayed() {
+        composeTestRule.setContent {
+            FiltersManager(
+                postsFilters = PostsFilters(),
+                onFilterChange = OnFilterChange(
+                    onFromAuthorChange = {},
+                    onFromPlaceChange = {},
+                    onOfAnimalChange = {},
+                    onOnlyFriendsPostsChange = {},
+                    onOnlyMyPostsChange = {},
+                ),
+                onDismissRequest = {},
+                onApply = {},
+                onReset = {},
+            )
+        }
 
-      var fromAuthor: String? by mutableStateOf(null)
-      val expanded by mutableStateOf(true)
+        composeTestRule
+            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+            .assertIsNotDisplayed()
 
-      composeTestRule.setContent {
-          FiltersManager(
-              postsFilters = PostsFilters(fromAuthor = fromAuthor),
-              onFilterChange = OnFilterChange(
-                  onFromAuthorChange = { fromAuthor = it },
-                  onFromPlaceChange = {},
-                  onOfAnimalChange = {},
-                  onOnlyFriendsPostsChange = {},
-                  onOnlyMyPostsChange = {}
-              ),
-              onDismissRequest = {},
-              onApply = {},
-              onReset = {},
-          )
+        composeTestRule
+            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+            .performClick()
+            .performTextInput("t")
 
-          // Simulate matching users
-          LazyColumn(modifier = Modifier.heightIn(max = (4 * 56).dp)) {
-              items(count = matchingUsers.size) { index ->
-                  val user = matchingUsers[index]
-                  ListItem(
-                      headlineContent = {
-                          Text("${user.name} ${user.surname}", style = typography.bodyLarge)
-                      },
-                      supportingContent = {
-                          Text(text = user.username, style = typography.bodyMedium)
-                      },
-                      leadingContent = {
-                          ClickableProfilePicture(
-                              modifier = Modifier.size(45.dp),
-                              profileId = user.userId,
-                              profilePictureURL = user.profilePictureURL,
-                              profileUserType = user.userType,
-                              onProfile = {
-                                  // Simulate the profile click action
-                                  fromAuthor = user.username
-                                  expanded = false
-                              }
-                          )
-                      },
-                      colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
-                      modifier = Modifier.fillMaxWidth().clickable {
-                          fromAuthor = user.username
-                          expanded = false
-                      }
-                  )
-              }
-          }
-      }
-
-      // Assert: Ensure that the matching users are displayed
-      composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
-      composeTestRule.onNodeWithText("johndoe").assertIsDisplayed()
-      composeTestRule.onNodeWithText("Jane Smith").assertIsDisplayed()
-      composeTestRule.onNodeWithText("janesmith").assertIsDisplayed()
-  }*/
-
+        composeTestRule
+            .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+            .assertIsDisplayed()
+    }*/
 }

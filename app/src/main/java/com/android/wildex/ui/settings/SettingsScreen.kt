@@ -87,6 +87,7 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 
 object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
@@ -110,6 +111,9 @@ object SettingsScreenTestTags {
   const val NOTIFICATIONS_SETTING_DIALOG = "notification_setting_dialog"
   const val NOTIFICATIONS_SETTING_DIALOG_CONFIRM = "notification_setting_dialog_confirm"
   const val NOTIFICATIONS_SETTING_DIALOG_CANCEL = "notification_setting_dialog_cancel"
+  const val USER_STATUS_DIALOG = "user_status_dialog"
+  const val USER_STATUS_DIALOG_CONFIRM = "user_status_dialog_confirm"
+  const val USER_STATUS_DIALOG_CANCEL = "user_status_dialog_cancel"
 }
 
 /**
@@ -135,6 +139,7 @@ fun SettingsScreen(
   val context = LocalContext.current
   var showDeletionValidation by remember { mutableStateOf(false) }
   var showSettingsDialog by remember { mutableStateOf(false) }
+  var showUserTypeValidation by remember { mutableStateOf(false) }
   val connectivityObserver = LocalConnectivityObserver.current
   val isOnline by connectivityObserver.isOnline.collectAsState()
 
@@ -217,6 +222,7 @@ fun SettingsScreen(
             isOnline = isOnline,
             viewModel = settingsScreenViewModel,
             notifPermissionState = notifPermissionState,
+            setUserTypeValidation = { showUserTypeValidation = true },
             showDialog = { showSettingsDialog = true },
         )
         if (showDeletionValidation) {
@@ -262,6 +268,11 @@ fun SettingsScreen(
               },
           )
         } else if (showSettingsDialog) SettingsPermissionDialog { showSettingsDialog = false }
+        else if (showUserTypeValidation) {
+          UserTypeValidationDialog(
+              dismissDialog = { showUserTypeValidation = false },
+              onUserStatusChanged = { settingsScreenViewModel.setUserType(it) })
+        }
       }
     }
   }
@@ -331,6 +342,7 @@ fun SettingsContent(
     isOnline: Boolean,
     viewModel: SettingsScreenViewModel,
     notifPermissionState: PermissionState?,
+    setUserTypeValidation: () -> Unit,
     showDialog: () -> Unit,
 ) {
   val groupButtonsColors =
@@ -380,6 +392,7 @@ fun SettingsContent(
           groupButtonsColors = groupButtonsColors,
           onUserStatusChanged = { viewModel.setUserType(it) },
           isOnline = isOnline,
+          setUserTypeValidation = setUserTypeValidation,
           onOfflineClick = { viewModel.onOfflineClick() },
       )
       SettingsDivider()
@@ -600,6 +613,7 @@ fun UserStatusOption(
     onUserStatusChanged: (UserType) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
     isOnline: Boolean,
+    setUserTypeValidation: () -> Unit,
     onOfflineClick: () -> Unit,
 ) {
   val context = LocalContext.current
@@ -627,7 +641,11 @@ fun UserStatusOption(
             onClick = {
               if (isOnline) {
                 val userType = getUserType(option, context)
-                onUserStatusChanged(userType)
+                if (currentUserStatus == UserType.PROFESSIONAL && userType == UserType.REGULAR) {
+                  setUserTypeValidation()
+                } else {
+                  onUserStatusChanged(userType)
+                }
               } else onOfflineClick()
             },
             selected = selectedIndex == index,
@@ -646,6 +664,58 @@ fun UserStatusOption(
       }
     }
   }
+}
+
+@Composable
+fun UserTypeValidationDialog(
+    dismissDialog: () -> Unit,
+    onUserStatusChanged: (UserType) -> Unit,
+) {
+  AlertDialog(
+      onDismissRequest = dismissDialog,
+      title = {
+        Text(
+            text = stringResource(R.string.user_change_validation_title),
+            color = colorScheme.onBackground,
+            style = typography.titleLarge,
+        )
+      },
+      text = {
+        Text(
+            text = stringResource(R.string.user_change_validation_text),
+            color = colorScheme.onBackground,
+            style = typography.bodyMedium)
+      },
+      confirmButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG_CONFIRM),
+            onClick = {
+              dismissDialog()
+              onUserStatusChanged(UserType.REGULAR)
+            },
+        ) {
+          Text(
+              text = stringResource(R.string.user_change_validation_confirm),
+              color = colorScheme.primary,
+              style = typography.bodyMedium)
+        }
+      },
+      dismissButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG_CANCEL),
+            onClick = dismissDialog,
+        ) {
+          Text(
+              text = stringResource(R.string.cancel),
+              color = colorScheme.onBackground,
+              style = typography.bodyMedium,
+          )
+        }
+      },
+      containerColor = colorScheme.background,
+      tonalElevation = 2.dp,
+      modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG),
+  )
 }
 
 private fun getUserType(option: String, context: Context): UserType =

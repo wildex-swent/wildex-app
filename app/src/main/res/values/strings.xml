@@ -48,6 +48,9 @@
     <string name="permission_required">Permission Required</string>
     <string name="enable_in_settings">Notification permission is required. Please enable it in Settings.</string>
     <string name="open_settings">Open Settings</string>
+    <string name="user_change_validation_title">Change user type ?</string>
+    <string name="user_change_validation_text">If you change your user type from PROFESSIONAL to REGULAR, you will be unassigned from every report you have self-assigned</string>
+    <string name="user_change_validation_confirm">Confirm</string>
 
     <!-- Friend screen -->
     <string name="friends_tab_title">Friends</string>

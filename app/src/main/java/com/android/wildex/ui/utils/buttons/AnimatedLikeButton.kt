@@ -12,7 +12,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
@@ -34,14 +37,16 @@ fun AnimatedLikeButton(
 ) {
 
   val scale = remember { Animatable(1f) }
+  var previousLiked by remember { mutableStateOf(likedByCurrentUser) }
 
   LaunchedEffect(likedByCurrentUser) {
-    if (likedByCurrentUser) {
+    if (!previousLiked && likedByCurrentUser) {
       scale.animateTo(1.4f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
       scale.animateTo(1.0f, animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
     } else {
       scale.snapTo(1.0f)
     }
+    previousLiked = likedByCurrentUser
   }
   Icon(
       imageVector =

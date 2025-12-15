@@ -69,6 +69,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -79,6 +80,7 @@ import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
+import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.mapbox.geojson.Point
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -122,6 +124,8 @@ fun ReportScreen(
 ) {
   val context = LocalContext.current
   val uiState by reportScreenViewModel.uiState.collectAsState()
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { reportScreenViewModel.loadUIState() }
   LaunchedEffect(uiState.errorMsg) {
@@ -148,15 +152,19 @@ fun ReportScreen(
         )
       },
   ) { innerPadding ->
-    ReportScreenContent(
-        innerPadding = innerPadding,
-        uiState = uiState,
-        reportScreenViewModel = reportScreenViewModel,
-        context = context,
-        onProfileClick = onProfileClick,
-        onReportClick = onReportClick,
-        onSubmitReportClick = onSubmitReportClick,
-    )
+    if (isOnline) {
+      ReportScreenContent(
+          innerPadding = innerPadding,
+          uiState = uiState,
+          reportScreenViewModel = reportScreenViewModel,
+          context = context,
+          onProfileClick = onProfileClick,
+          onReportClick = onReportClick,
+          onSubmitReportClick = onSubmitReportClick,
+      )
+    } else {
+      OfflineScreen(innerPadding = innerPadding)
+    }
   }
 }
 
@@ -450,7 +458,9 @@ private fun ReportSlider(
                   pins =
                       listOf(
                           Point.fromLngLat(
-                              reportState.location.longitude, reportState.location.latitude)),
+                              reportState.location.longitude,
+                              reportState.location.latitude,
+                          )),
                   styleUri = context.getString(R.string.map_style),
                   styleImportId = context.getString(R.string.map_standard_import),
                   isDark = isDark,

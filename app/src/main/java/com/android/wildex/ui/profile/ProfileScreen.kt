@@ -178,7 +178,6 @@ fun ProfileScreen(
               isOnline = isOnline,
               onFriends = onFriends,
               showMap = showMap,
-              isOnline = isOnline,
           )
         }
       }
@@ -198,7 +197,6 @@ fun ProfileContent(
     onMap: (Id) -> Unit,
     onFriends: (Id) -> Unit,
     showMap: Boolean = true,
-    isOnline: Boolean = true,
 ) {
   val id = user.userId
 

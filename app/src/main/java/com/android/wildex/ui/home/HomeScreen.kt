@@ -50,9 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -272,18 +270,11 @@ fun PostItem(
   val animalName = postState.animalName
   val pagerState = rememberPagerState(pageCount = { if (post.location != null) 2 else 1 })
 
-  // -------- Optimistic Like State (instant UI) --------
-  var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
-  var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
-  var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
+  val liked = postState.isLiked
+  val likeCount = postState.likeCount
+  val commentCount = postState.commentsCount
 
-  val onToggleLike: () -> Unit = {
-    if (isOnline) {
-      liked = !liked
-      likeCount = if (liked) likeCount + 1 else likeCount - 1
-    }
-    onPostLike(post.postId)
-  }
+  val onToggleLike: () -> Unit = { onPostLike(post.postId) }
 
   Card(
       shape = RoundedCornerShape(16.dp),

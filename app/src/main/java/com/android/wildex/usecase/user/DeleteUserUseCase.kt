@@ -58,7 +58,6 @@ class DeleteUserUseCase(
     userAnimalsRepository.deleteUserAnimals(userId)
     userAchievementsRepository.deleteUserAchievements(userId)
     userFriendsRepository.deleteUserFriendsOfUser(userId)
-    userFriendsRepository.deleteUserFriendsOfUser(userId)
     friends.forEach {
       userFriendsRepository.deleteFriendToUserFriendsOfUser(friendId = userId, userId = it.userId)
     }

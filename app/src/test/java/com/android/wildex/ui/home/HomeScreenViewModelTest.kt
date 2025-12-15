@@ -239,6 +239,7 @@ class HomeScreenViewModelTest {
                   likeCount = 1,
                   commentsCount = 1),
           )
+
       val updatedState = viewModel.uiState.value
       assertEquals(expectedStates, updatedState.postStates)
       assertEquals(u1, updatedState.currentUser)

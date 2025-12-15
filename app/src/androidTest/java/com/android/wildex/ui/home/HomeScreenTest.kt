@@ -120,8 +120,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
     userFriendsRepository.initializeUserFriends("currentUserId-1")
@@ -365,8 +364,7 @@ class HomeScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "Testland",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       postRepository.addPost(fullPost2)
       homeScreenVM.refreshUIState()
     }

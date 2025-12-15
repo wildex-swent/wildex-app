@@ -77,8 +77,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val author =
         User(
             userId = "poster1",
@@ -91,8 +90,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "India",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val commenter1 =
         User(
             userId = "commenter1",
@@ -105,8 +103,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "USA",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val commenter2 =
         User(
             userId = "commenter2",
@@ -118,8 +115,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "UK",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val liker1 =
         User(
             userId = "liker1",
@@ -131,8 +127,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Canada",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val liker2 =
         User(
             userId = "liker2",
@@ -144,8 +139,7 @@ class PostDetailsScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Australia",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     userRepository.addUser(currentUser)
     userRepository.addUser(author)
     userRepository.addUser(commenter1)

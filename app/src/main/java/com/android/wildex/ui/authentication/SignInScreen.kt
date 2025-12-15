@@ -75,11 +75,11 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.wildex.R
 import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.UserType
+import com.android.wildex.ui.achievement.ProgressBar
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 import com.android.wildex.ui.theme.WildexBlack
 import com.android.wildex.ui.utils.CountryDropdown
-import kotlinx.coroutines.delay
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -117,6 +117,31 @@ fun SignInScreen(
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.SIGN_IN_SCREEN),
       containerColor = Color.White,
+      topBar = {
+        val stage = uiState.onBoardingStage
+        if (stage != null) {
+          Column(
+              modifier = Modifier.fillMaxWidth().padding(20.dp),
+              verticalArrangement = Arrangement.spacedBy(6.dp),
+          ) {
+            val currentStep = stage.ordinal
+            val maxSteps = OnBoardingStage.entries.size - 1
+            val progress = currentStep.toFloat() / maxSteps
+            ProgressBar(
+                color = colorScheme.primary,
+                trackColor = colorScheme.surface.copy(.6f),
+                progress = progress,
+                modifier = Modifier.fillMaxWidth().height(10.dp),
+            )
+            Text(
+                text = "Step $currentStep/$maxSteps",
+                style = typography.titleMedium,
+                modifier = Modifier.align(Alignment.Start),
+                color = colorScheme.primary,
+            )
+          }
+        }
+      },
       content = { paddingValues ->
         Box(
             modifier =
@@ -162,14 +187,11 @@ fun SignInScreen(
                       data = uiState.onBoardingData,
                       updateData = { authViewModel.updateOnBoardingData(it) },
                       onBack = { authViewModel.goToPreviousStage() },
-                      onComplete = { authViewModel.finishRegistration() },
+                      onNext = { authViewModel.goToNextStage() },
                       isLoading = uiState.isLoading,
                   )
               OnBoardingStage.COMPLETE -> {
-                LaunchedEffect(Unit) {
-                  delay(1000)
-                  onSignedIn()
-                }
+                LaunchedEffect(Unit) { authViewModel.finishRegistration() }
                 WelcomeScreen()
               }
               else ->
@@ -387,7 +409,7 @@ fun OptionalInfoScreen(
 fun UserTypeScreen(
     data: OnBoardingData,
     updateData: (OnBoardingData) -> Unit,
-    onComplete: () -> Unit,
+    onNext: () -> Unit,
     onBack: () -> Unit,
     isLoading: Boolean,
 ) {
@@ -429,7 +451,7 @@ fun UserTypeScreen(
 
       Button(
           enabled = !isLoading,
-          onClick = onComplete,
+          onClick = onNext,
           modifier = Modifier.weight(1f).padding(start = 8.dp),
       ) {
         Text("Complete")

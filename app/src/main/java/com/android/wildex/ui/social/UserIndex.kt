@@ -6,8 +6,6 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.utils.search.SearchEngine
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 /**
  * Factor to apply to the score of a user if the query is the beginning of the user's name, surname
@@ -48,19 +46,20 @@ class UserIndex(
       limit: Int,
       excludeIds: List<Id> = emptyList()
   ): List<User> {
-      if (searchDataProvider.dataNeedsUpdate.value) {
-          searchDataProvider.invalidateCache()
-      }
+    if (searchDataProvider.dataNeedsUpdate.value) {
+      searchDataProvider.invalidateCache()
+    }
 
-      val searchDataToUserIds: Map<String, String> = searchData()
+    val searchDataToUserIds: Map<String, String> = searchData()
 
-      val suggestionIds = searchEngine
-          .search(query, searchDataToUserIds.keys.toList(), limit * 2)
-          .mapNotNull { searchDataToUserIds[it.string] }
-          .filter { !excludeIds.contains(it) }
-          .distinct()
-          .take(limit)
+    val suggestionIds =
+        searchEngine
+            .search(query, searchDataToUserIds.keys.toList(), limit * 2)
+            .mapNotNull { searchDataToUserIds[it.string] }
+            .filter { !excludeIds.contains(it) }
+            .distinct()
+            .take(limit)
 
-      return suggestionIds.map { userRepository.getUser(it) }
+    return suggestionIds.map { userRepository.getUser(it) }
   }
 }

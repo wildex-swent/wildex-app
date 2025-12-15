@@ -50,8 +50,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su1 = SimpleUser(u1.userId, u1.username, u1.profilePictureURL, u1.userType)
 
@@ -67,8 +66,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su2 = SimpleUser(u2.userId, u2.username, u2.profilePictureURL, u2.userType)
 
@@ -84,8 +82,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su3 = SimpleUser(u3.userId, u3.username, u3.profilePictureURL, u3.userType)
 
@@ -101,8 +98,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su4 = SimpleUser(u4.userId, u4.username, u4.profilePictureURL, u4.userType)
 

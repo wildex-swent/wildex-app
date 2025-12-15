@@ -77,8 +77,7 @@ class SignInViewModel(
     viewModelScope.launch {
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id)
-              )
+                  serverClientId = context.getString(R.string.default_web_client_id))
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
@@ -193,7 +192,7 @@ class SignInViewModel(
     val nextStage = currentStage?.next() ?: OnBoardingStage.NAMING
     _uiState.update { it.copy(isLoading = true) }
     viewModelScope.launch {
-      updateUser()
+      updateUser(nextStage)
       _uiState.update { it.copy(onBoardingStage = nextStage, isLoading = false) }
     }
   }
@@ -210,11 +209,10 @@ class SignInViewModel(
   }
 
   fun finishRegistration() {
-    _uiState.update { it.copy(isLoading = true, onBoardingStage = OnBoardingStage.COMPLETE) }
+    _uiState.update { it.copy(isLoading = true) }
     viewModelScope.launch {
       try {
         val data = _uiState.value.onBoardingData
-        updateUser()
         // initializeUserUseCase(data.userId)
         userTokensRepository.addTokenToUser(data.userId, userTokensRepository.getCurrentToken())
         _uiState.update { it.copy(isLoading = false) }
@@ -224,15 +222,13 @@ class SignInViewModel(
     }
   }
 
-  private suspend fun updateUser() {
+  private suspend fun updateUser(newStage: OnBoardingStage) {
     try {
       val data = _uiState.value.onBoardingData
-      val stage = _uiState.value.onBoardingStage!!
       val pictureUri = data.profilePicture
       val profilePictureUrl =
-          if (
-              !pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https")
-          ) // Meaning the user has changed it to a local Uri
+          if (!pictureUri.scheme.isNullOrBlank() &&
+              !pictureUri.scheme.equals("https")) // Meaning the user has changed it to a local Uri
            storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
           else data.profilePicture.toString() // Still an Url
       val user =
@@ -246,7 +242,7 @@ class SignInViewModel(
               userType = data.userType,
               creationDate = Timestamp.now(),
               country = data.country,
-              onBoardingStage = stage,
+              onBoardingStage = newStage,
           )
       userRepository.editUser(user.userId, user)
       _uiState.update { it.copy(isLoading = false) }

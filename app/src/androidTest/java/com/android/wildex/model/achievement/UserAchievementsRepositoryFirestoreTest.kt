@@ -57,8 +57,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(testUserId)
       userSettingsRepository.initializeUserSettings(testUserId)
     }

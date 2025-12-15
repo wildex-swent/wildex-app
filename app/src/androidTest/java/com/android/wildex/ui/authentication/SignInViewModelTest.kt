@@ -164,8 +164,7 @@ class SignInViewModelTest {
                 UserType.REGULAR,
                 Timestamp.now(),
                 "",
-                OnBoardingStage.COMPLETE
-            )
+                OnBoardingStage.COMPLETE)
 
         userRepository.addUser(user)
         userAchievementsRepository.initializeUserAchievements(user.userId)

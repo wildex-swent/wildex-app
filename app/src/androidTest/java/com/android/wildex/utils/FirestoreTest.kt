@@ -121,8 +121,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2024, Calendar.JANUARY, 1),
           country = "Country1",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   open val user2 =
       User(
@@ -135,8 +134,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2025, Calendar.FEBRUARY, 2),
           country = "Country2",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   open val user3 =
       User(
@@ -149,8 +147,7 @@ open class FirestoreTest(val collectionPath: String) {
           userType = UserType.REGULAR,
           creationDate = fromDate(2023, Calendar.MARCH, 3),
           country = "Country3",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   open val like1 = Like("like1", postId = post1.postId, userId = user1.userId)
 

@@ -2,16 +2,12 @@ package com.android.wildex.usecase.user
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
-import com.android.wildex.model.user.OnBoardingStage
-import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.google.firebase.Timestamp
 
 /**
  * Use case: Adding a new user to the database

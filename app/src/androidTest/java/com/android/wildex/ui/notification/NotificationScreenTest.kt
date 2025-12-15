@@ -102,8 +102,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
 
     userRepository.addUser(
         User(
@@ -117,8 +116,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userRepository.addUser(
         User(
             userId = "author2",
@@ -131,8 +129,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
 
     notificationScreenVM =
         NotificationScreenViewModel(

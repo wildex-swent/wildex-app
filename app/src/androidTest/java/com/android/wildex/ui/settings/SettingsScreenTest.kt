@@ -71,8 +71,7 @@ class SettingsScreenTest {
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "France",
-            onBoardingStage = OnBoardingStage.COMPLETE
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userSettingsRepository.initializeUserSettings("currentUserId")
     userAnimalsRepository.initializeUserAnimals("currentUserId")
     userAchievementsRepository.initializeUserAchievements("currentUserId")

@@ -56,8 +56,7 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
   private val user2 =
       User(
           userId = "u2",
@@ -69,8 +68,7 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
   private val post1 =
       Post(
           postId = "p1",

@@ -125,8 +125,7 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Italy",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   open val user1 =
       User(
@@ -139,8 +138,7 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "England",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   open val post0 =
       Post(

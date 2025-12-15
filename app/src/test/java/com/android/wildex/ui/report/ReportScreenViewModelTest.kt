@@ -95,8 +95,7 @@ class ReportScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-                  onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val simpleUser3 =
       SimpleUser(

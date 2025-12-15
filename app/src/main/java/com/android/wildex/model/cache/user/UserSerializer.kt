@@ -48,8 +48,7 @@ fun User.toProto(): UserProto {
           when (this.userType) {
             UserType.REGULAR -> UserTypeProto.REGULAR
             UserType.PROFESSIONAL -> UserTypeProto.PROFESSIONAL
-          }
-      )
+          })
       .setCreationDate(this.creationDate.seconds)
       .setOnBoardingStage(
           when (this.onBoardingStage) {
@@ -57,8 +56,7 @@ fun User.toProto(): UserProto {
             OnBoardingStage.OPTIONAL -> OnBoardingStageProto.OPTIONAL
             OnBoardingStage.USER_TYPE -> OnBoardingStageProto.USER_TYPE
             OnBoardingStage.COMPLETE -> OnBoardingStageProto.COMPLETE
-          }
-      )
+          })
       .setCountry(this.country)
       .setLastUpdated(System.currentTimeMillis())
       .build()

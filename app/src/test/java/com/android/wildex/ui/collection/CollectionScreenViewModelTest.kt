@@ -49,8 +49,7 @@ class CollectionScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-          )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val u2 =
       User(

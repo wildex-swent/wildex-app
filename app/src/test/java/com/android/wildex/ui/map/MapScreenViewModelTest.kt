@@ -73,8 +73,7 @@ class MapScreenViewModelTest {
           UserType.REGULAR,
           now,
           "CH",
-          OnBoardingStage.COMPLETE
-      )
+          OnBoardingStage.COMPLETE)
   private val proUser = regularUser.copy(userType = UserType.PROFESSIONAL)
 
   @Before

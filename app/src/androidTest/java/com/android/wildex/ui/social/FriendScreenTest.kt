@@ -60,8 +60,7 @@ class FriendScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Le pays des bisounours",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val user1 =
       User(
@@ -74,8 +73,7 @@ class FriendScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "War",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val user2 =
       User(
@@ -88,8 +86,7 @@ class FriendScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "RockNRoll",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val user3 =
       User(
@@ -102,8 +99,7 @@ class FriendScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Heaven",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val user4 =
       User(
@@ -116,8 +112,7 @@ class FriendScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   @Before
   fun setup() = runBlocking {

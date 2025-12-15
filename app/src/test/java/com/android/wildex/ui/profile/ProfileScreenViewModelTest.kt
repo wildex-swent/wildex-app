@@ -56,9 +56,7 @@ class ProfileScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          onBoardingStage = OnBoardingStage.COMPLETE
-
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val u2 = u1.copy(userId = "user_one_2", username = "user_one_2")
 

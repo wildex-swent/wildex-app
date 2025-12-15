@@ -2,7 +2,6 @@ package com.android.wildex.ui.utils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -19,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import com.android.wildex.ui.utils.search.SearchEngine
 import java.util.Locale
 
@@ -66,7 +64,7 @@ fun CountryDropdown(
   ExposedDropdownMenuBox(
       expanded = expanded,
       onExpandedChange = { expanded = !expanded },
-      modifier = modifier,
+      modifier = modifier.testTag(CountryDropdownTestTags.COUNTRY_DROPDOWN),
   ) {
     OutlinedTextField(
         value = if (expanded) searchQuery else selectedCountry,

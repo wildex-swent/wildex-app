@@ -40,8 +40,7 @@ class EditProfileViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "X",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   @Before
   fun setUp() {

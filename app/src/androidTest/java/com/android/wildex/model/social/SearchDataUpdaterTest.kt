@@ -27,7 +27,8 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
+          country = "",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser2 =
       User(
@@ -39,7 +40,8 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
+          country = "",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser3 =
       User(
@@ -51,7 +53,8 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
+          country = "",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val mockUser4 =
       User(
@@ -63,7 +66,8 @@ class SearchDataUpdaterTest {
           profilePictureURL = "",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "", onBoardingStage = OnBoardingStage.COMPLETE)
+          country = "",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val userRepository = LocalRepositories.userRepository
 

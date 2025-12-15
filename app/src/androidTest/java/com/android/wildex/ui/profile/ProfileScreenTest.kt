@@ -75,8 +75,7 @@ class ProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
-          onBoardingStage = OnBoardingStage.COMPLETE
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   /** Shared test achievements repo + use case + VM for tests that don't need custom repos. */
   private lateinit var defaultAchievementsRepo: FakeAchievementsRepo
@@ -102,8 +101,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       userRepository.addUser(
           User(
               userId = "currentUserId-1",
@@ -115,8 +113,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       userRepository.addUser(
           User(
               userId = "friend0",
@@ -128,8 +125,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       userRepository.addUser(
           User(
               userId = "friend1",
@@ -141,8 +137,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       userRepository.addUser(
           User(
               userId = "friend2",
@@ -154,8 +149,7 @@ class ProfileScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-              onBoardingStage = OnBoardingStage.COMPLETE
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       animalRepository.addAnimal(
           Animal(animalId = "animal0", pictureURL = "", name = "", species = "", description = ""))
       animalRepository.addAnimal(

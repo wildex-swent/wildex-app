@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -46,7 +45,6 @@ import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
-import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
@@ -92,11 +90,12 @@ class MainActivity : ComponentActivity() {
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     setContent {
       CompositionLocalProvider(
-          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)) {
-            WildexTheme(theme = AppTheme.appearanceMode) {
-              Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
-            }
-          }
+          LocalConnectivityObserver provides DefaultConnectivityObserver(applicationContext)
+      ) {
+        WildexTheme(theme = AppTheme.appearanceMode) {
+          Surface(modifier = Modifier.fillMaxSize()) { WildexApp() }
+        }
+      }
     }
   }
 
@@ -134,7 +133,7 @@ fun WildexApp(
     navController: NavHostController = rememberNavController(),
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
-  var onboardingComplete by remember { mutableStateOf(false) }
+  var onboardingComplete: Boolean? by remember { mutableStateOf(null) }
 
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
 
@@ -145,14 +144,16 @@ fun WildexApp(
               .collection(USERS_COLLECTION_PATH)
               .document(currentUserId!!)
               .addSnapshotListener { snapshot, error ->
-                if (error == null) {
-                  if (snapshot != null && snapshot.exists()) {
-                    val stage = snapshot.getString("onBoardingStage")
-                    onboardingComplete = stage == OnBoardingStage.COMPLETE.name
+                if (error == null && snapshot != null && snapshot.exists()) {
+                  snapshot.getString("onBoardingStage")?.let {
+                    onboardingComplete = it == OnBoardingStage.COMPLETE.name
                   }
                 }
               }
-        } else null
+        } else {
+          onboardingComplete = false
+          null
+        }
 
     onDispose { listenerRegistration?.remove() }
   }
@@ -160,9 +161,9 @@ fun WildexApp(
     SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
   }
 
-  val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
-  val startDestination = if (!onboardingComplete) Screen.Auth.route else Screen.Home.route
+  if (onboardingComplete == null) return
+  val startDestination = if (!onboardingComplete!!) Screen.Auth.route else Screen.Home.route
 
   val currentIntent by rememberUpdatedState((context as ComponentActivity).intent)
   LaunchedEffect(currentIntent) {
@@ -178,7 +179,7 @@ fun WildexApp(
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
-    authComposable(navigationActions, credentialManager, signInViewModel)
+    authComposable(credentialManager)
 
     // Home
     homeComposable(navigationActions, currentUserId)
@@ -312,7 +313,8 @@ private fun NavGraphBuilder.editProfileComposable(navigationActions: NavigationA
               navArgument("isNewUser") {
                 type = NavType.BoolType
                 defaultValue = false
-              }),
+              }
+          ),
   ) { backStackEntry ->
     val isNewUser = backStackEntry.arguments?.getBoolean("isNewUser") ?: false
     EditProfileScreen(
@@ -411,7 +413,8 @@ private fun NavGraphBuilder.collectionComposable(
           onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
           bottomBar = {
             if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
-          })
+          },
+      )
     }
   }
 }
@@ -499,16 +502,6 @@ private fun NavGraphBuilder.homeComposable(
   }
 }
 
-private fun NavGraphBuilder.authComposable(
-    navigationActions: NavigationActions,
-    credentialManager: CredentialManager,
-    signInViewModel: SignInViewModel,
-) {
-  composable(Screen.Auth.route) {
-    SignInScreen(
-        authViewModel = signInViewModel,
-        credentialManager = credentialManager,
-        onSignedIn = { navigationActions.navigateTo(Screen.Home) },
-    )
-  }
+private fun NavGraphBuilder.authComposable(credentialManager: CredentialManager) {
+  composable(Screen.Auth.route) { SignInScreen(credentialManager = credentialManager) }
 }

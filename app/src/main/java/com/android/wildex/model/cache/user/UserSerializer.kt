@@ -55,6 +55,7 @@ fun User.toProto(): UserProto {
             OnBoardingStage.NAMING -> OnBoardingStageProto.NAMING
             OnBoardingStage.OPTIONAL -> OnBoardingStageProto.OPTIONAL
             OnBoardingStage.USER_TYPE -> OnBoardingStageProto.USER_TYPE
+            OnBoardingStage.AWAITING_COMPLETE -> OnBoardingStageProto.AWAITING_COMPLETE
             OnBoardingStage.COMPLETE -> OnBoardingStageProto.COMPLETE
           })
       .setCountry(this.country)
@@ -83,6 +84,7 @@ fun UserProto.toUser(): User {
             OnBoardingStageProto.NAMING -> OnBoardingStage.NAMING
             OnBoardingStageProto.OPTIONAL -> OnBoardingStage.OPTIONAL
             OnBoardingStageProto.USER_TYPE -> OnBoardingStage.USER_TYPE
+            OnBoardingStageProto.AWAITING_COMPLETE -> OnBoardingStage.AWAITING_COMPLETE
             OnBoardingStageProto.COMPLETE -> OnBoardingStage.COMPLETE
             else -> OnBoardingStage.COMPLETE
           },

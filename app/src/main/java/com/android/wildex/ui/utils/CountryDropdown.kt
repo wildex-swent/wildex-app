@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 import com.android.wildex.ui.utils.search.SearchEngine
 import java.util.Locale
@@ -75,14 +76,18 @@ fun CountryDropdown(
           searchQuery = it
           if (!expanded) expanded = true
         },
-        label = { Text("Country") },
+        label = { Text(stringResource(R.string.country), color = colorScheme.onBackground.copy(.5f)) },
         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
         modifier =
-            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true).fillMaxWidth(),
+            Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
+                .fillMaxWidth(),
         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+        singleLine = true,
     )
 
     ExposedDropdownMenu(
+        tonalElevation = 2.dp,
         expanded = expanded,
         onDismissRequest = {
           expanded = false
@@ -96,7 +101,8 @@ fun CountryDropdown(
               Text(stringResource(R.string.no_countries_found), style = typography.bodyMedium)
             },
             onClick = {},
-            enabled = false)
+            enabled = false,
+        )
       } else {
         filteredCountries.forEach { countryPair ->
           val flag = countryPair.first

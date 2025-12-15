@@ -77,7 +77,8 @@ class SignInViewModel(
     viewModelScope.launch {
       val signInOptions =
           GetSignInWithGoogleOption.Builder(
-                  serverClientId = context.getString(R.string.default_web_client_id))
+                  serverClientId = context.getString(R.string.default_web_client_id)
+              )
               .build()
       val signInRequest = GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
@@ -94,9 +95,7 @@ class SignInViewModel(
 
                     val user =
                         try {
-                          val user = userRepository.getUser(userId)
-                          AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
-                          user
+                          userRepository.getUser(userId)
                         } catch (_: Exception) {
                           val user =
                               User(
@@ -112,11 +111,14 @@ class SignInViewModel(
                                   onBoardingStage = OnBoardingStage.NAMING,
                               )
                           userRepository.addUser(user)
-                          AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
                           user
                         }
-                    usernameList = userRepository.getAllUsers().map { it.username }
-
+                    if (user.onBoardingStage == OnBoardingStage.COMPLETE) {
+                      AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
+                    } else {
+                      AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+                      usernameList = userRepository.getAllUsers().map { it.username }
+                    }
                     _uiState.update {
                       it.copy(
                           isLoading = false,
@@ -128,7 +130,7 @@ class SignInViewModel(
                                   name = user.name,
                                   surname = user.surname,
                                   username = user.username,
-                                  profilePicture = Uri.parse(user.profilePictureURL),
+                                  profilePicture = user.profilePictureURL.toUri(),
                                   country = user.country,
                                   bio = user.bio,
                                   userType = user.userType,
@@ -213,9 +215,9 @@ class SignInViewModel(
     viewModelScope.launch {
       try {
         val data = _uiState.value.onBoardingData
-        // initializeUserUseCase(data.userId)
+        initializeUserUseCase(data.userId)
         userTokensRepository.addTokenToUser(data.userId, userTokensRepository.getCurrentToken())
-        _uiState.update { it.copy(isLoading = false) }
+        _uiState.update { it.copy(isLoading = false, onBoardingStage = OnBoardingStage.COMPLETE) }
       } catch (e: Exception) {
         _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
       }
@@ -227,10 +229,9 @@ class SignInViewModel(
       val data = _uiState.value.onBoardingData
       val pictureUri = data.profilePicture
       val profilePictureUrl =
-          if (!pictureUri.scheme.isNullOrBlank() &&
-              !pictureUri.scheme.equals("https")) // Meaning the user has changed it to a local Uri
-           storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
-          else data.profilePicture.toString() // Still an Url
+          if (!pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https"))
+              storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
+          else data.profilePicture.toString()
       val user =
           User(
               userId = data.userId,

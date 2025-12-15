@@ -21,11 +21,6 @@ class FakePostsCache : IPostsCache {
     return posts.ifEmpty { null }
   }
 
-  override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>? {
-    val posts = cache.values.filter { it.authorId == authorId }
-    return posts.ifEmpty { null }
-  }
-
   override suspend fun deletePostsByUser(userId: Id) {
     cache.entries.removeIf { it.value.authorId == userId }
   }

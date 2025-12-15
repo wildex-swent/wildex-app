@@ -69,23 +69,6 @@ class PostsCache(
     } else posts
   }
 
-  override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>? {
-    val posts =
-        postDataStore.data
-            .map { proto ->
-              val posts = proto.postsMap.values.filter { it.authorId == authorId }
-              if (posts.isNotEmpty() && posts.all { !isStale(it.lastUpdated) }) {
-                posts.map { it.toPost() }
-              } else {
-                null
-              }
-            }
-            .firstOrNull()
-    return if (posts == null && !connectivityObserver.isOnline.value) {
-      emptyList()
-    } else posts
-  }
-
   override suspend fun deletePostsByUser(userId: Id) {
     postDataStore.updateData {
       val builder = it.toBuilder()

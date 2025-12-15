@@ -53,7 +53,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore, private val ca
   }
 
   override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post> {
-    cache.getAllPostsByGivenAuthor(authorId)?.let {
+    cache.getAllPostsByAuthor(authorId)?.let {
       return it
     }
     val collection =

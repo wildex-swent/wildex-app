@@ -28,14 +28,6 @@ interface IPostsCache {
   suspend fun getAllPostsByAuthor(authorId: Id): List<Post>?
 
   /**
-   * Retrieves all posts by a specific author from the cache.
-   *
-   * @param authorId The ID of the author whose posts to retrieve.
-   * @return A list of Post objects if any are found, or null if none are found.
-   */
-  suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post>?
-
-  /**
    * Deletes all posts by a specific user from the cache.
    *
    * @param userId The ID of the user whose posts to delete.

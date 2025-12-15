@@ -59,7 +59,6 @@ fun ProfileMap(
     id: Id = "",
     onMap: (Id) -> Unit = {},
     pins: List<Point> = emptyList(),
-    isOnline: Boolean = true
 ) {
   val cs = colorScheme
   val context = LocalContext.current
@@ -96,7 +95,6 @@ fun ProfileMap(
           )
           Button(
               onClick = { onMap(id) },
-              enabled = isOnline,
               modifier = Modifier.padding(top = 10.dp).testTag(ProfileScreenTestTags.MAP_CTA),
               colors =
                   ButtonDefaults.buttonColors(

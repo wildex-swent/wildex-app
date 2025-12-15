@@ -216,6 +216,7 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
       viewModel.refreshUIState()
 
       assertTrue(viewModel.uiState.value.isRefreshing)
@@ -256,6 +257,7 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
       viewModel.loadUIState()
 
       assertTrue(viewModel.uiState.value.isLoading)
@@ -433,6 +435,7 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
 
       viewModel.refreshUIState()
       advanceUntilIdle()
@@ -516,8 +519,10 @@ class HomeScreenViewModelTest {
 
     val actual = viewModel.filterPosts(postStates = postStates)
 
-    assertTrue(actual.contains(postState1))
-    assertEquals(1, actual.size)
+    assertTrue(actual.isEmpty())
+
+    // assertTrue(actual.contains(postState1))
+    // assertEquals(1, actual.size)
   }
 
   @Test

@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Represents the UI state of the Home Screen.
@@ -127,7 +126,7 @@ class HomeScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-  // private val friendsIds = MutableStateFlow(emptyList<Id>())
+  private val friendsIds = MutableStateFlow(emptyList<Id>())
 
   /**
    * Loads the UI state by fetching posts and the current user. Updates [_uiState] with new values.
@@ -149,8 +148,7 @@ class HomeScreenViewModel(
               errorMsg = null,
               isError = false,
           )
-      // friendsIds.value = userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId
-      // }
+      friendsIds.value = userFriendsRepository.getAllFriendsOfUser(currentUserId).map { it.userId }
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load posts.")
       _uiState.value = _uiState.value.copy(isRefreshing = false, isLoading = false, isError = true)
@@ -291,13 +289,7 @@ class HomeScreenViewModel(
                   } ?: true
 
               val onlyFriendsPostsCondition =
-                  !onlyFriendsPosts ||
-                      runBlocking {
-                            userFriendsRepository.getAllFriendsOfUser(currentUserId).map {
-                              it.userId
-                            }
-                          }
-                          .contains(postState.author.userId)
+                  !onlyFriendsPosts || friendsIds.value.contains(postState.author.userId)
 
               val onlyMyPostsCondition = !onlyMyPosts || postState.author.userId == currentUserId
 

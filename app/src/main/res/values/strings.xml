@@ -99,7 +99,6 @@
     <string name="cluster_group_position">%1$d / %2$d</string>
     <string name="map_offline_placeholder_title">Nothing to display</string>
     <string name="map_offline_placeholder_subtitle">You’re offline and the map never loaded.</string>
-    <string name="map_offline_placeholder_message">Go online briefly to load part of the map.</string>
     <string name="map_offline_placeholder_hint">  We promise we’re not hiding anything.</string>
 
     <!-- Achievements screen -->
@@ -126,8 +125,6 @@
     <string name="confidence">Confidence</string>
     <string name="add_description">Add a description</string>
     <string name="description_placeholder">Share what you observed… behavior, habitat, weather conditions, or any interesting details!</string>
-    <string name="share_location">Share Location</string>
-    <string name="share_location_description">Help others discover nearby animals</string>
     <string name="cancel_button">Cancel &amp; Retry</string>
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>

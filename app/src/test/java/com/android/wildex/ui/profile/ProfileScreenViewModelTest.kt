@@ -479,7 +479,8 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(s.friendsCount + 1, s2.friendsCount)
       Assert.assertEquals(
           s,
-          s2.copy(friendStatus = FriendStatus.PENDING_RECEIVED, friendsCount = s2.friendsCount - 1))
+          s2.copy(friendStatus = FriendStatus.PENDING_RECEIVED, friendsCount = s2.friendsCount - 1),
+      )
     }
   }
 
@@ -575,7 +576,9 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(FriendStatus.NOT_FRIEND, s2.friendStatus)
       Assert.assertEquals(s.friendsCount - 1, s2.friendsCount)
       Assert.assertEquals(
-          s, s2.copy(friendStatus = FriendStatus.FRIEND, friendsCount = s2.friendsCount + 1))
+          s,
+          s2.copy(friendStatus = FriendStatus.FRIEND, friendsCount = s2.friendsCount + 1),
+      )
     }
   }
 

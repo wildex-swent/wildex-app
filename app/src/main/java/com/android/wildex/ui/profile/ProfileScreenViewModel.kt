@@ -21,6 +21,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.geojson.Point
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +73,7 @@ class ProfileScreenViewModel(
         RepositoryProvider.userFriendsRepository,
     private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
 
@@ -249,7 +251,7 @@ class ProfileScreenViewModel(
               emptyList()
             }
     // 2) SLOW PATH: recompute in background
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       runCatching {
             updateUserAchievements(userId) // Veery heavy
           }

@@ -78,9 +78,7 @@ fun CountryDropdown(
         label = { Text("Country") },
         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
         modifier =
-            Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
-                .fillMaxWidth(),
+            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true).fillMaxWidth(),
         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
     )
 
@@ -93,7 +91,12 @@ fun CountryDropdown(
         modifier = Modifier.background(colorScheme.surface),
     ) {
       if (filteredCountries.isEmpty()) {
-        DropdownMenuItem(text = { Text(stringResource(R.string.no_countries_found), style = typography.bodyMedium) }, onClick = {}, enabled = false)
+        DropdownMenuItem(
+            text = {
+              Text(stringResource(R.string.no_countries_found), style = typography.bodyMedium)
+            },
+            onClick = {},
+            enabled = false)
       } else {
         filteredCountries.forEach { countryPair ->
           val flag = countryPair.first

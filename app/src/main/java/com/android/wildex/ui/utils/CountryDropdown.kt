@@ -8,6 +8,7 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.android.wildex.R
 import com.android.wildex.ui.utils.search.SearchEngine
 import java.util.Locale
 
@@ -75,7 +78,9 @@ fun CountryDropdown(
         label = { Text("Country") },
         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
         modifier =
-            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true).fillMaxWidth(),
+            Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
+                .fillMaxWidth(),
         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
     )
 
@@ -88,14 +93,14 @@ fun CountryDropdown(
         modifier = Modifier.background(colorScheme.surface),
     ) {
       if (filteredCountries.isEmpty()) {
-        DropdownMenuItem(text = { Text("No countries found") }, onClick = {}, enabled = false)
+        DropdownMenuItem(text = { Text(stringResource(R.string.no_countries_found), style = typography.bodyMedium) }, onClick = {}, enabled = false)
       } else {
         filteredCountries.forEach { countryPair ->
           val flag = countryPair.first
           val countryName = countryPair.second
           DropdownMenuItem(
               modifier = Modifier.testTag(CountryDropdownTestTags.COUNTRY_ELEMENT + countryName),
-              text = { Text("$flag $countryName") },
+              text = { Text("$flag $countryName", style = typography.bodyMedium) },
               onClick = {
                 onCountrySelected(countryName)
                 expanded = false

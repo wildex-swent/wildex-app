@@ -61,9 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -134,7 +132,7 @@ fun SignInScreen(
                 modifier = Modifier.fillMaxWidth().height(10.dp),
             )
             Text(
-                text = "Step $currentStep/$maxSteps",
+                text = stringResource(R.string.step, currentStep, maxSteps),
                 style = typography.titleMedium,
                 modifier = Modifier.align(Alignment.Start),
                 color = colorScheme.primary,
@@ -151,17 +149,16 @@ fun SignInScreen(
           AnimatedContent(
               targetState = uiState.onBoardingStage,
               transitionSpec = {
-                if (initialState == null || targetState!! > initialState!!) {
-                      slideInHorizontally(animationSpec = tween(500)) { it } +
-                          fadeIn(animationSpec = tween(500)) togetherWith
-                          slideOutHorizontally(animationSpec = tween(500)) { -it } +
-                              fadeOut(animationSpec = tween(500))
-                    } else {
-                      slideInHorizontally(animationSpec = tween(500)) { -it } +
-                          fadeIn(animationSpec = tween(500)) togetherWith
-                          slideOutHorizontally(animationSpec = tween(500)) { it } +
-                              fadeOut(animationSpec = tween(500))
-                    }
+                (if (initialState == null || targetState!! > initialState!!)
+                        slideInHorizontally(animationSpec = tween(500)) { it } +
+                            fadeIn(animationSpec = tween(500)) togetherWith
+                            slideOutHorizontally(animationSpec = tween(500)) { -it } +
+                                fadeOut(animationSpec = tween(500))
+                    else
+                        slideInHorizontally(animationSpec = tween(500)) { -it } +
+                            fadeIn(animationSpec = tween(500)) togetherWith
+                            slideOutHorizontally(animationSpec = tween(500)) { it } +
+                                fadeOut(animationSpec = tween(500)))
                     .using(SizeTransform(clip = false))
               },
           ) { stage ->
@@ -275,7 +272,7 @@ fun NamingScreen(
       verticalArrangement = Arrangement.Center,
   ) {
     Text(
-        text = "Welcome! Let's get started",
+        text = stringResource(R.string.welcome),
         style = typography.displayMedium,
         color = colorScheme.onBackground,
     )
@@ -285,7 +282,7 @@ fun NamingScreen(
     OutlinedTextField(
         value = data.name,
         onValueChange = { updateData(data.copy(name = it)) },
-        label = { Text("First Name *") },
+        label = { Text(stringResource(R.string.first_name)) },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -295,7 +292,7 @@ fun NamingScreen(
     OutlinedTextField(
         value = data.surname,
         onValueChange = { updateData(data.copy(surname = it)) },
-        label = { Text("Last Name *") },
+        label = { Text(stringResource(R.string.last_name)) },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -305,7 +302,7 @@ fun NamingScreen(
     OutlinedTextField(
         value = data.username,
         onValueChange = { updateData(data.copy(username = it)) },
-        label = { Text("Username *") },
+        label = { Text(stringResource(R.string.username)) },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -317,7 +314,7 @@ fun NamingScreen(
         onClick = onNext,
         modifier = Modifier.padding(start = 8.dp),
     ) {
-      Text("Next")
+      Text(stringResource(R.string.next))
     }
   }
 }
@@ -366,8 +363,6 @@ fun OptionalInfoScreen(
     }
     Spacer(modifier = Modifier.height(32.dp))
 
-    Spacer(modifier = Modifier.height(16.dp))
-
     CountryDropdown(
         selectedCountry = data.country,
         onCountrySelected = { updateData(data.copy(country = it)) },
@@ -378,7 +373,7 @@ fun OptionalInfoScreen(
     OutlinedTextField(
         value = data.bio,
         onValueChange = { updateData(data.copy(bio = it)) },
-        label = { Text("Bio") },
+        label = { Text(stringResource(R.string.bio)) },
         modifier = Modifier.fillMaxWidth().height(120.dp),
         maxLines = 4,
     )
@@ -391,7 +386,7 @@ fun OptionalInfoScreen(
           onClick = onBack,
           modifier = Modifier.weight(1f).padding(end = 8.dp),
       ) {
-        Text("Back")
+        Text(stringResource(R.string.back))
       }
 
       Button(
@@ -399,7 +394,7 @@ fun OptionalInfoScreen(
           onClick = onNext,
           modifier = Modifier.weight(1f).padding(start = 8.dp),
       ) {
-        Text("Next")
+        Text(stringResource(R.string.next))
       }
     }
   }
@@ -420,9 +415,8 @@ fun UserTypeScreen(
       verticalArrangement = Arrangement.Center,
   ) {
     Text(
-        text = "Select Account Type",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
+        text = stringResource(R.string.account_type),
+        style = typography.displayMedium,
         color = colorScheme.onBackground,
     )
 
@@ -436,7 +430,7 @@ fun UserTypeScreen(
         },
     )
     Spacer(modifier = Modifier.width(8.dp))
-    Text("User type", style = typography.titleMedium)
+    Text(stringResource(R.string.user_type), style = typography.titleMedium)
 
     Spacer(modifier = Modifier.height(32.dp))
 
@@ -446,7 +440,7 @@ fun UserTypeScreen(
           onClick = onBack,
           modifier = Modifier.weight(1f).padding(end = 8.dp),
       ) {
-        Text("Back")
+        Text(stringResource(R.string.back))
       }
 
       Button(
@@ -454,7 +448,7 @@ fun UserTypeScreen(
           onClick = onNext,
           modifier = Modifier.weight(1f).padding(start = 8.dp),
       ) {
-        Text("Complete")
+        Text(stringResource(R.string.complete))
       }
     }
   }
@@ -481,9 +475,8 @@ fun LogoAndTagline() {
       )
       Spacer(modifier = Modifier.height(16.dp))
       Text(
-          text = "Discover the wild around you",
-          fontSize = 16.sp,
-          fontWeight = FontWeight.Medium,
+          text = stringResource(R.string.tag_line),
+          style = typography.titleMedium,
           color = White.copy(alpha = 0.9f),
           modifier = Modifier.testTag(SignInScreenTestTags.WELCOME),
       )
@@ -525,8 +518,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit, appearsOn: Boolean = true) {
           text = stringResource(R.string.sign_in),
           modifier = Modifier.graphicsLayer(alpha = alpha),
           color = WildexBlack,
-          fontSize = 16.sp,
-          fontWeight = FontWeight.Medium,
+          style = typography.titleMedium,
       )
     }
   }

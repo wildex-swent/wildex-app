@@ -256,5 +256,17 @@
     <string name="post_details_no_maps_found">No Google Maps app found</string>
     <string name="post_details_location_copied">Location copied</string>
     <string name="post_details_maps_link">https://www.google.com/maps/search/?api=1&amp;query=%1$s,%2$s</string>
+    <string name="no_countries_found">No countries found</string>
+    <string name="welcome">Welcome! Let\'s get started</string>
+    <string name="first_name">First Name *</string>
+    <string name="last_name">Last Name *</string>
+    <string name="username">Username *</string>
+    <string name="next">Next</string>
+    <string name="bio">Bio</string>
+    <string name="account_type">Select Account Type</string>
+    <string name="user_type">User type</string>
+    <string name="complete">Complete</string>
+    <string name="tag_line">Discover the wild around you</string>
+    <string name="step">Step %1$d/%2$d</string>
 
 </resources>

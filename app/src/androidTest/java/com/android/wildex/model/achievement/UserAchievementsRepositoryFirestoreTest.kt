@@ -1,5 +1,6 @@
 package com.android.wildex.model.achievement
 
+import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
@@ -38,7 +39,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
   @Before
   override fun setUp() {
     super.setUp()
-
+    RepositoryProvider.init(ApplicationProvider.getApplicationContext())
     runBlocking {
       userRepository.addUser(
           User(

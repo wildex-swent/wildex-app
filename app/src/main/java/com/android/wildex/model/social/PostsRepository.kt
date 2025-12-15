@@ -31,4 +31,7 @@ interface PostsRepository {
 
   /** Deletes all Post items made by a specific user. */
   suspend fun deletePostsByUser(userId: Id)
+
+  /** Refreshes the cache of Post items in the repository. */
+  suspend fun refreshCache()
 }

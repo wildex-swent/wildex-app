@@ -1,7 +1,11 @@
 syntax = "proto3";
 
+package wildex.datastore;
+
 option java_package = "com.android.wildex.datastore";
 option java_multiple_files = true;
+
+import "LocationProto.proto";
 
 message ReportCacheStorage {
     map<string, ReportProto> reports = 1;
@@ -18,10 +22,3 @@ message ReportProto {
     int64 last_updated = 8;
 }
 
-message LocationProto {
-    double latitude = 1;
-    double longitude = 2;
-    string name = 3;
-    string specific_name = 4;
-    string generale_name = 5;
-}

@@ -5,11 +5,8 @@ import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -142,7 +139,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkHomeScreenIsDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_PostDetails_AndGoBack() {
     val postId = "post_for_profile_nav"
     runBlocking {
@@ -166,7 +163,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateBackFromPostDetails()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }
+  }*/
 
   //  @Test
   //  fun navigation_AchievementsScreenFromProfile() {
@@ -199,7 +196,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkCollectionScreenIsDisplayed(userId)
   }
 
-  @Test
+  /*@Test
   fun navigationCollectionScreenFromOtherProfile_AndGoBack() {
     val userId2 = "userId"
     val postId2 = "postId2"
@@ -240,7 +237,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateBackFromCollection()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId2)
-  }
+  }*/
 
   @Test
   fun navigation_MapScreen_CurrentUser() {

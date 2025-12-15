@@ -4,6 +4,7 @@ import android.util.Log
 import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.utils.Location
 import com.android.wildex.utils.FirestoreTest
+import com.android.wildex.utils.offline.FakePostsCache
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -20,7 +21,10 @@ import org.junit.Test
 const val POSTS_COLLECTION_PATH = "posts"
 
 class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
-  private var repository = PostsRepositoryFirestore(Firebase.firestore)
+  private val postCache = FakePostsCache()
+
+  private var repository = PostsRepositoryFirestore(Firebase.firestore, postCache)
+  private val collection = Firebase.firestore.collection(POSTS_COLLECTION_PATH)
 
   @Before
   override fun setUp() {
@@ -58,7 +62,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         var exceptionThrown = false
         try {
           repository.addPost(post1)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
           exceptionThrown = true
         }
         assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
@@ -113,7 +117,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
   fun getNewPostIdReturnsUniqueIDs() =
       runTest(timeout = 60.seconds) {
         val numberIDs = 100
-        val postIds = (0 until numberIDs).toSet<Int>().map { repository.getNewPostId() }.toSet()
+        val postIds = (0 until numberIDs).toSet().map { repository.getNewPostId() }.toSet()
         assertEquals(postIds.size, numberIDs)
       }
 
@@ -221,7 +225,7 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         var exceptionThrown = false
         try {
           repository.getPost(nonExistentId)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
           exceptionThrown = true
         }
         assert(exceptionThrown) { "Expected IllegalArgumentException was not thrown." }
@@ -336,5 +340,50 @@ class PostsRepositoryFirestoreTest : FirestoreTest(POSTS_COLLECTION_PATH) {
         assertEquals(1, posts.size)
         assertTrue(posts.all { it.authorId != authorIdToDelete })
         assertEquals(listOf(post3), posts)
+      }
+
+  @Test
+  fun getPostUsesCacheAfterFirstFetch() =
+      runTest(timeout = 60.seconds) {
+        collection.document(post1.postId).set(post1).await()
+        val first = repository.getPost(post1.postId)
+        assertEquals(post1, first)
+        collection.document(post1.postId).delete().await()
+        val second = repository.getPost(post1.postId)
+        assertEquals(post1, second)
+      }
+
+  @Test
+  fun refreshCacheClearsCache() =
+      runTest(timeout = 60.seconds) {
+        collection.document(post1.postId).set(post1).await()
+        repository.getPost(post1.postId)
+        repository.refreshCache()
+        collection.document(post1.postId).delete().await()
+        val exception = runCatching { repository.getPost(post1.postId) }.exceptionOrNull()
+        assertTrue(exception is IllegalArgumentException)
+      }
+
+  @Test
+  fun editPostUpdatesCachedValue() =
+      runTest(timeout = 60.seconds) {
+        collection.document(post1.postId).set(post1).await()
+        repository.getPost(post1.postId)
+        val edited = post1.copy(description = "edited")
+        repository.editPost(post1.postId, edited)
+        collection.document(post1.postId).delete().await()
+        val cached = repository.getPost(post1.postId)
+        assertEquals("edited", cached.description)
+      }
+
+  @Test
+  fun getAllPostsUsesCacheAfterFirestoreCleared() =
+      runTest(timeout = 60.seconds) {
+        collection.document(post1.postId).set(post1).await()
+        collection.document(post2.postId).set(post2).await()
+        repository.getAllPosts()
+        collection.get().await().documents.forEach { it.reference.delete().await() }
+        val cached = repository.getAllPosts()
+        assertEquals(2, cached.size)
       }
 }

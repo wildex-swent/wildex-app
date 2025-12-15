@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.android.wildex.BuildConfig
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
@@ -32,6 +33,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,6 +113,7 @@ class MapScreenTest {
   private val postsRepository = LocalRepositories.postsRepository
   private val animalRepository = LocalRepositories.animalRepository
   private val currentUserId: Id = "u1"
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   private lateinit var viewModel: MapScreenViewModel
 
@@ -151,7 +154,11 @@ class MapScreenTest {
       skipThread: Boolean = true,
       isCurrentUser: Boolean = true,
   ) = compose {
-    CompositionLocalProvider(LocalSkipWorkerThread provides skipThread) {
+    fakeObserver.setOnline(true)
+    CompositionLocalProvider(
+        LocalConnectivityObserver provides fakeObserver,
+        LocalSkipWorkerThread provides skipThread,
+    ) {
       MapScreen(userId = uid, bottomBar = {}, viewModel = vm, isCurrentUser = isCurrentUser)
     }
   }
@@ -164,16 +171,19 @@ class MapScreenTest {
       onDismiss: () -> Unit = {},
       onToggleLike: (Id) -> Unit = {},
   ) = compose {
-    SelectionBottomCard(
-        modifier = Modifier,
-        selection = selection,
-        activeTab = tab,
-        onPost = onPost,
-        onReport = onReport,
-        onDismiss = onDismiss,
-        onToggleLike = onToggleLike,
-        isCurrentUser = true,
-    )
+    fakeObserver.setOnline(true)
+    CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+      SelectionBottomCard(
+          modifier = Modifier,
+          selection = selection,
+          activeTab = tab,
+          onPost = onPost,
+          onReport = onReport,
+          onDismiss = onDismiss,
+          onToggleLike = onToggleLike,
+          isCurrentUser = true,
+      )
+    }
   }
 
   private fun node(tag: String, unmerged: Boolean = false) =
@@ -465,20 +475,23 @@ class MapScreenTest {
             commentCount = 0,
         )
     compose {
-      SelectionBottomCard(
-          modifier = Modifier.testTag(MapContentTestTags.SELECTION_CARD),
-          selection = details,
-          activeTab = MapTab.Posts,
-          onPost = {},
-          onReport = {},
-          onDismiss = {},
-          onToggleLike = {},
-          isCurrentUser = true,
-          groupSize = 3,
-          groupIndex = 1,
-          onNext = { nextCount++ },
-          onPrev = { prevCount++ },
-      )
+      fakeObserver.setOnline(true)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        SelectionBottomCard(
+            modifier = Modifier.testTag(MapContentTestTags.SELECTION_CARD),
+            selection = details,
+            activeTab = MapTab.Posts,
+            onPost = {},
+            onReport = {},
+            onDismiss = {},
+            onToggleLike = {},
+            isCurrentUser = true,
+            groupSize = 3,
+            groupIndex = 1,
+            onNext = { nextCount++ },
+            onPrev = { prevCount++ },
+        )
+      }
     }
     node(MapContentTestTags.SELECTION_PAGER).assertIsDisplayed()
     node(MapContentTestTags.SELECTION_PAGER_LABEL).assertIsDisplayed()

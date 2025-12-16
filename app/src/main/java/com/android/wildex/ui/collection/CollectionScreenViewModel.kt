@@ -66,8 +66,8 @@ class CollectionScreenViewModel(
       }
       val user = userRepository.getSimpleUser(userUid)
       _uiState.value = _uiState.value.copy(user = user, isUserOwner = userUid == currentUserId)
-      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { it.animalId }
       val animals = animalRepository.getAllAnimals()
+      val userAnimals = userAnimalsRepository.getAllAnimalsByUser(userUid).map { it.animalId }
       val animalStates =
           animals
               .filter { userUid == currentUserId || userAnimals.contains(it.animalId) }

@@ -444,7 +444,7 @@ private fun PostSlider(
                   Modifier.fillMaxSize()
                       .height(height)
                       .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-              OfflineAwareMiniMap(
+                OfflineAwareMiniMap(
                     modifier = Modifier.matchParentSize(),
                     pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
                     styleUri = context.getString(R.string.map_style),

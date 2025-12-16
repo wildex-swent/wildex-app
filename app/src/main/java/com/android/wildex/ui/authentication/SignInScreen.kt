@@ -61,7 +61,6 @@ import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.theme.White
 import com.android.wildex.ui.theme.WildexBlack
 import com.android.wildex.ui.theme.WildexLightSurface
-import kotlinx.coroutines.delay
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -70,6 +69,8 @@ object SignInScreenTestTags {
   const val LOADING_INDICATOR = "loadingIndicator"
 
   const val WAITING_SCREEN = "waitingScreen"
+  const val INITIALIZING_TITLE = "initializingTitle"
+  const val INITIALIZING_ANIMATION = "initializingAnimation"
 }
 
 /**
@@ -130,7 +131,6 @@ fun SignInScreen(
                   SignInContent(
                       isLoading = uiState.isLoading,
                       onSignedIn = { authViewModel.signIn(context, credentialManager) },
-                      paddingValues = paddingValues,
                       isWaterFull = isWaterFull,
                       onFilled = { isWaterFull = true },
                   )
@@ -155,17 +155,12 @@ fun SignInScreen(
                       data = uiState.onBoardingData,
                       updateData = { authViewModel.updateOnBoardingData(it) },
                       onBack = { authViewModel.goToPreviousStage() },
-                      onNext = { authViewModel.goToNextStage() },
+                      onComplete = { authViewModel.finishRegistration() },
                       isLoading = uiState.isLoading,
                   )
-              OnBoardingStage.AWAITING_COMPLETE -> {
-                LaunchedEffect(Unit) {
-                  delay(5000)
-                  authViewModel.finishRegistration()
-                }
+              OnBoardingStage.COMPLETE -> {
                 WaitingScreen()
               }
-              else -> {}
             }
           }
         }
@@ -175,15 +170,14 @@ fun SignInScreen(
 
 @Composable
 private fun SignInTopBar(stage: OnBoardingStage?) {
-  if (stage != null && stage != OnBoardingStage.COMPLETE) {
+  if (stage != null) {
     val color =
-        if (stage == OnBoardingStage.AWAITING_COMPLETE) colorScheme.primary
-        else colorScheme.onBackground
+        if (stage == OnBoardingStage.COMPLETE) colorScheme.primary else colorScheme.onBackground
     Column(
         modifier = Modifier.fillMaxWidth().background(colorScheme.background).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-      val currentStep = stage.ordinal + 1
+      val currentStep = stage.ordinal
       val maxSteps = OnBoardingStage.entries.size - 1
       val progress = currentStep.toFloat() / maxSteps
       ProgressBar(
@@ -210,16 +204,17 @@ fun WaitingScreen() {
       verticalArrangement = Arrangement.Center,
   ) {
     Text(
-        text = "Initializing user...",
+        text = stringResource(R.string.initializing_user),
         style = typography.titleLarge,
         color = colorScheme.onBackground,
+        modifier = Modifier.testTag(SignInScreenTestTags.INITIALIZING_TITLE),
     )
     Spacer(modifier = Modifier.height(20.dp))
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loader_cat))
     LottieAnimation(
         composition = composition,
         iterations = LottieConstants.IterateForever,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().testTag(SignInScreenTestTags.INITIALIZING_ANIMATION),
     )
   }
 }
@@ -227,16 +222,15 @@ fun WaitingScreen() {
 @Composable
 fun SignInContent(
     isLoading: Boolean,
-    paddingValues: PaddingValues,
     isWaterFull: Boolean,
     onFilled: () -> Unit,
     onSignedIn: () -> Unit,
 ) {
-  Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+  Box(modifier = Modifier.fillMaxSize()) {
     WaterFillBackground(onFilled = onFilled)
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -307,7 +301,7 @@ fun LogoAndTagline() {
  * @param appearsOn Boolean flag to control the appearance animation of the button.
  */
 @Composable
-fun GoogleSignInButton(onSignInClick: () -> Unit, appearsOn: Boolean = true) {
+fun GoogleSignInButton(onSignInClick: () -> Unit, appearsOn: Boolean) {
   val alpha by
       animateFloatAsState(
           targetValue = if (appearsOn) 1f else 0f,

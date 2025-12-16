@@ -36,7 +36,7 @@ object UserTypeScreenTestTags {
   const val SELECT_SETTING_INFO = "select_setting_info"
   const val CHOICE_BUTTON_ROW = "choice_button_row"
   const val BACK_BUTTON = "back_button"
-  const val NEXT_BUTTON = "next_button"
+  const val COMPLETE_BUTTON = "next_button"
 
   fun buttonTestTag(userType: UserType) = "button_${userType.name}"
 }
@@ -45,7 +45,7 @@ object UserTypeScreenTestTags {
 fun UserTypeScreen(
     data: OnBoardingData,
     updateData: (OnBoardingData) -> Unit,
-    onNext: () -> Unit,
+    onComplete: () -> Unit,
     onBack: () -> Unit,
     isLoading: Boolean,
 ) {
@@ -134,9 +134,11 @@ fun UserTypeScreen(
 
       Button(
           enabled = !isLoading,
-          onClick = onNext,
+          onClick = onComplete,
           modifier =
-              Modifier.weight(1f).padding(start = 8.dp).testTag(UserTypeScreenTestTags.NEXT_BUTTON),
+              Modifier.weight(1f)
+                  .padding(start = 8.dp)
+                  .testTag(UserTypeScreenTestTags.COMPLETE_BUTTON),
       ) {
         Text(stringResource(R.string.complete))
       }

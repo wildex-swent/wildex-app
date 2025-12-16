@@ -77,7 +77,7 @@ class FakeCredentialManager private constructor(private val context: Context) :
   }
 }
 
-class FakeAuthRepository : AuthRepository {
+open class FakeAuthRepository : AuthRepository {
   var signInResult: Result<FirebaseUser>? = null
 
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {

@@ -272,8 +272,9 @@
 
     <!-- Country dropdown -->
     <string name="no_countries_found">No countries found</string>
-    <string name="bio_placeholder">Tell people a thing or two about yourself...</string>
+    <string name="bio_placeholder">Tell people a thing or two about yourself…</string>
     <string name="bio_support">%1$d/%2$d characters</string>
     <string name="country">Country</string>
+    <string name="initializing_user">Initializing user…</string>
 
 </resources>

@@ -89,7 +89,6 @@ class SignInViewModelTest {
     storageRepository = LocalRepositories.storageRepository
     val initializeUserUseCase =
         InitializeUserUseCase(
-            userRepository,
             userSettingsRepository,
             userAnimalsRepository,
             userAchievementsRepository,

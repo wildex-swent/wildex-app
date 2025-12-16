@@ -34,15 +34,13 @@ enum class OnBoardingStage {
   NAMING,
   OPTIONAL,
   USER_TYPE,
-  AWAITING_COMPLETE,
   COMPLETE;
 
   fun next(): OnBoardingStage =
       when (this) {
         NAMING -> OPTIONAL
         OPTIONAL -> USER_TYPE
-        USER_TYPE -> AWAITING_COMPLETE
-        AWAITING_COMPLETE -> COMPLETE
+        USER_TYPE -> COMPLETE
         COMPLETE -> COMPLETE
       }
 
@@ -51,7 +49,6 @@ enum class OnBoardingStage {
         NAMING -> NAMING
         OPTIONAL -> NAMING
         USER_TYPE -> OPTIONAL
-        AWAITING_COMPLETE -> USER_TYPE
         COMPLETE -> USER_TYPE
       }
 }

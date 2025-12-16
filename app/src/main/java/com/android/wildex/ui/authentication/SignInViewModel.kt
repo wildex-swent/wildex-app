@@ -25,6 +25,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.usecase.user.InitializeUserUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -213,14 +214,15 @@ class SignInViewModel(
   }
 
   fun finishRegistration() {
-    _uiState.update { it.copy(isLoading = true) }
+    _uiState.update { it.copy(isLoading = true, onBoardingStage = OnBoardingStage.COMPLETE) }
     viewModelScope.launch {
+      delay(2000)
       try {
         val userId = _uiState.value.onBoardingData.userId
         initializeUserUseCase(userId)
         userTokensRepository.addTokenToUser(userId, userTokensRepository.getCurrentToken())
         updateUser(OnBoardingStage.COMPLETE)
-        _uiState.update { it.copy(isLoading = false, onBoardingStage = OnBoardingStage.COMPLETE) }
+        _uiState.update { it.copy(isLoading = false) }
       } catch (e: Exception) {
         _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
       }

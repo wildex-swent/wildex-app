@@ -30,6 +30,5 @@ enum OnBoardingStageProto {
     NAMING = 0;
     OPTIONAL = 1;
     USER_TYPE = 2;
-    AWAITING_COMPLETE = 3;
-    COMPLETE = 4;
+    COMPLETE = 3;
 }

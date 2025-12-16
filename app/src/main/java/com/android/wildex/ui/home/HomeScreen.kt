@@ -182,7 +182,6 @@ fun HomeScreen(
         else -> {
           PostsView(
               postStates = postStates,
-              isOnline = isOnline,
               onProfilePictureClick = onProfilePictureClick,
               onPostLike = { homeScreenViewModel.toggleLike(it, isOnline) },
               onPostClick = onPostClick,
@@ -228,7 +227,6 @@ fun NoPostsView() {
 @Composable
 fun PostsView(
     postStates: List<PostState>,
-    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -241,7 +239,6 @@ fun PostsView(
     items(count = postStates.size, key = { index -> postStates[index].post.postId }) { index ->
       PostItem(
           postState = postStates[index],
-          isOnline = isOnline,
           onProfilePictureClick = onProfilePictureClick,
           onPostLike = onPostLike,
           onPostClick = onPostClick,
@@ -260,7 +257,6 @@ fun PostsView(
 @Composable
 fun PostItem(
     postState: PostState,
-    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -409,7 +405,7 @@ private fun PostSlider(
     pagerState: PagerState,
 ) {
   var imageHeight by
-      rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it?.dp })) {
+      rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it.dp })) {
         mutableStateOf<Dp?>(null)
       }
   val context = LocalContext.current

@@ -235,22 +235,22 @@ class HomeScreenViewModel(
       setErrorMsg("You are currently offline\nYou can not like or unlike posts :/")
       return
     }
-      // Optimistic UI
-      _uiState.update { currentState ->
-          currentState.copy(
-              postStates =
-                  currentState.postStates.map { postState ->
-                      if (postState.post.postId == postId) {
-                          val newLiked = !postState.isLiked
-                          postState.copy(
-                              isLiked = newLiked,
-                              likeCount =
-                                  if (newLiked) postState.likeCount + 1 else postState.likeCount - 1)
-                      } else {
-                          postState
-                      }
-                  })
-      }
+    // Optimistic UI
+    _uiState.update { currentState ->
+      currentState.copy(
+          postStates =
+              currentState.postStates.map { postState ->
+                if (postState.post.postId == postId) {
+                  val newLiked = !postState.isLiked
+                  postState.copy(
+                      isLiked = newLiked,
+                      likeCount =
+                          if (newLiked) postState.likeCount + 1 else postState.likeCount - 1)
+                } else {
+                  postState
+                }
+              })
+    }
     viewModelScope.launch {
       val like = likeRepository.getLikeForPost(postId)
       if (like != null) {

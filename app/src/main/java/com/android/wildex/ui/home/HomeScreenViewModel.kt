@@ -50,7 +50,7 @@ data class HomeUIState(
     val isRefreshing: Boolean = false,
     val errorMsg: String? = null,
     val isError: Boolean = false,
-    val postsFilters: PostsFilters = PostsFilters(),
+    val postsFilters: PostsFilters = PostsFilters()
 )
 
 /** Default placeholder user used when no valid user is loaded. */
@@ -92,7 +92,7 @@ data class PostsFilters(
     val onlyFriendsPosts: Boolean = false,
     val ofAnimal: String? = null,
     val fromPlace: String? = null,
-    val fromAuthor: SimpleUser? = null,
+    val fromAuthor: SimpleUser? = null
 )
 
 /**
@@ -213,8 +213,7 @@ class HomeScreenViewModel(
                   isLiked = isLiked,
                   animalName = animalName,
                   likeCount = likeCount,
-                  commentsCount = commentCount,
-              )
+                  commentsCount = commentCount)
             } catch (_: Exception) {
               null
             }
@@ -271,7 +270,7 @@ class HomeScreenViewModel(
       onlyFriendsPosts: Boolean = _uiState.value.postsFilters.onlyFriendsPosts,
       ofAnimal: String? = _uiState.value.postsFilters.ofAnimal,
       fromPlace: String? = _uiState.value.postsFilters.fromPlace,
-      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor,
+      fromAuthor: SimpleUser? = _uiState.value.postsFilters.fromAuthor
   ) {
     _uiState.value =
         _uiState.value.copy(
@@ -280,8 +279,7 @@ class HomeScreenViewModel(
                     onlyFriendsPosts = onlyFriendsPosts,
                     ofAnimal = ofAnimal,
                     fromPlace = fromPlace,
-                    fromAuthor = fromAuthor,
-                ))
+                    fromAuthor = fromAuthor))
   }
 
   /**

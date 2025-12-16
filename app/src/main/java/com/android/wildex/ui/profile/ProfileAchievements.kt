@@ -64,6 +64,7 @@ fun ProfileAchievements(
     id: Id = "",
     onAchievements: (Id) -> Unit = {},
     listAchievement: List<Achievement> = emptyList(),
+    isOnline: Boolean = true,
 ) {
   val cs = colorScheme
 
@@ -81,25 +82,24 @@ fun ProfileAchievements(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = cs.background),
     ) {
-      Column(
-          modifier = Modifier.padding(12.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
+      Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.Start) {
         Text(
-            text = LocalContext.current.getString(R.string.no_achievements),
+            text =
+                if (isOnline) LocalContext.current.getString(R.string.no_achievements)
+                else LocalContext.current.getString(R.string.no_achievements_offline),
             color = cs.onBackground,
             style = typography.titleMedium,
         )
         Spacer(Modifier.height(8.dp))
         Button(
             onClick = { onAchievements(id) },
+            enabled = isOnline,
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor = cs.onBackground,
                     contentColor = cs.background,
                 ),
-            modifier =
-                Modifier.align(Alignment.End).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
+            modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
         ) {
           Text(
               text = LocalContext.current.getString(R.string.view_achievements),
@@ -212,12 +212,12 @@ fun ProfileAchievements(
                       containerColor = cs.onBackground,
                       contentColor = cs.background,
                   ),
-          ) {
-            Text(
-                text = LocalContext.current.getString(R.string.view_achievements),
-                style = typography.titleSmall,
-            )
-          }
+              enabled = isOnline) {
+                Text(
+                    text = LocalContext.current.getString(R.string.view_achievements),
+                    style = typography.titleSmall,
+                )
+              }
         }
   }
 }

@@ -21,6 +21,8 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mapbox.geojson.Point
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,6 +73,7 @@ class ProfileScreenViewModel(
         RepositoryProvider.userFriendsRepository,
     private val friendRequestRepository: FriendRequestRepository =
         RepositoryProvider.friendRequestRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val currentUserId: Id? = Firebase.auth.uid,
 ) : ViewModel() {
 
@@ -105,9 +108,6 @@ class ProfileScreenViewModel(
    */
   private suspend fun updateUIState(userId: Id, calledFromRefresh: Boolean = false) =
       coroutineScope {
-        if (calledFromRefresh) {
-          userRepository.refreshCache()
-        }
         if (userId.isBlank()) {
           setErrorMsg("Empty user id")
           _uiState.value =
@@ -118,6 +118,10 @@ class ProfileScreenViewModel(
                   isError = true,
               )
           return@coroutineScope
+        }
+        // Refresh the cache when called from a pull-to-refresh action
+        if (calledFromRefresh) {
+          userRepository.refreshCache()
         }
         try {
           // 1) Load user fast and show something
@@ -138,17 +142,38 @@ class ProfileScreenViewModel(
             _uiState.value = _uiState.value.copy(achievements = achievements)
           }
 
+          // 3) Determine friendship status
           viewModelScope.launch {
-            val currentUserId = currentUserId!!
+            val currentUserId = currentUserId ?: return@launch
             val sentRequests =
-                friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map {
-                  it.receiverId
-                }
-            val friendsIds = userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId }
+                runCatching {
+                      friendRequestRepository.getAllFriendRequestsBySender(currentUserId).map {
+                        it.receiverId
+                      }
+                    }
+                    .getOrElse {
+                      setErrorMsg(it.message ?: "Failed to load sent requests")
+                      emptyList()
+                    }
+
+            val friendsIds =
+                runCatching { userFriendsRepository.getAllFriendsOfUser(userId).map { it.userId } }
+                    .getOrElse {
+                      setErrorMsg(it.message ?: "Failed to load friends list")
+                      emptyList()
+                    }
+
             val receivedRequests =
-                friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map {
-                  it.senderId
-                }
+                runCatching {
+                      friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId).map {
+                        it.senderId
+                      }
+                    }
+                    .getOrElse {
+                      setErrorMsg(it.message ?: "Failed to load received requests")
+                      emptyList()
+                    }
+
             when {
               _uiState.value.isUserOwner ->
                   _uiState.value = _uiState.value.copy(friendStatus = FriendStatus.IS_CURRENT_USER)
@@ -162,16 +187,29 @@ class ProfileScreenViewModel(
             }
           }
 
+          // 4) Load animals count
           viewModelScope.launch {
-            val animalsCount = userAnimalsRepository.getAnimalsCountOfUser(userId)
+            val animalsCount =
+                runCatching { userAnimalsRepository.getAnimalsCountOfUser(userId) }
+                    .getOrElse {
+                      setErrorMsg(it.message ?: "Failed to load animal count")
+                      0
+                    }
             _uiState.value = _uiState.value.copy(animalCount = animalsCount)
           }
 
+          // 5) Load friends count
           viewModelScope.launch {
-            val friendsCount = userFriendsRepository.getFriendsCountOfUser(userId)
+            val friendsCount =
+                runCatching { userFriendsRepository.getFriendsCountOfUser(userId) }
+                    .getOrElse {
+                      setErrorMsg(it.message ?: "Failed to load friend count")
+                      0
+                    }
             _uiState.value = _uiState.value.copy(friendsCount = friendsCount)
           }
 
+          // 6) Load recent post pins for map preview
           viewModelScope.launch {
             val pins = fetchPostPins(userId)
             _uiState.value = _uiState.value.copy(recentPins = pins)
@@ -204,15 +242,26 @@ class ProfileScreenViewModel(
   }
 
   /** Fetches the achievements of the given user */
-  private suspend fun fetchAchievements(userId: String): List<Achievement> {
-    return runCatching {
-          updateUserAchievements(userId)
-          achievementRepository.getAllAchievementsByUser(userId)
-        }
-        .getOrElse {
-          setErrorMsg(it.message ?: "Failed to load achievements")
-          emptyList()
-        }
+  private suspend fun fetchAchievements(userId: Id): List<Achievement> {
+    // 1) FAST PATH: just read what we have
+    val cachedOrRemote =
+        runCatching { achievementRepository.getAllAchievementsByUser(userId) }
+            .getOrElse {
+              setErrorMsg(it.message ?: "Failed to load achievements")
+              emptyList()
+            }
+    // 2) SLOW PATH: recompute in background
+    viewModelScope.launch(ioDispatcher) {
+      runCatching {
+            updateUserAchievements(userId) // Veery heavy
+          }
+          .onSuccess {
+            // after recompute, refresh achievements in UI
+            runCatching { achievementRepository.getAllAchievementsByUser(userId) }
+                .onSuccess { fresh -> _uiState.value = _uiState.value.copy(achievements = fresh) }
+          }
+    }
+    return cachedOrRemote
   }
 
   /**
@@ -248,7 +297,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       if (state.isUserOwner) return@launch
-      val currentUserId = currentUserId!!
+      val currentUserId = currentUserId ?: return@launch
 
       _uiState.value = state.copy(friendStatus = FriendStatus.PENDING_SENT)
 
@@ -266,7 +315,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       if (state.isUserOwner) return@launch
-      val currentUserId = currentUserId!!
+      val currentUserId = currentUserId ?: return@launch
       val request = FriendRequest(currentUserId, state.user.userId)
 
       _uiState.value = state.copy(friendStatus = FriendStatus.NOT_FRIEND)
@@ -285,7 +334,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       if (state.isUserOwner) return@launch
-      val currentUserId = currentUserId!!
+      val currentUserId = currentUserId ?: return@launch
       val request = FriendRequest(state.user.userId, currentUserId)
 
       _uiState.value =
@@ -305,7 +354,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       if (state.isUserOwner) return@launch
-      val currentUserId = currentUserId!!
+      val currentUserId = currentUserId ?: return@launch
       val request = FriendRequest(state.user.userId, currentUserId)
 
       _uiState.value = state.copy(friendStatus = FriendStatus.NOT_FRIEND)
@@ -324,7 +373,7 @@ class ProfileScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       if (state.isUserOwner) return@launch
-      val currentUserId = currentUserId!!
+      val currentUserId = currentUserId ?: return@launch
 
       _uiState.value =
           state.copy(friendStatus = FriendStatus.NOT_FRIEND, friendsCount = state.friendsCount - 1)

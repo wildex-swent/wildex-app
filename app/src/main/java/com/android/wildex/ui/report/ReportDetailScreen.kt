@@ -157,6 +157,16 @@ fun ReportDetailsScreen(
   }
 }
 
+/**
+ * Main content of the report details screen, handling loading, error, and loaded states.
+ *
+ * @param innerPadding The padding values to be applied to the screen content.
+ * @param uiState The UI state of the report details screen.
+ * @param reportDetailsViewModel The ViewModel managing the report details state.
+ * @param onProfile Callback when the user wants to view a profile.
+ * @param reportId The ID of the report to display.
+ * @param onGoBack Callback when the user wants to go back.
+ */
 @Composable
 fun ReportDetailsScreenContent(
     innerPadding: PaddingValues,

@@ -77,7 +77,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
-import com.android.wildex.ui.profile.StaticMiniMap
+import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 import com.android.wildex.ui.utils.offline.OfflineScreen
@@ -148,7 +148,8 @@ fun ReportScreen(
                   UserType.PROFESSIONAL -> stringResource(R.string.report_title_professional)
                 },
             onNotificationClick = onNotificationClick,
-            onProfilePictureClick = onCurrentProfileClick)
+            onProfilePictureClick = onCurrentProfileClick,
+        )
       },
   ) { innerPadding ->
     if (isOnline) {
@@ -195,21 +196,22 @@ private fun ReportScreenContent(
         state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = { reportScreenViewModel.refreshUIState() },
-        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH)) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            uiState.reports.isEmpty() -> NoReportsView()
-            else -> {
-              ReportsView(
-                  reports = uiState.reports,
-                  userId = uiState.currentUser.userId,
-                  onProfileClick = onProfileClick,
-                  onReportClick = onReportClick,
-              )
-            }
-          }
+        modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.reports.isEmpty() -> NoReportsView()
+        else -> {
+          ReportsView(
+              reports = uiState.reports,
+              userId = uiState.currentUser.userId,
+              onProfileClick = onProfileClick,
+              onReportClick = onReportClick,
+          )
         }
+      }
+    }
     // Hidden buttons
     Box(
         modifier =
@@ -451,17 +453,19 @@ private fun ReportSlider(
             modifier =
                 Modifier.fillMaxSize()
                     .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "map"))) {
-              StaticMiniMap(
+              OfflineAwareMiniMap(
                   modifier = Modifier.matchParentSize(),
                   pins =
                       listOf(
                           Point.fromLngLat(
-                              reportState.location.longitude, reportState.location.latitude)),
+                              reportState.location.longitude,
+                              reportState.location.latitude,
+                          )),
                   styleUri = context.getString(R.string.map_style),
                   styleImportId = context.getString(R.string.map_standard_import),
                   isDark = isDark,
                   fallbackZoom = 4.0,
-                  context = context)
+              )
               Row(
                   verticalAlignment = Alignment.CenterVertically,
                   modifier =
@@ -596,7 +600,8 @@ private fun ReportScreenButtons(
           imageVector = Icons.Default.Add,
           contentDescription = "Expand Actions",
           modifier = Modifier.rotate(rotation),
-          tint = colorScheme.primary)
+          tint = colorScheme.primary,
+      )
     }
   }
 }

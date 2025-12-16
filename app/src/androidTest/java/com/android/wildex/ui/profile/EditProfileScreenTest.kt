@@ -1,6 +1,7 @@
 package com.android.wildex.ui.profile
 
 import android.net.Uri
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -14,12 +15,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.storage.StorageRepository
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.utils.LocalRepositories
+import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -35,6 +38,7 @@ class EditProfileScreenTest {
 
   private lateinit var userRepository: UserRepository
   private lateinit var storageRepository: StorageRepository
+  private val fakeObserver = FakeConnectivityObserver(initial = true)
 
   private fun sampleUser() =
       User(
@@ -62,15 +66,20 @@ class EditProfileScreenTest {
 
   @Test
   fun initialState_showsFields_andProfilePreview() {
-
+    fakeObserver.setOnline(true)
     runBlocking { userRepository.addUser(sampleUser()) }
     val vm =
         EditProfileViewModel(
             userRepository = userRepository,
             storageRepository = storageRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
 
-    composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        EditProfileScreen(editScreenViewModel = vm, isNewUser = true)
+      }
+    }
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME).assertTextContains("Jane")
@@ -87,15 +96,20 @@ class EditProfileScreenTest {
 
   @Test
   fun countryDropdown_opens_and_selects_country() {
-
+    fakeObserver.setOnline(true)
     runBlocking { userRepository.addUser(sampleUser()) }
     val vm =
         EditProfileViewModel(
             userRepository = userRepository,
             storageRepository = storageRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
 
-    composeRule.setContent { EditProfileScreen(editScreenViewModel = vm, isNewUser = true) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        EditProfileScreen(editScreenViewModel = vm, isNewUser = true)
+      }
+    }
     composeRule.waitForIdle()
 
     val initialCountry = vm.uiState.value.country
@@ -130,15 +144,21 @@ class EditProfileScreenTest {
 
   @Test
   fun changeProfileImage_updatesPreview() {
+    fakeObserver.setOnline(true)
 
     runBlocking { userRepository.addUser(sampleUser()) }
     val vm =
         EditProfileViewModel(
             userRepository = userRepository,
             storageRepository = storageRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
 
-    composeRule.setContent { EditProfileScreen(editScreenViewModel = vm) }
+    composeRule.setContent {
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        EditProfileScreen(editScreenViewModel = vm)
+      }
+    }
     composeRule.waitForIdle()
 
     vm.setNewProfileImageUri(Uri.parse("content://local/new"))
@@ -149,17 +169,20 @@ class EditProfileScreenTest {
 
   @Test
   fun goBack_invokes_callback() {
-
+    fakeObserver.setOnline(true)
     runBlocking { userRepository.addUser(sampleUser()) }
     val vm =
         EditProfileViewModel(
             userRepository = userRepository,
             storageRepository = storageRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
 
     var back = 0
     composeRule.setContent {
-      EditProfileScreen(editScreenViewModel = vm, onGoBack = { back++ }, isNewUser = true)
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        EditProfileScreen(editScreenViewModel = vm, onGoBack = { back++ }, isNewUser = true)
+      }
     }
     composeRule.waitForIdle()
 
@@ -170,12 +193,14 @@ class EditProfileScreenTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun save_click_invokes_onSave_when_isNewUser_true() {
+    fakeObserver.setOnline(true)
     runBlocking { userRepository.addUser(sampleUser()) }
     val vm =
         EditProfileViewModel(
             userRepository = userRepository,
             storageRepository = storageRepository,
-            currentUserId = "uid-1")
+            currentUserId = "uid-1",
+        )
 
     vm.setName("Jane")
     vm.setSurname("Doe")
@@ -184,7 +209,9 @@ class EditProfileScreenTest {
 
     var saved = 0
     composeRule.setContent {
-      EditProfileScreen(editScreenViewModel = vm, isNewUser = true, onSave = { saved++ })
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        EditProfileScreen(editScreenViewModel = vm, isNewUser = true, onSave = { saved++ })
+      }
     }
     composeRule.waitForIdle()
 

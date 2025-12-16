@@ -543,7 +543,7 @@ class PostDetailsScreenTest {
         }
       }
       composeRule.waitForIdle()
-      composeRule.scrollToTagWithinScroll(PostDetailsContentTestTags.DESCRIPTION_TEXT)
+      composeRule.scrollToTagWithinScroll(PostDetailsContentTestTags.DESCRIPTION_TOGGLE)
       composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TEXT).assertIsDisplayed()
       composeRule.onNodeWithTag(PostDetailsContentTestTags.DESCRIPTION_TOGGLE).assertIsDisplayed()
     }

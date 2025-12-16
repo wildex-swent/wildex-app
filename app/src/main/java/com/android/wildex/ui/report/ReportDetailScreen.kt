@@ -134,12 +134,13 @@ fun ReportDetailsScreen(
       modifier = Modifier.testTag(ReportDetailsScreenTestTags.SCREEN),
       topBar = { ReportDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
-        ReportCommentInput(
-            user = uiState.currentUser,
-            onProfile = onProfile,
-            onSend = { text -> reportDetailsViewModel.addComment(text) },
-            isOnline = isOnline,
-        )
+        if (isOnline) {
+          ReportCommentInput(
+              user = uiState.currentUser,
+              onProfile = onProfile,
+              onSend = { text -> reportDetailsViewModel.addComment(text) },
+          )
+        }
       },
   ) { innerPadding ->
     if (isOnline) {
@@ -705,7 +706,6 @@ private fun ReportCommentInput(
     user: SimpleUser,
     onProfile: (Id) -> Unit = {},
     onSend: (String) -> Unit = {},
-    isOnline: Boolean,
 ) {
   Box(
       modifier =
@@ -731,33 +731,31 @@ private fun ReportCommentInput(
 
       var text by remember { mutableStateOf("") }
 
-      if (isOnline) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
-            modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
-            shape = RoundedCornerShape(32.dp),
-            singleLine = true,
-            trailingIcon = {
-              IconButton(
-                  onClick = {
-                    if (text.isNotBlank()) {
-                      onSend(text)
-                      text = ""
-                    }
-                  },
-                  modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
-              ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send comment",
-                    tint = colorScheme.onBackground,
-                )
-              }
-            },
-        )
-      }
+      OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          placeholder = { Text(context.getString(R.string.report_details_add_comment)) },
+          modifier = Modifier.weight(1f).testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD),
+          shape = RoundedCornerShape(32.dp),
+          singleLine = true,
+          trailingIcon = {
+            IconButton(
+                onClick = {
+                  if (text.isNotBlank()) {
+                    onSend(text)
+                    text = ""
+                  }
+                },
+                modifier = Modifier.testTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND),
+            ) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Send,
+                  contentDescription = "Send comment",
+                  tint = colorScheme.onBackground,
+              )
+            }
+          },
+      )
     }
   }
 }

@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
@@ -56,6 +58,7 @@ object CollectionScreenTestTags {
   const val GO_BACK_BUTTON = "collection_screen_go_back_button"
   const val NO_ANIMAL_TEXT = "no_animal_text"
   const val ANIMAL_LIST = "collection_screen_animal_list"
+  const val PULL_TO_REFRESH = "collection_screen_pull_to_refresh"
 
   fun testTagForAnimal(animalId: Id, isUnlocked: Boolean) =
       if (isUnlocked) "collection_screen_animal_${animalId}_unlocked"
@@ -89,6 +92,8 @@ fun CollectionScreen(
 ) {
   val uiState by collectionScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { collectionScreenViewModel.loadUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
@@ -112,7 +117,14 @@ fun CollectionScreen(
         else OtherUserCollectionTopBar(onGoBack = onGoBack)
       },
   ) { innerPadding ->
-    Box(modifier = Modifier.padding(innerPadding)) {
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = {
+          if (isOnline) collectionScreenViewModel.refreshUIState(userUid)
+          else collectionScreenViewModel.refreshOffline()
+        },
+        modifier = Modifier.padding(innerPadding).testTag(CollectionScreenTestTags.PULL_TO_REFRESH),
+    ) {
       when {
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()

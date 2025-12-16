@@ -29,7 +29,6 @@
     <string name="last_name">Last Name*</string>
     <string name="username">Username*</string>
     <string name="next">Next</string>
-    <string name="bio">Bio</string>
     <string name="account_type_title">Select Account Type</string>
     <string name="user_type_info">Choosing to be a professional user will allow you to see animal reports and be assigned to them. Make sure you are eligible.</string>
     <string name="user_type_setting">You change this anytime in your settings.</string>
@@ -273,7 +272,7 @@
     <!-- Country dropdown -->
     <string name="no_countries_found">No countries found</string>
     <string name="bio_placeholder">Tell people a thing or two about yourself…</string>
-    <string name="bio_support">%1$d/%2$d characters</string>
+    <string name="bio_support">%1$s/%2$s characters</string>
     <string name="country">Country</string>
     <string name="initializing_user">Initializing user…</string>
 

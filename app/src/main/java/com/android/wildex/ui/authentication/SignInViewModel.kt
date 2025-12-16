@@ -91,51 +91,7 @@ class SignInViewModel(
                   try {
                     val userId = firebaseUser.uid
                     val googlePhotoUrl = firebaseUser.photoUrl?.toString() ?: ""
-
-                    val user =
-                        try {
-                          userRepository.getUser(userId)
-                        } catch (_: Exception) {
-                          val user =
-                              User(
-                                  userId = userId,
-                                  username = "",
-                                  name = "",
-                                  surname = "",
-                                  bio = "",
-                                  profilePictureURL = googlePhotoUrl,
-                                  userType = UserType.REGULAR,
-                                  creationDate = Timestamp.now(),
-                                  country = "",
-                                  onBoardingStage = OnBoardingStage.NAMING,
-                              )
-                          userRepository.addUser(user)
-                          user
-                        }
-                    if (user.onBoardingStage == OnBoardingStage.COMPLETE) {
-                      AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
-                    } else {
-                      AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
-                      usernameList = userRepository.getAllUsers().map { it.username }
-                    }
-                    _uiState.update {
-                      it.copy(
-                          isLoading = false,
-                          errorMsg = null,
-                          onBoardingStage = user.onBoardingStage,
-                          onBoardingData =
-                              OnBoardingData(
-                                  userId = user.userId,
-                                  name = user.name,
-                                  surname = user.surname,
-                                  username = user.username,
-                                  profilePicture = user.profilePictureURL.toUri(),
-                                  country = user.country,
-                                  bio = user.bio,
-                                  userType = user.userType,
-                              ),
-                      )
-                    }
+                    updateUIState(userId, googlePhotoUrl)
                   } catch (e: Exception) {
                     _uiState.update { it.copy(isLoading = false, errorMsg = e.localizedMessage) }
                   }
@@ -168,6 +124,56 @@ class SignInViewModel(
           )
         }
       }
+    }
+  }
+
+  private suspend fun updateUIState(userId: String, googlePhotoUrl: String) {
+    val user =
+        try {
+          userRepository.getUser(userId)
+        } catch (_: Exception) {
+          val user =
+              User(
+                  userId = userId,
+                  username = "",
+                  name = "",
+                  surname = "",
+                  bio = "",
+                  profilePictureURL = googlePhotoUrl,
+                  userType = UserType.REGULAR,
+                  creationDate = Timestamp.now(),
+                  country = "",
+                  onBoardingStage = OnBoardingStage.NAMING,
+              )
+          userRepository.addUser(user)
+          user
+        }
+    val stage =
+        if (user.onBoardingStage == OnBoardingStage.COMPLETE) {
+          AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(userId)
+          null
+        } else {
+          AppTheme.appearanceMode = AppearanceMode.AUTOMATIC
+          usernameList = userRepository.getAllUsers().map { it.username }
+          OnBoardingStage.NAMING
+        }
+    _uiState.update {
+      it.copy(
+          isLoading = false,
+          errorMsg = null,
+          onBoardingStage = stage,
+          onBoardingData =
+              OnBoardingData(
+                  userId = user.userId,
+                  name = user.name,
+                  surname = user.surname,
+                  username = user.username,
+                  profilePicture = user.profilePictureURL.toUri(),
+                  country = user.country,
+                  bio = user.bio,
+                  userType = user.userType,
+              ),
+      )
     }
   }
 

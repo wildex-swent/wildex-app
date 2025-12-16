@@ -214,7 +214,7 @@ fun WaitingScreen() {
     LottieAnimation(
         composition = composition,
         iterations = LottieConstants.IterateForever,
-        modifier = Modifier.fillMaxSize().testTag(SignInScreenTestTags.INITIALIZING_ANIMATION),
+        modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.INITIALIZING_ANIMATION),
     )
   }
 }

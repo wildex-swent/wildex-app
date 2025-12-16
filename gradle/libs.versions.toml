@@ -64,7 +64,6 @@ datastore = "1.2.0"
 datastore-preferences = "1.2.0"
 protobuf = "0.9.3"
 protobuf-javalite = "3.25.0"
-ui = "1.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -144,7 +143,6 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf-javalite" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

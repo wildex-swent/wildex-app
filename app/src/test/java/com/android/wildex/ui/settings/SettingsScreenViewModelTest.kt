@@ -98,6 +98,7 @@ class SettingsScreenViewModelTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "Spain",
+          onBoardingStage = OnBoardingStage.COMPLETE,
       )
 
   private val report1 =

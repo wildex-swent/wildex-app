@@ -87,7 +87,6 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 
 object SettingsScreenTestTags {
   const val GO_BACK_BUTTON = "go_back_button"
@@ -225,53 +224,22 @@ fun SettingsScreen(
             setUserTypeValidation = { showUserTypeValidation = true },
             showDialog = { showSettingsDialog = true },
         )
-        if (showDeletionValidation) {
-          AlertDialog(
-              onDismissRequest = { showDeletionValidation = false },
-              title = {
-                Text(
-                    text = context.getString(R.string.delete_account),
-                    style = typography.titleLarge,
-                )
-              },
-              text = {
-                Text(
-                    text = context.getString(R.string.delete_account_confirmation),
-                    style = typography.bodyMedium,
-                )
-              },
-              modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
-              confirmButton = {
-                TextButton(
-                    modifier =
-                        Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON),
-                    onClick = {
-                      showDeletionValidation = false
-                      settingsScreenViewModel.deleteAccount { onAccountDeleteOrSignOut() }
-                    },
-                ) {
-                  Text(
-                      text = context.getString(R.string.delete),
-                      color = Color.Red,
-                      style = typography.bodyMedium,
-                  )
-                }
-              },
-              dismissButton = {
-                TextButton(
-                    modifier =
-                        Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
-                    onClick = { showDeletionValidation = false },
-                ) {
-                  Text(text = context.getString(R.string.cancel), style = typography.bodyMedium)
-                }
-              },
-          )
-        } else if (showSettingsDialog) SettingsPermissionDialog { showSettingsDialog = false }
-        else if (showUserTypeValidation) {
-          UserTypeValidationDialog(
-              dismissDialog = { showUserTypeValidation = false },
-              onUserTypeChanged = { settingsScreenViewModel.setUserType(it) })
+        when {
+          showDeletionValidation -> {
+            DeleteAccountDialog(
+                dismissDialog = { showDeletionValidation = false },
+                deleteAccount = {
+                  settingsScreenViewModel.deleteAccount { onAccountDeleteOrSignOut() }
+                })
+          }
+          showSettingsDialog -> {
+            SettingsPermissionDialog { showSettingsDialog = false }
+          }
+          showUserTypeValidation -> {
+            UserTypeValidationDialog(
+                dismissDialog = { showUserTypeValidation = false },
+                onUserTypeChanged = { settingsScreenViewModel.setUserType(it) })
+          }
         }
       }
     }
@@ -316,6 +284,118 @@ fun SettingsPermissionDialog(dismissDialog: () -> Unit) {
       containerColor = colorScheme.background,
       tonalElevation = 2.dp,
       modifier = Modifier.testTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG),
+  )
+}
+
+/**
+ * Dialog prompting the user to delete his account
+ *
+ * @param dismissDialog callback function to be called when the user dismisses the dialog
+ * @param deleteAccount callback function to be called when the user confirms the deletion of his
+ *   account
+ */
+@Composable
+fun DeleteAccountDialog(
+    dismissDialog: () -> Unit,
+    deleteAccount: () -> Unit,
+) {
+  val context = LocalContext.current
+  AlertDialog(
+      onDismissRequest = dismissDialog,
+      title = {
+        Text(
+            text = context.getString(R.string.delete_account),
+            style = typography.titleLarge,
+        )
+      },
+      text = {
+        Text(
+            text = context.getString(R.string.delete_account_confirmation),
+            style = typography.bodyMedium,
+        )
+      },
+      modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DIALOG),
+      confirmButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON),
+            onClick = {
+              dismissDialog()
+              deleteAccount()
+            },
+        ) {
+          Text(
+              text = context.getString(R.string.delete),
+              color = Color.Red,
+              style = typography.bodyMedium,
+          )
+        }
+      },
+      dismissButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_ACCOUNT_DISMISS_BUTTON),
+            onClick = dismissDialog,
+        ) {
+          Text(text = context.getString(R.string.cancel), style = typography.bodyMedium)
+        }
+      },
+  )
+}
+
+/**
+ * Dialog prompting the user to change his type from professional to regular
+ *
+ * @param dismissDialog callback function to be called when the user dismisses the dialog
+ * @param onUserTypeChanged callback function to be called when the user changes his type
+ */
+@Composable
+fun UserTypeValidationDialog(
+    dismissDialog: () -> Unit,
+    onUserTypeChanged: (UserType) -> Unit,
+) {
+  AlertDialog(
+      onDismissRequest = dismissDialog,
+      title = {
+        Text(
+            text = stringResource(R.string.user_type_change_validation_title),
+            color = colorScheme.onBackground,
+            style = typography.titleLarge,
+        )
+      },
+      text = {
+        Text(
+            text = stringResource(R.string.user_type_change_validation_text),
+            color = colorScheme.onBackground,
+            style = typography.bodyMedium)
+      },
+      confirmButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CONFIRM),
+            onClick = {
+              dismissDialog()
+              onUserTypeChanged(UserType.REGULAR)
+            },
+        ) {
+          Text(
+              text = stringResource(R.string.user_type_change_validation_confirm),
+              color = colorScheme.primary,
+              style = typography.bodyMedium)
+        }
+      },
+      dismissButton = {
+        TextButton(
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CANCEL),
+            onClick = dismissDialog,
+        ) {
+          Text(
+              text = stringResource(R.string.cancel),
+              color = colorScheme.onBackground,
+              style = typography.bodyMedium,
+          )
+        }
+      },
+      containerColor = colorScheme.background,
+      tonalElevation = 2.dp,
+      modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG),
   )
 }
 
@@ -605,6 +685,7 @@ fun NotificationOption(
  * @param groupButtonsColors colors to be applied to the interactable element, so that it follows
  *   the application's theme
  * @param isOnline boolean value indicating whether the user is online or not
+ * @param setUserTypeValidation callback function to be called when the user wants to change type
  * @param onOfflineClick callback function to be called when the user is offline
  */
 @Composable
@@ -639,14 +720,14 @@ fun UserTypeOption(
         SegmentedButton(
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             onClick = {
-              if (isOnline) {
-                val userType = getUserType(option, context)
-                if (currentUserType == UserType.PROFESSIONAL && userType == UserType.REGULAR) {
-                  setUserTypeValidation()
-                } else {
-                  onUserTypeChanged(userType)
-                }
-              } else onOfflineClick()
+              handleUserTypeClick(
+                  isOnline = isOnline,
+                  option = option,
+                  context = context,
+                  currentUserType = currentUserType,
+                  setUserTypeValidation = setUserTypeValidation,
+                  onUserTypeChanged = onUserTypeChanged,
+                  onOfflineClick = onOfflineClick)
             },
             selected = selectedIndex == index,
             colors = groupButtonsColors,
@@ -666,56 +747,37 @@ fun UserTypeOption(
   }
 }
 
-@Composable
-fun UserTypeValidationDialog(
-    dismissDialog: () -> Unit,
+/**
+ * Handles the user type click
+ *
+ * @param isOnline boolean value indicating whether the user is online or not
+ * @param option option selected by the user
+ * @param context context of the application
+ * @param currentUserType current user type of the logged in user
+ * @param setUserTypeValidation callback function to be called when the user wants to change type
+ * @param onUserTypeChanged callback function to be called when the user changes his type
+ * @param onOfflineClick callback function to be called when the user is offline
+ */
+private fun handleUserTypeClick(
+    isOnline: Boolean,
+    option: String,
+    context: Context,
+    currentUserType: UserType,
+    setUserTypeValidation: () -> Unit,
     onUserTypeChanged: (UserType) -> Unit,
+    onOfflineClick: () -> Unit
 ) {
-  AlertDialog(
-      onDismissRequest = dismissDialog,
-      title = {
-        Text(
-            text = stringResource(R.string.user_type_change_validation_title),
-            color = colorScheme.onBackground,
-            style = typography.titleLarge,
-        )
-      },
-      text = {
-        Text(
-            text = stringResource(R.string.user_type_change_validation_text),
-            color = colorScheme.onBackground,
-            style = typography.bodyMedium)
-      },
-      confirmButton = {
-        TextButton(
-            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CONFIRM),
-            onClick = {
-              dismissDialog()
-              onUserTypeChanged(UserType.REGULAR)
-            },
-        ) {
-          Text(
-              text = stringResource(R.string.user_type_change_validation_confirm),
-              color = colorScheme.primary,
-              style = typography.bodyMedium)
-        }
-      },
-      dismissButton = {
-        TextButton(
-            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CANCEL),
-            onClick = dismissDialog,
-        ) {
-          Text(
-              text = stringResource(R.string.cancel),
-              color = colorScheme.onBackground,
-              style = typography.bodyMedium,
-          )
-        }
-      },
-      containerColor = colorScheme.background,
-      tonalElevation = 2.dp,
-      modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG),
-  )
+  if (!isOnline) {
+    onOfflineClick()
+    return
+  }
+
+  val userType = getUserType(option, context)
+  if (currentUserType == UserType.PROFESSIONAL && userType == UserType.REGULAR) {
+    setUserTypeValidation()
+  } else {
+    onUserTypeChanged(userType)
+  }
 }
 
 private fun getUserType(option: String, context: Context): UserType =

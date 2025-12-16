@@ -4,11 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
-import com.android.wildex.model.animal.AnimalRepositoryFirestore
 import com.android.wildex.model.social.Post
-import com.android.wildex.model.social.PostsRepositoryFirestore
 import com.android.wildex.model.user.User
-import com.android.wildex.model.user.UserAnimalsRepositoryFirestore
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserSettingsRepositoryFirestore
 import com.android.wildex.model.user.UserType

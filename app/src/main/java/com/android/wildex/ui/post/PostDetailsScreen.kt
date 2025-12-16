@@ -102,7 +102,6 @@ fun PostDetailsScreen(
             userUserType = uiState.currentUserUserType,
             onProfile = onProfile,
             postDetailsScreenViewModel = postDetailsScreenViewModel,
-            isOnline = isOnline,
         )
       },
   ) { innerPadding ->
@@ -225,7 +224,6 @@ fun CommentInput(
     userUserType: UserType = UserType.REGULAR,
     onProfile: (Id) -> Unit = {},
     postDetailsScreenViewModel: PostDetailsScreenViewModel,
-    isOnline: Boolean = true
 ) {
   Box(
       modifier =
@@ -258,7 +256,6 @@ fun CommentInput(
 
           OutlinedTextField(
               value = text,
-              enabled = isOnline,
               onValueChange = { text = it },
               placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
               modifier = Modifier.weight(1f),

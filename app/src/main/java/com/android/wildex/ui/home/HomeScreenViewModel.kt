@@ -30,6 +30,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -233,6 +234,22 @@ class HomeScreenViewModel(
     if (!isOnline) {
       setErrorMsg("You are currently offline\nYou can not like or unlike posts :/")
       return
+    }
+    // Optimistic UI
+    _uiState.update { currentState ->
+      currentState.copy(
+          postStates =
+              currentState.postStates.map { postState ->
+                if (postState.post.postId == postId) {
+                  val newLiked = !postState.isLiked
+                  postState.copy(
+                      isLiked = newLiked,
+                      likeCount =
+                          if (newLiked) postState.likeCount + 1 else postState.likeCount - 1)
+                } else {
+                  postState
+                }
+              })
     }
     viewModelScope.launch {
       val like = likeRepository.getLikeForPost(postId)

@@ -140,6 +140,21 @@ fun AchievementsScreen(
   }
 }
 
+/**
+ * Renders the main content of the achievements screen when the device is online.
+ *
+ * Displays loading and error states, the overall progress card, labeled sections for unlocked and
+ * locked achievements, and the grid of achievement items. When an item is selected, the details
+ * dialog for that achievement is shown.
+ *
+ * @param uiState Current UI state that contains lists of unlocked and locked achievements, overall
+ *   progress and loading/error flags.
+ * @param paddingValues Inner padding provided by the parent Scaffold.
+ * @param context Android Context used for accessing resources.
+ * @param selectedAchievement Currently selected achievement to show in the details dialog, or null.
+ * @param onSelectAchievement Callback invoked when an achievement is selected.
+ * @param onCloseSelectedAchievement Callback invoked to close the achievement details dialog.
+ */
 @Composable
 private fun AchievementsOnlineContent(
     uiState: AchievementsUIState,

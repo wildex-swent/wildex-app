@@ -35,6 +35,20 @@ object CameraScreenTestTags {
   const val SAVE_TO_GALLERY_SCREEN = "save_to_gallery_screen"
 }
 
+/**
+ * Top-level camera screen that coordinates permission flow, preview, detection and post creation.
+ *
+ * It observes ViewModel state to switch between the preview, permission request, detecting,
+ * uploading and post creation screens.
+ *
+ * @param cameraScreenViewModel ViewModel that holds camera-related UI state and actions.
+ * @param onPost Callback invoked after a successful post creation.
+ * @param bottomBar Optional bottom bar composable to display when appropriate.
+ * @param onPickLocation Callback to start location picking flow.
+ * @param serializedLocation Optional location passed back from the picker.
+ * @param onPickedLocationConsumed Callback to notify the caller that the picked location has been
+ *   handled.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreen(

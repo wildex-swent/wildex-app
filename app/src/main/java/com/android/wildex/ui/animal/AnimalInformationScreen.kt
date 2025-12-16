@@ -46,6 +46,16 @@ object AnimalInformationScreenTestTags {
   const val BACK_BUTTON = "back_button"
 }
 
+/**
+ * Screen that displays detailed information about a single animal.
+ *
+ * The composable fetches animal data by id via the provided ViewModel, shows loading and error
+ * states, and renders the animal picture, name, species and description.
+ *
+ * @param animalId The identifier of the animal to load and display.
+ * @param animalInformationScreenViewModel ViewModel responsible for loading and exposing UI state.
+ * @param onGoBack Callback invoked when the user requests to navigate back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalInformationScreen(

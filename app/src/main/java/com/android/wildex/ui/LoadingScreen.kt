@@ -21,6 +21,12 @@ object LoadingScreenTestTags {
   const val LOADING_FAIL = "loading_fail"
 }
 
+/**
+ * Displays a centered circular progress indicator used as a loading screen.
+ *
+ * @param modifier Optional Modifier applied to the root container.
+ * @param pd Optional PaddingValues applied around the content.
+ */
 @Composable
 fun LoadingScreen(modifier: Modifier = Modifier, pd: PaddingValues = PaddingValues(0.dp)) {
   Box(
@@ -31,6 +37,12 @@ fun LoadingScreen(modifier: Modifier = Modifier, pd: PaddingValues = PaddingValu
   }
 }
 
+/**
+ * Displays a centered error message when loading fails.
+ *
+ * @param modifier Optional Modifier applied to the root container.
+ * @param pd Optional PaddingValues applied around the content.
+ */
 @Composable
 fun LoadingFail(modifier: Modifier = Modifier, pd: PaddingValues = PaddingValues(0.dp)) {
   Box(

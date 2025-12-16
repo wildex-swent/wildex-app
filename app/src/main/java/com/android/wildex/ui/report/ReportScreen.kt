@@ -466,6 +466,12 @@ private fun ReportSlider(
   }
 }
 
+/**
+ * Small pager indicator dot representing one page in a pager.
+ *
+ * @param slideIndex Index of this dot.
+ * @param currentPage Currently visible pager page.
+ */
 @Composable
 private fun SlideState(slideIndex: Int, currentPage: Int) {
   Box(

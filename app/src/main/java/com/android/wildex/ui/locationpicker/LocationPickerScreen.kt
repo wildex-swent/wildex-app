@@ -296,6 +296,20 @@ fun LocationPickerScreen(
 
 /* ---------- Side effects extracted from LocationPickerScreen ---------- */
 
+/**
+ * Handles side effects and view-model event collection for the Location Picker.
+ * - Reacts to user location availability and forwards it to the viewModel.
+ * - Collects confirmation events and forwards the chosen location to the caller.
+ * - Shows error toasts when the viewModel reports an error.
+ *
+ * @param viewModel The LocationPickerViewModel instance providing uiState and events.
+ * @param uiState The current UI state snapshot for the location picker.
+ * @param context Android context used for toasts and resources.
+ * @param isLocationGranted Whether location permissions are currently granted.
+ * @param lastPosition Last known user position on the map, if available.
+ * @param mapView Reference to the MapView used to animate when a selection is shown.
+ * @param onLocationPicked Callback invoked when a location has been confirmed.
+ */
 @Composable
 private fun LocationPickerEffects(
     viewModel: LocationPickerViewModel,
@@ -307,6 +321,8 @@ private fun LocationPickerEffects(
     onLocationPicked: (Location) -> Unit,
 ) {
   LaunchedEffect(lastPosition, isLocationGranted) {
+    // When the user location becomes available and permissions are granted,
+    // notify the viewModel to possibly center the map.
     if (lastPosition != null && isLocationGranted && !uiState.hasCenteredOnUserLocation) {
       viewModel.onUserLocationAvailable(
           latitude = lastPosition.latitude(),
@@ -316,6 +332,7 @@ private fun LocationPickerEffects(
   }
 
   LaunchedEffect(Unit) {
+    // Collect one-shot events from the viewModel and forward to caller.
     viewModel.events.collect { event ->
       when (event) {
         is LocationPickerEvent.Confirmed -> onLocationPicked(event.location)
@@ -428,6 +445,18 @@ private fun LocationPickerTopBar(
   }
 }
 
+/**
+ * Trailing icons for the search text field in the location picker.
+ *
+ * @param query Current search query string.
+ * @param isBusy True if a search is in progress or loading UI is active.
+ * @param isLocationGranted Whether location permissions are granted.
+ * @param onQueryChange Callback when the query is changed (e.g. clear).
+ * @param onUseCurrentLocationName Callback to use the device location name as query.
+ * @param onSearch Callback to trigger a search.
+ * @param focusRequester FocusRequester used to request focus on the text field.
+ * @param focusManager FocusManager used to clear focus when appropriate.
+ */
 @Composable
 private fun LocationPickerTrailingIcons(
     query: String,
@@ -493,6 +522,11 @@ private fun LocationPickerTrailingIcons(
   }
 }
 
+/**
+ * Provides keyboard actions for the search field.
+ *
+ * Triggers the given onSearch lambda when the IME search action is pressed.
+ */
 private fun locationPickerKeyboardActions(
     query: String,
     onSearch: (String) -> Unit,
@@ -509,6 +543,14 @@ private fun locationPickerKeyboardActions(
   )
 }
 
+/**
+ * Shows a dropdown of suggested locations matching the user's query.
+ *
+ * @param suggestions List of Location suggestions to display.
+ * @param query Current query string used for highlighting.
+ * @param onSuggestionClick Callback invoked when a suggestion is selected.
+ * @param modifier Optional modifier for the dropdown card.
+ */
 @Composable
 private fun SuggestionsDropdown(
     suggestions: List<Location>,
@@ -579,8 +621,14 @@ private fun SuggestionsDropdown(
   }
 }
 
-/* ---------- Recenter FAB ---------- */
-
+/**
+ * Floating action button to recenter the map or request location permission.
+ *
+ * @param modifier Modifier to apply to the FAB.
+ * @param isLocationGranted Whether location permission is currently granted.
+ * @param onRecenter Callback to center the map on the user.
+ * @param onAskLocation Callback to start permission request flow.
+ */
 @Composable
 private fun LocationPickerRecenterFab(
     modifier: Modifier = Modifier,
@@ -606,8 +654,12 @@ private fun LocationPickerRecenterFab(
   }
 }
 
-/* ---------- Tap listener to pick a point ---------- */
-
+/**
+ * Adds a tap listener to the MapView to allow picking coordinates.
+ *
+ * @param mapView The MapView instance to attach the listener to.
+ * @param onTap Callback invoked with the tapped latitude and longitude.
+ */
 @Composable
 private fun LocationPickerTapListener(
     mapView: MapView?,
@@ -623,7 +675,13 @@ private fun LocationPickerTapListener(
   }
 }
 
-/* ---------- Confirm dialog ---------- */
+/**
+ * Confirmation dialog shown when the user selects a location on the map.
+ *
+ * @param placeName Name of the place to confirm.
+ * @param onConfirm Callback invoked when the user confirms.
+ * @param onDismiss Callback invoked when the dialog is dismissed.
+ */
 @Composable
 private fun LocationPickerConfirmDialog(
     placeName: String,
@@ -689,6 +747,13 @@ private fun LocationPickerConfirmDialog(
   )
 }
 
+/**
+ * Draws a pin overlay on the MapView at the selected coordinates using a vector drawable.
+ *
+ * @param mapView The MapView to add the annotation to.
+ * @param selectedLat Selected latitude or null to clear.
+ * @param selectedLon Selected longitude or null to clear.
+ */
 @Composable
 private fun LocationPickerMarkerOverlay(
     mapView: MapView?,
@@ -713,6 +778,11 @@ private fun LocationPickerMarkerOverlay(
   }
 }
 
+/**
+ * Icon composable that switches between enabled/disabled location icons.
+ *
+ * @param isLocationGranted True to show the active location icon, false to show the disabled icon.
+ */
 @Composable
 private fun IconLocation(isLocationGranted: Boolean) {
   if (isLocationGranted) {
@@ -728,6 +798,12 @@ private fun IconLocation(isLocationGranted: Boolean) {
   }
 }
 
+/**
+ * Offline placeholder wrapper for the location picker.
+ *
+ * @param context Android context used to build the top bar.
+ * @param onBack Callback invoked when the user wants to go back.
+ */
 @Composable
 private fun OfflineScreenPicker(context: Context, onBack: () -> Unit) {
   Scaffold(topBar = { LocationPickerTopBar(context, onBack) }) { inner ->
@@ -735,11 +811,20 @@ private fun OfflineScreenPicker(context: Context, onBack: () -> Unit) {
   }
 }
 
+/**
+ * Loads a vector drawable as a square bitmap of the requested size.
+ *
+ * @param context Android context used to load the drawable resource.
+ * @param resId Resource id of the drawable.
+ * @param sizePx Desired bitmap size in pixels (square).
+ * @return A Bitmap representation of the vector drawable.
+ */
 private fun loadVectorAsBitmap(
     context: Context,
     resId: Int,
     sizePx: Int = 96,
 ): Bitmap {
+  // Create bitmap and canvas and draw the vector into it so Mapbox annotations can use it.
   val d = AppCompatResources.getDrawable(context, resId) ?: return createBitmap(1, 1)
   val bmp = createBitmap(sizePx, sizePx)
   val canvas = Canvas(bmp)
@@ -748,6 +833,14 @@ private fun loadVectorAsBitmap(
   return bmp
 }
 
+/**
+ * Builds an AnnotatedString where the matching substring (query) is highlighted.
+ *
+ * @param name The full name to display.
+ * @param queryLower The lowercase query to highlight.
+ * @param highlightColor Color used for the highlighted span.
+ * @return AnnotatedString with the highlighted part if found.
+ */
 private fun buildHighlightedName(
     name: String,
     queryLower: String,

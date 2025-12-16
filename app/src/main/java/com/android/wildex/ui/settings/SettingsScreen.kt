@@ -100,9 +100,9 @@ object SettingsScreenTestTags {
   const val DELETE_ACCOUNT_DISMISS_BUTTON = "delete_account_dismiss_button"
   const val NOTIFICATIONS_SETTING = "notifications_setting"
   const val NOTIFICATIONS_TOGGLE = "notifications_toggle"
-  const val USER_STATUS_SETTING = "user_status_setting"
-  const val REGULAR_USER_STATUS_BUTTON = "regular_user_status_button"
-  const val PROFESSIONAL_USER_STATUS_BUTTON = "professional_user_status_button"
+  const val USER_TYPE_SETTING = "user_type_setting"
+  const val REGULAR_USER_TYPE_BUTTON = "regular_user_type_button"
+  const val PROFESSIONAL_USER_TYPE_BUTTON = "professional_user_type_button"
   const val APPEARANCE_MODE_SETTING = "appearance_mode_setting"
   const val AUTOMATIC_MODE_BUTTON = "automatic_mode_button"
   const val LIGHT_MODE_BUTTON = "light_mode_button"
@@ -111,9 +111,9 @@ object SettingsScreenTestTags {
   const val NOTIFICATIONS_SETTING_DIALOG = "notification_setting_dialog"
   const val NOTIFICATIONS_SETTING_DIALOG_CONFIRM = "notification_setting_dialog_confirm"
   const val NOTIFICATIONS_SETTING_DIALOG_CANCEL = "notification_setting_dialog_cancel"
-  const val USER_STATUS_DIALOG = "user_status_dialog"
-  const val USER_STATUS_DIALOG_CONFIRM = "user_status_dialog_confirm"
-  const val USER_STATUS_DIALOG_CANCEL = "user_status_dialog_cancel"
+  const val USER_TYPE_DIALOG = "user_type_dialog"
+  const val USER_TYPE_DIALOG_CONFIRM = "user_type_dialog_confirm"
+  const val USER_TYPE_DIALOG_CANCEL = "user_type_dialog_cancel"
 }
 
 /**
@@ -271,7 +271,7 @@ fun SettingsScreen(
         else if (showUserTypeValidation) {
           UserTypeValidationDialog(
               dismissDialog = { showUserTypeValidation = false },
-              onUserStatusChanged = { settingsScreenViewModel.setUserType(it) })
+              onUserTypeChanged = { settingsScreenViewModel.setUserType(it) })
         }
       }
     }
@@ -321,13 +321,13 @@ fun SettingsPermissionDialog(dismissDialog: () -> Unit) {
 
 /**
  * Container Composable for the actual settings available to the user (appearance, notifications,
- * user status, edit profile)
+ * user type, edit profile)
  *
  * @param onEditProfileClick callback function to be called when clicking on the Edit Profile
  *   setting
  * @param paddingValues padding values of the scaffold passed down to the column
  * @param uiState settings UI state, containing info on the current notification enablement status,
- *   the current user status and the current appearance mode
+ *   the current user type and the current appearance mode
  * @param isOnline boolean value indicating whether the user is online or not
  * @param viewModel settings screen view model
  * @param notifPermissionState permission state of the notification permission
@@ -387,10 +387,10 @@ fun SettingsContent(
       SettingsDivider()
     }
     item {
-      UserStatusOption(
-          currentUserStatus = uiState.userType,
+      UserTypeOption(
+          currentUserType = uiState.userType,
           groupButtonsColors = groupButtonsColors,
-          onUserStatusChanged = { viewModel.setUserType(it) },
+          onUserTypeChanged = { viewModel.setUserType(it) },
           isOnline = isOnline,
           setUserTypeValidation = setUserTypeValidation,
           onOfflineClick = { viewModel.onOfflineClick() },
@@ -597,20 +597,20 @@ fun NotificationOption(
 }
 
 /**
- * User Status setting, allowing the user to change his status from regular to professional, or the
+ * User Type setting, allowing the user to change his type from regular to professional, or the
  * opposite
  *
- * @param currentUserStatus current user status of the logged in user
- * @param onUserStatusChanged callback function to be called when the user changes his status
+ * @param currentUserType current user type of the logged in user
+ * @param onUserTypeChanged callback function to be called when the user changes his type
  * @param groupButtonsColors colors to be applied to the interactable element, so that it follows
  *   the application's theme
  * @param isOnline boolean value indicating whether the user is online or not
  * @param onOfflineClick callback function to be called when the user is offline
  */
 @Composable
-fun UserStatusOption(
-    currentUserStatus: UserType,
-    onUserStatusChanged: (UserType) -> Unit,
+fun UserTypeOption(
+    currentUserType: UserType,
+    onUserTypeChanged: (UserType) -> Unit,
     groupButtonsColors: SegmentedButtonColors,
     isOnline: Boolean,
     setUserTypeValidation: () -> Unit,
@@ -619,20 +619,20 @@ fun UserStatusOption(
   val context = LocalContext.current
   val options =
       listOf(
-          context.getString(R.string.regular_status),
-          context.getString(R.string.professional_status),
+          context.getString(R.string.regular_type),
+          context.getString(R.string.professional_type),
       )
   val testTags =
       listOf(
-          SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON,
-          SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON,
+          SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON,
+          SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON,
       )
-  val selectedIndex = UserType.entries.indexOf(currentUserStatus)
+  val selectedIndex = UserType.entries.indexOf(currentUserType)
 
   SettingTemplate(
-      testTag = SettingsScreenTestTags.USER_STATUS_SETTING,
+      testTag = SettingsScreenTestTags.USER_TYPE_SETTING,
       icon = Icons.Outlined.Person,
-      settingName = context.getString(R.string.user_status),
+      settingName = context.getString(R.string.user_type),
   ) {
     SingleChoiceSegmentedButtonRow {
       options.forEachIndexed { index, option ->
@@ -641,10 +641,10 @@ fun UserStatusOption(
             onClick = {
               if (isOnline) {
                 val userType = getUserType(option, context)
-                if (currentUserStatus == UserType.PROFESSIONAL && userType == UserType.REGULAR) {
+                if (currentUserType == UserType.PROFESSIONAL && userType == UserType.REGULAR) {
                   setUserTypeValidation()
                 } else {
-                  onUserStatusChanged(userType)
+                  onUserTypeChanged(userType)
                 }
               } else onOfflineClick()
             },
@@ -669,40 +669,40 @@ fun UserStatusOption(
 @Composable
 fun UserTypeValidationDialog(
     dismissDialog: () -> Unit,
-    onUserStatusChanged: (UserType) -> Unit,
+    onUserTypeChanged: (UserType) -> Unit,
 ) {
   AlertDialog(
       onDismissRequest = dismissDialog,
       title = {
         Text(
-            text = stringResource(R.string.user_change_validation_title),
+            text = stringResource(R.string.user_type_change_validation_title),
             color = colorScheme.onBackground,
             style = typography.titleLarge,
         )
       },
       text = {
         Text(
-            text = stringResource(R.string.user_change_validation_text),
+            text = stringResource(R.string.user_type_change_validation_text),
             color = colorScheme.onBackground,
             style = typography.bodyMedium)
       },
       confirmButton = {
         TextButton(
-            modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG_CONFIRM),
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CONFIRM),
             onClick = {
               dismissDialog()
-              onUserStatusChanged(UserType.REGULAR)
+              onUserTypeChanged(UserType.REGULAR)
             },
         ) {
           Text(
-              text = stringResource(R.string.user_change_validation_confirm),
+              text = stringResource(R.string.user_type_change_validation_confirm),
               color = colorScheme.primary,
               style = typography.bodyMedium)
         }
       },
       dismissButton = {
         TextButton(
-            modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG_CANCEL),
+            modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CANCEL),
             onClick = dismissDialog,
         ) {
           Text(
@@ -714,14 +714,14 @@ fun UserTypeValidationDialog(
       },
       containerColor = colorScheme.background,
       tonalElevation = 2.dp,
-      modifier = Modifier.testTag(SettingsScreenTestTags.USER_STATUS_DIALOG),
+      modifier = Modifier.testTag(SettingsScreenTestTags.USER_TYPE_DIALOG),
   )
 }
 
 private fun getUserType(option: String, context: Context): UserType =
     when (option) {
-      context.getString(R.string.regular_status) -> UserType.REGULAR
-      context.getString(R.string.professional_status) -> UserType.PROFESSIONAL
+      context.getString(R.string.regular_type) -> UserType.REGULAR
+      context.getString(R.string.professional_type) -> UserType.PROFESSIONAL
       else -> throw IllegalArgumentException("The user type [$option] is not recognized")
     }
 

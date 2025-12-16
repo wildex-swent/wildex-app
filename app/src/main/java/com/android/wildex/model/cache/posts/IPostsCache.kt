@@ -3,6 +3,7 @@ package com.android.wildex.model.cache.posts
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.utils.Id
 
+/** Interface defining the contract for a posts cache. */
 interface IPostsCache {
   /**
    * Retrieves a post by their ID from the cache.

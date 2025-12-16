@@ -15,6 +15,7 @@ import com.google.protobuf.InvalidProtocolBufferException
 import java.io.InputStream
 import java.io.OutputStream
 
+/** Serializer for [PostCacheStorage] instances. */
 object PostCacheSerializer : Serializer<PostCacheStorage> {
   override val defaultValue: PostCacheStorage = PostCacheStorage.getDefaultInstance()
 

@@ -44,6 +44,7 @@ class FileSearchDataStorage(context: Context) {
         map[key] = jsonObject.getString(key)
       }
 
+      // since we read the file, reset the updated flag
       _updated.value = false
       map
     } catch (e: Exception) {
@@ -72,6 +73,7 @@ class FileSearchDataStorage(context: Context) {
           StandardCopyOption.REPLACE_EXISTING,
           StandardCopyOption.ATOMIC_MOVE)
 
+      // since we wrote to the file, set the updated flag
       _updated.value = true
     } catch (e: IOException) {
       e.printStackTrace()

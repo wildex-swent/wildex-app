@@ -36,6 +36,11 @@ sealed class MapPin {
   /**
    * Data class representing a post pin on the map.
    *
+   * @property id The unique identifier for the post.
+   * @property authorId The ID of the user who created the post.
+   * @property location The geographical location of the post.
+   * @property imageURL The URL of the image associated with the post.
+   * @property kind The kind of pin, defaulting to POST.
    * @property isFriend Indicates whether the post author is a friend of the current user.
    */
   data class PostPin(
@@ -50,6 +55,11 @@ sealed class MapPin {
   /**
    * Data class representing a report pin on the map.
    *
+   * @property id The unique identifier for the report.
+   * @property authorId The ID of the user who created the report.
+   * @property location The geographical location of the report.
+   * @property imageURL The URL of the image associated with the report.
+   * @property kind The kind of pin, defaulting to REPORT.
    * @property assigneeId The ID of the user assigned to handle the report, if any
    */
   data class ReportPin(
@@ -65,6 +75,7 @@ sealed class MapPin {
    * Data class representing a cluster of pins on the map.
    *
    * @property count The number of pins clustered together.
+   * @property childIds The list of IDs of the pins included in the cluster.
    */
   data class ClusterPin(
       override val id: Id,
@@ -86,6 +97,8 @@ sealed interface PinDetails {
    * @property post The post associated with the pin.
    * @property author Simplified user information for the post author.
    * @property likedByMe Indicates whether the current user has liked this post.
+   * @property likeCount The total number of likes on the post.
+   * @property commentCount The total number of comments on the post.
    * @property animalName The name of the animal referenced in the post.
    */
   data class PostDetails(

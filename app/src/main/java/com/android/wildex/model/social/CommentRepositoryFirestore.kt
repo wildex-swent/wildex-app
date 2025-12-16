@@ -196,7 +196,7 @@ class CommentRepositoryFirestore(private val db: FirebaseFirestore) : CommentRep
           text = text,
           date = date,
           tag = tag)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       null
     }
   }

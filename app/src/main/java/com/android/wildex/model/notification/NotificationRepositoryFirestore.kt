@@ -5,6 +5,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+/** Firestore implementation of the [NotificationRepository]. */
 class NotificationRepositoryFirestore(db: FirebaseFirestore) : NotificationRepository {
   companion object {
     private const val NOTIFICATIONS_COLLECTION_PATH = "notifications"
@@ -59,6 +60,12 @@ class NotificationRepositoryFirestore(db: FirebaseFirestore) : NotificationRepos
     }
   }
 
+  /**
+   * Converts a Firestore [DocumentSnapshot] to a [Notification] object.
+   *
+   * @param document The Firestore document snapshot to convert.
+   * @return The corresponding Notification object.
+   */
   private fun documentToNotification(document: DocumentSnapshot): Notification {
     val notificationId = document.id
     val targetId = document.getString(TARGET_ID) ?: throwMissingFieldException(TARGET_ID)
@@ -72,6 +79,7 @@ class NotificationRepositoryFirestore(db: FirebaseFirestore) : NotificationRepos
     return Notification(notificationId, targetId, authorId, isRead, title, body, route, date)
   }
 
+  /** Throws an exception indicating a missing required field in the Notification. */
   private fun throwMissingFieldException(field: String): Nothing {
     throw IllegalArgumentException("Missing required field in Notification: $field")
   }

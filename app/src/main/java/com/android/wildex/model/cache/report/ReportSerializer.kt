@@ -15,6 +15,7 @@ import com.google.protobuf.InvalidProtocolBufferException
 import java.io.InputStream
 import java.io.OutputStream
 
+/** Serializer for ReportCacheStorage to handle reading and writing of report cache data. */
 object ReportCacheSerializer : Serializer<ReportCacheStorage> {
   override val defaultValue: ReportCacheStorage = ReportCacheStorage.getDefaultInstance()
 

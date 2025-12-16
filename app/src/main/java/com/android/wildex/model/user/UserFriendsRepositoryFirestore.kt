@@ -31,6 +31,7 @@ class UserFriendsRepositoryFirestore(
    * Retrieves UserFriends associated with a specific User.
    *
    * @param userId The Id of the user whose list of Friends is to be retrieved
+   * @return A list of Users who are friends of the specified user
    */
   override suspend fun getAllFriendsOfUser(userId: Id): List<User> {
     val docRef = collection.document(userId)
@@ -46,6 +47,7 @@ class UserFriendsRepositoryFirestore(
    * Get UserFriends count of a specific User.
    *
    * @param userId The Id of the user whose friendsCount is to be retrieved
+   * @return The number of friends the specified user has
    */
   override suspend fun getFriendsCountOfUser(userId: Id): Int {
     val docRef = collection.document(userId)
@@ -89,6 +91,7 @@ class UserFriendsRepositoryFirestore(
   /**
    * Add or Delete a Friend to the UserFriends of a specific User.
    *
+   * @param toAdd Boolean indicating whether to add (true) or delete (false) the friend
    * @param friendId The Id of the friend to add or delete to the user's list of friends
    * @param userId The Id of the user whose UserFriends is to be updated
    */

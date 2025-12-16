@@ -148,7 +148,7 @@ class FriendRequestRepositoryFirestore(private val db: FirebaseFirestore) :
               ?: throwMissingFieldException(FriendRequestsFields.RECEIVER_ID)
 
       FriendRequest(senderId = senderId, receiverId = receiverId)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       null
     }
   }

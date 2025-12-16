@@ -13,6 +13,16 @@ data class AnimalDetectResponse(
     val taxonomy: Taxonomy,
 )
 
+/**
+ * Data class representing the taxonomy details of an animal.
+ *
+ * @property id The unique identifier for the taxonomy entry.
+ * @property animalClass The class of the animal (e.g., "Mammalia").
+ * @property order The order of the animal (e.g., "Carnivora").
+ * @property family The family of the animal (e.g., "Canidae").
+ * @property genus The genus of the animal (e.g., "Canis").
+ * @property species The species of the animal (e.g., "Canis lupus").
+ */
 data class Taxonomy(
     val id: String,
     val animalClass: String = "",

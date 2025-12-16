@@ -11,7 +11,14 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
-/** Geocoding repository using Mapbox. */
+/**
+ * Geocoding repository using Mapbox.
+ *
+ * @param okHttpClient The OkHttpClient to use for network requests.
+ * @param accessToken The Mapbox access token.
+ * @param dispatcher The CoroutineDispatcher to use for network requests.
+ * @param baseURL The base URL for the Mapbox API.
+ */
 class MapboxGeocodingRepository(
     private val okHttpClient: OkHttpClient,
     private val accessToken: String = BuildConfig.MAPBOX_ACCESS_TOKEN,

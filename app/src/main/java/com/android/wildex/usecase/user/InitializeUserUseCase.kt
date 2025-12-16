@@ -16,7 +16,8 @@ import com.google.firebase.Timestamp
  * Use case: Adding a new user to the database
  *
  * Adding a new user means creating a User object but also creating a UserAnimals collection, a
- * UserSettings to store the user's preferences and a UserAchievements collection
+ * UserSettings to store the user's preferences, a UserAchievements collection, an empty UserFriends
+ * collection, and a UserTokens collection for notifications.
  */
 class InitializeUserUseCase(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,

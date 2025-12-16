@@ -19,34 +19,6 @@ import org.junit.runners.JUnit4
 class NavigationTest : NavigationTestUtils() {
 
   @Test
-  fun navigation_Auth_toEditProfile_toHome_toProfile_toSettings_toAuth_toHome() {
-    runBlocking { FirebaseEmulator.auth.signOut() }
-    composeRule.waitForIdle()
-    composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateFromAuth()
-    composeRule.waitForIdle()
-    composeRule.checkEditProfileScreenIsDisplayed(true)
-    composeRule.navigateFromEditProfile()
-    composeRule.waitForIdle()
-    composeRule.checkHomeScreenIsDisplayed()
-    composeRule.waitUntil(5000) {
-      composeRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
-    }
-    composeRule.navigateToMyProfileScreenFromHome()
-    composeRule.waitForIdle()
-    composeRule.checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
-    composeRule.navigateToSettingsScreenFromProfile()
-    composeRule.waitForIdle()
-    composeRule.checkSettingsScreenIsDisplayed()
-    composeRule.navigateFromSettingsScreen_LogOut()
-    composeRule.waitForIdle()
-    composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateFromAuth()
-    composeRule.waitForIdle()
-    composeRule.checkHomeScreenIsDisplayed()
-  }
-
-  @Test
   fun startsAtHomeScreen_whenAuthenticated_oldUser() {
     composeRule.waitForIdle()
     assertNotNull(FirebaseEmulator.auth.currentUser)

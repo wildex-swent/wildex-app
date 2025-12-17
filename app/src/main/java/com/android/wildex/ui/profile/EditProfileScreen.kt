@@ -30,13 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,8 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,8 +56,8 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.CountryDropdown
 import com.android.wildex.ui.utils.offline.OfflineScreen
-import java.util.Locale
 
 object EditProfileScreenTestTags {
   const val GO_BACK = "edit_profile_screen_go_back_button"
@@ -73,8 +65,6 @@ object EditProfileScreenTestTags {
   const val INPUT_SURNAME = "edit_profile_screen_input_surname"
   const val INPUT_USERNAME = "edit_profile_screen_input_username"
   const val INPUT_DESCRIPTION = "edit_profile_screen_input_description"
-  const val DROPDOWN_COUNTRY = "edit_profile_screen_dropdown_country"
-  const val COUNTRY_ELEMENT = "edit_profile_screen_country_element_"
   const val PROFILE_PICTURE_PREVIEW = "edit_profile_screen_profile_picture_preview"
   const val SAVE = "edit_profile_screen_go_save_button"
   const val ERROR_MESSAGE = "edit_profile_screen_error_message"
@@ -102,32 +92,16 @@ fun EditProfileScreen(
   val context = LocalContext.current
   val connectivityObserver = LocalConnectivityObserver.current
   val isOnline by connectivityObserver.isOnline.collectAsState()
-  val userLocale = context.resources.configuration.locales[0]
-  val countryNames =
-      remember(userLocale) {
-        Locale.getISOCountries()
-            .map { code ->
-              val locale = Locale("", code)
-              val name = locale.getDisplayCountry(userLocale)
-              val flag = code.toFlagEmoji()
-              "$flag  $name"
-            }
-            .sorted()
-      }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       editScreenViewModel.clearErrorMsg()
     }
   }
-
-  // Launcher for image picker
   val pickImageLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { editScreenViewModel.setNewProfileImageUri(it) }
       }
-
-  val cs = colorScheme
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.EDIT_PROFILE_SCREEN),
       topBar = { EditProfileTopBar(isNewUser, onGoBack) },
@@ -143,8 +117,6 @@ fun EditProfileScreen(
                 isNewUser = isNewUser,
                 pd = pd,
                 uiState = uiState,
-                countryNames = countryNames,
-                cs = cs,
                 pickImageLauncher = pickImageLauncher,
             )
       }
@@ -162,8 +134,6 @@ fun EditProfileScreen(
  * @param isNewUser True when creating a new profile.
  * @param pd Padding values from parent.
  * @param uiState Current UI state.
- * @param countryNames List of display country names with flags.
- * @param cs Current ColorScheme.
  * @param pickImageLauncher Activity launcher used to pick an image.
  */
 @Composable
@@ -173,8 +143,6 @@ fun EditView(
     isNewUser: Boolean = false,
     pd: PaddingValues = PaddingValues(0.dp),
     uiState: EditProfileUIState,
-    countryNames: List<String> = emptyList(),
-    cs: ColorScheme,
     pickImageLauncher: ManagedActivityResultLauncher<String, Uri?>,
 ) {
   // State for dropdown visibility
@@ -193,7 +161,7 @@ fun EditView(
               Modifier.width(96.dp)
                   .aspectRatio(1f)
                   .clip(CircleShape)
-                  .border(1.dp, cs.outline, CircleShape)
+                  .border(1.dp, colorScheme.outline, CircleShape)
                   .clickable {
                     pickImageLauncher.launch("image/*")
                     editScreenViewModel.clearProfileSaved()
@@ -204,12 +172,12 @@ fun EditView(
       Icon(
           imageVector = Icons.Filled.Create,
           contentDescription = "Change profile picture",
-          tint = cs.onPrimary,
+          tint = colorScheme.onPrimary,
           modifier =
               Modifier.align(Alignment.TopEnd)
                   .size(20.dp)
                   .clip(CircleShape)
-                  .background(cs.secondary)
+                  .background(colorScheme.secondary)
                   .padding(4.dp),
       )
     }
@@ -280,7 +248,6 @@ fun EditView(
     // Country Input with dropdown
     CountryDropdown(
         selectedCountry = uiState.country,
-        countries = countryNames,
         onCountrySelected = {
           editScreenViewModel.setCountry(it)
           editScreenViewModel.clearProfileSaved()
@@ -294,12 +261,12 @@ fun EditView(
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = "Saved successfully",
-            tint = cs.primary,
+            tint = colorScheme.primary,
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = LocalContext.current.getString(R.string.edit_profile_save_successfully),
-            color = cs.primary,
+            color = colorScheme.primary,
         )
       }
     }
@@ -313,11 +280,6 @@ fun EditView(
           }
         },
         enabled = uiState.isValid,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = cs.secondary,
-                contentColor = cs.onSecondary,
-            ),
         shape = RoundedCornerShape(8.dp),
         modifier =
             Modifier.testTag(EditProfileScreenTestTags.SAVE)
@@ -327,72 +289,4 @@ fun EditView(
       Text(text = "Save")
     }
   }
-}
-
-/**
- * Country dropdown composable that allows selecting a country string.
- *
- * @param modifier Modifier to apply to the dropdown container.
- * @param label Label to display for the field.
- * @param selectedCountry Currently selected country string.
- * @param countries List of formatted country strings (flag + name).
- * @param onCountrySelected Callback when a country is chosen.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CountryDropdown(
-    modifier: Modifier = Modifier,
-    label: String = "Country",
-    selectedCountry: String,
-    countries: List<String>,
-    onCountrySelected: (String) -> Unit,
-) {
-  var expanded by remember { mutableStateOf(false) }
-
-  ExposedDropdownMenuBox(
-      expanded = expanded,
-      onExpandedChange = { expanded = !expanded },
-      modifier = modifier.testTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY),
-  ) {
-    OutlinedTextField(
-        value = selectedCountry,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text(label) },
-        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-        modifier =
-            Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
-                .fillMaxWidth(),
-        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-    )
-
-    ExposedDropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false },
-        modifier = Modifier.background(colorScheme.surface),
-    ) {
-      countries.forEach { countryName ->
-        DropdownMenuItem(
-            modifier = Modifier.testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT + countryName),
-            text = { Text(countryName) },
-            onClick = {
-              // CountryName contains a flag prefix; find first letter and trim
-              val startIndex = countryName.indexOfFirst { it.isLetter() }
-              val cleaned =
-                  if (startIndex >= 0) countryName.substring(startIndex).trim()
-                  else countryName.trim()
-              onCountrySelected(cleaned)
-              expanded = false
-            },
-        )
-      }
-    }
-  }
-}
-
-/** Convert ISO country code (e.g. "US") to a flag emoji. */
-fun String.toFlagEmoji(): String {
-  val first = Character.codePointAt(this, 0) - 0x41 + 0x1F1E6
-  val second = Character.codePointAt(this, 1) - 0x41 + 0x1F1E6
-  return String(Character.toChars(first)) + String(Character.toChars(second))
 }

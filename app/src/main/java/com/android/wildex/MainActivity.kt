@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -38,12 +38,13 @@ import com.android.wildex.model.notification.NotificationGroupType
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.SearchDataUpdater
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
+import com.android.wildex.model.user.USERS_COLLECTION_PATH
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.achievement.AchievementsScreen
 import com.android.wildex.ui.animal.AnimalInformationScreen
 import com.android.wildex.ui.authentication.SignInScreen
-import com.android.wildex.ui.authentication.SignInViewModel
 import com.android.wildex.ui.camera.CameraScreen
 import com.android.wildex.ui.collection.CollectionScreen
 import com.android.wildex.ui.home.HomeScreen
@@ -66,6 +67,7 @@ import com.android.wildex.ui.social.FriendScreen
 import com.android.wildex.ui.theme.WildexTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.mapbox.common.MapboxOptions
 import okhttp3.OkHttpClient
@@ -130,14 +132,37 @@ fun WildexApp(
     navController: NavHostController = rememberNavController(),
 ) {
   var currentUserId by remember { mutableStateOf(Firebase.auth.uid) }
+  var onboardingComplete: Boolean? by remember { mutableStateOf(null) }
+
   LaunchedEffect(Unit) { Firebase.auth.addAuthStateListener { currentUserId = it.uid } }
+
+  DisposableEffect(currentUserId) {
+    val listenerRegistration =
+        if (currentUserId != null) {
+          Firebase.firestore
+              .collection(USERS_COLLECTION_PATH)
+              .document(currentUserId!!)
+              .addSnapshotListener { snapshot, error ->
+                if (error == null && snapshot != null && snapshot.exists()) {
+                  snapshot.getString("onBoardingStage")?.let {
+                    onboardingComplete = it == OnBoardingStage.COMPLETE.name
+                  }
+                }
+              }
+        } else {
+          onboardingComplete = false
+          null
+        }
+
+    onDispose { listenerRegistration?.remove() }
+  }
   LaunchedEffect(Unit) {
     SearchDataUpdater(storage = FileSearchDataStorage(context)).updateSearchData()
   }
 
-  val signInViewModel: SignInViewModel = viewModel()
   val navigationActions = NavigationActions(navController)
-  val startDestination = if (currentUserId == null) Screen.Auth.route else Screen.Home.route
+  if (onboardingComplete == null) return
+  val startDestination = if (!onboardingComplete!!) Screen.Auth.route else Screen.Home.route
 
   val currentIntent by rememberUpdatedState((context as ComponentActivity).intent)
   LaunchedEffect(currentIntent) {
@@ -153,7 +178,7 @@ fun WildexApp(
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Auth
-    authComposable(navigationActions, credentialManager, signInViewModel)
+    authComposable(credentialManager)
 
     // Home
     homeComposable(navigationActions, currentUserId)
@@ -386,7 +411,8 @@ private fun NavGraphBuilder.collectionComposable(
           onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
           bottomBar = {
             if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
-          })
+          },
+      )
     }
   }
 }
@@ -474,19 +500,6 @@ private fun NavGraphBuilder.homeComposable(
   }
 }
 
-private fun NavGraphBuilder.authComposable(
-    navigationActions: NavigationActions,
-    credentialManager: CredentialManager,
-    signInViewModel: SignInViewModel,
-) {
-  composable(Screen.Auth.route) {
-    SignInScreen(
-        authViewModel = signInViewModel,
-        credentialManager = credentialManager,
-        onSignedIn = {
-          if (it) navigationActions.navigateTo(Screen.EditProfile(true))
-          else navigationActions.navigateTo(Screen.Home)
-        },
-    )
-  }
+private fun NavGraphBuilder.authComposable(credentialManager: CredentialManager) {
+  composable(Screen.Auth.route) { SignInScreen(credentialManager = credentialManager) }
 }

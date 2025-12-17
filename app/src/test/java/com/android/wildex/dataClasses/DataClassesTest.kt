@@ -10,6 +10,7 @@ import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAchievements
@@ -177,6 +178,7 @@ class DataClassesTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Switzerland",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         )
 
     TestCase.assertEquals("user1", user.userId)
@@ -187,6 +189,7 @@ class DataClassesTest {
     TestCase.assertEquals("https://example.com/user_pic", user.profilePictureURL)
     TestCase.assertEquals(UserType.REGULAR, user.userType)
     TestCase.assertEquals("Switzerland", user.country)
+    TestCase.assertEquals(OnBoardingStage.COMPLETE, user.onBoardingStage)
   }
 
   @Test

@@ -10,6 +10,7 @@ import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
@@ -72,7 +73,7 @@ class MapScreenViewModelTest {
           UserType.REGULAR,
           now,
           "CH",
-      )
+          OnBoardingStage.COMPLETE)
   private val proUser = regularUser.copy(userType = UserType.PROFESSIONAL)
 
   @Before

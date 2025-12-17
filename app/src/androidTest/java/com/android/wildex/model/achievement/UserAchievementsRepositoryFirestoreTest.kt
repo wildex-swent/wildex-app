@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepositoryFirestore
 import com.android.wildex.model.user.UserSettingsRepositoryFirestore
@@ -56,7 +57,7 @@ class UserAchievementsRepositoryFirestoreTest : FirestoreTest(USER_ACHIEVEMENTS_
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "",
-          ))
+              onBoardingStage = OnBoardingStage.COMPLETE))
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(testUserId)
       userSettingsRepository.initializeUserSettings(testUserId)
     }

@@ -17,10 +17,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.storage.StorageRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.utils.CountryDropdownTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
@@ -51,6 +53,7 @@ class EditProfileScreenTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp(0, 0),
           country = "Switzerland",
+          onBoardingStage = OnBoardingStage.COMPLETE,
       )
 
   @Before
@@ -90,7 +93,7 @@ class EditProfileScreenTest {
     composeRule
         .onNodeWithTag(EditProfileScreenTestTags.INPUT_DESCRIPTION)
         .assertTextContains("Bio of Jane")
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).assertIsDisplayed()
+    composeRule.onNodeWithTag(CountryDropdownTestTags.COUNTRY_DROPDOWN).assertIsDisplayed()
     composeRule.onNodeWithTag(EditProfileScreenTestTags.PROFILE_PICTURE_PREVIEW).assertIsDisplayed()
   }
 
@@ -113,12 +116,12 @@ class EditProfileScreenTest {
     composeRule.waitForIdle()
 
     val initialCountry = vm.uiState.value.country
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).assertIsDisplayed()
+    composeRule.onNodeWithTag(CountryDropdownTestTags.COUNTRY_DROPDOWN).assertIsDisplayed()
 
     composeRule
         .onNode(
             hasClickAction()
-                .and(hasAnyAncestor(hasTestTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY))),
+                .and(hasAnyAncestor(hasTestTag(CountryDropdownTestTags.COUNTRY_DROPDOWN))),
             useUnmergedTree = true,
         )
         .performClick()
@@ -126,7 +129,7 @@ class EditProfileScreenTest {
     val countryItemMatcher =
         SemanticsMatcher("country item") { node ->
           val tag = node.config.getOrNull(SemanticsProperties.TestTag)
-          tag is String && tag.startsWith(EditProfileScreenTestTags.COUNTRY_ELEMENT)
+          tag is String && tag.startsWith(CountryDropdownTestTags.COUNTRY_ELEMENT)
         }
 
     composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -139,7 +142,7 @@ class EditProfileScreenTest {
 
     val newCountry = vm.uiState.value.country
     Assert.assertNotEquals(initialCountry, newCountry)
-    composeRule.onNodeWithTag(EditProfileScreenTestTags.DROPDOWN_COUNTRY).assertIsDisplayed()
+    composeRule.onNodeWithTag(CountryDropdownTestTags.COUNTRY_DROPDOWN).assertIsDisplayed()
   }
 
   @Test

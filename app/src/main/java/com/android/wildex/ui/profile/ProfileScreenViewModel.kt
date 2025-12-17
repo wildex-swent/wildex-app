@@ -9,6 +9,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
@@ -30,7 +31,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 private val emptyUser =
-    User("", "Username", "Name", "Surname", "", "", UserType.REGULAR, Timestamp(0, 0), "Country")
+    User(
+        "",
+        "Username",
+        "Name",
+        "Surname",
+        "",
+        "",
+        UserType.REGULAR,
+        Timestamp(0, 0),
+        "Country",
+        OnBoardingStage.NAMING,
+    )
 
 /**
  * UI state for the Profile screen.

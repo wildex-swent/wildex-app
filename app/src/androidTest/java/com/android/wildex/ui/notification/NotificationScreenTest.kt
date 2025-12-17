@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.notification.Notification
 import com.android.wildex.model.notification.NotificationRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -101,7 +102,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
 
     userRepository.addUser(
         User(
@@ -115,7 +116,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
     userRepository.addUser(
         User(
             userId = "author2",
@@ -128,7 +129,7 @@ class NotificationScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
-        ))
+            onBoardingStage = OnBoardingStage.COMPLETE))
 
     notificationScreenVM =
         NotificationScreenViewModel(

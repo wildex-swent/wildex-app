@@ -17,6 +17,7 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
@@ -56,7 +57,7 @@ class ReportDetailScreenTest {
             userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     val regularUser =
         User(
             userId = "user2",
@@ -68,7 +69,7 @@ class ReportDetailScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Switzerland",
-        )
+            onBoardingStage = OnBoardingStage.COMPLETE)
     userRepository.addUser(professionalUser)
     userRepository.addUser(regularUser)
     val report =
@@ -252,7 +253,7 @@ class ReportDetailScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "CH",
-          )
+              onBoardingStage = OnBoardingStage.COMPLETE)
       userRepository.addUser(regular)
       val report =
           Report(
@@ -323,7 +324,7 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-          )
+              onBoardingStage = OnBoardingStage.COMPLETE)
       userRepository.addUser(pro)
       val report =
           Report(
@@ -448,7 +449,7 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-          )
+              onBoardingStage = OnBoardingStage.COMPLETE)
       val otherAssignee =
           User(
               userId = "otherPro",
@@ -460,7 +461,7 @@ class ReportDetailScreenTest {
               userType = UserType.PROFESSIONAL,
               creationDate = Timestamp.now(),
               country = "CH",
-          )
+              onBoardingStage = OnBoardingStage.COMPLETE)
       userRepository.addUser(pro)
       userRepository.addUser(otherAssignee)
       val report =

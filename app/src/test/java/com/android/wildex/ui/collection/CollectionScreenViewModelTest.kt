@@ -2,6 +2,7 @@ package com.android.wildex.ui.collection
 
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
@@ -47,7 +48,8 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France")
+          country = "France",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val u2 =
       User(
@@ -60,7 +62,8 @@ class CollectionScreenViewModelTest {
               "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
-          country = "France")
+          country = "France",
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su1 =
       SimpleUser(

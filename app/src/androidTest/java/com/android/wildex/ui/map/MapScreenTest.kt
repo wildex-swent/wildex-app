@@ -26,6 +26,7 @@ import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
@@ -55,7 +56,7 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
   private val user2 =
       User(
           userId = "u2",
@@ -67,7 +68,7 @@ class MapScreenTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "CH",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
   private val post1 =
       Post(
           postId = "p1",

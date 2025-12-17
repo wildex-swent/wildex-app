@@ -27,7 +27,31 @@ data class User(
     val userType: UserType,
     val creationDate: Timestamp,
     val country: String,
+    val onBoardingStage: OnBoardingStage,
 )
+
+enum class OnBoardingStage {
+  NAMING,
+  OPTIONAL,
+  USER_TYPE,
+  COMPLETE;
+
+  fun next(): OnBoardingStage =
+      when (this) {
+        NAMING -> OPTIONAL
+        OPTIONAL -> USER_TYPE
+        USER_TYPE -> COMPLETE
+        COMPLETE -> COMPLETE
+      }
+
+  fun previous(): OnBoardingStage =
+      when (this) {
+        NAMING -> NAMING
+        OPTIONAL -> NAMING
+        USER_TYPE -> OPTIONAL
+        COMPLETE -> USER_TYPE
+      }
+}
 
 /**
  * Represents a summary of a user's achievements.

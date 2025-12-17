@@ -194,6 +194,8 @@ class AnimalInfoRepositoryHttp(client: OkHttpClient) : AnimalInfoRepository {
       if (score < 0.7) null
       else {
         val (taxonomy, animalType) = parseClassification(className)
+        if (animalType == "blank" || animalType == "vehicle" || animalType == "human")
+            return@mapNotNull null
         AnimalDetectResponse(
             animalType = animalType,
             confidence = score,

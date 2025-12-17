@@ -32,6 +32,7 @@ import com.android.wildex.model.social.Comment
 import com.android.wildex.model.social.CommentTag
 import com.android.wildex.model.social.Like
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
@@ -105,6 +106,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         ))
     userRepository.addUser(
         User(
@@ -118,6 +120,7 @@ class HomeScreenTest {
             userType = UserType.REGULAR,
             creationDate = Timestamp.now(),
             country = "Testland",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         ))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
@@ -314,7 +317,9 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.sliderStateTag(noLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.sliderStateTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
@@ -324,7 +329,9 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.sliderStateTag(blankLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.sliderStateTag(blankLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .performScrollTo()
         .assertIsDisplayed()
   }
@@ -362,6 +369,7 @@ class HomeScreenTest {
               userType = UserType.REGULAR,
               creationDate = Timestamp.now(),
               country = "Testland",
+              onBoardingStage = OnBoardingStage.COMPLETE,
           ))
       postRepository.addPost(fullPost2)
       homeScreenVM.refreshUIState()
@@ -409,7 +417,9 @@ class HomeScreenTest {
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
         .performClick()
     assert(postClicked)
@@ -456,7 +466,9 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
@@ -469,7 +481,9 @@ class HomeScreenTest {
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
@@ -484,7 +498,9 @@ class HomeScreenTest {
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewButtonTag(fullPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.mapLocationTag(fullPost.postId), useUnmergedTree = true)
@@ -500,19 +516,27 @@ class HomeScreenTest {
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.sliderStateTag(noLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.sliderStateTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewTag(noLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapPreviewButtonTag(noLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapPreviewButtonTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(
-            HomeScreenTestTags.mapLocationTag(noLocationPost.postId), useUnmergedTree = true)
+            HomeScreenTestTags.mapLocationTag(noLocationPost.postId),
+            useUnmergedTree = true,
+        )
         .assertIsNotDisplayed()
   }
 
@@ -632,30 +656,28 @@ class HomeScreenTest {
         HomeScreen(homeScreenVM)
       }
     }
-
-    // Scroll to first post and assert
-    scrollToPost(postWithCounts.postId)
     composeTestRule
         .onNodeWithTag(
             HomeScreenTestTags.likeButtonTag(postWithCounts.postId),
             useUnmergedTree = true,
         )
+        .performScrollTo()
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("42"))
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postWithCounts.postId), useUnmergedTree = true)
+        .performScrollTo()
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("7"))
 
-    // Scroll to second post and assert
-    scrollToPost(postWithCount.postId)
     composeTestRule
         .onNodeWithTag(
             HomeScreenTestTags.likeButtonTag(postWithCount.postId),
             useUnmergedTree = true,
         )
+        .performScrollTo()
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1"))
@@ -664,6 +686,7 @@ class HomeScreenTest {
             HomeScreenTestTags.commentTag(postWithCount.postId),
             useUnmergedTree = true,
         )
+        .performScrollTo()
         .assertIsDisplayed()
         .onChildren()
         .assertAny(hasText("1"))
@@ -755,21 +778,33 @@ class HomeScreenTest {
   private fun assertFullPostIsDisplayed(postId: String) {
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.locationTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.sliderTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
+        .assertExists()
+        .performScrollTo()
         .assertIsDisplayed()
   }
 
@@ -777,18 +812,23 @@ class HomeScreenTest {
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.locationTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+        .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.authorPictureTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+        .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.commentTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+        .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.imageTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+        .assertDoesNotExist()
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
+        .assertDoesNotExist()
   }
 
   @Test

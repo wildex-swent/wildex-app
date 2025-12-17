@@ -3,6 +3,7 @@ package com.android.wildex.ui.social
 import com.android.wildex.model.friendRequest.FriendRequest
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.PostsRepository
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserFriends
@@ -49,7 +50,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su1 = SimpleUser(u1.userId, u1.username, u1.profilePictureURL, u1.userType)
 
@@ -65,7 +66,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su2 = SimpleUser(u2.userId, u2.username, u2.profilePictureURL, u2.userType)
 
@@ -81,7 +82,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su3 = SimpleUser(u3.userId, u3.username, u3.profilePictureURL, u3.userType)
 
@@ -97,7 +98,7 @@ class FriendScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val su4 = SimpleUser(u4.userId, u4.username, u4.profilePictureURL, u4.userType)
 

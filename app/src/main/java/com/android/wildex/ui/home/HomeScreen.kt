@@ -966,9 +966,8 @@ private fun PostActions(
     // Comments
     Row(
         modifier =
-            Modifier.testTag(HomeScreenTestTags.commentTag(post.postId)).clickable {
-              onPostClick()
-            },
+            Modifier.testTag(HomeScreenTestTags.commentTag(post.postId))
+                .clickable(onClick = onPostClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(

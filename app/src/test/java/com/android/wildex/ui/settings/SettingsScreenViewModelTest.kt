@@ -10,6 +10,7 @@ import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
 import com.android.wildex.model.social.PostsRepository
 import com.android.wildex.model.user.AppearanceMode
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
@@ -69,7 +70,7 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val u2 =
       User(
@@ -83,7 +84,7 @@ class SettingsScreenViewModelTest {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "France",
-      )
+          onBoardingStage = OnBoardingStage.COMPLETE)
 
   private val u3 =
       User(
@@ -97,6 +98,7 @@ class SettingsScreenViewModelTest {
           userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "Spain",
+          onBoardingStage = OnBoardingStage.COMPLETE,
       )
 
   private val report1 =

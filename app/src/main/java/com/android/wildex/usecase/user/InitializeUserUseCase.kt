@@ -2,15 +2,11 @@ package com.android.wildex.usecase.user
 
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.UserAchievementsRepository
-import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserAnimalsRepository
 import com.android.wildex.model.user.UserFriendsRepository
-import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
-import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
-import com.google.firebase.Timestamp
 
 /**
  * Use case: Adding a new user to the database
@@ -20,7 +16,6 @@ import com.google.firebase.Timestamp
  * collection, and a UserTokens collection for notifications.
  */
 class InitializeUserUseCase(
-    private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userSettingsRepository: UserSettingsRepository =
         RepositoryProvider.userSettingsRepository,
     private val userAnimalsRepository: UserAnimalsRepository =
@@ -39,8 +34,6 @@ class InitializeUserUseCase(
    * @param userId user whose account we want to create
    */
   suspend operator fun invoke(userId: Id) {
-    val user = User(userId, "", "", "", "", "", UserType.REGULAR, Timestamp.now(), "")
-    userRepository.addUser(user)
     userSettingsRepository.initializeUserSettings(userId)
     userAnimalsRepository.initializeUserAnimals(userId)
     userAchievementsRepository.initializeUserAchievements(userId)

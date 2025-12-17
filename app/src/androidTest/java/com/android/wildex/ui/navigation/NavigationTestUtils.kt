@@ -22,11 +22,13 @@ import com.android.wildex.WildexApp
 import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.report.Report
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.achievement.AchievementsScreenTestTags
 import com.android.wildex.ui.animal.AnimalInformationScreenTestTags
@@ -37,9 +39,11 @@ import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.collection.CollectionScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.map.MapContentTestTags
+import com.android.wildex.ui.notification.NotificationScreenTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
+import com.android.wildex.ui.report.ReportDetailsScreenTestTags
 import com.android.wildex.ui.report.ReportScreenTestTags
 import com.android.wildex.ui.report.SubmitReportFormScreenTestTags
 import com.android.wildex.ui.settings.SettingsScreenTestTags
@@ -51,6 +55,7 @@ import com.android.wildex.utils.FirebaseEmulator
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
 import com.mapbox.common.MapboxOptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -104,15 +109,17 @@ abstract class NavigationTestUtils {
       RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
       RepositoryProvider.userFriendsRepository.initializeUserFriends(user.userId)
       RepositoryProvider.userTokensRepository.initializeUserTokens(user.userId)
+      delay(1000)
       result.user!!.uid
     }
   }
 
   @After
-  fun teardown() {
+  fun teardown() = runBlocking {
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
+    delay(500)
   }
 
   @get:Rule
@@ -130,7 +137,7 @@ abstract class NavigationTestUtils {
           surname = "World",
           bio = "This is my bio",
           profilePictureURL = "",
-          userType = UserType.REGULAR,
+          userType = UserType.PROFESSIONAL,
           creationDate = Timestamp.now(),
           country = "Italy",
           onBoardingStage = OnBoardingStage.COMPLETE,
@@ -159,6 +166,17 @@ abstract class NavigationTestUtils {
           description = "This is my first post",
           date = Timestamp.now(),
           animalId = "0",
+      )
+
+  open val report0 =
+      Report(
+          reportId = "0",
+          imageURL = "https://cdn-icons-png.flaticon.com/512/4823/4823463.png",
+          location = Location(0.0, 0.0, "location name", "Location address", "Location country"),
+          date = Timestamp.now(),
+          description = "This is my report",
+          authorId = user0.userId,
+          assigneeId = user1.userId,
       )
 
   open val post1 =
@@ -276,11 +294,29 @@ abstract class NavigationTestUtils {
     assertEquals(Screen.SubmitReport.route, navController.currentDestination?.route)
   }
 
+  // REPORT DETAIL SCREEN
+  fun ComposeTestRule.checkReportDetailScreenIsDisplayed(reportUid: Id) {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.REPORT_DETAILS_SCREEN)
+    assertEquals(Screen.ReportDetails.PATH, navController.currentDestination?.route)
+    assertEquals(reportUid, navController.currentBackStackEntry?.arguments?.getString("reportUid"))
+  }
+
   // FRIEND SCREEN
   fun ComposeTestRule.checkFriendScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.FRIEND_SCREEN)
     assertEquals(Screen.Social.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
+  }
+
+  // LOCATION PICKER SCREEN
+  fun ComposeTestRule.checkLocationPickerScreenIsDisplayed() {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.LOCATION_PICKER_SCREEN)
+    assertEquals(Screen.LocationPicker.route, navController.currentDestination?.route)
+  }
+
+  // NOTIFICATION SCREEN
+  fun ComposeTestRule.checkNotificationScreenIsDisplayed() {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.NOTIFICATION_SCREEN)
   }
 
   // BOTTOM BAR -> HOME SCREEN
@@ -372,7 +408,7 @@ abstract class NavigationTestUtils {
   }
 
   // POST DETAILS SCREEN -> PROFILE SCREEN
-  fun ComposeTestRule.navigateToProfileFromPostDetails(userId: String) {
+  fun ComposeTestRule.navigateToProfileScreenFromPostDetails(userId: String) {
     performClickOnTag(PostDetailsScreenTestTags.testTagForProfilePicture(userId, "author"))
   }
 
@@ -450,6 +486,51 @@ abstract class NavigationTestUtils {
   // HOME SCREEN -> PROFILE SCREEN
   fun ComposeTestRule.navigateToMyProfileScreenFromReport() {
     performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
+  }
+
+  // REPORT SCREEN -> REPORT DETAIL SCREEN
+  fun ComposeTestRule.navigateToReportDetailsScreenFromReport(reportUid: String) {
+    performClickOnTag(ReportScreenTestTags.testTagForReport(reportUid, "image"))
+  }
+
+  // HOME SCREEN -> NOTIFICATIONS SCREEN
+  fun ComposeTestRule.navigateToNotificationScreenFromHome() {
+    performClickOnTag(NavigationTestTags.NOTIFICATION_BELL)
+  }
+
+  // COLLECTION SCREEN -> NOTIFICATIONS SCREEN
+  fun ComposeTestRule.navigateToNotificationScreenFromCollection() {
+    performClickOnTag(NavigationTestTags.NOTIFICATION_BELL)
+  }
+
+  // REPORT SCREEN -> NOTIFICATIONS SCREEN
+  fun ComposeTestRule.navigateToNotificationScreenFromReport() {
+    performClickOnTag(NavigationTestTags.NOTIFICATION_BELL)
+  }
+
+  // NOTIFICATION SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromNotification() {
+    performClickOnTag(NotificationScreenTestTags.BACK_BUTTON)
+  }
+
+  // REPORT DETAILS -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToProfileScreenFromReportDetails() {
+    performClickOnTag(ReportDetailsScreenTestTags.INFO_AUTHOR_PICTURE)
+  }
+
+  // REPORT DETAILS (BACK)
+  fun ComposeTestRule.navigateBackFromReportDetails() {
+    performClickOnTag(ReportDetailsScreenTestTags.BACK_BUTTON)
+  }
+
+  // REPORT SCREEN -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToProfileScreenFromReport(userId: Id) {
+    performClickOnTag(ReportScreenTestTags.testTagForProfilePicture(userId, "author"))
+  }
+
+  // FRIEND SCREEN -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToProfileScreenFromFriend(userId: Id) {
+    performClickOnTag(FriendScreenTestTags.testTagForProfilePicture(userId))
   }
 
   private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {

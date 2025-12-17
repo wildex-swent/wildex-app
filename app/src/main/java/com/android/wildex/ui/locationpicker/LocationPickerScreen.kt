@@ -81,6 +81,7 @@ import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.map.MapCanvas
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -187,7 +188,11 @@ fun LocationPickerScreen(
   // Online
   Scaffold { inner ->
     Box(
-        modifier = Modifier.fillMaxSize().padding(inner).testTag(LocationPickerTestTags.ROOT),
+        modifier =
+            Modifier.fillMaxSize()
+                .padding(inner)
+                .testTag(LocationPickerTestTags.ROOT)
+                .testTag(NavigationTestTags.LOCATION_PICKER_SCREEN),
     ) {
       // Map
       MapCanvas(

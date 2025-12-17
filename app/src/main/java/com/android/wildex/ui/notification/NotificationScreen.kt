@@ -48,6 +48,7 @@ import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
@@ -111,7 +112,7 @@ fun NotificationScreen(
     }
   }
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.NOTIFICATION_SCREEN),
       topBar = { NotificationTopBar(onGoBack = onGoBack) },
   ) { pd ->
     val pullState = rememberPullToRefreshState()

@@ -66,13 +66,13 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.URL
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object ReportDetailsScreenTestTags {
-  const val SCREEN = "report_details_screen"
   const val PULL_TO_REFRESH = "report_details_pull_to_refresh"
   const val CONTENT_LIST = "report_details_content_list"
   const val BACK_BUTTON = "report_details_back_button"
@@ -132,7 +132,7 @@ fun ReportDetailsScreen(
   }
 
   Scaffold(
-      modifier = Modifier.testTag(ReportDetailsScreenTestTags.SCREEN),
+      modifier = Modifier.testTag(NavigationTestTags.REPORT_DETAILS_SCREEN),
       topBar = { ReportDetailsTopBar(onGoBack = onGoBack) },
       bottomBar = {
         if (isOnline) {

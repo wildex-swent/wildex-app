@@ -48,6 +48,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.offline.OfflineScreen
 
 object NotificationScreenTestTags {
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
@@ -109,21 +110,25 @@ fun NotificationScreen(
         },
         modifier = Modifier.padding(pd).testTag(NotificationScreenTestTags.PULL_TO_REFRESH),
     ) {
-      when {
-        uiState.isError -> LoadingFail()
-        uiState.isLoading -> LoadingScreen()
-        uiState.notifications.isEmpty() -> NoNotificationView()
-        else -> {
-          NotificationView(
-              notifications = uiState.notifications,
-              onProfileClick = onProfileClick,
-              onNotificationClick = onNotificationClick,
-              markAsRead = { notificationScreenViewModel.markAsRead(it) },
-              markAllAsRead = { notificationScreenViewModel.markAllAsRead() },
-              clearNotification = { notificationScreenViewModel.clearNotification(it) },
-              clearAllNotifications = { notificationScreenViewModel.clearAllNotifications() },
-          )
+      if (isOnline) {
+        when {
+          uiState.isError -> LoadingFail()
+          uiState.isLoading -> LoadingScreen()
+          uiState.notifications.isEmpty() -> NoNotificationView()
+          else -> {
+            NotificationView(
+                notifications = uiState.notifications,
+                onProfileClick = onProfileClick,
+                onNotificationClick = onNotificationClick,
+                markAsRead = { notificationScreenViewModel.markAsRead(it) },
+                markAllAsRead = { notificationScreenViewModel.markAllAsRead() },
+                clearNotification = { notificationScreenViewModel.clearNotification(it) },
+                clearAllNotifications = { notificationScreenViewModel.clearAllNotifications() },
+            )
+          }
         }
+      } else {
+        OfflineScreen(innerPadding = pd)
       }
     }
   }

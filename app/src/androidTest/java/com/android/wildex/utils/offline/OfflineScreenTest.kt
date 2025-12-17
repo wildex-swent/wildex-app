@@ -3,6 +3,8 @@ package com.android.wildex.utils.offline
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.wildex.ui.utils.offline.FriendsOfflineScreen
+import com.android.wildex.ui.utils.offline.FriendsOfflineScreenTestTags
 import com.android.wildex.ui.utils.offline.OfflineScreen
 import com.android.wildex.ui.utils.offline.OfflineScreenTestTags
 import org.junit.Rule
@@ -20,5 +22,16 @@ class OfflineScreenTest {
     composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_SUBTITLE).isDisplayed()
     composeTestRule.onNodeWithTag(OfflineScreenTestTags.OFFLINE_MESSAGE).isDisplayed()
     composeTestRule.onNodeWithTag(OfflineScreenTestTags.ANIMATION).isDisplayed()
+  }
+
+  @Test
+  fun offline_friend_screen_displays_correctly() {
+    composeTestRule.setContent { FriendsOfflineScreen() }
+
+    composeTestRule.onNodeWithTag(FriendsOfflineScreenTestTags.SCREEN).isDisplayed()
+    composeTestRule.onNodeWithTag(FriendsOfflineScreenTestTags.ANIMATION).isDisplayed()
+    composeTestRule.onNodeWithTag(FriendsOfflineScreenTestTags.TITLE).isDisplayed()
+    composeTestRule.onNodeWithTag(FriendsOfflineScreenTestTags.MESSAGE).isDisplayed()
+    composeTestRule.onNodeWithTag(FriendsOfflineScreenTestTags.ANIMATION).isDisplayed()
   }
 }

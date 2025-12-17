@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
@@ -55,6 +58,7 @@ object CollectionScreenTestTags {
   const val GO_BACK_BUTTON = "collection_screen_go_back_button"
   const val NO_ANIMAL_TEXT = "no_animal_text"
   const val ANIMAL_LIST = "collection_screen_animal_list"
+  const val PULL_TO_REFRESH = "collection_screen_pull_to_refresh"
 
   fun testTagForAnimal(animalId: Id, isUnlocked: Boolean) =
       if (isUnlocked) "collection_screen_animal_${animalId}_unlocked"
@@ -84,10 +88,12 @@ fun CollectionScreen(
     onProfilePictureClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onGoBack: () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {}
+    bottomBar: @Composable () -> Unit = {},
 ) {
   val uiState by collectionScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
 
   LaunchedEffect(Unit) { collectionScreenViewModel.loadUIState(userUid) }
   LaunchedEffect(uiState.errorMsg) {
@@ -106,18 +112,27 @@ fun CollectionScreen(
                 currentUser = uiState.user,
                 title = context.getString(R.string.collection),
                 onNotificationClick = onNotificationClick,
-                onProfilePictureClick = onProfilePictureClick)
+                onProfilePictureClick = onProfilePictureClick,
+            )
         else OtherUserCollectionTopBar(onGoBack = onGoBack)
-      }) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-          when {
-            uiState.isError -> LoadingFail()
-            uiState.isLoading -> LoadingScreen()
-            uiState.animals.isEmpty() -> NoAnimalsView(uiState.isUserOwner)
-            else -> AnimalsView(animalsStates = uiState.animals, onAnimalClick = onAnimalClick)
-          }
-        }
+      },
+  ) { innerPadding ->
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = {
+          if (isOnline) collectionScreenViewModel.refreshUIState(userUid)
+          else collectionScreenViewModel.refreshOffline()
+        },
+        modifier = Modifier.padding(innerPadding).testTag(CollectionScreenTestTags.PULL_TO_REFRESH),
+    ) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        uiState.animals.isEmpty() -> NoAnimalsView(uiState.isUserOwner)
+        else -> AnimalsView(animalsStates = uiState.animals, onAnimalClick = onAnimalClick)
       }
+    }
+  }
 }
 
 /**
@@ -141,7 +156,8 @@ fun OtherUserCollectionTopBar(onGoBack: () -> Unit) {
               modifier = Modifier.size(30.dp),
           )
         }
-      })
+      },
+  )
 }
 
 /**
@@ -169,7 +185,10 @@ fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
         // Check if there is another animal to display when we are at the last row
         if (rowStartIndex + 1 <= animalsStates.size - 1) {
           AnimalView(
-              animalsStates[rowStartIndex + 1], onAnimalClick, modifier = Modifier.weight(1f))
+              animalsStates[rowStartIndex + 1],
+              onAnimalClick,
+              modifier = Modifier.weight(1f),
+          )
         } else {
           Spacer(modifier = Modifier.weight(1f))
         }
@@ -195,37 +214,45 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
         modifier =
             modifier.testTag(
                 CollectionScreenTestTags.testTagForAnimal(
-                    animalState.animalId, animalState.isUnlocked))) {
-          Column(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = animalPictureURL,
-                contentDescription = animalName,
-                modifier = Modifier.fillMaxSize().weight(0.82f),
-                contentScale = ContentScale.Crop)
-            Box(
-                modifier =
-                    Modifier.fillMaxWidth().weight(0.18f).background(color = colorScheme.primary),
-                contentAlignment = Alignment.Center) {
-                  Text(
-                      text = if (animalState.isUnlocked) animalName else "???",
-                      color = colorScheme.background,
-                      textAlign = TextAlign.Center,
-                      style = typography.titleMedium,
-                      modifier = Modifier.fillMaxWidth())
-                }
-          }
+                    animalState.animalId,
+                    animalState.isUnlocked,
+                )),
+    ) {
+      Column(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = animalPictureURL,
+            contentDescription = animalName,
+            modifier = Modifier.fillMaxSize().weight(0.82f),
+            contentScale = ContentScale.Crop,
+        )
+        Box(
+            modifier =
+                Modifier.fillMaxWidth().weight(0.18f).background(color = colorScheme.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+          Text(
+              text = if (animalState.isUnlocked) animalName else "???",
+              color = colorScheme.background,
+              textAlign = TextAlign.Center,
+              style = typography.titleMedium,
+              modifier = Modifier.fillMaxWidth(),
+          )
         }
+      }
+    }
     if (!animalState.isUnlocked) {
       Box(
           modifier =
               Modifier.matchParentSize()
                   .background(color = colorScheme.background.copy(alpha = 0.4f)),
-          contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(id = R.drawable.lock),
-                contentDescription = "Locked animal",
-                modifier = Modifier.size(90.dp))
-          }
+          contentAlignment = Alignment.Center,
+      ) {
+        Image(
+            painter = painterResource(id = R.drawable.lock),
+            contentDescription = "Locked animal",
+            modifier = Modifier.size(90.dp),
+        )
+      }
     }
   }
 }
@@ -234,14 +261,26 @@ fun AnimalView(animalState: AnimalState, onAnimalClick: (Id) -> Unit, modifier: 
 @Composable
 fun NoAnimalsView(isUserOwner: Boolean) {
   Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-    Text(
-        text =
-            LocalContext.current.getString(
-                if (isUserOwner) R.string.empty_current_collection
-                else R.string.empty_other_collection),
-        color = colorScheme.onBackground,
-        style = typography.titleLarge,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT))
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      Icon(
+          imageVector = Icons.Outlined.Pets,
+          contentDescription = null,
+          tint = colorScheme.onBackground.copy(alpha = 0.6f),
+          modifier = Modifier.size(56.dp),
+      )
+      Text(
+          text =
+              LocalContext.current.getString(
+                  if (isUserOwner) R.string.empty_current_collection
+                  else R.string.empty_other_collection),
+          color = colorScheme.onBackground,
+          style = typography.titleLarge,
+          textAlign = TextAlign.Center,
+          modifier = Modifier.testTag(CollectionScreenTestTags.NO_ANIMAL_TEXT),
+      )
+    }
   }
 }

@@ -1,6 +1,7 @@
 package com.android.wildex.model.social
 
 import android.util.Log
+import com.android.wildex.model.cache.posts.IPostsCache
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.google.firebase.auth.ktx.auth
@@ -11,7 +12,8 @@ import kotlinx.coroutines.tasks.await
 
 const val POST_COLLECTION_PATH = "posts"
 
-class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsRepository {
+class PostsRepositoryFirestore(private val db: FirebaseFirestore, private val cache: IPostsCache) :
+    PostsRepository {
 
   private val ownerAttributeName = "authorId"
 
@@ -20,6 +22,9 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
   }
 
   override suspend fun getAllPosts(): List<Post> {
+    cache.getAllPosts()?.let {
+      return it
+    }
     val collection = db.collection(POST_COLLECTION_PATH).get().await()
     val docs = collection.documents
     if (docs.isEmpty()) {
@@ -27,20 +32,30 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
       return emptyList()
     }
 
-    return docs.mapNotNull { convertToPost(it) }
+    val posts = docs.mapNotNull { convertToPost(it) }
+    cache.savePosts(posts)
+    return posts
   }
 
   override suspend fun getAllPostsByAuthor(): List<Post> {
     val authorId =
         Firebase.auth.currentUser?.uid
             ?: throw Exception("PostsRepositoryFirestore: User not logged in.")
+    cache.getAllPostsByAuthor(authorId)?.let {
+      return it
+    }
     val collection =
         db.collection(POST_COLLECTION_PATH).whereEqualTo(ownerAttributeName, authorId).get().await()
     val docs = collection.documents
-    return docs.mapNotNull { convertToPost(it) }
+    val posts = docs.mapNotNull { convertToPost(it) }
+    cache.savePosts(posts)
+    return posts
   }
 
   override suspend fun getAllPostsByGivenAuthor(authorId: Id): List<Post> {
+    cache.getAllPostsByAuthor(authorId)?.let {
+      return it
+    }
     val collection =
         db.collection(POST_COLLECTION_PATH).whereEqualTo(ownerAttributeName, authorId).get().await()
     val docs = collection.documents
@@ -48,13 +63,20 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
       Log.w("PostsRepositoryFirestore", "No posts found for authorId: $authorId")
       return emptyList()
     }
-    return docs.mapNotNull { convertToPost(it) }
+    val posts = docs.mapNotNull { convertToPost(it) }
+    cache.savePosts(posts)
+    return posts
   }
 
   override suspend fun getPost(postId: Id): Post {
+    cache.getPost(postId)?.let {
+      return it
+    }
     val doc = db.collection(POST_COLLECTION_PATH).document(postId).get().await()
     require(doc.exists())
-    return convertToPost(doc) ?: throw IllegalArgumentException("Post with given Id not found")
+    val post = convertToPost(doc) ?: throw IllegalArgumentException("Post with given Id not found")
+    cache.savePost(post)
+    return post
   }
 
   override suspend fun addPost(post: Post) {
@@ -62,6 +84,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
     val doc = docRef.get().await()
     require(!doc.exists())
     docRef.set(post).await()
+    cache.savePost(post)
   }
 
   override suspend fun editPost(postId: Id, newValue: Post) {
@@ -69,6 +92,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
     val doc = docRef.get().await()
     require(doc.exists())
     docRef.set(newValue).await()
+    cache.savePost(newValue)
   }
 
   override suspend fun deletePost(postId: String) {
@@ -76,6 +100,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
     val doc = docRef.get().await()
     require(doc.exists())
     docRef.delete().await()
+    cache.deletePost(postId)
   }
 
   override suspend fun deletePostsByUser(userId: Id) {
@@ -85,6 +110,11 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
         .await()
         .documents
         .forEach { it.reference.delete().await() }
+    cache.deletePostsByUser(userId)
+  }
+
+  override suspend fun refreshCache() {
+    cache.clearAll()
   }
 
   private fun convertToPost(doc: DocumentSnapshot): Post? {
@@ -100,7 +130,8 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore) : PostsReposit
                 longitude = it["longitude"] as? Double ?: 0.0,
                 name = it["name"] as? String ?: "",
                 specificName = it["specificName"] as? String ?: "",
-                generalName = it["generalName"] as? String ?: "")
+                generalName = it["generalName"] as? String ?: "",
+            )
           }
       val date = doc.getTimestamp("date") ?: throwMissingFieldException("date")
       val animalId = doc.getString("animalId") ?: throwMissingFieldException("animalId")

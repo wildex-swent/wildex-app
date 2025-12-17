@@ -145,7 +145,7 @@ class ReportDetailsScreenViewModel(
             errorMsg = null,
             isError = false,
         )
-    viewModelScope.launch { updateReportDetails(reportId) }
+    viewModelScope.launch { updateReportDetails(reportId, calledFromRefresh = true) }
   }
 
   /**
@@ -154,8 +154,12 @@ class ReportDetailsScreenViewModel(
    *
    * @param reportId ID of the report whose details are being resolved.
    */
-  private suspend fun updateReportDetails(reportId: Id) {
+  private suspend fun updateReportDetails(reportId: Id, calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+        reportRepository.refreshCache()
+      }
       // ------ Fatal errors ------
       val report = reportRepository.getReport(reportId)
       val currentUser = userRepository.getSimpleUser(currentUserId)

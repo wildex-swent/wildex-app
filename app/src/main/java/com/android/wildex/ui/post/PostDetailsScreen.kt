@@ -95,14 +95,16 @@ fun PostDetailsScreen(
         )
       },
       bottomBar = {
-        // Pinned comment input – content scrolls behind it
-        CommentInput(
-            userId = uiState.currentUserId,
-            userProfilePictureURL = uiState.currentUserProfilePictureURL,
-            userUserType = uiState.currentUserUserType,
-            onProfile = onProfile,
-            postDetailsScreenViewModel = postDetailsScreenViewModel,
-        )
+        if (isOnline) {
+          // Pinned comment input – content scrolls behind it
+          CommentInput(
+              userId = uiState.currentUserId,
+              userProfilePictureURL = uiState.currentUserProfilePictureURL,
+              userUserType = uiState.currentUserUserType,
+              onProfile = onProfile,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+          )
+        }
       },
   ) { innerPadding ->
     if (isOnline) {

@@ -25,12 +25,16 @@ import com.android.wildex.model.utils.Id
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import java.text.Normalizer
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Represents the UI state of the Home Screen.
@@ -134,8 +138,12 @@ class HomeScreenViewModel(
    * Also manages [HomeUIState.isLoading], [HomeUIState.isRefreshing], [HomeUIState.isError] and
    * [HomeUIState.errorMsg] to allow UI feedback.
    */
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(calledFromRefresh: Boolean = false) {
     try {
+      if (calledFromRefresh) {
+        userRepository.refreshCache()
+        postRepository.refreshCache()
+      }
       AppTheme.appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val user = userRepository.getSimpleUser(currentUserId)
       _uiState.value = _uiState.value.copy(currentUser = user)
@@ -162,24 +170,48 @@ class HomeScreenViewModel(
 
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(calledFromRefresh = true) }
   }
 
   /**
    * Retrieves posts and converts them to [PostState] objects including like status and author data.
    */
   private suspend fun fetchPosts(): List<PostState> = coroutineScope {
-    postRepository
-        .getAllPosts()
+    val posts = postRepository.getAllPosts()
+
+    val authorMemo = mutableMapOf<Id, Deferred<SimpleUser>>()
+    val animalMemo = mutableMapOf<Id, Deferred<String>>()
+    val authorMutex = Mutex()
+    val animalMutex = Mutex()
+
+    posts
         .map { post ->
           async {
             try {
-              val author = userRepository.getSimpleUser(post.authorId)
-              val isLiked = likeRepository.getLikeForPost(post.postId) != null
-              val animalName = animalRepository.getAnimal(post.animalId).name
-              val likeCount = likeRepository.getLikesForPost(post.postId).size
-              val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
+              val authorDeferred =
+                  authorMutex.withLock {
+                    authorMemo.getOrPut(post.authorId) {
+                      async { userRepository.getSimpleUser(post.authorId) }
+                    }
+                  }
+              val animalDeferred =
+                  animalMutex.withLock {
+                    animalMemo.getOrPut(post.animalId) {
+                      async { animalRepository.getAnimal(post.animalId).name }
+                    }
+                  }
 
+              val author = authorDeferred.await()
+              val animalName = animalDeferred.await()
+
+              val isLiked =
+                  runCatching { likeRepository.getLikeForPost(post.postId) != null }
+                      .getOrDefault(false)
+              val likeCount =
+                  runCatching { likeRepository.getLikesForPost(post.postId).size }.getOrDefault(0)
+              val commentCount =
+                  runCatching { commentRepository.getAllCommentsByPost(post.postId).size }
+                      .getOrDefault(0)
               PostState(
                   post = post,
                   author = author,
@@ -202,7 +234,27 @@ class HomeScreenViewModel(
    *
    * @param postId The unique identifier of the post to toggle like status.
    */
-  fun toggleLike(postId: Id) {
+  fun toggleLike(postId: Id, isOnline: Boolean = true) {
+    if (!isOnline) {
+      setErrorMsg("You are currently offline\nYou can not like or unlike posts :/")
+      return
+    }
+    // Optimistic UI
+    _uiState.update { currentState ->
+      currentState.copy(
+          postStates =
+              currentState.postStates.map { postState ->
+                if (postState.post.postId == postId) {
+                  val newLiked = !postState.isLiked
+                  postState.copy(
+                      isLiked = newLiked,
+                      likeCount =
+                          if (newLiked) postState.likeCount + 1 else postState.likeCount - 1)
+                } else {
+                  postState
+                }
+              })
+    }
     viewModelScope.launch {
       val like = likeRepository.getLikeForPost(postId)
       if (like != null) {

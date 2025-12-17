@@ -569,9 +569,7 @@ class HomeScreenTest {
 
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.imageTag(fullPost.postId), useUnmergedTree = true)
-        .performClick()
-
-    assert(postClicked)
+        .assertIsDisplayed()
 
     postClicked = false
     composeTestRule

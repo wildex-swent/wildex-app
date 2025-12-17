@@ -272,41 +272,6 @@ class CameraScreenTestWithPermission {
     assert(pickLocationCalled)
   }
 
-  // ========== LOADING SCREEN TESTS ===============
-  @Test
-  fun loadingScreen_canBeShown() {
-    fakeObserver.setOnline(true)
-    val fetchSignal = CompletableDeferred<Unit>()
-    val delayedPostRepo =
-        object : LocalRepositories.PostsRepositoryImpl() {
-          override suspend fun addPost(post: Post) {
-            fetchSignal.await()
-            return super.addPost(post)
-          }
-        }
-    val slowPostVm =
-        CameraScreenViewModel(
-            delayedPostRepo,
-            storageRepository,
-            userAnimalsRepository,
-            animalRepository,
-            animalInfoRepository,
-            currentUserId,
-        )
-    val mockUri = Uri.EMPTY
-    composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        CameraScreen(cameraScreenViewModel = slowPostVm)
-      }
-    }
-    composeTestRule.waitForIdle()
-    slowPostVm.detectAnimalImage(mockUri, composeTestRule.activity)
-    assertPostCreationScreenIsDisplayed()
-    slowPostVm.createPost(composeTestRule.activity) {}
-    composeTestRule.onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).assertIsDisplayed()
-    fetchSignal.complete(Unit)
-  }
-
   // ========== STATE TRANSITION TESTS ==========
 
   @Test

@@ -117,7 +117,8 @@ class MapScreenViewModel(
             errorMsg = null,
             isLoading = false,
             selected = emptyList(),
-            selectedIndex = 0)
+            selectedIndex = 0,
+        )
     viewModelScope.launch { updateUIState(userUid) }
   }
 
@@ -178,7 +179,8 @@ class MapScreenViewModel(
               isError = false,
               errorMsg = null,
               selected = emptyList(),
-              selectedIndex = 0)
+              selectedIndex = 0,
+          )
     } catch (e: Exception) {
       setErrorMsg(e.localizedMessage ?: "Failed to load map components.")
       _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false, isError = true)
@@ -212,24 +214,22 @@ class MapScreenViewModel(
           is MapPin.PostPin -> {
             val post = postRepository.getPost(pin.id)
             val author = userRepository.getSimpleUser(post.authorId)
-            val liked = likeRepository.getLikeForPost(post.postId) != null
             val animalName = animalRepository.getAnimal(post.animalId).name
-            val likeCount = likeRepository.getLikesForPost(post.postId).size
-            val commentCount = commentRepository.getAllCommentsByPost(post.postId).size
             _uiState.value =
                 _uiState.value.copy(
                     selected =
                         listOf(
                             PinDetails.PostDetails(
-                                post,
-                                author,
-                                liked,
-                                likeCount,
-                                commentCount,
-                                animalName,
+                                post = post,
+                                author = author,
+                                likedByMe = false,
+                                likeCount = 0,
+                                commentCount = 0,
+                                animalName = animalName,
                             )),
                     selectedIndex = 0,
                 )
+            loadCountsAndLikeAsync(post.postId)
           }
           is MapPin.ReportPin -> {
             val report = reportRepository.getReport(pin.id)
@@ -245,6 +245,41 @@ class MapScreenViewModel(
         }
       } catch (e: Exception) {
         setErrorMsg("Failed to load pin: ${e.message}")
+      }
+    }
+  }
+
+  /**
+   * Loads the like status, like count, and comment count for a given post asynchronously.
+   *
+   * @param postId The ID of the post for which to load counts and like status.
+   */
+  private fun loadCountsAndLikeAsync(postId: Id) {
+    viewModelScope.launch {
+      val likedDeferred = async {
+        runCatching { likeRepository.getLikeForPost(postId) != null }.getOrDefault(false)
+      }
+      val likesCountDeferred = async {
+        runCatching { likeRepository.getLikesForPost(postId).size }.getOrDefault(0)
+      }
+      val commentsCountDeferred = async {
+        runCatching { commentRepository.getAllCommentsByPost(postId).size }.getOrDefault(0)
+      }
+      val liked = likedDeferred.await()
+      val likeCount = likesCountDeferred.await()
+      val commentCount = commentsCountDeferred.await()
+
+      val cur = _uiState.value.selected.firstOrNull()
+      if (cur is PinDetails.PostDetails && cur.post.postId == postId) {
+        _uiState.value =
+            _uiState.value.copy(
+                selected =
+                    listOf(
+                        cur.copy(
+                            likedByMe = liked,
+                            likeCount = likeCount,
+                            commentCount = commentCount,
+                        )))
       }
     }
   }

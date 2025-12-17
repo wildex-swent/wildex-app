@@ -15,6 +15,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -286,6 +291,65 @@ class CollectionScreenViewModelTest {
 
       viewModel.clearErrorMsg()
       Assert.assertNull(viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshUiStateRefreshesCachesAndUpdatesState() {
+    mainDispatcherRule.runTest {
+      coEvery { animalsRepository.refreshCache() } returns Unit
+      coEvery { userAnimalsRepository.refreshCache() } returns Unit
+      coEvery { userRepository.refreshCache() } returns Unit
+      viewModel.refreshUIState("currentUserId")
+      assertTrue(viewModel.uiState.value.isRefreshing)
+      advanceUntilIdle()
+      assertFalse(viewModel.uiState.value.isRefreshing)
+      assertFalse(viewModel.uiState.value.isError)
+      assertNull(viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun refreshOfflineSetsErrorMessage() {
+    viewModel.refreshOffline()
+    assertEquals(
+        "You are currently offline\nYou can not refresh for now :/",
+        viewModel.uiState.value.errorMsg)
+  }
+
+  @Test
+  fun errorDuringRefreshSetsErrorStateAndStopsRefreshing() {
+    mainDispatcherRule.runTest {
+      coEvery { animalsRepository.refreshCache() } throws RuntimeException("refresh boom")
+      viewModel.refreshUIState("currentUserId")
+      advanceUntilIdle()
+      val state = viewModel.uiState.value
+      assertTrue(state.isError)
+      assertFalse(state.isRefreshing)
+      assertNotNull(state.errorMsg)
+    }
+  }
+
+  @Test
+  fun errorWithoutLocalizedMessageUsesDefaultErrorMessage() {
+    mainDispatcherRule.runTest {
+      coEvery { userRepository.getSimpleUser("currentUserId") } throws Exception()
+      viewModel.loadUIState("currentUserId")
+      advanceUntilIdle()
+      assertEquals("Failed to load collection.", viewModel.uiState.value.errorMsg)
+    }
+  }
+
+  @Test
+  fun animalsAreSortedWithUnlockedFirst() {
+    mainDispatcherRule.runTest {
+      viewModel.loadUIState("currentUserId")
+      advanceUntilIdle()
+      val animals = viewModel.uiState.value.animals
+      val unlocked = animals.takeWhile { it.isUnlocked }
+      val locked = animals.dropWhile { it.isUnlocked }
+      assertTrue(unlocked.all { it.isUnlocked })
+      assertTrue(locked.all { !it.isUnlocked })
     }
   }
 }

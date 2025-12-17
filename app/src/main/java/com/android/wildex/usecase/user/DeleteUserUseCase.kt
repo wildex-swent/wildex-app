@@ -51,11 +51,16 @@ class DeleteUserUseCase(
    * @param userId user whose account we want to delete
    */
   suspend operator fun invoke(userId: Id) {
+    val friends = userFriendsRepository.getAllFriendsOfUser(userId)
+
     userRepository.deleteUser(userId)
     userSettingsRepository.deleteUserSettings(userId)
     userAnimalsRepository.deleteUserAnimals(userId)
     userAchievementsRepository.deleteUserAchievements(userId)
     userFriendsRepository.deleteUserFriendsOfUser(userId)
+    friends.forEach {
+      userFriendsRepository.deleteFriendToUserFriendsOfUser(friendId = userId, userId = it.userId)
+    }
     friendRequestRepository.deleteAllFriendRequestsOfUser(userId)
     postsRepository.deletePostsByUser(userId)
     reportRepository.deleteReportsByUser(userId)

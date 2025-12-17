@@ -83,6 +83,8 @@ object LocalRepositories {
       listOfPosts.removeIf { it.authorId == userId }
     }
 
+    override suspend fun refreshCache() {}
+
     override fun clear() {
       listOfPosts.clear()
     }
@@ -216,6 +218,8 @@ object LocalRepositories {
     override fun clear() {
       listOfUsers.clear()
     }
+
+    override suspend fun refreshCache() {}
   }
 
   open class CommentRepositoryImpl() : CommentRepository, ClearableRepository {
@@ -285,6 +289,10 @@ object LocalRepositories {
     override fun clear() {
       listOfAnimals.clear()
     }
+
+    override suspend fun refreshCache() {
+      listOfAnimals.clear()
+    }
   }
 
   open class UserAnimalsRepositoryImpl(private val animalRepository: AnimalRepository) :
@@ -325,6 +333,10 @@ object LocalRepositories {
 
     override fun clear() {
       mapUserToAnimals.forEach { (p0, _) -> mapUserToAnimals[p0] = mutableListOf() }
+    }
+
+    override suspend fun refreshCache() {
+      mapUserToAnimals.clear()
     }
   }
 
@@ -493,6 +505,10 @@ object LocalRepositories {
     }
 
     override fun clear() {
+      listOfReports.clear()
+    }
+
+    override suspend fun refreshCache() {
       listOfReports.clear()
     }
   }

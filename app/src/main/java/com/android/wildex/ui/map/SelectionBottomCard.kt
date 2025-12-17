@@ -14,6 +14,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
@@ -66,6 +69,8 @@ fun SelectionBottomCard(
     onPrev: () -> Unit = {},
 ) {
   if (selection == null) return
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   val cs = colorScheme
   Surface(
       modifier =
@@ -104,6 +109,7 @@ fun SelectionBottomCard(
                 activeTab = activeTab,
                 isCurrentUser = isCurrentUser,
                 onProfile = onProfile,
+                isOnline = isOnline,
             )
           }
           is PinDetails.ReportDetails -> {
@@ -111,6 +117,7 @@ fun SelectionBottomCard(
                 details = selection,
                 onReport = onReport,
                 onProfile = onProfile,
+                isOnline = isOnline,
             )
           }
         }
@@ -119,7 +126,8 @@ fun SelectionBottomCard(
           HorizontalDivider(
               modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
               thickness = DividerDefaults.Thickness,
-              color = cs.outlineVariant.copy(alpha = 0.3f))
+              color = cs.outlineVariant.copy(alpha = 0.3f),
+          )
           ClusterFooterPager(
               groupSize = groupSize,
               groupIndex = groupIndex,
@@ -180,7 +188,10 @@ private fun ClusterFooterPager(
       Text(
           text =
               LocalContext.current.getString(
-                  R.string.cluster_group_position, groupIndex + 1, groupSize),
+                  R.string.cluster_group_position,
+                  groupIndex + 1,
+                  groupSize,
+              ),
           style = typography.labelMedium,
           color = cs.onSurfaceVariant,
           modifier = Modifier.testTag(MapContentTestTags.SELECTION_PAGER_LABEL),
@@ -252,9 +263,10 @@ private fun LocationRow(name: String) {
  * @param size The size of the icon.
  */
 @Composable
-private fun OpenButton(onClick: () -> Unit, ui: Color, size: Int) {
+private fun OpenButton(onClick: () -> Unit, ui: Color, size: Int, isOnline: Boolean = true) {
   IconButton(
       onClick = onClick,
+      enabled = isOnline,
       modifier = Modifier.size(34.dp).testTag(MapContentTestTags.SELECTION_OPEN_BUTTON),
       colors = IconButtonDefaults.iconButtonColors(contentColor = ui),
   ) {
@@ -309,6 +321,7 @@ private fun PostSelectionCard(
     activeTab: MapTab = MapTab.Posts,
     isCurrentUser: Boolean,
     onProfile: (Id) -> Unit = {},
+    isOnline: Boolean = true,
 ) {
   val cs = colorScheme
   val context = LocalContext.current
@@ -348,18 +361,18 @@ private fun PostSelectionCard(
 
     LocationRow(details.post.location?.name ?: "")
     Spacer(Modifier.height(2.dp))
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
       val activeColor = if (details.likedByMe) cs.primary else cs.onBackground
+      val borderColor = if (isOnline) activeColor else activeColor.copy(alpha = 0.3f)
 
       Row(
           modifier =
               Modifier.height(34.dp)
-                  .border(width = 1.dp, color = activeColor, shape = RoundedCornerShape(50))
+                  .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(50))
                   .padding(horizontal = 10.dp),
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -368,17 +381,21 @@ private fun PostSelectionCard(
             imageVector =
                 if (details.likedByMe) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
             contentDescription = "Like",
-            tint = activeColor,
+            tint = if (isOnline) activeColor else activeColor.copy(alpha = 0.4f),
             modifier =
-                Modifier.size(20.dp).testTag(MapContentTestTags.SELECTION_LIKE_BUTTON).clickable {
-                  onToggleLike(details.post.postId)
+                Modifier.size(20.dp).testTag(MapContentTestTags.SELECTION_LIKE_BUTTON).let {
+                  if (isOnline) {
+                    it.clickable { onToggleLike(details.post.postId) }
+                  } else {
+                    it
+                  }
                 },
         )
 
         Text(
             text = details.likeCount.toString(),
             style = typography.bodySmall,
-            color = activeColor,
+            color = if (isOnline) activeColor else activeColor.copy(alpha = 0.4f),
         )
       }
 
@@ -389,20 +406,21 @@ private fun PostSelectionCard(
         Icon(
             Icons.Filled.ChatBubbleOutline,
             contentDescription = "Comments",
-            tint = cs.onBackground,
+            tint = if (isOnline) cs.onBackground else cs.onBackground.copy(alpha = 0.4f),
             modifier = Modifier.size(28.dp).testTag(MapContentTestTags.SELECTION_COMMENT_ICON),
         )
 
         Text(
             text = details.commentCount.toString(),
             style = typography.bodySmall,
-            color = cs.onBackground,
+            color = if (isOnline) cs.onBackground else cs.onBackground.copy(alpha = 0.4f),
         )
       }
 
       OpenButton(
           onClick = { onPost(details.post.postId) },
           ui = cs.onBackground,
+          isOnline = isOnline,
           size = 28,
       )
     }
@@ -420,6 +438,7 @@ private fun ReportSelectionCard(
     details: PinDetails.ReportDetails,
     onReport: (Id) -> Unit,
     onProfile: (Id) -> Unit = {},
+    isOnline: Boolean = true,
 ) {
   val cs = colorScheme
   val context = LocalContext
@@ -464,9 +483,10 @@ private fun ReportSelectionCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-      val assigned = !details.report.assigneeId.isNullOrBlank() && details.assignee != null
+      val assignee = details.assignee
       val bg =
-          if (assigned) cs.onBackground.copy(alpha = 0.08f) else cs.onBackground.copy(alpha = 0.12f)
+          if (assignee != null) cs.onBackground.copy(alpha = 0.08f)
+          else cs.onBackground.copy(alpha = 0.12f)
       val fg = cs.background
 
       Surface(
@@ -475,7 +495,7 @@ private fun ReportSelectionCard(
           contentColor = fg,
           modifier = Modifier.weight(1f).wrapContentWidth(),
       ) {
-        if (!assigned) {
+        if (assignee == null) {
           Text(
               text = context.current.getString(R.string.map_not_assigned),
               modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -500,7 +520,7 @@ private fun ReportSelectionCard(
             AsyncImage(
                 model =
                     ImageRequest.Builder(LocalContext.current)
-                        .data(details.assignee?.profilePictureURL)
+                        .data(details.assignee.profilePictureURL)
                         .build(),
                 contentDescription = "Assignee",
                 contentScale = ContentScale.Crop,
@@ -508,8 +528,7 @@ private fun ReportSelectionCard(
             )
 
             Text(
-                text =
-                    details.assignee?.username ?: context.current.getString(R.string.map_unknown),
+                text = details.assignee.username,
                 style = typography.bodySmall,
                 color = cs.primary,
                 fontWeight = FontWeight.Bold,
@@ -524,6 +543,7 @@ private fun ReportSelectionCard(
       OpenButton(
           onClick = { onReport(details.report.reportId) },
           ui = cs.onBackground,
+          isOnline = isOnline,
           size = 26,
       )
     }

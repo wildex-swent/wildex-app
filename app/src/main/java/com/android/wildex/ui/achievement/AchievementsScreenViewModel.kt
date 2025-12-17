@@ -7,10 +7,16 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.ProgressInfo
 import com.android.wildex.model.utils.URL
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * UI state for the Achievements screen.
@@ -30,6 +36,15 @@ data class AchievementsUIState(
     val isError: Boolean = false,
 )
 
+/**
+ * UI state for a single achievement.
+ *
+ * @property id The unique identifier of the achievement.
+ * @property name The name of the achievement.
+ * @property description A brief description of the achievement.
+ * @property pictureURL The URL of the achievement's picture.
+ * @property progress A list of progress information related to the achievement.
+ */
 data class AchievementUIState(
     val id: Id,
     val name: String,
@@ -46,6 +61,8 @@ data class AchievementUIState(
 class AchievementsScreenViewModel(
     private val userAchievementsRepository: UserAchievementsRepository =
         RepositoryProvider.userAchievementsRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AchievementsUIState(isLoading = true))
   val uiState: StateFlow<AchievementsUIState> = _uiState.asStateFlow()
@@ -59,37 +76,62 @@ class AchievementsScreenViewModel(
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch {
       try {
-        val allAchievements = userAchievementsRepository.getAllAchievements()
-        val unlockedAchievements = userAchievementsRepository.getAllAchievementsByUser(userId)
-        val lockedAchievements = allAchievements.filter { it !in unlockedAchievements }
-        val progress = Pair(unlockedAchievements.size, allAchievements.size)
+        // 1) Repo calls off-main, in parallel
+        val (allAchievements, unlockedAchievements) =
+            withContext(ioDispatcher) {
+              val allDeferred = async { userAchievementsRepository.getAllAchievements() }
+              val unlockedDeferred = async {
+                userAchievementsRepository.getAllAchievementsByUser(userId)
+              }
+              allDeferred.await() to unlockedDeferred.await()
+            }
+
+        // 2) Compute locked + build UI models off-main
+        val unlockedIds = unlockedAchievements.asSequence().map { it.achievementId }.toHashSet()
+        val lockedAchievements =
+            allAchievements.asSequence().filter { it.achievementId !in unlockedIds }.toList()
+
+        val (unlockedUI, lockedUI) =
+            withContext(computeDispatcher) {
+              coroutineScope {
+                val unlockedUIDeferred =
+                    unlockedAchievements.map { ach ->
+                      async {
+                        AchievementUIState(
+                            id = ach.achievementId,
+                            name = ach.name,
+                            description = ach.description,
+                            pictureURL = ach.pictureURL,
+                            progress = ach.progress(userId),
+                        )
+                      }
+                    }
+
+                val lockedUIDeferred =
+                    lockedAchievements.map { ach ->
+                      async {
+                        AchievementUIState(
+                            id = ach.achievementId,
+                            name = ach.name,
+                            description = ach.description,
+                            pictureURL = ach.pictureURL,
+                            progress = ach.progress(userId),
+                        )
+                      }
+                    }
+
+                unlockedUIDeferred.awaitAll() to lockedUIDeferred.awaitAll()
+              }
+            }
 
         _uiState.value =
             _uiState.value.copy(
-                unlocked =
-                    unlockedAchievements.map {
-                      AchievementUIState(
-                          id = it.achievementId,
-                          name = it.name,
-                          description = it.description,
-                          pictureURL = it.pictureURL,
-                          progress = it.progress(userId),
-                      )
-                    },
-                locked =
-                    lockedAchievements.map {
-                      AchievementUIState(
-                          id = it.achievementId,
-                          name = it.name,
-                          description = it.description,
-                          pictureURL = it.pictureURL,
-                          progress = it.progress(userId),
-                      )
-                    },
+                unlocked = unlockedUI,
+                locked = lockedUI,
+                overallProgress = Pair(unlockedUI.size, allAchievements.size),
                 isLoading = false,
                 isError = false,
                 errorMsg = null,
-                overallProgress = progress,
             )
       } catch (e: Exception) {
         setErrorMsg(e.localizedMessage ?: "Failed to load achievements.")

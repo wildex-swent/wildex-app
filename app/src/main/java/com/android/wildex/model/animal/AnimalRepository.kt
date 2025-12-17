@@ -13,4 +13,7 @@ interface AnimalRepository {
 
   /** Adds a new Animal item to the repository. */
   suspend fun addAnimal(animal: Animal)
+
+  /** Clears the animal cache. */
+  suspend fun refreshCache()
 }

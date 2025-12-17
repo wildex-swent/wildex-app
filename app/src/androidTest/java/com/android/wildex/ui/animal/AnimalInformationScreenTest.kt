@@ -67,6 +67,8 @@ class AnimalInformationScreenTest {
             fetchSignal.await()
             return super.getAnimal(animalId)
           }
+
+          override suspend fun refreshCache() {}
         }
     runBlocking {
       delayedAnimalsRepo.addAnimal(

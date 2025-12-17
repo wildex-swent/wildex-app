@@ -1,7 +1,8 @@
 package com.android.wildex.model.user
 
-import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
+import com.android.wildex.model.animal.AnimalRepository
+import com.android.wildex.model.cache.user.IUserAnimalsCache
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,7 +10,11 @@ import kotlinx.coroutines.tasks.await
 
 const val USER_ANIMALS_COLLECTION_PATH = "userAnimals"
 
-class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAnimalsRepository {
+class UserAnimalsRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val cache: IUserAnimalsCache,
+    private val animalRepository: AnimalRepository,
+) : UserAnimalsRepository {
 
   private val collection = db.collection(USER_ANIMALS_COLLECTION_PATH)
 
@@ -21,7 +26,9 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
   override suspend fun initializeUserAnimals(userId: Id) {
     val docRef = collection.document(userId)
     ensureDocumentDoesNotExist(docRef, userId)
-    docRef.set(UserAnimals(userId = userId)).await()
+    val userAnimals = UserAnimals(userId = userId)
+    docRef.set(userAnimals).await()
+    cache.saveUserAnimals(userAnimals)
   }
 
   /**
@@ -31,14 +38,18 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
    * @return The list of all the animals of a specific user
    */
   override suspend fun getAllAnimalsByUser(userId: Id): List<Animal> {
+    cache.getUserAnimals(userId)?.animalsId?.let {
+      return it.map { id -> animalRepository.getAnimal(id) }
+    }
+
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
 
     val userAnimals = docRef.get().await().toObject(UserAnimals::class.java)
-    val animals =
-        userAnimals?.animalsId?.map { RepositoryProvider.animalRepository.getAnimal(it) }
-            ?: emptyList()
+    requireNotNull(userAnimals)
+    val animals = userAnimals.animalsId.map { animalRepository.getAnimal(it) }
 
+    cache.saveUserAnimals(userAnimals)
     return animals
   }
 
@@ -49,11 +60,19 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
    * @return The animalsCount of a specific user
    */
   override suspend fun getAnimalsCountOfUser(userId: Id): Int {
+    cache.getAnimalsCountOfUser(userId)?.let {
+      return it
+    }
+
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
 
     val userAnimals = docRef.get().await().toObject(UserAnimals::class.java)
-    return userAnimals?.animalsCount ?: 0
+    requireNotNull(userAnimals)
+    val count = userAnimals.animalsCount
+
+    cache.saveUserAnimals(userAnimals)
+    return count
   }
 
   /**
@@ -74,9 +93,10 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
       animalsCount = animalsCount.inc()
     }
 
-    docRef
-        .set(UserAnimals(userId = userId, animalsId = animalsId, animalsCount = animalsCount))
-        .await()
+    val newUserAnimals =
+        UserAnimals(userId = userId, animalsId = animalsId, animalsCount = animalsCount)
+    docRef.set(newUserAnimals).await()
+    cache.saveUserAnimals(newUserAnimals)
   }
 
   /**
@@ -97,15 +117,21 @@ class UserAnimalsRepositoryFirestore(private val db: FirebaseFirestore) : UserAn
       animalsCount = animalsCount.dec()
     }
 
-    docRef
-        .set(UserAnimals(userId = userId, animalsId = animalsId, animalsCount = animalsCount))
-        .await()
+    val newUserAnimals =
+        UserAnimals(userId = userId, animalsId = animalsId, animalsCount = animalsCount)
+    docRef.set(newUserAnimals).await()
+    cache.saveUserAnimals(newUserAnimals)
   }
 
   override suspend fun deleteUserAnimals(userId: Id) {
     val docRef = collection.document(userId)
     ensureDocumentExists(docRef, userId)
     docRef.delete().await()
+    cache.deleteUserAnimals(userId)
+  }
+
+  override suspend fun refreshCache() {
+    cache.clearAll()
   }
 
   /**

@@ -36,11 +36,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,27 +62,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
@@ -99,9 +97,11 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
-import com.android.wildex.ui.profile.StaticMiniMap
+import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.social.UserIndex
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLike
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -207,7 +207,8 @@ fun HomeScreen(
             user,
             context.getString(R.string.app_name),
             onNotificationClick,
-            onCurrentProfilePictureClick)
+            onCurrentProfilePictureClick,
+        )
       },
       bottomBar = bottomBar,
       modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
@@ -615,7 +616,7 @@ fun PostsView(
       verticalArrangement = Arrangement.spacedBy(2.dp),
       contentPadding = PaddingValues(vertical = 2.dp),
   ) {
-    items(postStates.size) { index ->
+    items(count = postStates.size, key = { index -> postStates[index].post.postId }) { index ->
       PostItem(
           postState = postStates[index],
           onProfilePictureClick = onProfilePictureClick,
@@ -645,16 +646,11 @@ fun PostItem(
   val animalName = postState.animalName
   val pagerState = rememberPagerState(pageCount = { if (post.location != null) 2 else 1 })
 
-  // -------- Optimistic Like State (instant UI) --------
-  var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
-  var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
-  var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
+  val liked = postState.isLiked
+  val likeCount = postState.likeCount
+  val commentCount = postState.commentsCount
 
-  val onToggleLike: () -> Unit = {
-    liked = !liked
-    likeCount = if (liked) likeCount + 1 else likeCount - 1
-    onPostLike(post.postId)
-  }
+  val onToggleLike: () -> Unit = { onPostLike(post.postId) }
 
   Card(
       shape = RoundedCornerShape(16.dp),
@@ -670,7 +666,13 @@ fun PostItem(
     )
 
     // Image
-    PostSlider(post = post, onPostClick = { onPostClick(post.postId) }, pagerState)
+    PostSlider(
+        post = post,
+        liked = liked,
+        onPostClick = { onPostClick(post.postId) },
+        onToggleLike = onToggleLike,
+        pagerState = pagerState,
+    )
 
     // Actions: likes & comments & location
     PostActions(
@@ -775,80 +777,95 @@ private fun PostHeader(
  * @param onPostClick The action when the user clicks on the post, to see its details.
  */
 @Composable
-private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerState) {
+private fun PostSlider(
+    post: Post,
+    liked: Boolean,
+    onPostClick: () -> Unit,
+    onToggleLike: () -> Unit,
+    pagerState: PagerState,
+) {
+  var imageHeight by
+      rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it.dp })) {
+        mutableStateOf<Dp?>(null)
+      }
+  val context = LocalContext.current
+  val density = LocalDensity.current
   HorizontalPager(
       state = pagerState,
-      modifier =
-          Modifier.fillMaxWidth()
-              .height(LocalWindowInfo.current.containerSize.height.dp / 6)
-              .testTag(HomeScreenTestTags.sliderTag(post.postId)),
+      modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.sliderTag(post.postId)),
   ) { page ->
     when (page) {
       0 -> {
-        AsyncImage(
-            model = post.pictureURL,
-            contentDescription = "Post picture",
+        ImageWithDoubleTapLike(
+            pictureURL = post.pictureURL,
+            likedByCurrentUser = liked,
             modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.imageTag(post.postId)).clickable {
-                  onPostClick()
+                Modifier.testTag(HomeScreenTestTags.imageTag(post.postId)).onGloballyPositioned {
+                    coordinates ->
+                  val heightPx = coordinates.size.height
+                  val h = with(density) { heightPx.toDp() }
+                  if (h > 0.dp) imageHeight = h
                 },
-            contentScale = ContentScale.Crop,
+            onTap = { onPostClick() },
+            onDoubleTap = onToggleLike,
         )
       }
       1 -> {
         val loc = post.location!!
-        val context = LocalContext.current
         val isDark =
             when (AppTheme.appearanceMode) {
               AppearanceMode.DARK -> true
               AppearanceMode.LIGHT -> false
               AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
             }
-        Box(
-            modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-              StaticMiniMap(
-                  modifier = Modifier.matchParentSize(),
-                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                  styleUri = context.getString(R.string.map_style),
-                  styleImportId = context.getString(R.string.map_standard_import),
-                  isDark = isDark,
-                  fallbackZoom = 2.0,
-                  context = context,
-              )
-              if (loc.specificName.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(colorScheme.onBackground)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                ) {
-                  Icon(
-                      imageVector = Icons.Filled.Place,
-                      contentDescription = "Country Icon",
-                      tint = colorScheme.background,
-                      modifier = Modifier.size(16.dp),
-                  )
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Text(
-                      modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                      text = loc.specificName,
-                      style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                      color = colorScheme.background,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis,
-                  )
+        imageHeight?.let { height ->
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .height(height)
+                      .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+                OfflineAwareMiniMap(
+                    modifier = Modifier.matchParentSize(),
+                    pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                    styleUri = context.getString(R.string.map_style),
+                    styleImportId = context.getString(R.string.map_standard_import),
+                    isDark = isDark,
+                    fallbackZoom = 2.0,
+                )
+                if (loc.specificName.isNotEmpty()) {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier =
+                          Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                              .clip(RoundedCornerShape(20.dp))
+                              .background(colorScheme.onBackground)
+                              .padding(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = "Country Icon",
+                        tint = colorScheme.background,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                        text = loc.specificName,
+                        style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = colorScheme.background,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                  }
                 }
+                Box(
+                    modifier =
+                        Modifier.matchParentSize()
+                            .clickable { onPostClick() }
+                            .background(colorScheme.tertiary)
+                            .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
               }
-              Box(
-                  modifier =
-                      Modifier.matchParentSize()
-                          .clickable { onPostClick() }
-                          .background(colorScheme.tertiary)
-                          .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
-            }
+        }
       }
     }
   }
@@ -892,17 +909,13 @@ private fun PostActions(
   ) {
     // Likes
     Row(
-        modifier =
-            Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
-              onToggleLike()
-            },
+        modifier = Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(
-          imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-          contentDescription = "Likes",
-          modifier = Modifier.size(30.dp),
-          tint = if (liked) colorScheme.primary else colorScheme.onBackground,
+      AnimatedLikeButton(
+          likedByCurrentUser = liked,
+          onToggleLike = onToggleLike,
+          iconSize = 28.dp,
       )
       Spacer(Modifier.width(6.dp))
       Text(
@@ -944,7 +957,7 @@ private fun PostActions(
       Icon(
           imageVector = Icons.AutoMirrored.Outlined.Chat,
           contentDescription = "Comments",
-          modifier = Modifier.size(25.dp),
+          modifier = Modifier.size(28.dp),
           tint = colorScheme.onBackground,
       )
       Spacer(Modifier.width(6.dp))

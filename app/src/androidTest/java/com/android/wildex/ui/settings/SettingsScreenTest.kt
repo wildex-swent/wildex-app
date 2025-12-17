@@ -1,9 +1,11 @@
 package com.android.wildex.ui.settings
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -16,6 +18,10 @@ import com.android.wildex.utils.FakeAuthRepository
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -28,7 +34,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
-  @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private val userRepository = LocalRepositories.userRepository
 
@@ -61,7 +67,7 @@ class SettingsScreenTest {
             bio = "This is a bio",
             profilePictureURL =
                 "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
-            userType = UserType.REGULAR,
+            userType = UserType.PROFESSIONAL,
             creationDate = Timestamp.now(),
             country = "France",
         ))
@@ -77,6 +83,7 @@ class SettingsScreenTest {
             userRepository = userRepository,
             userSettingsRepository = userSettingsRepository,
             userTokensRepository = userTokensRepository,
+            reportRepository = reportsRepository,
             currentUserId = "currentUserId",
             deleteUserUseCase =
                 DeleteUserUseCase(
@@ -117,7 +124,7 @@ class SettingsScreenTest {
     }
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PROFILE_SETTING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SettingsScreenTestTags.USER_STATUS_SETTING).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.USER_TYPE_SETTING).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(SettingsScreenTestTags.APPEARANCE_MODE_SETTING)
         .assertIsDisplayed()
@@ -191,8 +198,6 @@ class SettingsScreenTest {
   @Test
   fun userStatusChange_invokesUserStatusChange() {
     fakeObserver.setOnline(true)
-    val initialStatus = userSettingsScreenVM.uiState.value.userType
-
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         SettingsScreen(
@@ -203,12 +208,29 @@ class SettingsScreenTest {
         )
       }
     }
+    composeTestRule.waitForIdle()
 
+    val initialType = userSettingsScreenVM.uiState.value.userType
+    assert(initialType == UserType.PROFESSIONAL)
+
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.USER_TYPE_DIALOG).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
+        .onNodeWithTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CANCEL)
+        .assertIsDisplayed()
         .performClick()
-    val newStatus = userSettingsScreenVM.uiState.value.userType
-    assert(initialStatus != newStatus)
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CONFIRM)
+        .assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON).performClick()
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.USER_TYPE_DIALOG_CONFIRM)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(SettingsScreenTestTags.USER_TYPE_DIALOG).assertIsNotDisplayed()
+
+    val newType = userSettingsScreenVM.uiState.value.userType
+    assert(initialType != newType)
   }
 
   @Test
@@ -316,7 +338,6 @@ class SettingsScreenTest {
   fun cancelDeleteAccount_hidesPopup_and_doesNotInvokeCallback() {
     fakeObserver.setOnline(true)
     var accountDeletionInvoked = false
-
     composeTestRule.setContent {
       CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
         SettingsScreen(
@@ -327,7 +348,6 @@ class SettingsScreenTest {
         )
       }
     }
-
     composeTestRule
         .onNodeWithTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
         .assertIsDisplayed()
@@ -338,6 +358,33 @@ class SettingsScreenTest {
         .assertIsDisplayed()
         .performClick()
     assert(!accountDeletionInvoked)
+  }
+
+  @Test
+  fun settingsDialog_dismisses_afterPermissionGranted() {
+    var count = 0
+    val fakeContext = spyk(composeTestRule.activity.applicationContext)
+    every { fakeContext.startActivity(any()) } just Runs
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalContext provides fakeContext) {
+        SettingsPermissionDialog { ++count }
+      }
+    }
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG_CANCEL)
+        .assertIsDisplayed()
+        .performClick()
+    assert(count == 1)
+
+    composeTestRule
+        .onNodeWithTag(SettingsScreenTestTags.NOTIFICATIONS_SETTING_DIALOG_CONFIRM)
+        .assertIsDisplayed()
+        .performClick()
+    assert(count == 2)
   }
 
   @Test
@@ -450,12 +497,12 @@ class SettingsScreenTest {
     when (oldState) {
       UserType.REGULAR -> {
         composeTestRule
-            .onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON)
+            .onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON)
             .performClick()
       }
       UserType.PROFESSIONAL -> {
         composeTestRule
-            .onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON)
+            .onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON)
             .performClick()
       }
     }

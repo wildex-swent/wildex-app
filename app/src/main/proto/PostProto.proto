@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package wildex.datastore;
+
+option java_package = "com.android.wildex.datastore";
+option java_multiple_files = true;
+
+import "LocationProto.proto";
+
+/** Cache storage for posts */
+message PostCacheStorage {
+    map<string, PostProto> posts = 1;
+}
+
+/** Represents a post made by a user */
+message PostProto {
+    string post_id = 1;
+    string author_id = 2;
+    string picture_url = 3;
+    LocationProto location = 4;
+    string description = 5;
+    int64 date = 6;
+    string animal_id = 7;
+    int64 last_updated = 10;
+}

@@ -158,6 +158,9 @@ class HomeScreenViewModelTest {
     animalRepository = mockk()
     userSettingsRepository = mockk()
     userFriendsRepository = mockk()
+    coEvery { userRepository.refreshCache() } coAnswers {}
+    coEvery { postsRepository.refreshCache() } coAnswers {}
+
     viewModel =
         HomeScreenViewModel(
             postsRepository,
@@ -172,6 +175,8 @@ class HomeScreenViewModelTest {
     coEvery { userSettingsRepository.getAppearanceMode("uid-1") } returns AppearanceMode.AUTOMATIC
     coEvery { userRepository.getSimpleUser("author1") } returns author1
     coEvery { userRepository.getSimpleUser("author2") } returns author2
+
+    coEvery { userRepository.refreshCache() } coAnswers {}
     coEvery { likeRepository.getLikeForPost("p1") } returns null
     coEvery { likeRepository.getLikeForPost("p2") } returns null
     coEvery { likeRepository.getLikesForPost("p1") } returns listOf(like1)

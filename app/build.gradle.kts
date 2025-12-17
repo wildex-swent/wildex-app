@@ -1,3 +1,4 @@
+import com.google.protobuf.gradle.id
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -7,6 +8,7 @@ plugins {
   alias(libs.plugins.ktfmt)
   alias(libs.plugins.sonar)
   alias(libs.plugins.gms)
+  alias(libs.plugins.protobuf)
   id("jacoco")
 }
 
@@ -27,7 +29,8 @@ android {
 
   defaultConfig {
     applicationId = "com.android.wildex"
-    minSdk = 28
+    minSdk = 29
+    targetSdk = 34
     versionCode = 1
     versionName = "1.0"
 
@@ -150,6 +153,21 @@ sonar {
   }
 }
 
+protobuf {
+  protoc {
+    artifact = "com.google.protobuf:protoc:3.25.0"
+  }
+  generateProtoTasks {
+    all().forEach { task ->
+      task.builtins {
+        id("java") {
+          option("lite")
+        }
+      }
+    }
+  }
+}
+
 // When a library is used both by robolectric and connected tests, use this function
 fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
   androidTestImplementation(dep)
@@ -267,6 +285,8 @@ dependencies {
   // DataStore
   implementation(libs.datastore.preferences)
   implementation(libs.datastore)
+  implementation(libs.datastore.core)
+  implementation(libs.protobuf.javalite)
 }
 
 tasks.withType<Test> {

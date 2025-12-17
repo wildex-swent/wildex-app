@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "com.android.wildex.datastore";
+option java_multiple_files = true;
+
+message AnimalCacheStorage {
+    map<string, AnimalProto> animals = 1;
+}
+
+message AnimalProto {
+    string animal_id = 1;
+    string picture_url = 2;
+    string name = 3;
+    string species = 4;
+    string description = 5;
+    int64 last_updated = 6;
+}

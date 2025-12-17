@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package wildex.datastore;
+
+option java_package = "com.android.wildex.datastore";
+option java_multiple_files = true;
+
+message LocationProto {
+    double latitude = 1;
+    double longitude = 2;
+    string name = 3;
+    string specific_name = 4;
+    string general_name = 5;
+}

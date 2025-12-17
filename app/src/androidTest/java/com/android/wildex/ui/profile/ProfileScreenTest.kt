@@ -243,18 +243,21 @@ class ProfileScreenTest {
 
   @Test
   fun profileContent_core() {
+    fakeObserver.setOnline(true)
     var collection = 0
     var friends = 0
     composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          viewModel = defaultViewModel,
-          state = defaultViewModel.uiState.value.copy(user = sampleUser),
-          onAchievements = {},
-          onCollection = { collection++ },
-          onMap = {},
-          onFriends = { friends++ },
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileContent(
+            user = sampleUser,
+            viewModel = defaultViewModel,
+            state = defaultViewModel.uiState.value.copy(user = sampleUser),
+            onAchievements = {},
+            onCollection = { collection++ },
+            onMap = {},
+            onFriends = { friends++ },
+        )
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Jane Doe")
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME).assertTextContains("jane_doe")
@@ -352,15 +355,18 @@ class ProfileScreenTest {
 
   @Test
   fun profile_defaults_and_map_achievements_defaults() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      Column {
-        ProfileImageAndName(
-            viewModel = defaultViewModel,
-            state = defaultViewModel.uiState.collectAsState().value,
-        )
-        ProfileDescription()
-        ProfileAchievements()
-        ProfileMap()
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        Column {
+          ProfileImageAndName(
+              viewModel = defaultViewModel,
+              state = defaultViewModel.uiState.collectAsState().value,
+          )
+          ProfileDescription()
+          ProfileAchievements()
+          ProfileMap()
+        }
       }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_NAME).assertTextContains("Name Surname")
@@ -445,16 +451,19 @@ class ProfileScreenTest {
 
   @Test
   fun achievements_cta_visible_for_non_owner_still_when_used_in_content() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ProfileContent(
-          user = sampleUser,
-          viewModel = defaultViewModel,
-          state = defaultViewModel.uiState.value,
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileContent(
+            user = sampleUser,
+            viewModel = defaultViewModel,
+            state = defaultViewModel.uiState.value,
+            onAchievements = {},
+            onCollection = {},
+            onMap = {},
+            onFriends = {},
+        )
+      }
     }
     composeRule.onAllNodesWithText("View all achievements", substring = true).assertCountEquals(1)
   }
@@ -469,6 +478,8 @@ class ProfileScreenTest {
             fetchSignal.await()
             return super.getUser(userId)
           }
+
+          override suspend fun refreshCache() {}
         }
     runBlocking {
       delayedUsersRepo.addUser(user = sampleUser)
@@ -518,24 +529,28 @@ class ProfileScreenTest {
 
   @Test
   fun profileImageAndName_shows_professional_badge_when_professional() {
+    fakeObserver.setOnline(true)
     composeRule.setContent {
-      ProfileContent(
-          user = sampleUser.copy(userType = UserType.PROFESSIONAL),
-          viewModel = defaultViewModel,
-          state =
-              defaultViewModel.uiState.value.copy(
-                  user = sampleUser.copy(userType = UserType.PROFESSIONAL)),
-          onAchievements = {},
-          onCollection = {},
-          onMap = {},
-          onFriends = {},
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileContent(
+            user = sampleUser.copy(userType = UserType.PROFESSIONAL),
+            viewModel = defaultViewModel,
+            state =
+                defaultViewModel.uiState.value.copy(
+                    user = sampleUser.copy(userType = UserType.PROFESSIONAL)),
+            onAchievements = {},
+            onCollection = {},
+            onMap = {},
+            onFriends = {},
+        )
+      }
     }
     composeRule.onNodeWithContentDescription("Professional badge").assertIsDisplayed()
   }
 
   @Test
   fun staticMiniMap_withPins_executesLocalSubsetAndCameraLogic() {
+    fakeObserver.setOnline(true)
     val pins =
         listOf(
             Point.fromLngLat(6.632, 46.519),
@@ -543,11 +558,13 @@ class ProfileScreenTest {
             Point.fromLngLat(6.65, 46.53),
         )
     composeRule.setContent {
-      ProfileMap(
-          id = "u-1",
-          onMap = {},
-          pins = pins,
-      )
+      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
+        ProfileMap(
+            id = "u-1",
+            onMap = {},
+            pins = pins,
+        )
+      }
     }
     composeRule.onNodeWithTag(ProfileScreenTestTags.MAP).assertIsDisplayed()
   }

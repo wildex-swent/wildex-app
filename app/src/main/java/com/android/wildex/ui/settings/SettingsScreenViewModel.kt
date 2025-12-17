@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
@@ -34,6 +35,7 @@ class SettingsScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userTokensRepository: UserTokensRepository =
         RepositoryProvider.userTokensRepository,
+    private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase(),
 ) : ViewModel() {
@@ -44,11 +46,16 @@ class SettingsScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
-  private suspend fun updateUIState() {
+  private suspend fun updateUIState(notificationPermissionEnabled: Boolean) {
     try {
-      val notificationsEnabled = userSettingsRepository.getEnableNotification(currentUserId)
       val appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val userType = userRepository.getUser(currentUserId).userType
+      val notificationsEnabled =
+          if (!notificationPermissionEnabled) {
+            userSettingsRepository.setEnableNotification(currentUserId, false)
+            false
+          } else userSettingsRepository.getEnableNotification(currentUserId)
+
       _uiState.value =
           _uiState.value.copy(
               appearanceMode = appearanceMode,
@@ -64,9 +71,9 @@ class SettingsScreenViewModel(
     }
   }
 
-  fun loadUIState() {
+  fun loadUIState(notificationPermissionEnabled: Boolean) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-    viewModelScope.launch { updateUIState() }
+    viewModelScope.launch { updateUIState(notificationPermissionEnabled) }
   }
 
   /**
@@ -102,7 +109,8 @@ class SettingsScreenViewModel(
   }
 
   /**
-   * Sets the user type for the current user.
+   * Sets the user type for the current user and unassigns any reports assigned to them if they
+   * switch from professional to regular
    *
    * @param type The desired [UserType] to set.
    */
@@ -110,6 +118,16 @@ class SettingsScreenViewModel(
     viewModelScope.launch {
       try {
         val user = userRepository.getUser(currentUserId)
+        if (user.userType == UserType.PROFESSIONAL && type == UserType.REGULAR) {
+          val reportsAssignedToUser =
+              reportRepository.getAllReportsByAssignee(assigneeId = user.userId)
+          reportsAssignedToUser.forEach { report ->
+            reportRepository.editReport(
+                reportId = report.reportId,
+                newValue = report.copy(assigneeId = null),
+            )
+          }
+        }
         val updatedUser = user.copy(userType = type)
         userRepository.editUser(currentUserId, updatedUser)
         _uiState.value = _uiState.value.copy(userType = type)

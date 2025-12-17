@@ -454,8 +454,7 @@ class HomeScreenViewModelTest {
                   animalName = animal1.name,
                   likeCount = 1,
                   commentsCount = 1,
-              )
-          ),
+              )),
           s.postStates,
       )
     }
@@ -483,8 +482,7 @@ class HomeScreenViewModelTest {
       assertNull(before.errorMsg)
       assertNotNull(after.errorMsg)
       assertTrue(
-          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/")
-      )
+          after.errorMsg!!.contains("You are currently offline\nYou can not refresh for now :/"))
     }
   }
 
@@ -533,8 +531,7 @@ class HomeScreenViewModelTest {
                   creationDate = Timestamp(0, 0),
                   country = "country",
                   onBoardingStage = OnBoardingStage.COMPLETE,
-              )
-          )
+              ))
 
       val postState =
           PostState(

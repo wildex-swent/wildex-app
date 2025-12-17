@@ -159,22 +159,23 @@ class NotificationScreenViewModel(
    * Inline comment: this updates repository and reloads the whole UI; errors set the error state.
    */
   fun markAsRead(notificationId: Id) {
-    _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
+      val state = _uiState.value
+      val notifications = state.notifications
+      val newNotifications =
+          notifications.map {
+            if (it.notificationId == notificationId) {
+              it.copy(notificationReadState = true)
+            } else {
+              it
+            }
+          }
+      _uiState.value = state.copy(notifications = newNotifications)
       try {
         notificationRepository.markNotificationAsRead(notificationId)
-        updateUIState()
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                isRefreshing = false,
-                errorMsg = null,
-                isError = false,
-            )
       } catch (e: Exception) {
+        _uiState.value = state
         setErrorMsg("Error marking notification as read : ${e.localizedMessage}")
-        _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
       }
     }
   }
@@ -186,66 +187,46 @@ class NotificationScreenViewModel(
    * single-mark flow.
    */
   fun markAllAsRead() {
-    _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
+      val state = _uiState.value
+      val notifications = state.notifications
+      val newNotifications = notifications.map { it.copy(notificationReadState = true) }
+      _uiState.value = state.copy(notifications = newNotifications)
       try {
         notificationRepository.markAllNotificationsForUserAsRead(currentUserId)
-        updateUIState()
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                isRefreshing = false,
-                errorMsg = null,
-                isError = false,
-            )
       } catch (e: Exception) {
+        _uiState.value = state
         setErrorMsg("Error marking all notifications as read : ${e.localizedMessage}")
-        _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
       }
     }
   }
 
   /** Deletes a single notification for the user and refreshes UI. */
   fun clearNotification(notificationId: Id) {
-    _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
+      val state = _uiState.value
+      val notifications = state.notifications
+      val newNotifications = notifications.filter { it.notificationId != notificationId }
+      _uiState.value = state.copy(notifications = newNotifications)
       try {
         notificationRepository.deleteNotification(notificationId)
-        updateUIState()
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                isRefreshing = false,
-                errorMsg = null,
-                isError = false,
-            )
       } catch (e: Exception) {
+        _uiState.value = state
         setErrorMsg("Error clearing notification : ${e.localizedMessage}")
-        _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
       }
     }
   }
 
   /** Deletes all notifications for the current user and refreshes UI. */
   fun clearAllNotifications() {
-    _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
+      val state = _uiState.value
+      _uiState.value = state.copy(notifications = emptyList())
       try {
         notificationRepository.deleteAllNotificationsForUser(currentUserId)
-        updateUIState()
-        _uiState.value =
-            _uiState.value.copy(
-                isLoading = false,
-                isRefreshing = false,
-                errorMsg = null,
-                isError = false,
-            )
       } catch (e: Exception) {
+        _uiState.value = state
         setErrorMsg("Error clearing all notifications : ${e.localizedMessage}")
-        _uiState.value =
-            _uiState.value.copy(isError = true, isLoading = false, isRefreshing = false)
       }
     }
   }
@@ -270,14 +251,18 @@ class NotificationScreenViewModel(
     val seconds = ChronoUnit.SECONDS.between(then, now)
 
     return when {
-      years > 0 -> "$years years ago"
-      months > 0 -> "$months months ago"
-      weeks > 0 -> "$weeks weeks ago"
-      days > 0 -> "$days days ago"
-      hours > 0 -> "$hours hours ago"
-      minutes > 0 -> "$minutes minutes ago"
+      years > 0 -> formattedStamp(years, "year")
+      months > 0 -> formattedStamp(months, "month")
+      weeks > 0 -> formattedStamp(weeks, "week")
+      days > 0 -> formattedStamp(days, "day")
+      hours > 0 -> formattedStamp(hours, "hour")
+      minutes > 0 -> formattedStamp(minutes, "minute")
       seconds < 5 -> "now"
-      else -> "$seconds seconds ago"
+      else -> formattedStamp(seconds, "second")
     }
+  }
+
+  private fun formattedStamp(value: Long, magnitude: String): String {
+    return "$value $magnitude${if (value > 1) "s" else ""} ago"
   }
 }

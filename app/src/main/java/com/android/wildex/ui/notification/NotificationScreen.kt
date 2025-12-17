@@ -182,8 +182,9 @@ fun NotificationView(
           modifier = Modifier.fillMaxWidth(),
       )
     }
-    items(notifications) {
+    items(notifications, key = { it.notificationId }) {
       SwipeToDeleteNotification(
+          itemId = it.notificationId,
           onDelete = { clearNotification(it.notificationId) },
           modifier =
               Modifier.clickable {

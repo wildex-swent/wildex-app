@@ -88,25 +88,26 @@ fun ActionsRow(onMarkAllRead: () -> Unit, onDeleteAll: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToDeleteNotification(
+    itemId: String,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
     animationDuration: Int = 500,
     content: @Composable RowScope.() -> Unit = {},
 ) {
-  var isDeleting by remember { mutableStateOf(false) }
+  var visible by remember(itemId) { mutableStateOf(true) }
 
   val dismissState = rememberSwipeToDismissBoxState(initialValue = SwipeToDismissBoxValue.Settled)
 
   LaunchedEffect(dismissState.currentValue) {
     if (dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd) {
-      isDeleting = true
+      visible = false
       delay(animationDuration.toLong())
       onDelete()
     }
   }
 
   AnimatedVisibility(
-      visible = !isDeleting,
+      visible = visible,
       exit =
           slideOutHorizontally(
               targetOffsetX = { fullWidth -> fullWidth },

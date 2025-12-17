@@ -47,7 +47,6 @@
 
     <!-- Edit Profile screen -->
     <string name="edit_profile_title">Edit Profile</string>
-    <string name="create_profile_title">Create Profile</string>
     <string name="edit_profile_save_successfully">Profile changes saved successfully</string>
     <string name="default_profile_picture_link">https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg</string>
 

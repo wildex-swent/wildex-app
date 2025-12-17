@@ -573,7 +573,7 @@ class HomeScreenTest {
   @Test
   fun postImageAndCommentCountClick_invokesCallback() {
     fakeObserver.setOnline(true)
-    var postClicked = false
+    var postClicked: Boolean
     runBlocking {
       postRepository.addPost(fullPost)
       homeScreenVM.refreshUIState()

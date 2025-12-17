@@ -63,6 +63,7 @@ import com.android.wildex.model.user.SimpleUser
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.FriendsOfflineScreen
 import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
@@ -130,7 +131,7 @@ fun FriendScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.FRIEND_SCREEN),
       topBar = { FriendScreenTopBar(onGoBack = onGoBack) },
   ) { paddingValues ->
     val pullState = rememberPullToRefreshState()

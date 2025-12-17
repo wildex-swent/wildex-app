@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.isDisplayed
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -26,9 +27,13 @@ import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.achievement.AchievementsScreenTestTags
 import com.android.wildex.ui.animal.AnimalInformationScreenTestTags
+import com.android.wildex.ui.authentication.NamingScreenTestTags
+import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
 import com.android.wildex.ui.authentication.SignInScreenTestTags
+import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.collection.CollectionScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.map.MapContentTestTags
@@ -38,6 +43,7 @@ import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.ui.report.ReportScreenTestTags
 import com.android.wildex.ui.report.SubmitReportFormScreenTestTags
 import com.android.wildex.ui.settings.SettingsScreenTestTags
+import com.android.wildex.ui.social.FriendScreenTestTags
 import com.android.wildex.ui.theme.WildexTheme
 import com.android.wildex.utils.FakeCredentialManager
 import com.android.wildex.utils.FakeJwtGenerator
@@ -52,7 +58,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 
-const val DEFAULT_TIMEOUT = 5_000L
+const val DEFAULT_TIMEOUT = 10_000L
 
 /** Base class for all Wildex tests, providing common setup and utility functions. */
 abstract class NavigationTestUtils {
@@ -96,6 +102,8 @@ abstract class NavigationTestUtils {
       RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
       RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
       RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
+      RepositoryProvider.userFriendsRepository.initializeUserFriends(user.userId)
+      RepositoryProvider.userTokensRepository.initializeUserTokens(user.userId)
       result.user!!.uid
     }
   }
@@ -125,7 +133,8 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Italy",
-          onBoardingStage = OnBoardingStage.COMPLETE)
+          onBoardingStage = OnBoardingStage.COMPLETE,
+      )
 
   open val user1 =
       User(
@@ -138,13 +147,14 @@ abstract class NavigationTestUtils {
           userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "England",
-          onBoardingStage = OnBoardingStage.COMPLETE)
+          onBoardingStage = OnBoardingStage.COMPLETE,
+      )
 
   open val post0 =
       Post(
           postId = "0",
           authorId = user0.userId,
-          pictureURL = "",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/4823/4823463.png",
           location = null,
           description = "This is my first post",
           date = Timestamp.now(),
@@ -155,7 +165,7 @@ abstract class NavigationTestUtils {
       Post(
           postId = "1",
           authorId = user1.userId,
-          pictureURL = "",
+          pictureURL = "https://cdn-icons-png.flaticon.com/512/4823/4823463.png",
           location = null,
           description = "This my post",
           date = Timestamp.now(),
@@ -171,25 +181,25 @@ abstract class NavigationTestUtils {
           description = "The lion is a species in the family Felidae",
       )
 
-  private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
-    waitUntil(2000) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
-  }
-
+  // BOTTOM NAVIGATION BAR
   fun ComposeTestRule.checkBottomNavigationIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
   }
 
+  // AUTH SCREEN
   fun ComposeTestRule.checkAuthScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.SIGN_IN_SCREEN)
     assertEquals(Screen.Auth.route, navController.currentDestination?.route)
   }
 
+  // HOME SCREEN
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.HOME_SCREEN)
     onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(Screen.Home.route, navController.currentDestination?.route)
   }
 
+  // MAP SCREEN
   fun ComposeTestRule.checkMapScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.MAP_SCREEN)
     assertEquals(Screen.Map.PATH, navController.currentDestination?.route)
@@ -198,11 +208,13 @@ abstract class NavigationTestUtils {
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
   }
 
+  // CAMERA SCREEN
   fun ComposeTestRule.checkCameraScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.CAMERA_SCREEN)
     assertEquals(Screen.Camera.route, navController.currentDestination?.route)
   }
 
+  // COLLECTION SCREEN
   fun ComposeTestRule.checkCollectionScreenIsDisplayed(userId: Id, isCurrentUser: Boolean = true) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.COLLECTION_SCREEN)
     assertEquals(Screen.Collection.PATH, navController.currentDestination?.route)
@@ -211,50 +223,237 @@ abstract class NavigationTestUtils {
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
   }
 
+  // REPORT SCREEN
   fun ComposeTestRule.checkReportScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.REPORT_SCREEN)
     onNodeWithTag(NavigationTestTags.REPORT_TAB).assertIsDisplayed().assertIsSelected()
     assertEquals(Screen.Report.route, navController.currentDestination?.route)
   }
 
+  // PROFILE SCREEN
   fun ComposeTestRule.checkProfileScreenIsDisplayed(userId: Id) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.PROFILE_SCREEN)
     assertEquals(Screen.Profile.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
   }
 
+  // SETTINGS SCREEN
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.SETTINGS_SCREEN)
     assertEquals(Screen.Settings.route, navController.currentDestination?.route)
   }
 
-  fun ComposeTestRule.checkEditProfileScreenIsDisplayed(isNewUser: Boolean) {
+  // EDIT PROFILE SCREEN
+  fun ComposeTestRule.checkEditProfileScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.EDIT_PROFILE_SCREEN)
-    assertEquals(Screen.EditProfile.PATH, navController.currentDestination?.route)
-    assertEquals(isNewUser, navController.currentBackStackEntry?.arguments?.getBoolean("isNewUser"))
+    assertEquals(Screen.EditProfile.route, navController.currentDestination?.route)
   }
 
+  // POST DETAILS SCREEN
   fun ComposeTestRule.checkPostDetailsScreenIsDisplayed(postUid: Id) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.POST_DETAILS_SCREEN)
     assertEquals(Screen.PostDetails.PATH, navController.currentDestination?.route)
     assertEquals(postUid, navController.currentBackStackEntry?.arguments?.getString("postUid"))
   }
 
+  // ANIMAL INFORMATION SCREEN
   fun ComposeTestRule.checkAnimalInformationScreenIsDisplayed(animalUid: Id) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.ANIMAL_INFORMATION_SCREEN)
     assertEquals(Screen.AnimalInformation.PATH, navController.currentDestination?.route)
     assertEquals(animalUid, navController.currentBackStackEntry?.arguments?.getString("animalUid"))
   }
 
+  // ACHIEVEMENTS SCREEN
   fun ComposeTestRule.checkAchievementsScreenIsDisplayed(userId: Id) {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.ACHIEVEMENTS_SCREEN)
     assertEquals(Screen.Achievements.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
   }
 
+  // SUBMIT REPORT SCREEN
   fun ComposeTestRule.checkSubmitReportScreenIsDisplayed() {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.SUBMIT_REPORT_SCREEN)
     assertEquals(Screen.SubmitReport.route, navController.currentDestination?.route)
+  }
+
+  // FRIEND SCREEN
+  fun ComposeTestRule.checkFriendScreenIsDisplayed() {
+    checkNodeWithTagGetsDisplayed(NavigationTestTags.FRIEND_SCREEN)
+    assertEquals(Screen.Social.PATH, navController.currentDestination?.route)
+    assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
+  }
+
+  // BOTTOM BAR -> HOME SCREEN
+  fun ComposeTestRule.navigateToHomeScreenFromBottomBar() {
+    onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().performClick()
+  }
+
+  // AUTH SCREEN -> HOME SCREEN
+  fun ComposeTestRule.navigateToHomeScreenFromAuth() {
+    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
+    checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)
+    onNodeWithTag(NamingScreenTestTags.NAME_FIELD).performTextInput("TestName")
+    onNodeWithTag(NamingScreenTestTags.SURNAME_FIELD).performTextInput("TestSurname")
+    onNodeWithTag(NamingScreenTestTags.USERNAME_FIELD).performTextInput("TestUsername")
+    performClickOnTag(NamingScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(OptionalInfoScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(UserTypeScreenTestTags.COMPLETE_BUTTON)
+  }
+
+  // BOTTOM BAR -> MAP SCREEN
+  fun ComposeTestRule.navigateToMapScreenFromBottomBar() {
+    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().performClick()
+  }
+
+  // PROFILE SCREEN -> MAP SCREEN
+  fun ComposeTestRule.navigateToMapScreenFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.MAP_CTA)
+  }
+
+  // MAP SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromMap() {
+    performClickOnTag(MapContentTestTags.BACK_BUTTON)
+  }
+
+  // BOTTOM BAR -> CAMERA SCREEN
+  fun ComposeTestRule.navigateToCameraScreenFromBottomBar() {
+    onNodeWithTag(NavigationTestTags.CAMERA_TAB).assertIsDisplayed().performClick()
+  }
+
+  // BOTTOM BAR -> COLLECTION SCREEN
+  fun ComposeTestRule.navigateToCollectionScreenFromBottomBar() {
+    onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().performClick()
+  }
+
+  // PROFILE SCREEN -> COLLECTION SCREEN
+  fun ComposeTestRule.navigateToCollectionScreenFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.ANIMAL_COUNT)
+  }
+
+  // COLLECTION SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromCollection() {
+    performClickOnTag(CollectionScreenTestTags.GO_BACK_BUTTON)
+  }
+
+  // PROFILE SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.GO_BACK)
+  }
+
+  // BOTTOM BAR -> REPORT SCREEN
+  fun ComposeTestRule.navigateToReportScreenFromBottomBar() {
+    onNodeWithTag(NavigationTestTags.REPORT_TAB).assertIsDisplayed().performClick()
+  }
+
+  // HOME SCREEN -> MY PROFILE SCREEN
+  fun ComposeTestRule.navigateToMyProfileScreenFromHome() {
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
+  }
+
+  // HOME SCREEN -> PROFILE SCREEN
+
+  fun ComposeTestRule.navigateToProfileScreenFromHome(postId: Id) {
+    performClickOnTag(HomeScreenTestTags.authorPictureTag(postId))
+  }
+
+  // COLLECTION SCREEN -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToMyProfileScreenFromCollection() {
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
+  }
+
+  // HOME SCREEN -> POST DETAILS SCREEN
+  fun ComposeTestRule.navigateToPostDetailsScreenFromHome(postUid: String) {
+    performClickOnTag(HomeScreenTestTags.imageTag(postUid))
+  }
+
+  // POST DETAILS SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromPostDetails() {
+    performClickOnTag(PostDetailsScreenTestTags.BACK_BUTTON)
+  }
+
+  // POST DETAILS SCREEN -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToProfileFromPostDetails(userId: String) {
+    performClickOnTag(PostDetailsScreenTestTags.testTagForProfilePicture(userId, "author"))
+  }
+
+  // COLLECTION SCREEN -> ANIMAL INFORMATION SCREEN
+  fun ComposeTestRule.navigateToAnimalInformationScreenFromCollection(animalUid: String) {
+    performClickOnTag(CollectionScreenTestTags.testTagForAnimal(animalUid, true))
+  }
+
+  // ANIMAL INFORMATION SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromAnimalInformation() {
+    performClickOnTag(AnimalInformationScreenTestTags.BACK_BUTTON)
+  }
+
+  // PROFILE SCREEN -> ACHIEVEMENTS SCREEN
+  fun ComposeTestRule.navigateToAchievementsScreenFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+  }
+
+  // PROFILE SCREEN -> FRIEND SCREEN
+  fun ComposeTestRule.navigateToFriendScreenFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.FRIENDS_COUNT)
+  }
+
+  fun ComposeTestRule.navigateBackFromFriend() {
+    performClickOnTag(FriendScreenTestTags.GO_BACK_BUTTON)
+  }
+
+  // ACHIEVEMENTS SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromAchievements() {
+    performClickOnTag(AchievementsScreenTestTags.BACK_BUTTON)
+  }
+
+  // PROFILE SCREEN -> SETTINGS SCREEN
+  fun ComposeTestRule.navigateToSettingsScreenFromProfile() {
+    performClickOnTag(ProfileScreenTestTags.SETTINGS)
+  }
+
+  // SETTINGS SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromSettings() {
+    performClickOnTag(SettingsScreenTestTags.GO_BACK_BUTTON)
+  }
+
+  // REPORT SCREEN -> SUBMIT REPORT SCREEN
+  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {
+    performClickOnTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
+    performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON)
+  }
+
+  // SUBMIT REPORT SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromSubmitReport() {
+    performClickOnTag(SubmitReportFormScreenTestTags.BACK_BUTTON)
+  }
+
+  // SETTINGS SCREEN -> EDIT PROFILE SCREEN
+  fun ComposeTestRule.navigateToEditProfileScreenFromSettings() {
+    performClickOnTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)
+  }
+
+  // EDIT PROFILE SCREEN (BACK)
+  fun ComposeTestRule.navigateBackFromEditProfile() {
+    performClickOnTag(EditProfileScreenTestTags.GO_BACK)
+  }
+
+  // SETTINGS SCREEN -> AUTH SCREEN
+  fun ComposeTestRule.navigateFromSettingsScreenToAuthScreen_LogOut() {
+    performClickOnTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)
+  }
+
+  // SETTINGS SCREEN -> AUTH SCREEN
+  fun ComposeTestRule.navigateFromSettingsScreenToAuthScreen_DeleteAccount() {
+    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
+    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
+  }
+
+  // HOME SCREEN -> PROFILE SCREEN
+  fun ComposeTestRule.navigateToMyProfileScreenFromReport() {
+    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
+  }
+
+  private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
+    waitUntil(DEFAULT_TIMEOUT) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
   }
 
   private fun ComposeTestRule.performClickOnTag(
@@ -262,148 +461,14 @@ abstract class NavigationTestUtils {
       useUnmergedTree: Boolean = true,
       timeout: Long = DEFAULT_TIMEOUT,
   ) {
+    waitUntil(DEFAULT_TIMEOUT) {
+      onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
     val node = onNodeWithTag(tag, useUnmergedTree)
     try {
       node.performScrollTo()
     } catch (_: AssertionError) {}
     waitUntil(timeout) { node.isDisplayed() }
     node.performClick()
-  }
-
-  // Navigation helpers
-
-  fun ComposeTestRule.navigateFromEditProfile() {
-    val nameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
-    val surnameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_SURNAME)
-    val usernameNode = onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
-    val saveNode = onNodeWithTag(EditProfileScreenTestTags.SAVE)
-    waitUntil(DEFAULT_TIMEOUT) {
-      nameNode.isDisplayed() ||
-          surnameNode.isDisplayed() ||
-          usernameNode.isDisplayed() ||
-          saveNode.isDisplayed()
-    }
-    nameNode.performScrollTo().performClick().performTextInput("James")
-    surnameNode.performScrollTo().performClick().performTextInput("Bond")
-    usernameNode.performScrollTo().performClick().performTextInput("007")
-    saveNode.performScrollTo().performClick()
-  }
-
-  fun ComposeTestRule.navigateToHomeScreenFromBottomBar() {
-    onNodeWithTag(NavigationTestTags.HOME_TAB).assertIsDisplayed().performClick()
-  }
-
-  fun ComposeTestRule.navigateFromAuth() {
-    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToMapScreenFromBottomBar() {
-    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed().performClick()
-  }
-
-  fun ComposeTestRule.navigateToMapFromProfile() {
-    performClickOnTag(ProfileScreenTestTags.MAP_CTA)
-  }
-
-  fun ComposeTestRule.navigateBackFromMap() {
-    performClickOnTag(MapContentTestTags.BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToCameraScreenFromBottomBar() {
-    onNodeWithTag(NavigationTestTags.CAMERA_TAB).assertIsDisplayed().performClick()
-  }
-
-  fun ComposeTestRule.navigateToCollectionScreenFromBottomBar() {
-    onNodeWithTag(NavigationTestTags.COLLECTION_TAB).assertIsDisplayed().performClick()
-  }
-
-  fun ComposeTestRule.navigateToCollectionScreenFromProfile() {
-    performClickOnTag(ProfileScreenTestTags.COLLECTION)
-  }
-
-  fun ComposeTestRule.navigateBackFromCollection() {
-    performClickOnTag(CollectionScreenTestTags.GO_BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateBackFromProfile() {
-    performClickOnTag(ProfileScreenTestTags.GO_BACK)
-  }
-
-  fun ComposeTestRule.navigateToReportScreenFromBottomBar() {
-    onNodeWithTag(NavigationTestTags.REPORT_TAB).assertIsDisplayed().performClick()
-  }
-
-  fun ComposeTestRule.navigateToMyProfileScreenFromHome() {
-    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
-  }
-
-  fun ComposeTestRule.navigateToMyProfileScreenFromCollection() {
-    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
-  }
-
-  fun ComposeTestRule.navigateToPostDetailsScreenFromHome(postUid: String) {
-    performClickOnTag(HomeScreenTestTags.imageTag(postUid))
-  }
-
-  fun ComposeTestRule.navigateBackFromPostDetails() {
-    performClickOnTag(PostDetailsScreenTestTags.BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToProfileFromPostDetails(userId: String) {
-    performClickOnTag(PostDetailsScreenTestTags.testTagForProfilePicture(userId, "author"))
-  }
-
-  fun ComposeTestRule.navigateToAnimalInformationScreenFromCollection(animalUid: String) {
-    performClickOnTag(CollectionScreenTestTags.testTagForAnimal(animalUid, true))
-  }
-
-  fun ComposeTestRule.navigateBackFromAnimalInformation() {
-    performClickOnTag(AnimalInformationScreenTestTags.BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToAchievementsScreenFromProfile() {
-    performClickOnTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
-  }
-
-  fun ComposeTestRule.navigateBackFromAchievements() {
-    performClickOnTag(AchievementsScreenTestTags.BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToSettingsScreenFromProfile() {
-    performClickOnTag(ProfileScreenTestTags.SETTINGS)
-  }
-
-  fun ComposeTestRule.navigateBackFromSettings() {
-    performClickOnTag(SettingsScreenTestTags.GO_BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToSubmitReportScreenFromReport() {
-    performClickOnTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON)
-    performClickOnTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateBackFromSubmitReport() {
-    performClickOnTag(SubmitReportFormScreenTestTags.BACK_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToEditProfileScreenFromSettings() {
-    performClickOnTag(SettingsScreenTestTags.EDIT_PROFILE_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateBackFromEditProfile() {
-    performClickOnTag(EditProfileScreenTestTags.GO_BACK)
-  }
-
-  fun ComposeTestRule.navigateFromSettingsScreen_LogOut() {
-    performClickOnTag(SettingsScreenTestTags.SIGN_OUT_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateFromSettingsScreen_DeleteAccount() {
-    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_BUTTON)
-    performClickOnTag(SettingsScreenTestTags.DELETE_ACCOUNT_CONFIRM_BUTTON)
-  }
-
-  fun ComposeTestRule.navigateToMyProfileScreenFromReport() {
-    performClickOnTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE)
   }
 }

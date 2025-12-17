@@ -116,10 +116,8 @@ class EditProfileViewModel(
    *
    * Inline comments: this method may perform an upload to remote storage, build a new User object,
    * and call the repository to update the user. Errors set the error state.
-   *
-   * @param onSave Callback invoked when save completes successfully.
    */
-  fun saveProfileChanges(onSave: () -> Unit) {
+  fun saveProfileChanges() {
     if (!_uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
       return
@@ -157,7 +155,6 @@ class EditProfileViewModel(
         clearErrorMsg()
         _uiState.value =
             _uiState.value.copy(isLoading = false, isError = false, profileSaved = true)
-        onSave()
       } catch (e: Exception) {
         Log.e("EditProfileViewModel", "Error saving profile changes", e)
         setErrorMsg("Failed to save profile changes: ${e.message ?: "unknown"}")

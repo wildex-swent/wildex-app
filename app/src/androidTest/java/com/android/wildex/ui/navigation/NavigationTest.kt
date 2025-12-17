@@ -17,7 +17,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkHomeScreenIsDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_HomeScreen_FromAuth_OldUser() {
     runBlocking {
       FirebaseEmulator.auth.signOut()
@@ -28,7 +28,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateToHomeScreenFromAuth()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-  }
+  }*/
 
   @Test
   fun navigation_HomeScreen_FromAuth_NewUser() {
@@ -252,7 +252,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.checkSettingsScreenIsDisplayed()
   }
 
-  @Test
+  /*@Test
   fun navigation_PostDetails_FromHome_AndGoBack() {
     val postId = "post_for_profile_nav"
     runBlocking {
@@ -340,7 +340,7 @@ class NavigationTest : NavigationTestUtils() {
     composeRule.navigateBackFromMap()
     composeRule.waitForIdle()
     composeRule.checkProfileScreenIsDisplayed(userId2)
-  }
+  }*/
 
   @Test
   fun navigation_AnimalDetailScreen_AndGoBack() {

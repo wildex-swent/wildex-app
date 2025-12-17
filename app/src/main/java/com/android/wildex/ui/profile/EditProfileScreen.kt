@@ -84,8 +84,6 @@ object EditProfileScreenTestTags {
 fun EditProfileScreen(
     editScreenViewModel: EditProfileViewModel = viewModel(),
     onGoBack: () -> Unit = {},
-    onSave: () -> Unit = {},
-    isNewUser: Boolean = false,
 ) {
   LaunchedEffect(Unit) { editScreenViewModel.loadUIState() }
   val uiState by editScreenViewModel.uiState.collectAsState()
@@ -104,7 +102,7 @@ fun EditProfileScreen(
       }
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.EDIT_PROFILE_SCREEN),
-      topBar = { EditProfileTopBar(isNewUser, onGoBack) },
+      topBar = { EditProfileTopBar(onGoBack) },
   ) { pd ->
     if (isOnline) {
       when {
@@ -113,8 +111,6 @@ fun EditProfileScreen(
         else ->
             EditView(
                 editScreenViewModel = editScreenViewModel,
-                onSave = onSave,
-                isNewUser = isNewUser,
                 pd = pd,
                 uiState = uiState,
                 pickImageLauncher = pickImageLauncher,
@@ -139,8 +135,6 @@ fun EditProfileScreen(
 @Composable
 fun EditView(
     editScreenViewModel: EditProfileViewModel = viewModel(),
-    onSave: () -> Unit = {},
-    isNewUser: Boolean = false,
     pd: PaddingValues = PaddingValues(0.dp),
     uiState: EditProfileUIState,
     pickImageLauncher: ManagedActivityResultLauncher<String, Uri?>,
@@ -272,13 +266,7 @@ fun EditView(
     }
     Spacer(modifier = Modifier.height(8.dp))
     Button(
-        onClick = {
-          editScreenViewModel.saveProfileChanges {
-            if (isNewUser) {
-              onSave()
-            }
-          }
-        },
+        onClick = { editScreenViewModel.saveProfileChanges() },
         enabled = uiState.isValid,
         shape = RoundedCornerShape(8.dp),
         modifier =

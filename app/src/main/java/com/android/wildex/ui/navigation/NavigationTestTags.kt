@@ -23,6 +23,7 @@ object NavigationTestTags {
   const val PROFILE_SCREEN = "ProfileScreen"
   const val EDIT_PROFILE_SCREEN = "EditProfileScreen"
   const val SUBMIT_REPORT_SCREEN = "SubmitReportScreen"
+  const val FRIEND_SCREEN = "FriendScreen"
 
   fun getTabTestTag(tab: Tab): String =
       when (tab) {

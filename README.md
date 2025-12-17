@@ -51,12 +51,12 @@
 ## About The Project
 
 <p align="center">
-  <img src="docs/assets/welcome.jpg" width="150">
-  <img src="docs/assets/home.jpg" width="150">
-  <img src="docs/assets/map.jpg" width="150">
-  <img src="docs/assets/post.jpg" width="150">
-  <img src="docs/assets/collection.jpg" width="150">
-  <img src="docs/assets/report.jpg" width="150">
+  <img src="docs/assets/welcome.png" width="180" alt="">
+  <img src="docs/assets/home.png" width="180" alt="">
+  <img src="docs/assets/map.png" width="180" alt="">
+  <img src="docs/assets/post.png" width="180" alt="">
+  <img src="docs/assets/collection.png" width="180" alt="">
+  <img src="docs/assets/report.png" width="180" alt="">
 </p>
 
 **Wildex** is a mobile application focused on wildlife exploration and reporting.   It allows users to identify animals from a picture, post sightings, and get informations about the encountered animals. In addition to regular sightings, users can create reports for animals that appear injured, endangered, or otherwise at risk. These reports are meant to make potentially critical situations visible to professional users who are able to respond.

@@ -1,5 +1,6 @@
 package com.android.wildex.ui.notification
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -140,6 +141,7 @@ fun NotificationView(
     clearNotification: (Id) -> Unit,
     clearAllNotifications: () -> Unit,
 ) {
+  Log.w(null, "Rendering NotificationView with ${notifications.size} notifications")
 
   LazyColumn(
       modifier =
@@ -156,8 +158,9 @@ fun NotificationView(
           modifier = Modifier.fillMaxWidth(),
       )
     }
-    items(notifications) {
+    items(notifications, key = { it.notificationId }) {
       SwipeToDeleteNotification(
+          itemId = it.notificationId,
           onDelete = { clearNotification(it.notificationId) },
           modifier =
               Modifier.clickable {

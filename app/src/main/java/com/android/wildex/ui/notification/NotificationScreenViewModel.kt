@@ -140,9 +140,7 @@ class NotificationScreenViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       val notifications = state.notifications
-      val newNotifications = notifications.map {
-        it.copy(notificationReadState = true)
-      }
+      val newNotifications = notifications.map { it.copy(notificationReadState = true) }
       _uiState.value = state.copy(notifications = newNotifications)
       try {
         notificationRepository.markAllNotificationsForUserAsRead(currentUserId)
@@ -206,7 +204,7 @@ class NotificationScreenViewModel(
     }
   }
 
-  private fun formattedStamp(value: Long, magnitude: String): String{
+  private fun formattedStamp(value: Long, magnitude: String): String {
     return "$value $magnitude${if (value > 1) "s" else ""} ago"
   }
 }

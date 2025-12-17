@@ -10,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 
 const val LIKE_COLLECTION_PATH = "likes"
 
+/** Firestore implementation of the [LikeRepository] */
 class LikeRepositoryFirestore(private val db: FirebaseFirestore) : LikeRepository {
 
   override fun getNewLikeId(): String {

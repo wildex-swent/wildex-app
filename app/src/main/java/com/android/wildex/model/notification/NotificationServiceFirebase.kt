@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/** Service to handle Firebase Cloud Messaging notifications. */
 class NotificationServiceFirebase : FirebaseMessagingService() {
 
   override fun onNewToken(token: String) {

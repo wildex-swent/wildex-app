@@ -9,6 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 const val USER_ACHIEVEMENTS_COLLECTION_PATH = "userAchievements"
 
+/** Implementation of [UserAchievementsRepository] using Firestore */
 class UserAchievementsRepositoryFirestore(private val db: FirebaseFirestore) :
     UserAchievementsRepository {
 

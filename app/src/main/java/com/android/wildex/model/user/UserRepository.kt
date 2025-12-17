@@ -14,7 +14,11 @@ interface UserRepository {
    */
   suspend fun getUser(userId: Id): User
 
-  /** Retrieves all users identifiers in the repository. */
+  /**
+   * Retrieves all users in the repository.
+   *
+   * @return the list of all User objects.
+   */
   suspend fun getAllUsers(): List<User>
 
   /**
@@ -30,7 +34,6 @@ interface UserRepository {
    * Creates a new user in the repository.
    *
    * @param user The User object containing the details of the user to create.
-   * @return `true` if the user was successfully created, `false` otherwise.
    */
   suspend fun addUser(user: User)
 
@@ -38,7 +41,6 @@ interface UserRepository {
    * Updates an existing user in the repository.
    *
    * @param newUser The User object containing the updated details of the user.
-   * @return `true` if the user was successfully updated, `false` otherwise.
    * @throws Exception if the User is not found
    */
   suspend fun editUser(userId: Id, newUser: User)
@@ -47,7 +49,6 @@ interface UserRepository {
    * Deletes a user from the repository by their unique identifier.
    *
    * @param userId The unique identifier of the user to delete.
-   * @return `true` if the user was successfully deleted, `false` otherwise.
    * @throws Exception if the User is not found
    */
   suspend fun deleteUser(userId: Id)

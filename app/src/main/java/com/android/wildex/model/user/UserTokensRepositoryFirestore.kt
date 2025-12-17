@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.messaging
 import kotlinx.coroutines.tasks.await
 
+/** Firestore implementation of [UserTokensRepository]. */
 class UserTokensRepositoryFirestore(db: FirebaseFirestore) : UserTokensRepository {
   companion object {
     private const val USER_TOKENS_COLLECTION_PATH = "userTokens"

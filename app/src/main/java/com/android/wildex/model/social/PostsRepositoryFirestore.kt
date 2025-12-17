@@ -12,6 +12,7 @@ import kotlinx.coroutines.tasks.await
 
 const val POST_COLLECTION_PATH = "posts"
 
+/** Implementation of [PostsRepository] using Firestore */
 class PostsRepositoryFirestore(private val db: FirebaseFirestore, private val cache: IPostsCache) :
     PostsRepository {
 
@@ -117,6 +118,12 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore, private val ca
     cache.clearAll()
   }
 
+  /**
+   * Converts a Firestore [DocumentSnapshot] to a [Post] object.
+   *
+   * @param doc the Firestore document snapshot to convert
+   * @return the corresponding [Post] object, or null if conversion fails
+   */
   private fun convertToPost(doc: DocumentSnapshot): Post? {
     return try {
       val postId = doc.id
@@ -152,6 +159,7 @@ class PostsRepositoryFirestore(private val db: FirebaseFirestore, private val ca
     }
   }
 
+  /** Throws an exception indicating a missing required field in the PostRepository. */
   private fun throwMissingFieldException(field: String): Nothing {
     throw IllegalArgumentException("Missing required field in PostRepository: $field")
   }

@@ -14,6 +14,14 @@ class UserCache(
     private val userDataStore: DataStore<UserCacheStorage>,
     private val connectivityObserver: ConnectivityObserver,
 ) : IUserCache {
+
+  /**
+   * Checks if the cached data is stale based on the last updated timestamp and current connectivity
+   * status.
+   *
+   * @param lastUpdated The timestamp of the last update in milliseconds.
+   * @return True if the data is stale and should be refreshed; false otherwise.
+   */
   private fun isStale(lastUpdated: Long): Boolean {
     val isOnline = connectivityObserver.isOnline.value
     val currentTime = System.currentTimeMillis()

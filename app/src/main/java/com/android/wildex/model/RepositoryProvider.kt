@@ -52,7 +52,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 
-/** Provides a single instance of all the repository in the app. */
+/** Provides a single instance of all the Firestore repositories in the app. */
 object RepositoryProvider {
   private lateinit var appContext: Context
   private lateinit var connectivityObserver: ConnectivityObserver

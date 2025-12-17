@@ -9,6 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 const val ANIMAL_COLLECTION_PATH = "animals"
 
+/** Firestore implementation of the [AnimalRepository]. */
 class AnimalRepositoryFirestore(
     private val db: FirebaseFirestore,
     private val cache: IAnimalCache

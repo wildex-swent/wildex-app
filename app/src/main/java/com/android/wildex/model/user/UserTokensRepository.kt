@@ -2,6 +2,7 @@ package com.android.wildex.model.user
 
 import com.android.wildex.model.utils.Id
 
+/** Repository interface for managing UserTokens. */
 interface UserTokensRepository {
 
   /** Retrieves the current token for a user. */

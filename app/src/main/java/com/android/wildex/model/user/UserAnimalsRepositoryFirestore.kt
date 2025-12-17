@@ -146,10 +146,10 @@ class UserAnimalsRepositoryFirestore(
   }
 
   /**
-   * Ensures one userAnimals item in the document reference has a specific userId.
+   * Ensures one userAnimals item in the document reference has the given userId.
    *
    * @param docRef The document reference containing all userAnimals.
-   * @param commentId The ID that one userAnimals should have.
+   * @param userId The ID that one userAnimals should have.
    */
   private suspend fun ensureDocumentExists(docRef: DocumentReference, userId: String) {
     val doc = docRef.get().await()

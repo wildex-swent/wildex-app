@@ -20,7 +20,7 @@ import com.android.wildex.model.utils.Id
  * Use case: Delete a user's account
  *
  * Deleting a user's account means deleting the User object itself but also all other objects linked
- * to this User. This includes a UserSettings, a UserAnimals and a UserAchievements.
+ * to this User. This includes UserSettings, UserAnimals, UserAchievements, etc.
  */
 class DeleteUserUseCase(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,

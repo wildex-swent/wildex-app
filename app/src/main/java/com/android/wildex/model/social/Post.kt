@@ -12,6 +12,7 @@ import com.google.firebase.Timestamp
  * @property authorId The ID of the user who created the post.
  * @property pictureURL The URL of the image in the post.
  * @property location The location where the post was made.
+ * @property description The description of the post.
  * @property date The date and time when the post was created.
  * @property animalId The ID of the animal related to the post.
  */

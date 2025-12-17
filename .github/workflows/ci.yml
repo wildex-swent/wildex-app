@@ -142,6 +142,14 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache --stacktrace
 
+      - name: Upload Android Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-test-report
+          path: app/build/reports/androidTests/connected/
+          retention-days: 5
+
       # This step generates the coverage report which will be uploaded to sonar
       - name: Generate Coverage Report
         run: |

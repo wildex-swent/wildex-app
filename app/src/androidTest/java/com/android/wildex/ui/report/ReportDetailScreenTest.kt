@@ -22,6 +22,7 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.utils.LocalRepositories
 import com.android.wildex.utils.offline.FakeConnectivityObserver
 import com.google.firebase.Timestamp
@@ -120,7 +121,6 @@ class ReportDetailScreenTest {
       }
     }
     composeRule.waitForIdle()
-    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.SCREEN).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.PULL_TO_REFRESH).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.CONTENT_LIST).assertIsDisplayed()
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.HERO_IMAGE).assertExists()
@@ -196,7 +196,7 @@ class ReportDetailScreenTest {
         .onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_FIELD)
         .performTextInput(longComment)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_INPUT_SEND).performClick()
-    composeRule.onNodeWithTag(ReportDetailsScreenTestTags.SCREEN).performClick()
+    composeRule.onNodeWithTag(NavigationTestTags.REPORT_DETAILS_SCREEN).performClick()
     composeRule.waitForIdle()
     composeRule.scrollToTagWithinScroll(ReportDetailsScreenTestTags.COMMENT_CARD)
     composeRule.onNodeWithTag(ReportDetailsScreenTestTags.COMMENT_CARD).assertExists()

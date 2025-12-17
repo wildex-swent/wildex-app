@@ -27,6 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the camera screen and post creation flow.
+ *
+ * Contains the current image Uri, detection response, description and various loading flags.
+ */
 data class CameraUiState(
     val animalDetectResponse: AnimalDetectResponse? = null,
     val currentImageUri: Uri? = null,
@@ -52,7 +57,7 @@ class CameraScreenViewModel(
   private val _uiState = MutableStateFlow(CameraUiState())
   val uiState: StateFlow<CameraUiState> = _uiState.asStateFlow()
 
-  /** resets to default state where camera preview is shown */
+  /** Resets the ViewModel state to the default camera preview state. */
   fun resetState() {
     _uiState.value = CameraUiState()
   }

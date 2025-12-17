@@ -144,6 +144,18 @@ fun AchievementDetailsDialog(achievement: AchievementUIState, onClose: () -> Uni
   }
 }
 
+/**
+ * Small status badge displayed in the achievement details dialog.
+ *
+ * This composable shows an icon and a text label on a rounded background, centered horizontally
+ * inside a ColumnScope. It is intended to indicate whether an achievement is completed or in
+ * progress.
+ *
+ * @param text The status text to display (e.g. "Completed" or "In progress").
+ * @param icon The icon to display on the left of the text.
+ * @param background The background color of the badge.
+ * @param contentColor The color used for the icon and text.
+ */
 @Composable
 private fun ColumnScope.AchievementStatus(
     text: String,

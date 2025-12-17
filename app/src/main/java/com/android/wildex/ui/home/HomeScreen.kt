@@ -804,6 +804,9 @@ private fun PostSlider(
                     coordinates ->
                   val heightPx = coordinates.size.height
                   val h = with(density) { heightPx.toDp() }
+                  // Complex measurement: we capture the measured height of the image on first
+                  // layout
+                  // to reuse it when showing the map preview page so the pager keeps stable height.
                   if (h > 0.dp) imageHeight = h
                 },
             onTap = { onPostClick() },

@@ -208,13 +208,13 @@ fun FriendScreenTopBar(onGoBack: () -> Unit = {}) {
 }
 
 /**
- * Tab selection Composable for the current user when viewing their own friend screen. It allows to
- * switch from the friends tab, where the user can see his friend list as well as new friend
- * suggestions, to the requests tab where the user can manage their sent requests and received
- * requests.
+ * Tab selection Composable for the current user when viewing their own friend screen.
+ *
+ * Note: the component computes a small fixed height from the window size to adapt visually across
+ * devices; this is why it reads LocalWindowInfo and divides the height.
  *
  * @param selectedTab the initially selected tab
- * @param onTabSelected callback function to be called when the user wants to switch tabs
+ * @param onTabSelected callback invoked when the user selects a tab
  */
 @Composable
 fun CurrentUserSelectionTab(selectedTab: String, onTabSelected: (String) -> Unit) {
@@ -223,6 +223,7 @@ fun CurrentUserSelectionTab(selectedTab: String, onTabSelected: (String) -> Unit
           LocalContext.current.getString(R.string.friends_tab_title),
           LocalContext.current.getString(R.string.requests_tab_title),
       )
+  // Inline comment: compute a compact height based on window height to ensure consistent look.
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   Row(
       modifier = Modifier.fillMaxWidth().height(screenHeight / 55),
@@ -800,6 +801,19 @@ fun RequestsTabContent(
   }
 }
 
+/**
+ * Content of the friend screen when the current user views their own friends.
+ *
+ * Renders the search bar, tab selection and either the friends list or the requests tab content.
+ *
+ * @param selectedTab current selected tab label
+ * @param setSelectedTab callback to switch tabs
+ * @param friendScreenViewModel ViewModel instance providing actions and state
+ * @param state current UI state for the friends screen
+ * @param onProfileClick callback when a profile picture is clicked
+ * @param userIndex search index used by the user search bar
+ * @param currentUserId id of the current user
+ */
 @Composable
 fun CurrentUserFriendScreenContent(
     selectedTab: String,
@@ -824,18 +838,13 @@ fun CurrentUserFriendScreenContent(
 }
 
 /**
- * Content of the friend screen when viewing another user's friend screen. It has only one section:
- * the friend list, in which the current user can interact freely with users. If any user in the
- * list has sent a friend request to the current user, they can directly accept or decline it from
- * there. If the current user sent a friend request to a user in the list, they can see it and
- * cancel it directly from this screen.
+ * Content of the friend screen when viewing another user's friend list.
  *
- * @param viewModel viewModel needed to interact with the friendships/requests with users in the
- *   friend list
- * @param state state needed to get the friends of the screen's user as well as their respective
- *   status relative to the current user
- * @param onProfileClick callback function to be called when the current user clicks on a profile
- *   picture
+ * Renders the other user's friends and associated interactables (follow/unfollow, accept/decline).
+ *
+ * @param viewModel ViewModel instance providing actions
+ * @param state current UI state for the other user's friend screen
+ * @param onProfileClick callback when a profile picture is clicked
  */
 @Composable
 fun OtherUserFriendScreenContent(

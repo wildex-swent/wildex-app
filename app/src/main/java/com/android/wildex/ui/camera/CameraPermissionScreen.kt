@@ -43,6 +43,18 @@ object CameraPermissionScreenTestTags {
   const val CAMERA_PERMISSION_UPLOAD_BUTTON = "camera_permission_upload_button"
 }
 
+/**
+ * UI shown when the app lacks camera permission.
+ *
+ * Displays an explanatory message and provides actions to request permission or upload a photo from
+ * device storage.
+ *
+ * @param onRequestPermission Callback invoked when user requests the camera permission.
+ * @param onUploadClick Callback invoked when user chooses to upload an image instead.
+ * @param modifier Modifier applied to the root container.
+ * @param permissionRequestMsg Primary message explaining the permission need.
+ * @param extraRequestMsg Optional extra message with more details.
+ */
 @Composable
 fun CameraPermissionScreen(
     onRequestPermission: () -> Unit,

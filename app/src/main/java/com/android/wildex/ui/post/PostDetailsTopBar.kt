@@ -12,6 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
+/**
+ * Top bar used on the Post Details screen.
+ *
+ * Shows a back button and an actions button.
+ *
+ * @param onGoBack Called when the back button is pressed.
+ * @param onOpenActions Called when the actions (more) button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetailsTopBar(

@@ -29,8 +29,8 @@ object Achievements {
   val DOG_NAME = "domestic dog"
   val CAT_NAME = "domestic cat"
   val BIRD_NAME = "bird"
-  val BUNNY_NAME = "bunny"
-  val CENTIPEDE_NAME = "centipede"
+  val BUNNY_NAME = "mountain cottontail"
+  val MILLIPEDES_NAME = "millipedes"
 
   /** First Post — awarded for creating the first post. */
   val firstPost =
@@ -71,14 +71,14 @@ object Achievements {
           },
       )
 
-  /** Dog lover — awarded for publishing at least 5 dogs. */
-  val dogLover =
+  /** Dog fan — awarded for publishing at least 5 dogs. */
+  val dogFan =
       Achievement(
           achievementId = "achievement_4",
           pictureURL =
               "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/achievements%2FDog.png?alt=media&token=f1fc5a85-621f-4a22-bd72-1de57fe208ca",
           description = "Reach 5 dog posts",
-          name = "Dog Lover",
+          name = "Dog Fan",
           progress = { userId ->
             listOf(
                 Triple(
@@ -90,14 +90,14 @@ object Achievements {
           },
       )
 
-  /** Cat lover — awarded for publishing at least 5 cats. */
-  val catLover =
+  /** Cat fan — awarded for publishing at least 5 cats. */
+  val catFan =
       Achievement(
           achievementId = "achievement_5",
           pictureURL =
               "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/achievements%2FCat.png?alt=media&token=3dff771f-8792-48e4-a372-46de2b6c7261",
           description = "Reach 5 cat posts",
-          name = "Cat Lover",
+          name = "Cat Fan",
           progress = { userId ->
             listOf(
                 Triple(
@@ -109,20 +109,20 @@ object Achievements {
           },
       )
 
-  /** Insect lover — awarded for publishing at least 1 centipede. */
-  val insectLover =
+  /** Insect fan — awarded for publishing at least 1 centipede. */
+  val insectFan =
       Achievement(
           achievementId = "achievement_6",
           pictureURL =
               "https://firebasestorage.googleapis.com/v0/b/wildex-170b0.firebasestorage.app/o/achievements%2FInsect.png?alt=media&token=ee202c9d-18f4-4e17-804d-c9763bd770c0",
-          description = "Post a centipede",
-          name = "Insect Lover",
+          description = "Post a millipede",
+          name = "Insect Fan",
           progress = { userId ->
             listOf(
                 Triple(
-                    "Centipedes",
+                    "Millipedes",
                     postRepository.getAllPostsByGivenAuthor(userId).count {
-                      animalRepository.getAnimal(it.animalId).name == CENTIPEDE_NAME
+                      animalRepository.getAnimal(it.animalId).name == MILLIPEDES_NAME
                     },
                     1))
           },
@@ -426,9 +426,9 @@ object Achievements {
           firstPost,
           postMaster,
           postLegend,
-          dogLover,
-          catLover,
-          insectLover,
+          dogFan,
+          catFan,
+          insectFan,
           firstLike,
           socialButterfly,
           goldenHeart,

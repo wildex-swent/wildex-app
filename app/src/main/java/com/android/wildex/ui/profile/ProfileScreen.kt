@@ -107,7 +107,21 @@ object ProfileScreenTestTags {
   const val PULL_TO_REFRESH = "ProfileScreenPullToRefresh"
 }
 
-/** Profile Screen Composable */
+/**
+ * Top-level Profile screen composable.
+ *
+ * Observes the [ProfileScreenViewModel] state, handles loading / error / offline states and
+ * coordinates navigation callbacks for collection, achievements, friends and map.
+ *
+ * @param profileScreenViewModel ViewModel providing profile UI state and actions.
+ * @param userUid The id of the user whose profile is shown.
+ * @param onGoBack Called when navigating back.
+ * @param onSettings Called when opening settings (for owner).
+ * @param onCollection Callback when collection is requested.
+ * @param onAchievements Callback when achievements are requested.
+ * @param onFriends Callback when friends are requested.
+ * @param onMap Callback when map preview is requested.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -185,7 +199,19 @@ fun ProfileScreen(
   }
 }
 
-/** Profile Content Composable */
+/**
+ * Profile content area showing picture, bio, stats, achievements and optional map preview.
+ *
+ * @param user The full user object to be displayed.
+ * @param viewModel ViewModel instance used for interactive actions.
+ * @param state The current UI state snapshot.
+ * @param onAchievements Callback when achievements button is pressed.
+ * @param onCollection Callback when collection button is pressed.
+ * @param isOnline Whether the device is currently online.
+ * @param onMap Callback when the map preview is requested.
+ * @param onFriends Callback when the friends view is requested.
+ * @param showMap Whether to render the embedded mini map.
+ */
 @Composable
 fun ProfileContent(
     user: User,
@@ -392,7 +418,21 @@ fun ProfileDescription(description: String = "Bio:...") {
   }
 }
 
-/** Profile Stat Card Composable */
+/**
+ * Generic stat card used for Animals / Friends boxes.
+ *
+ * Inline comment: this composable adds a subtle scale animation when pressed using an interaction
+ * source and animateFloatAsState to provide tactile feedback.
+ *
+ * @param modifier Modifier to apply to the card.
+ * @param containerColor Card background color.
+ * @param contentColor Color for text and icon content.
+ * @param icon Composable slot for the icon.
+ * @param title Stat title string.
+ * @param value Stat value string.
+ * @param onClick Click callback.
+ * @param testTag Test tag for UI testing.
+ */
 @Composable
 private fun ProfileStatCard(
     modifier: Modifier = Modifier,
@@ -462,7 +502,14 @@ private fun ProfileStatCard(
   }
 }
 
-/** Profile Animals Composable */
+/**
+ * Animals stat card wrapper.
+ *
+ * @param modifier Modifier to apply.
+ * @param id User id used for navigation callback.
+ * @param onCollection Callback when the animals card is clicked.
+ * @param animalCount Current animals count for display.
+ */
 @Composable
 fun ProfileAnimals(
     modifier: Modifier = Modifier,
@@ -490,7 +537,14 @@ fun ProfileAnimals(
   )
 }
 
-/** Profile Friends Composable */
+/**
+ * Friends stat card wrapper.
+ *
+ * @param modifier Modifier to apply.
+ * @param id User id used for navigation callback.
+ * @param onFriends Callback when the friends card is clicked.
+ * @param friendCount Current friends count for display.
+ */
 @Composable
 fun ProfileFriends(
     modifier: Modifier = Modifier,
@@ -518,7 +572,12 @@ fun ProfileFriends(
   )
 }
 
-/** Remove friend button interactable element */
+/**
+ * Small unfollow button UI.
+ *
+ * @param onUnfollow Callback invoked on press.
+ * @param testTag Test tag used for automated tests.
+ */
 @Composable
 fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
   Box(
@@ -550,7 +609,12 @@ fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
       }
 }
 
-/** Send friend request interactable element */
+/**
+ * Small follow (send request) button UI.
+ *
+ * @param onFollow Callback invoked on press.
+ * @param testTag Test tag used for automated tests.
+ */
 @Composable
 fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
   Box(
@@ -582,7 +646,12 @@ fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
       }
 }
 
-/** Cancel sent request interactable element */
+/**
+ * UI shown when a sent friend request is pending.
+ *
+ * @param onCancel Callback to cancel the sent request.
+ * @param testTag Test tag for the element.
+ */
 @Composable
 fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
   Box(
@@ -608,7 +677,14 @@ fun SentRequestInteractable(onCancel: () -> Unit = {}, testTag: String) {
       }
 }
 
-/** Received friend request interactable element */
+/**
+ * UI controls shown when a friend request has been received (accept / decline).
+ *
+ * @param onAccept Callback to accept the request.
+ * @param onDecline Callback to decline the request.
+ * @param testTagAccept Test tag for accept button.
+ * @param testTagDecline Test tag for decline button.
+ */
 @Composable
 fun ReceivedRequestInteractable(
     onAccept: () -> Unit = {},
@@ -663,7 +739,13 @@ fun ReceivedRequestInteractable(
   }
 }
 
-/** Friend Request Button Composable */
+/**
+ * Chooses which friend interaction control to render based on [friendStatus].
+ *
+ * @param viewModel ViewModel to invoke actions on.
+ * @param friendStatus Current friend relationship status.
+ * @param modifier Modifier to apply to the container.
+ */
 @Composable
 fun ProfileFriendInteractable(
     viewModel: ProfileScreenViewModel,

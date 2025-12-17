@@ -4,6 +4,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.authentication.AuthRepository
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.notification.NotificationRepository
+import com.android.wildex.model.report.Report
 import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.social.CommentRepository
 import com.android.wildex.model.social.LikeRepository
@@ -16,6 +17,7 @@ import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
 import com.android.wildex.model.user.UserTokensRepository
 import com.android.wildex.model.user.UserType
+import com.android.wildex.model.utils.Location
 import com.android.wildex.usecase.user.DeleteUserUseCase
 import com.android.wildex.utils.MainDispatcherRule
 import com.google.firebase.Timestamp
@@ -83,6 +85,31 @@ class SettingsScreenViewModelTest {
           country = "France",
       )
 
+  private val u3 =
+      User(
+          userId = "userId3",
+          username = "otherUsername3",
+          name = "Alan",
+          surname = "Monkey",
+          bio = "This is my Alaa bio",
+          profilePictureURL =
+              "https://www.shareicon.net/data/512x512/2016/05/24/770137_man_512x512.png",
+          userType = UserType.PROFESSIONAL,
+          creationDate = Timestamp.now(),
+          country = "Spain",
+      )
+
+  private val report1 =
+      Report(
+          reportId = "reportId1",
+          imageURL = "fakeURL",
+          location = Location(latitude = 1.0, longitude = 2.0, name = "fakeName"),
+          date = Timestamp.now(),
+          description = "fakeDescription",
+          authorId = "otherUserId",
+          assigneeId = "userId3",
+      )
+
   @Before
   fun setUp() {
     userRepository = mockk()
@@ -105,6 +132,7 @@ class SettingsScreenViewModelTest {
             userSettingsRepository = userSettingsRepository,
             userRepository = userRepository,
             userTokensRepository = userTokensRepository,
+            reportRepository = reportRepository,
             currentUserId = "currentUserId",
             deleteUserUseCase =
                 DeleteUserUseCase(
@@ -126,6 +154,7 @@ class SettingsScreenViewModelTest {
 
     coEvery { userRepository.getUser("currentUserId") } returns u1
     coEvery { userRepository.getUser("otherUserId") } returns u2
+    coEvery { userRepository.getUser("userId3") } returns u3
     coEvery { userSettingsRepository.getEnableNotification("currentUserId") } returns false
     coEvery { userSettingsRepository.getAppearanceMode("currentUserId") } returns
         AppearanceMode.DARK
@@ -223,6 +252,24 @@ class SettingsScreenViewModelTest {
 
       val updatedState = viewModel.uiState.value
       assertEquals(UserType.PROFESSIONAL, updatedState.userType)
+    }
+  }
+
+  @Test
+  fun setUserType_from_professional_to_regular_unassigns_reports() {
+    mainDispatcherRule.runTest {
+      val updatedUser = u3.copy(userType = UserType.REGULAR)
+      coEvery { userRepository.editUser("userId3", updatedUser) } coAnswers {}
+      coEvery { reportRepository.getAllReportsByAssignee("userId3") } returns listOf(report1)
+      coEvery {
+        reportRepository.editReport("reportId1", report1.copy(assigneeId = null))
+      } coAnswers {}
+      viewModel.loadUIState(true)
+      viewModel.setUserType(UserType.REGULAR)
+      advanceUntilIdle()
+
+      val updatedState = viewModel.uiState.value
+      assertEquals(UserType.REGULAR, updatedState.userType)
     }
   }
 

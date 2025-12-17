@@ -23,4 +23,7 @@ interface UserAnimalsRepository {
 
   /** Delete the UserAnimals linked to the given user */
   suspend fun deleteUserAnimals(userId: Id)
+
+  /** Clears the user animals cache. */
+  suspend fun refreshCache()
 }

@@ -64,6 +64,7 @@ import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.offline.FriendsOfflineScreen
 
 object FriendScreenTestTags {
   const val GO_BACK_BUTTON = "friend_screen_go_back_button"
@@ -109,7 +110,7 @@ fun FriendScreen(
     userIndex: UserIndex =
         UserIndex(
             searchDataProvider =
-                SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)))
+                SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current))),
 ) {
   val context = LocalContext.current
   val uiState by friendScreenViewModel.uiState.collectAsState()
@@ -128,43 +129,50 @@ fun FriendScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(), topBar = { FriendScreenTopBar(onGoBack = onGoBack) }) {
-          paddingValues ->
-        val pullState = rememberPullToRefreshState()
+      modifier = Modifier.fillMaxSize(),
+      topBar = { FriendScreenTopBar(onGoBack = onGoBack) },
+  ) { paddingValues ->
+    val pullState = rememberPullToRefreshState()
 
-        PullToRefreshBox(
-            state = pullState,
-            isRefreshing = uiState.isRefreshing,
-            modifier =
-                Modifier.padding(paddingValues)
-                    .fillMaxSize()
-                    .testTag(FriendScreenTestTags.PULL_TO_REFRESH),
-            onRefresh = {
-              if (isOnline) friendScreenViewModel.refreshUIState(userId)
-              else friendScreenViewModel.refreshOffline()
-            }) {
-              when {
-                uiState.isError -> LoadingFail()
-                uiState.isLoading -> LoadingScreen()
-                else -> {
-                  Column(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.isCurrentUser) {
-                      CurrentUserFriendScreenContent(
-                          selectedTab,
-                          setSelectedTab,
-                          friendScreenViewModel,
-                          uiState,
-                          onProfileClick,
-                          userIndex,
-                          userId)
-                    } else {
-                      OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
-                    }
-                  }
-                }
+    PullToRefreshBox(
+        state = pullState,
+        isRefreshing = uiState.isRefreshing,
+        modifier =
+            Modifier.padding(paddingValues)
+                .fillMaxSize()
+                .testTag(FriendScreenTestTags.PULL_TO_REFRESH),
+        onRefresh = {
+          if (isOnline) friendScreenViewModel.refreshUIState(userId)
+          else friendScreenViewModel.refreshOffline()
+        },
+    ) {
+      if (isOnline) {
+        when {
+          uiState.isError -> LoadingFail()
+          uiState.isLoading -> LoadingScreen()
+          else -> {
+            Column(modifier = Modifier.fillMaxSize()) {
+              if (uiState.isCurrentUser) {
+                CurrentUserFriendScreenContent(
+                    selectedTab,
+                    setSelectedTab,
+                    friendScreenViewModel,
+                    uiState,
+                    onProfileClick,
+                    userIndex,
+                    userId,
+                )
+              } else {
+                OtherUserFriendScreenContent(friendScreenViewModel, uiState, onProfileClick)
               }
             }
+          }
+        }
+      } else {
+        FriendsOfflineScreen(innerPadding = paddingValues)
       }
+    }
+  }
 }
 
 /**
@@ -181,35 +189,41 @@ fun FriendScreenTopBar(onGoBack: () -> Unit = {}) {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_title),
             style = typography.titleLarge,
-            modifier = Modifier.testTag(FriendScreenTestTags.SCREEN_TITLE))
+            modifier = Modifier.testTag(FriendScreenTestTags.SCREEN_TITLE),
+        )
       },
       navigationIcon = {
         IconButton(
             onClick = { onGoBack() },
-            modifier = Modifier.testTag(FriendScreenTestTags.GO_BACK_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Filled.ChevronLeft,
-                  contentDescription = "Go Back",
-                  modifier = Modifier.fillMaxSize(0.8f))
-            }
-      })
+            modifier = Modifier.testTag(FriendScreenTestTags.GO_BACK_BUTTON),
+        ) {
+          Icon(
+              imageVector = Icons.Filled.ChevronLeft,
+              contentDescription = "Go Back",
+              modifier = Modifier.fillMaxSize(0.8f),
+          )
+        }
+      },
+  )
 }
 
 /**
- * Tab selection Composable for the current user when viewing their own friend screen. It allows to
- * switch from the friends tab, where the user can see his friend list as well as new friend
- * suggestions, to the requests tab where the user can manage their sent requests and received
- * requests.
+ * Tab selection Composable for the current user when viewing their own friend screen.
+ *
+ * Note: the component computes a small fixed height from the window size to adapt visually across
+ * devices; this is why it reads LocalWindowInfo and divides the height.
  *
  * @param selectedTab the initially selected tab
- * @param onTabSelected callback function to be called when the user wants to switch tabs
+ * @param onTabSelected callback invoked when the user selects a tab
  */
 @Composable
 fun CurrentUserSelectionTab(selectedTab: String, onTabSelected: (String) -> Unit) {
   val tabs =
       listOf(
           LocalContext.current.getString(R.string.friends_tab_title),
-          LocalContext.current.getString(R.string.requests_tab_title))
+          LocalContext.current.getString(R.string.requests_tab_title),
+      )
+  // Inline comment: compute a compact height based on window height to ensure consistent look.
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
   Row(
       modifier = Modifier.fillMaxWidth().height(screenHeight / 55),
@@ -227,20 +241,23 @@ fun CurrentUserSelectionTab(selectedTab: String, onTabSelected: (String) -> Unit
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { onTabSelected(tab) })) {
-              Text(
-                  text = tab,
-                  style = typography.titleMedium,
-                  color =
-                      if (tab == selectedTab) colorScheme.onBackground
-                      else colorScheme.onBackground.copy(alpha = 0.5f),
-              )
-            }
+                        onClick = { onTabSelected(tab) },
+                    ),
+        ) {
+          Text(
+              text = tab,
+              style = typography.titleMedium,
+              color =
+                  if (tab == selectedTab) colorScheme.onBackground
+                  else colorScheme.onBackground.copy(alpha = 0.5f),
+          )
+        }
         if (tab == selectedTab) {
           HorizontalDivider(
               thickness = 1.dp,
               color = colorScheme.onBackground,
-              modifier = Modifier.fillMaxWidth(0.9f))
+              modifier = Modifier.fillMaxWidth(0.9f),
+          )
         }
       }
     }
@@ -261,13 +278,15 @@ fun FollowButton(onFollow: () -> Unit = {}, testTag: String) {
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onFollow)
+                  onClick = onFollow,
+              )
               .background(color = colorScheme.primary, shape = RoundedCornerShape(5.dp))) {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_send_request),
             style = typography.titleMedium,
             color = colorScheme.background,
-            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
+            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp),
+        )
       }
 }
 
@@ -285,13 +304,15 @@ fun UnfollowButton(onUnfollow: () -> Unit = {}, testTag: String) {
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onUnfollow)
+                  onClick = onUnfollow,
+              )
               .background(color = colorScheme.onSurface, shape = RoundedCornerShape(5.dp))) {
         Text(
             text = LocalContext.current.getString(R.string.friend_screen_remove_friend),
             style = typography.titleMedium,
             color = colorScheme.surface,
-            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
+            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp),
+        )
       }
 }
 
@@ -307,7 +328,7 @@ fun ReceivedRequestInteractable(
     onAccept: () -> Unit = {},
     onDecline: () -> Unit = {},
     testTagAccept: String,
-    testTagDecline: String
+    testTagDecline: String,
 ) {
   Row(modifier = Modifier.width(80.dp).height(30.dp)) {
     RequestButton(
@@ -316,14 +337,16 @@ fun ReceivedRequestInteractable(
         contentDescription = "Accept Friend Request",
         backgroundColor = colorScheme.primary,
         iconColor = colorScheme.background,
-        modifier = Modifier.weight(1f).testTag(testTagAccept))
+        modifier = Modifier.weight(1f).testTag(testTagAccept),
+    )
     RequestButton(
         onClick = onDecline,
         icon = Icons.Default.Close,
         contentDescription = "Decline Friend Request",
         backgroundColor = colorScheme.onSurface,
         iconColor = colorScheme.surface,
-        modifier = Modifier.weight(1f).testTag(testTagDecline))
+        modifier = Modifier.weight(1f).testTag(testTagDecline),
+    )
   }
 }
 
@@ -343,7 +366,8 @@ fun CurrentUserSentRequestInteractable(onCancel: () -> Unit = {}, testTag: Strin
       contentDescription = "Cancel Friend Request",
       backgroundColor = colorScheme.onSurface,
       iconColor = colorScheme.surface,
-      modifier = Modifier.height(30.dp).width(40.dp).testTag(testTag))
+      modifier = Modifier.height(30.dp).width(40.dp).testTag(testTag),
+  )
 }
 
 /**
@@ -362,14 +386,16 @@ fun OtherUserSentRequestInteractable(onCancel: () -> Unit = {}, testTag: String)
               .clickable(
                   interactionSource = remember { MutableInteractionSource() },
                   indication = null,
-                  onClick = onCancel)
+                  onClick = onCancel,
+              )
               .background(color = colorScheme.onSurface, shape = RoundedCornerShape(5.dp))) {
         Text(
             text =
                 LocalContext.current.getString(R.string.friend_screen_pending_request_other_user),
             style = typography.titleMedium,
             color = colorScheme.surface,
-            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp))
+            modifier = Modifier.padding(horizontal = 23.dp, vertical = 7.dp),
+        )
       }
 }
 
@@ -394,7 +420,7 @@ fun RequestButton(
     contentDescription: String,
     backgroundColor: Color,
     iconColor: Color,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
   IconButton(modifier = modifier, onClick = onClick) {
     Icon(
@@ -404,7 +430,8 @@ fun RequestButton(
         modifier =
             Modifier.background(color = backgroundColor, shape = CircleShape)
                 .size(23.dp)
-                .padding(2.dp))
+                .padding(2.dp),
+    )
   }
 }
 
@@ -433,7 +460,7 @@ fun FriendRequestSuggestionTemplate(
     user: SimpleUser,
     subtext: String = "",
     onProfileClick: (Id) -> Unit = {},
-    friendStatus: FriendStatus
+    friendStatus: FriendStatus,
 ) {
   Row(
       modifier =
@@ -441,65 +468,73 @@ fun FriendRequestSuggestionTemplate(
               .padding(horizontal = 25.dp)
               .height(70.dp)
               .testTag(FriendScreenTestTags.testTagForTemplate(user.userId)),
-      verticalAlignment = Alignment.CenterVertically) {
-        ClickableProfilePicture(
-            modifier =
-                Modifier.size(45.dp)
-                    .testTag(FriendScreenTestTags.testTagForProfilePicture(user.userId)),
-            profileId = user.userId,
-            profilePictureURL = user.profilePictureURL,
-            profileUserType = user.userType,
-            onProfile = onProfileClick)
-        Spacer(modifier = Modifier.width(10.dp))
-        Column(
-            modifier = Modifier.weight(1f).fillMaxHeight().padding(end = 10.dp),
-            verticalArrangement = Arrangement.Center) {
-              Spacer(modifier = Modifier.weight(1f))
-              Text(
-                  text = user.username,
-                  maxLines = 1,
-                  style = typography.titleMedium,
-                  fontSize = 16.sp,
-              )
-              if (subtext.isNotEmpty()) {
-                Spacer(modifier = Modifier.weight(0.4f))
-                Text(
-                    text = subtext,
-                    style = typography.titleMedium,
-                    fontSize = 10.sp,
-                )
-              }
-              Spacer(modifier = Modifier.weight(1f))
-            }
-        when (friendStatus) {
-          FriendStatus.FRIEND ->
-              UnfollowButton(
-                  onUnfollow = { viewModel.unfollowUser(user.userId) },
-                  testTag = FriendScreenTestTags.testTagForUnfollowButton(user.userId))
-          FriendStatus.NOT_FRIEND ->
-              FollowButton(
-                  onFollow = { viewModel.sendRequestToUser(user.userId) },
-                  testTag = FriendScreenTestTags.testTagForFollowButton(user.userId))
-          FriendStatus.PENDING_RECEIVED ->
-              ReceivedRequestInteractable(
-                  onAccept = { viewModel.acceptReceivedRequest(user.userId) },
-                  onDecline = { viewModel.declineReceivedRequest(user.userId) },
-                  testTagAccept =
-                      FriendScreenTestTags.testTagForAcceptReceivedRequestButton(user.userId),
-                  testTagDecline =
-                      FriendScreenTestTags.testTagForDeclineReceivedRequestButton(user.userId))
-          FriendStatus.PENDING_SENT ->
-              if (isCurrentUser) {
-                CurrentUserSentRequestInteractable(
-                    onCancel = { viewModel.cancelSentRequest(user.userId) },
-                    testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId))
-              } else
-                  OtherUserSentRequestInteractable(
-                      onCancel = { viewModel.cancelSentRequest(user.userId) },
-                      testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId))
-          FriendStatus.IS_CURRENT_USER -> Unit
-        }
+      verticalAlignment = Alignment.CenterVertically,
+  ) {
+    ClickableProfilePicture(
+        modifier =
+            Modifier.size(45.dp)
+                .testTag(FriendScreenTestTags.testTagForProfilePicture(user.userId)),
+        profileId = user.userId,
+        profilePictureURL = user.profilePictureURL,
+        profileUserType = user.userType,
+        onProfile = onProfileClick,
+    )
+    Spacer(modifier = Modifier.width(10.dp))
+    Column(
+        modifier = Modifier.weight(1f).fillMaxHeight().padding(end = 10.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+      Spacer(modifier = Modifier.weight(1f))
+      Text(
+          text = user.username,
+          maxLines = 1,
+          style = typography.titleMedium,
+          fontSize = 16.sp,
+      )
+      if (subtext.isNotEmpty()) {
+        Spacer(modifier = Modifier.weight(0.4f))
+        Text(
+            text = subtext,
+            style = typography.titleMedium,
+            fontSize = 10.sp,
+        )
       }
+      Spacer(modifier = Modifier.weight(1f))
+    }
+    when (friendStatus) {
+      FriendStatus.FRIEND ->
+          UnfollowButton(
+              onUnfollow = { viewModel.unfollowUser(user.userId) },
+              testTag = FriendScreenTestTags.testTagForUnfollowButton(user.userId),
+          )
+      FriendStatus.NOT_FRIEND ->
+          FollowButton(
+              onFollow = { viewModel.sendRequestToUser(user.userId) },
+              testTag = FriendScreenTestTags.testTagForFollowButton(user.userId),
+          )
+      FriendStatus.PENDING_RECEIVED ->
+          ReceivedRequestInteractable(
+              onAccept = { viewModel.acceptReceivedRequest(user.userId) },
+              onDecline = { viewModel.declineReceivedRequest(user.userId) },
+              testTagAccept =
+                  FriendScreenTestTags.testTagForAcceptReceivedRequestButton(user.userId),
+              testTagDecline =
+                  FriendScreenTestTags.testTagForDeclineReceivedRequestButton(user.userId),
+          )
+      FriendStatus.PENDING_SENT ->
+          if (isCurrentUser) {
+            CurrentUserSentRequestInteractable(
+                onCancel = { viewModel.cancelSentRequest(user.userId) },
+                testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId),
+            )
+          } else
+              OtherUserSentRequestInteractable(
+                  onCancel = { viewModel.cancelSentRequest(user.userId) },
+                  testTag = FriendScreenTestTags.testTagForCancelSentRequestButton(user.userId),
+              )
+      FriendStatus.IS_CURRENT_USER -> Unit
+    }
+  }
 }
 
 /**
@@ -514,21 +549,24 @@ fun NoFriends(text: String) {
   Column(
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_FRIENDS)) {
-        Icon(
-            imageVector = Icons.Default.SearchOff,
-            contentDescription = null,
-            modifier = Modifier.size(70.dp))
-        Text(
-            text = text,
-            style = typography.titleMedium,
-            textAlign = TextAlign.Center,
-            fontSize = 12.sp,
-            modifier =
-                Modifier.fillMaxWidth(0.6f)
-                    .padding(top = 10.dp)
-                    .testTag(FriendScreenTestTags.NO_FRIENDS_TEXT))
-      }
+      modifier = Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_FRIENDS),
+  ) {
+    Icon(
+        imageVector = Icons.Default.SearchOff,
+        contentDescription = null,
+        modifier = Modifier.size(70.dp),
+    )
+    Text(
+        text = text,
+        style = typography.titleMedium,
+        textAlign = TextAlign.Center,
+        fontSize = 12.sp,
+        modifier =
+            Modifier.fillMaxWidth(0.6f)
+                .padding(top = 10.dp)
+                .testTag(FriendScreenTestTags.NO_FRIENDS_TEXT),
+    )
+  }
 }
 
 /**
@@ -541,18 +579,21 @@ fun NoSuggestions() {
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_SUGGESTIONS)) {
-        Icon(
-            imageVector = Icons.Default.AutoFixHigh,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_suggestions),
-            style = typography.titleMedium,
-            textAlign = TextAlign.Center,
-            fontSize = 12.sp,
-            modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
-      }
+          Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_SUGGESTIONS),
+  ) {
+    Icon(
+        imageVector = Icons.Default.AutoFixHigh,
+        contentDescription = null,
+        modifier = Modifier.size(60.dp),
+    )
+    Text(
+        text = LocalContext.current.getString(R.string.no_suggestions),
+        style = typography.titleMedium,
+        textAlign = TextAlign.Center,
+        fontSize = 12.sp,
+        modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp),
+    )
+  }
 }
 
 /**
@@ -568,7 +609,7 @@ fun NoSuggestions() {
 fun FriendsTabContent(
     viewModel: FriendScreenViewModel,
     state: FriendsScreenUIState,
-    onProfileClick: (Id) -> Unit
+    onProfileClick: (Id) -> Unit,
 ) {
   val friends = state.friends
   val suggestions = state.suggestions
@@ -582,7 +623,8 @@ fun FriendsTabContent(
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 16.dp, bottom = 6.dp))
+                  .padding(top = 16.dp, bottom = 6.dp),
+      )
     }
     if (friends.isEmpty()) {
       item { NoFriends(LocalContext.current.getString(R.string.no_friends_current_user)) }
@@ -594,7 +636,8 @@ fun FriendsTabContent(
             isCurrentUser = state.isCurrentUser,
             user = friendState.friend,
             onProfileClick = onProfileClick,
-            friendStatus = friendState.status)
+            friendStatus = friendState.status,
+        )
       }
     }
     item {
@@ -607,7 +650,8 @@ fun FriendsTabContent(
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 16.dp, bottom = 6.dp))
+                  .padding(top = 16.dp, bottom = 6.dp),
+      )
     }
     if (suggestions.isEmpty()) {
       item { NoSuggestions() }
@@ -620,7 +664,8 @@ fun FriendsTabContent(
             user = suggestion.user,
             subtext = suggestion.reason,
             onProfileClick = onProfileClick,
-            friendStatus = FriendStatus.NOT_FRIEND)
+            friendStatus = FriendStatus.NOT_FRIEND,
+        )
       }
     }
   }
@@ -636,18 +681,21 @@ fun NoSentRequests() {
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_SENT_REQUESTS)) {
-        Icon(
-            imageVector = Icons.Default.CancelScheduleSend,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_sent_requests),
-            style = typography.titleMedium,
-            textAlign = TextAlign.Center,
-            fontSize = 12.sp,
-            modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
-      }
+          Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_SENT_REQUESTS),
+  ) {
+    Icon(
+        imageVector = Icons.Default.CancelScheduleSend,
+        contentDescription = null,
+        modifier = Modifier.size(60.dp),
+    )
+    Text(
+        text = LocalContext.current.getString(R.string.no_sent_requests),
+        style = typography.titleMedium,
+        textAlign = TextAlign.Center,
+        fontSize = 12.sp,
+        modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp),
+    )
+  }
 }
 
 /**
@@ -660,20 +708,21 @@ fun NoReceivedRequests() {
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.height(210.dp)
-              .fillMaxWidth()
-              .testTag(FriendScreenTestTags.NO_RECEIVED_REQUESTS)) {
-        Icon(
-            imageVector = Icons.Default.Inbox,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp))
-        Text(
-            text = LocalContext.current.getString(R.string.no_received_requests),
-            style = typography.titleMedium,
-            textAlign = TextAlign.Center,
-            fontSize = 12.sp,
-            modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp))
-      }
+          Modifier.height(210.dp).fillMaxWidth().testTag(FriendScreenTestTags.NO_RECEIVED_REQUESTS),
+  ) {
+    Icon(
+        imageVector = Icons.Default.Inbox,
+        contentDescription = null,
+        modifier = Modifier.size(60.dp),
+    )
+    Text(
+        text = LocalContext.current.getString(R.string.no_received_requests),
+        style = typography.titleMedium,
+        textAlign = TextAlign.Center,
+        fontSize = 12.sp,
+        modifier = Modifier.fillMaxWidth(0.6f).padding(top = 10.dp),
+    )
+  }
 }
 
 /**
@@ -691,7 +740,7 @@ fun NoReceivedRequests() {
 fun RequestsTabContent(
     viewModel: FriendScreenViewModel,
     state: FriendsScreenUIState,
-    onProfileClick: (Id) -> Unit
+    onProfileClick: (Id) -> Unit,
 ) {
   val receivedRequests = state.receivedRequests
   val sentRequests = state.sentRequests
@@ -705,7 +754,8 @@ fun RequestsTabContent(
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 16.dp, bottom = 6.dp))
+                  .padding(top = 16.dp, bottom = 6.dp),
+      )
     }
     if (receivedRequests.isEmpty()) {
       item { NoReceivedRequests() }
@@ -717,7 +767,8 @@ fun RequestsTabContent(
             isCurrentUser = state.isCurrentUser,
             user = receivedRequest.user,
             onProfileClick = onProfileClick,
-            friendStatus = FriendStatus.PENDING_RECEIVED)
+            friendStatus = FriendStatus.PENDING_RECEIVED,
+        )
       }
     }
     item {
@@ -730,7 +781,8 @@ fun RequestsTabContent(
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 16.dp, bottom = 6.dp))
+                  .padding(top = 16.dp, bottom = 6.dp),
+      )
     }
     if (sentRequests.isEmpty()) {
       item { NoSentRequests() }
@@ -742,12 +794,26 @@ fun RequestsTabContent(
             isCurrentUser = state.isCurrentUser,
             user = sentRequest.user,
             onProfileClick = onProfileClick,
-            friendStatus = FriendStatus.PENDING_SENT)
+            friendStatus = FriendStatus.PENDING_SENT,
+        )
       }
     }
   }
 }
 
+/**
+ * Content of the friend screen when the current user views their own friends.
+ *
+ * Renders the search bar, tab selection and either the friends list or the requests tab content.
+ *
+ * @param selectedTab current selected tab label
+ * @param setSelectedTab callback to switch tabs
+ * @param friendScreenViewModel ViewModel instance providing actions and state
+ * @param state current UI state for the friends screen
+ * @param onProfileClick callback when a profile picture is clicked
+ * @param userIndex search index used by the user search bar
+ * @param currentUserId id of the current user
+ */
 @Composable
 fun CurrentUserFriendScreenContent(
     selectedTab: String,
@@ -756,10 +822,13 @@ fun CurrentUserFriendScreenContent(
     state: FriendsScreenUIState,
     onProfileClick: (Id) -> Unit,
     userIndex: UserIndex,
-    currentUserId: Id
+    currentUserId: Id,
 ) {
   UserSearchBar(
-      userIndex = userIndex, onResultClick = onProfileClick, currentUserId = currentUserId)
+      userIndex = userIndex,
+      onResultClick = onProfileClick,
+      currentUserId = currentUserId,
+  )
   CurrentUserSelectionTab(selectedTab = selectedTab, onTabSelected = setSelectedTab)
   if (selectedTab == LocalContext.current.getString(R.string.friends_tab_title)) {
     FriendsTabContent(friendScreenViewModel, state, onProfileClick)
@@ -769,24 +838,19 @@ fun CurrentUserFriendScreenContent(
 }
 
 /**
- * Content of the friend screen when viewing another user's friend screen. It has only one section:
- * the friend list, in which the current user can interact freely with users. If any user in the
- * list has sent a friend request to the current user, they can directly accept or decline it from
- * there. If the current user sent a friend request to a user in the list, they can see it and
- * cancel it directly from this screen.
+ * Content of the friend screen when viewing another user's friend list.
  *
- * @param viewModel viewModel needed to interact with the friendships/requests with users in the
- *   friend list
- * @param state state needed to get the friends of the screen's user as well as their respective
- *   status relative to the current user
- * @param onProfileClick callback function to be called when the current user clicks on a profile
- *   picture
+ * Renders the other user's friends and associated interactables (follow/unfollow, accept/decline).
+ *
+ * @param viewModel ViewModel instance providing actions
+ * @param state current UI state for the other user's friend screen
+ * @param onProfileClick callback when a profile picture is clicked
  */
 @Composable
 fun OtherUserFriendScreenContent(
     viewModel: FriendScreenViewModel,
     state: FriendsScreenUIState,
-    onProfileClick: (Id) -> Unit
+    onProfileClick: (Id) -> Unit,
 ) {
   val friends = state.friends
   LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -799,7 +863,8 @@ fun OtherUserFriendScreenContent(
           modifier =
               Modifier.fillMaxWidth()
                   .padding(horizontal = 20.dp)
-                  .padding(top = 12.dp, bottom = 4.dp))
+                  .padding(top = 12.dp, bottom = 4.dp),
+      )
     }
     if (friends.isEmpty()) {
       item { NoFriends(LocalContext.current.getString(R.string.no_friends_other_user)) }
@@ -811,7 +876,8 @@ fun OtherUserFriendScreenContent(
             isCurrentUser = state.isCurrentUser,
             user = friendState.friend,
             onProfileClick = onProfileClick,
-            friendStatus = friendState.status)
+            friendStatus = friendState.status,
+        )
       }
     }
   }

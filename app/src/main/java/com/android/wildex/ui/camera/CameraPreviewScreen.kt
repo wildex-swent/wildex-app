@@ -63,6 +63,17 @@ object CameraPreviewScreenTestTags {
   const val CAMERA_PREVIEW_ZOOM_VALUE = "camera_preview_zoom_value"
 }
 
+/**
+ * Screen that hosts the camera preview and controls.
+ *
+ * Binds CameraX use cases, observes zoom state and renders preview with capture/upload controls.
+ *
+ * @param onPhotoTaken Callback invoked with the Uri of the captured image.
+ * @param onUploadClick Callback invoked when the user chooses to upload an existing image.
+ * @param modifier Modifier applied to the root container.
+ * @param mainDispatcher Dispatcher used for camera initialization context switching (defaults to
+ *   Main).
+ */
 @Composable
 fun CameraPreviewScreen(
     onPhotoTaken: (Uri) -> Unit,
@@ -124,6 +135,12 @@ fun CameraPreviewScreen(
   }
 }
 
+/**
+ * Composable that renders the CameraX viewfinder when a SurfaceRequest is available.
+ *
+ * @param surfaceRequest The SurfaceRequest provided by the preview use case, or null.
+ * @param cameraRef Reference to the current Camera instance for control interactions.
+ */
 @Composable
 private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
   Box(
@@ -146,6 +163,16 @@ private fun CameraPreview(surfaceRequest: SurfaceRequest?, cameraRef: Camera?) {
       }
 }
 
+/**
+ * Renders the capture/switch/upload controls below the camera preview.
+ *
+ * @param onSwitchClick Action to switch camera (front/back).
+ * @param onCaptureClick Action to capture a photo.
+ * @param onUploadClick Action to upload an existing photo.
+ * @param zoomValue Current camera zoom value to display.
+ * @param modifier Modifier applied to the controls container.
+ * @param isOnline Flag indicating if the device is online to show upload option.
+ */
 @Composable
 private fun CameraControls(
     onSwitchClick: () -> Unit,
@@ -194,6 +221,12 @@ private fun CameraControls(
   }
 }
 
+/**
+ * Small surface showing the current zoom value.
+ *
+ * @param zoomValue The numeric zoom ratio to display.
+ * @param modifier Modifier applied to the zoom surface.
+ */
 @Composable
 private fun ZoomText(zoomValue: Float, modifier: Modifier) {
   Surface(
@@ -209,6 +242,12 @@ private fun ZoomText(zoomValue: Float, modifier: Modifier) {
   }
 }
 
+/**
+ * Large circular capture button used to take a photo.
+ *
+ * @param onClick Callback invoked when the user presses the capture button.
+ * @param modifier Modifier applied to the IconButton.
+ */
 @Composable
 private fun CaptureButton(
     onClick: () -> Unit,
@@ -231,6 +270,12 @@ private fun CaptureButton(
   }
 }
 
+/**
+ * Circular upload button shown to allow selecting an existing image.
+ *
+ * @param onClick Callback invoked when the upload button is pressed.
+ * @param modifier Modifier applied to the IconButton.
+ */
 @Composable
 private fun UploadButton(
     onClick: () -> Unit,
@@ -253,6 +298,12 @@ private fun UploadButton(
   }
 }
 
+/**
+ * Circular button that switches between front and back cameras.
+ *
+ * @param onClick Callback invoked when the switch button is pressed.
+ * @param modifier Modifier applied to the IconButton.
+ */
 @Composable
 private fun SwitchButton(
     onClick: () -> Unit,
@@ -275,7 +326,13 @@ private fun SwitchButton(
   }
 }
 
-// Helper function for capture logic
+/**
+ * Captures a photo using this ImageCapture instance and writes to a cache file.
+ *
+ * @param context Android context used to create the cache file and main executor.
+ * @param onPhotoTaken Callback invoked with the Uri of the saved image on success.
+ * @param cameraSelector CameraSelector used to determine if the image should be mirrored.
+ */
 private fun ImageCapture.capturePhoto(
     context: Context,
     onPhotoTaken: (Uri) -> Unit,

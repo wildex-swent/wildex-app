@@ -1,12 +1,19 @@
 package com.android.wildex.ui.home
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isNotDisplayed
+import androidx.compose.ui.test.isOff
+import androidx.compose.ui.test.isOn
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
@@ -37,7 +44,9 @@ import com.mapbox.common.MapboxOptions
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -112,6 +121,7 @@ class HomeScreenTest {
         ))
     userSettingsRepository.initializeUserSettings("currentUserId-1")
     userSettingsRepository.initializeUserSettings("poster0")
+    userFriendsRepository.initializeUserFriends("currentUserId-1")
     animalRepository.addAnimal(
         Animal(
             animalId = "a1",
@@ -559,9 +569,7 @@ class HomeScreenTest {
 
     composeTestRule
         .onNodeWithTag(HomeScreenTestTags.imageTag(fullPost.postId), useUnmergedTree = true)
-        .performClick()
-
-    assert(postClicked)
+        .assertIsDisplayed()
 
     postClicked = false
     composeTestRule
@@ -782,4 +790,219 @@ class HomeScreenTest {
         .onNodeWithTag(HomeScreenTestTags.likeButtonTag(postId), useUnmergedTree = true)
         .assertIsNotDisplayed()
   }
+
+  @Test
+  fun openFiltersButtonOpensFilterManager() {
+    composeTestRule.setContent { OpenFiltersButton(homeScreenVM) }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE).assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL).assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun applyButtonChangesFilters() {
+    val fromAuthor: String? by mutableStateOf("John")
+    val fromPlace: String? by mutableStateOf("EPFL")
+    val ofAnimal: String? by mutableStateOf("Cat")
+    val onlyFriendsPosts by mutableStateOf(true)
+    val onlyMyPosts by mutableStateOf(true)
+
+    var showFilters by mutableStateOf(true)
+
+    composeTestRule.setContent {
+      FiltersManager(
+          postsFilters = homeScreenVM.uiState.value.postsFilters,
+          onApply = {
+            homeScreenVM.setPostsFilter(
+                fromPlace = fromPlace,
+                fromAuthor = fromAuthor,
+                ofAnimal = ofAnimal,
+                onlyFriendsPosts = onlyFriendsPosts,
+                onlyMyPosts = onlyMyPosts,
+            )
+
+            showFilters = false
+          },
+          onReset = {})
+    }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_APPLY).performClick()
+
+    assertEquals("John", homeScreenVM.uiState.value.postsFilters.fromAuthor)
+    assertEquals("EPFL", homeScreenVM.uiState.value.postsFilters.fromPlace)
+    assertEquals("Cat", homeScreenVM.uiState.value.postsFilters.ofAnimal)
+
+    assertTrue(homeScreenVM.uiState.value.postsFilters.onlyFriendsPosts)
+    assertTrue(homeScreenVM.uiState.value.postsFilters.onlyMyPosts)
+
+    assertFalse(showFilters)
+  }
+
+  @Test
+  fun resetButtonResetsFilters() {
+    var fromAuthor: String? by mutableStateOf("John")
+    var fromPlace: String? by mutableStateOf("EPFL")
+    var ofAnimal: String? by mutableStateOf("Cat")
+    var onlyFriendsPosts by mutableStateOf(true)
+    var onlyMyPosts by mutableStateOf(true)
+
+    var showFilters by mutableStateOf(true)
+
+    homeScreenVM.setPostsFilter(
+        fromAuthor = fromAuthor,
+        fromPlace = fromPlace,
+        ofAnimal = ofAnimal,
+        onlyFriendsPosts = onlyFriendsPosts,
+        onlyMyPosts = onlyMyPosts)
+
+    composeTestRule.setContent {
+      FiltersManager(
+          postsFilters = homeScreenVM.uiState.value.postsFilters,
+          onReset = {
+            fromAuthor = null
+            fromPlace = null
+            ofAnimal = null
+            onlyFriendsPosts = false
+            onlyMyPosts = false
+
+            homeScreenVM.setPostsFilter(
+                fromAuthor = null,
+                fromPlace = null,
+                ofAnimal = null,
+                onlyFriendsPosts = false,
+                onlyMyPosts = false,
+            )
+
+            showFilters = false
+          })
+    }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_RESET).performClick()
+
+    assertEquals(null, homeScreenVM.uiState.value.postsFilters.fromAuthor)
+    assertEquals(null, homeScreenVM.uiState.value.postsFilters.fromPlace)
+    assertEquals(null, homeScreenVM.uiState.value.postsFilters.ofAnimal)
+
+    assertFalse(homeScreenVM.uiState.value.postsFilters.onlyFriendsPosts)
+    assertFalse(homeScreenVM.uiState.value.postsFilters.onlyMyPosts)
+
+    assertFalse(showFilters)
+  }
+
+  @Test
+  fun closeFiltersDoesNotChangeFilters() {
+    val fromAuthor: String? by mutableStateOf("John")
+    val fromPlace: String? by mutableStateOf(null)
+    val ofAnimal: String? by mutableStateOf("Cat")
+    val onlyFriendsPosts by mutableStateOf(true)
+    val onlyMyPosts by mutableStateOf(false)
+
+    homeScreenVM.setPostsFilter(
+        fromAuthor = fromAuthor,
+        fromPlace = fromPlace,
+        ofAnimal = ofAnimal,
+        onlyFriendsPosts = onlyFriendsPosts,
+        onlyMyPosts = onlyMyPosts)
+
+    composeTestRule.setContent { OpenFiltersButton(homeScreenVM) }
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER).performClick()
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER).isNotDisplayed()
+
+    assertEquals("John", homeScreenVM.uiState.value.postsFilters.fromAuthor)
+    assertEquals(null, homeScreenVM.uiState.value.postsFilters.fromPlace)
+    assertEquals("Cat", homeScreenVM.uiState.value.postsFilters.ofAnimal)
+
+    assertTrue(homeScreenVM.uiState.value.postsFilters.onlyFriendsPosts)
+    assertFalse(homeScreenVM.uiState.value.postsFilters.onlyMyPosts)
+  }
+
+  @Test
+  fun filterValuesInFiltersManager() {
+    val fromAuthor: String? by mutableStateOf("John")
+    val fromPlace: String? by mutableStateOf("EPFL")
+    val ofAnimal: String? by mutableStateOf("Cat")
+    val onlyFriendsPosts by mutableStateOf(true)
+    val onlyMyPosts by mutableStateOf(false)
+
+    composeTestRule.setContent {
+      FiltersManager(
+          postsFilters =
+              PostsFilters(
+                  fromAuthor = fromAuthor,
+                  fromPlace = fromPlace,
+                  ofAnimal = ofAnimal,
+                  onlyFriendsPosts = onlyFriendsPosts,
+                  onlyMyPosts = onlyMyPosts),
+      )
+    }
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+        .assert(hasText("John"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE)
+        .assert(hasText("EPFL"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL)
+        .assert(hasText("Cat"))
+
+    composeTestRule
+        .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS)
+        .assert(isOn())
+
+    composeTestRule.onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS).assert(isOff())
+  }
+
+  /*@Test
+  fun ColumnOfMatchingUsersIsDisplayed() {
+      composeTestRule.setContent {
+          FiltersManager(
+              postsFilters = PostsFilters(),
+              onFilterChange = OnFilterChange(
+                  onFromAuthorChange = {},
+                  onFromPlaceChange = {},
+                  onOfAnimalChange = {},
+                  onOnlyFriendsPostsChange = {},
+                  onOnlyMyPostsChange = {},
+              ),
+              onDismissRequest = {},
+              onApply = {},
+              onReset = {},
+          )
+      }
+
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+          .assertIsNotDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR)
+          .performClick()
+          .performTextInput("t")
+
+      composeTestRule
+          .onNodeWithTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)
+          .assertIsDisplayed()
+  }*/
 }

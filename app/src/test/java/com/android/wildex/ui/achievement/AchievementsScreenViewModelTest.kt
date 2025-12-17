@@ -84,7 +84,12 @@ class AchievementsScreenViewModelTest {
     Dispatchers.setMain(testDispatcher)
     currentUserId = "currentUserId"
     userAchievementsRepository = mockk()
-    viewModel = AchievementsScreenViewModel(userAchievementsRepository)
+    viewModel =
+        AchievementsScreenViewModel(
+            userAchievementsRepository,
+            testDispatcher,
+            testDispatcher,
+        )
   }
 
   @After

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.authentication.AuthRepository
+import com.android.wildex.model.report.ReportRepository
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.UserRepository
 import com.android.wildex.model.user.UserSettingsRepository
@@ -34,6 +35,7 @@ class SettingsScreenViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val userTokensRepository: UserTokensRepository =
         RepositoryProvider.userTokensRepository,
+    private val reportRepository: ReportRepository = RepositoryProvider.reportRepository,
     private val currentUserId: Id = Firebase.auth.uid ?: "",
     private val deleteUserUseCase: DeleteUserUseCase = DeleteUserUseCase(),
 ) : ViewModel() {
@@ -44,12 +46,21 @@ class SettingsScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
+  /**
+   * Loads and updates the settings UI state for the current user.
+   *
+   * This suspending function reads persisted user settings and user type and ensures notification
+   * settings respect the device permission state. Exceptions update the UI error flags.
+   *
+   * @param notificationPermissionEnabled true if the OS notification permission is granted.
+   */
   private suspend fun updateUIState(notificationPermissionEnabled: Boolean) {
     try {
       val appearanceMode = userSettingsRepository.getAppearanceMode(currentUserId)
       val userType = userRepository.getUser(currentUserId).userType
       val notificationsEnabled =
           if (!notificationPermissionEnabled) {
+            // If OS-level permission is disabled, persist and surface false to UI
             userSettingsRepository.setEnableNotification(currentUserId, false)
             false
           } else userSettingsRepository.getEnableNotification(currentUserId)
@@ -69,6 +80,13 @@ class SettingsScreenViewModel(
     }
   }
 
+  /**
+   * Initiates loading of settings UI state.
+   *
+   * Sets the loading flag and launches a coroutine to fetch persisted settings.
+   *
+   * @param notificationPermissionEnabled true if the OS notification permission is granted.
+   */
   fun loadUIState(notificationPermissionEnabled: Boolean) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(notificationPermissionEnabled) }
@@ -107,14 +125,30 @@ class SettingsScreenViewModel(
   }
 
   /**
-   * Sets the user type for the current user.
+   * Sets the user type for the current user and unassigns any reports assigned to them if they
+   * switch from professional to regular.
    *
-   * @param type The desired [UserType] to set.
+   * Inline comment: complex flow where reports assigned to a professional must be iterated and
+   * updated to remove the assignee before the user type is changed — this ensures data consistency.
+   *
+   * @param type The desired [com.android.wildex.model.user.UserType] to set.
    */
   fun setUserType(type: UserType) {
     viewModelScope.launch {
       try {
         val user = userRepository.getUser(currentUserId)
+        if (user.userType == UserType.PROFESSIONAL && type == UserType.REGULAR) {
+          // Complex step: find all reports assigned to this professional and unassign them.
+          val reportsAssignedToUser =
+              reportRepository.getAllReportsByAssignee(assigneeId = user.userId)
+          reportsAssignedToUser.forEach { report ->
+            // Persist each report change to remove assignee
+            reportRepository.editReport(
+                reportId = report.reportId,
+                newValue = report.copy(assigneeId = null),
+            )
+          }
+        }
         val updatedUser = user.copy(userType = type)
         userRepository.editUser(currentUserId, updatedUser)
         _uiState.value = _uiState.value.copy(userType = type)
@@ -136,6 +170,14 @@ class SettingsScreenViewModel(
     }
   }
 
+  /**
+   * Signs out the current user and optionally removes the stored push token when online.
+   *
+   * Invokes onSignOut on success; on failure, an error message is set in the UI state.
+   *
+   * @param isOnline Whether device is online and can reach remote services.
+   * @param onSignOut Callback invoked after successful sign out.
+   */
   fun signOut(isOnline: Boolean, onSignOut: () -> Unit) {
     viewModelScope.launch {
       if (isOnline) {
@@ -151,6 +193,11 @@ class SettingsScreenViewModel(
     }
   }
 
+  /**
+   * Handler invoked when a user action is attempted while offline that requires connectivity.
+   *
+   * Sets an informative error message in the UI state.
+   */
   fun onOfflineClick() {
     setErrorMsg("This action is not supported offline. Check your connection and try again.")
   }

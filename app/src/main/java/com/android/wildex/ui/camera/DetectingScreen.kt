@@ -55,6 +55,14 @@ object DetectingScreenTestTags {
   const val DETECTING_SCREEN_IMAGE = "detecting_screen_image"
 }
 
+/**
+ * Screen shown while an image is being analyzed for animal detection.
+ *
+ * Shows the captured photo as background, an overlay with animation and a loading indicator.
+ *
+ * @param photoUri Uri of the photo being analyzed.
+ * @param modifier Modifier applied to the root container.
+ */
 @Composable
 fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
   Box(modifier = modifier.fillMaxSize()) {
@@ -156,6 +164,12 @@ fun DetectingScreen(photoUri: Uri, modifier: Modifier = Modifier) {
   }
 }
 
+/**
+ * Plays a sequence of Lottie animations randomly chosen from the provided raw resource ids.
+ *
+ * @param lottieResIds List of raw resource ids for Lottie animations.
+ * @param modifier Modifier applied to the animation.
+ */
 @Composable
 fun RandomLottieAnimationsFromRaw(lottieResIds: List<Int>, modifier: Modifier = Modifier) {
   var currentIndex by remember { mutableIntStateOf((lottieResIds.indices).random()) }

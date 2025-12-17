@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,57 +35,93 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.android.wildex.AppTheme
 import com.android.wildex.R
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.social.SearchDataProvider
 import com.android.wildex.model.user.AppearanceMode
 import com.android.wildex.model.user.SimpleUser
+import com.android.wildex.model.user.User
 import com.android.wildex.model.utils.Id
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
-import com.android.wildex.ui.profile.StaticMiniMap
+import com.android.wildex.ui.profile.OfflineAwareMiniMap
+import com.android.wildex.ui.social.UserIndex
 import com.android.wildex.ui.utils.ClickableProfilePicture
+import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
+import com.android.wildex.ui.utils.images.ImageWithDoubleTapLike
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+/**
+ * Represents the set of onChange functions for every filter
+ *
+ * @property onFromAuthorChange the onChange function for the fromAuthor filter
+ * @property onFromPlaceChange the onChange function for the fromPlace filter
+ * @property onOfAnimalChange the onChange function for the ofAnimal filter
+ * @property onOnlyFriendsPostsChange the onChange function for the onlyFriendsPosts filter
+ * @property onOnlyMyPostsChange the onChange function for the onlyMyPosts filter
+ */
+data class OnFilterChange(
+    val onFromAuthorChange: (String?) -> Unit = {},
+    val onFromPlaceChange: (String?) -> Unit = {},
+    val onOfAnimalChange: (String?) -> Unit = {},
+    val onOnlyFriendsPostsChange: (Boolean) -> Unit = {},
+    val onOnlyMyPostsChange: (Boolean) -> Unit = {},
+)
 
 /** Test tag constants used for UI testing of HomeScreen components. */
 object HomeScreenTestTags {
@@ -92,6 +129,18 @@ object HomeScreenTestTags {
   const val POSTS_LIST = "HomeScreenPostsList"
   const val NO_POSTS = "HomeScreenEmpty"
   const val PULL_TO_REFRESH = "HomeScreenPullToRefresh"
+
+  const val OPEN_FILTERS_MANAGER = "HomeScreenOpenFiltersManager"
+  const val FILTERS_MANAGER = "HomeScreenFiltersManager"
+  const val FILTERS_MANAGER_APPLY = "HomeScreenFiltersManagerApply"
+  const val FILTERS_MANAGER_RESET = "HomeScreenFiltersManagerReset"
+  const val FILTERS_MANAGER_LAZY_COLUMN = "HomeScreenFiltersManagerLazyColumn"
+
+  const val FILTERS_MANAGER_FROM_AUTHOR = "HomeScreenFiltersManagerFromAuthor"
+  const val FILTERS_MANAGER_FROM_PLACE = "HomeScreenFiltersManagerFromPlace"
+  const val FILTERS_MANAGER_OF_ANIMAL = "HomeScreenFiltersManagerOfAnimal"
+  const val FILTERS_MANAGER_ONLY_FRIENDS_POSTS = "HomeScreenFiltersManagerOnlyFriendsPosts"
+  const val FILTERS_MANAGER_ONLY_MY_POSTS = "HomeScreenFiltersManagerOnlyMyPosts"
 
   fun testTagForPost(postId: Id, element: String): String = "HomeScreenPost_${postId}_$element"
 
@@ -178,19 +227,349 @@ fun HomeScreen(
       when {
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
-        postStates.isEmpty() -> NoPostsView()
         else -> {
-          PostsView(
-              postStates = postStates,
-              isOnline = isOnline,
-              onProfilePictureClick = onProfilePictureClick,
-              onPostLike = { homeScreenViewModel.toggleLike(it, isOnline) },
-              onPostClick = onPostClick,
-          )
+          val filteredPostStates = homeScreenViewModel.filterPosts(postStates = postStates)
+
+          when {
+            filteredPostStates.isEmpty() -> NoPostsView()
+            else ->
+                PostsView(
+                    postStates = filteredPostStates,
+                    onProfilePictureClick = onProfilePictureClick,
+                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostClick = onPostClick,
+                )
+          }
         }
       }
     }
+
+    OpenFiltersButton(homeScreenViewModel = homeScreenViewModel)
   }
+}
+
+/**
+ * Displays a FloatingActionButton that opens the Filters Manager when clicked
+ *
+ * @param homeScreenViewModel the view model of the screen
+ */
+@Composable
+fun OpenFiltersButton(
+    homeScreenViewModel: HomeScreenViewModel = viewModel(),
+) {
+  val uiState by homeScreenViewModel.uiState.collectAsState()
+  val cs = colorScheme
+
+  var showFilters by remember { mutableStateOf(false) }
+
+  var fromAuthor: String? by remember { mutableStateOf(uiState.postsFilters.fromAuthor) }
+  var fromPlace: String? by remember { mutableStateOf(uiState.postsFilters.fromPlace) }
+  var ofAnimal: String? by remember { mutableStateOf(uiState.postsFilters.ofAnimal) }
+  var onlyFriendsPosts by remember { mutableStateOf(uiState.postsFilters.onlyFriendsPosts) }
+  var onlyMyPosts by remember { mutableStateOf(uiState.postsFilters.onlyMyPosts) }
+
+  Box(modifier = Modifier.fillMaxSize()) {
+    FloatingActionButton(
+        onClick = { showFilters = true },
+        modifier =
+            Modifier.align(Alignment.BottomEnd)
+                .padding(bottom = 75.dp, end = 15.dp)
+                .clip(shape = RoundedCornerShape(100))
+                .testTag(HomeScreenTestTags.OPEN_FILTERS_MANAGER),
+        containerColor = cs.background,
+        contentColor = cs.onBackground,
+    ) {
+      Icon(
+          imageVector = Icons.Default.Search,
+          contentDescription = "Filter",
+          modifier = Modifier.size(25.dp),
+      )
+    }
+
+    if (showFilters) {
+      FiltersManager(
+          postsFilters =
+              PostsFilters(
+                  fromAuthor = fromAuthor,
+                  fromPlace = fromPlace,
+                  ofAnimal = ofAnimal,
+                  onlyFriendsPosts = onlyFriendsPosts,
+                  onlyMyPosts = onlyMyPosts,
+              ),
+          onFilterChange =
+              OnFilterChange(
+                  onFromAuthorChange = { fromAuthor = it },
+                  onFromPlaceChange = { fromPlace = it },
+                  onOfAnimalChange = { ofAnimal = it },
+                  onOnlyFriendsPostsChange = {
+                    onlyFriendsPosts = it
+                    if (onlyFriendsPosts && onlyMyPosts) {
+                      onlyMyPosts = false
+                    }
+                  },
+                  onOnlyMyPostsChange = {
+                    onlyMyPosts = it
+                    if (onlyFriendsPosts && onlyMyPosts) {
+                      onlyFriendsPosts = false
+                    }
+                  },
+              ),
+          onDismissRequest = {
+            fromAuthor = uiState.postsFilters.fromAuthor
+            fromPlace = uiState.postsFilters.fromPlace
+            ofAnimal = uiState.postsFilters.ofAnimal
+            onlyFriendsPosts = uiState.postsFilters.onlyFriendsPosts
+            onlyMyPosts = uiState.postsFilters.onlyMyPosts
+
+            showFilters = false
+          },
+          onApply = {
+            ofAnimal = getNullIfEmpty(ofAnimal)
+            fromPlace = getNullIfEmpty(fromPlace)
+            fromAuthor = getNullIfEmpty(fromAuthor)
+
+            homeScreenViewModel.setPostsFilter(
+                fromPlace = fromPlace,
+                fromAuthor = fromAuthor,
+                ofAnimal = ofAnimal,
+                onlyFriendsPosts = onlyFriendsPosts,
+                onlyMyPosts = onlyMyPosts,
+            )
+
+            showFilters = false
+          },
+          onReset = {
+            fromAuthor = null
+            fromPlace = null
+            ofAnimal = null
+            onlyFriendsPosts = false
+            onlyMyPosts = false
+
+            homeScreenViewModel.setPostsFilter(
+                fromAuthor = null,
+                fromPlace = null,
+                ofAnimal = null,
+                onlyFriendsPosts = false,
+                onlyMyPosts = false,
+            )
+
+            showFilters = false
+          },
+      )
+    }
+  }
+}
+
+/**
+ * Displays the Filters Manager to interact with the 4 filters: fromAuthor, fromPlace, ofAnimal,
+ * onlyFriendsPosts and onlyMyPosts.
+ *
+ * @param postsFilters the values of the filters
+ * @param onFilterChange the functions to apply when the value of the different filters are modified
+ * @param onDismissRequest the function to apply when the user quits the Filters Managers
+ * @param onApply the function to apply when the user applies new filters
+ * @param onReset the function to apply when the user resets the filters
+ */
+@Composable
+fun FiltersManager(
+    postsFilters: PostsFilters = PostsFilters(),
+    onFilterChange: OnFilterChange = OnFilterChange(),
+    onDismissRequest: () -> Unit = {},
+    onApply: () -> Unit = {},
+    onReset: () -> Unit = {},
+) {
+  val cs: ColorScheme = colorScheme
+  val userIndex =
+      UserIndex(
+          searchDataProvider =
+              SearchDataProvider(storage = FileSearchDataStorage(LocalContext.current)))
+
+  var expanded by rememberSaveable { mutableStateOf(false) }
+  var matchingUsers by remember { mutableStateOf(emptyList<User>()) }
+
+  LaunchedEffect(postsFilters.fromAuthor) {
+    matchingUsers =
+        when {
+          !postsFilters.fromAuthor.isNullOrEmpty() ->
+              userIndex.usersMatching(postsFilters.fromAuthor, limit = 10)
+          else -> emptyList()
+        }
+  }
+
+  AlertDialog(
+      modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER),
+      containerColor = cs.background,
+      iconContentColor = cs.onBackground,
+      titleContentColor = cs.onBackground,
+      textContentColor = cs.onBackground,
+      onDismissRequest = onDismissRequest,
+      title = {
+        Text(
+            text = stringResource(R.string.filters_title),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        Column() {
+          FilterTextField(
+              value = postsFilters.fromAuthor,
+              onValueChange = {
+                onFilterChange.onFromAuthorChange(it)
+                expanded = true
+              },
+              filterName = stringResource(R.string.author),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_AUTHOR).onFocusChanged {
+                    expanded = true
+                  })
+
+          if (expanded && matchingUsers.isNotEmpty()) {
+            LazyColumn(
+                modifier =
+                    Modifier.heightIn(max = (4 * 56).dp)
+                        .testTag(HomeScreenTestTags.FILTERS_MANAGER_LAZY_COLUMN)) {
+                  items(count = matchingUsers.size) { index ->
+                    val user = matchingUsers[index]
+                    ListItem(
+                        headlineContent = {
+                          Text(user.name + " " + user.surname, style = typography.bodyLarge)
+                        },
+                        supportingContent = {
+                          Text(text = user.username, style = typography.bodyMedium)
+                        },
+                        leadingContent = {
+                          ClickableProfilePicture(
+                              modifier = Modifier.size(45.dp),
+                              profileId = user.userId,
+                              profilePictureURL = user.profilePictureURL,
+                              profileUserType = user.userType,
+                              onProfile = {
+                                onFilterChange.onFromAuthorChange(user.username)
+                                expanded = false
+                              },
+                          )
+                        },
+                        colors = ListItemDefaults.colors(containerColor = colorScheme.tertiary),
+                        modifier =
+                            Modifier.fillMaxWidth().clickable {
+                              onFilterChange.onFromAuthorChange(user.username)
+                              expanded = false
+                            })
+                  }
+                }
+          }
+
+          FilterTextField(
+              value = postsFilters.fromPlace,
+              onValueChange = onFilterChange.onFromPlaceChange,
+              filterName = stringResource(R.string.location),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_FROM_PLACE).onFocusChanged {
+                    expanded = false
+                  },
+          )
+
+          FilterTextField(
+              value = postsFilters.ofAnimal,
+              onValueChange = onFilterChange.onOfAnimalChange,
+              filterName = stringResource(R.string.animal),
+              modifier =
+                  Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_OF_ANIMAL).onFocusChanged {
+                    expanded = false
+                  },
+          )
+
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Text(
+                text = stringResource(R.string.onlyFriendsPosts),
+            )
+            Switch(
+                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_FRIENDS_POSTS),
+                checked = postsFilters.onlyFriendsPosts,
+                onCheckedChange = {
+                  onFilterChange.onOnlyFriendsPostsChange(it)
+                  expanded = false
+                },
+            )
+          }
+
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Text(
+                text = stringResource(R.string.onlyMyPosts),
+            )
+            Switch(
+                modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_ONLY_MY_POSTS),
+                checked = postsFilters.onlyMyPosts,
+                onCheckedChange = {
+                  onFilterChange.onOnlyMyPostsChange(it)
+                  expanded = false
+                },
+            )
+          }
+        }
+      },
+      confirmButton = {
+        TextButton(
+            onClick = onApply,
+            modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_APPLY),
+        ) {
+          Text(
+              text = stringResource(R.string.apply),
+          )
+        }
+      },
+      dismissButton = {
+        TextButton(
+            onClick = onReset,
+            modifier = Modifier.testTag(HomeScreenTestTags.FILTERS_MANAGER_RESET),
+        ) {
+          Text(
+              text = stringResource(R.string.reset),
+          )
+        }
+      },
+  )
+}
+
+/**
+ * Displays a mutable text field for a filter
+ *
+ * @param value the value of the filter
+ * @param onValueChange the function to apply when the value of the filter is modified
+ * @param filterName the name of the filter
+ */
+@Composable
+private fun FilterTextField(
+    value: String?,
+    onValueChange: (String?) -> Unit,
+    filterName: String,
+    modifier: Modifier,
+) {
+  OutlinedTextField(
+      value = value ?: "",
+      onValueChange = { onValueChange(it) },
+      label = { Text("$filterName Name") },
+      singleLine = true,
+      modifier = modifier.fillMaxWidth(),
+      trailingIcon = {
+        if (value != null) {
+          IconButton(onClick = { onValueChange(null) }) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Clear $filterName",
+            )
+          }
+        }
+      },
+  )
 }
 
 /** Displays a placeholder view when there are no posts available. */
@@ -209,7 +588,7 @@ fun NoPostsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = LocalContext.current.getString(R.string.no_nearby_posts),
+        text = LocalContext.current.getString(R.string.no_posts),
         color = colorScheme.onBackground,
         style = typography.titleLarge,
         maxLines = 2,
@@ -228,7 +607,6 @@ fun NoPostsView() {
 @Composable
 fun PostsView(
     postStates: List<PostState>,
-    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -238,10 +616,9 @@ fun PostsView(
       verticalArrangement = Arrangement.spacedBy(2.dp),
       contentPadding = PaddingValues(vertical = 2.dp),
   ) {
-    items(postStates.size) { index ->
+    items(count = postStates.size, key = { index -> postStates[index].post.postId }) { index ->
       PostItem(
           postState = postStates[index],
-          isOnline = isOnline,
           onProfilePictureClick = onProfilePictureClick,
           onPostLike = onPostLike,
           onPostClick = onPostClick,
@@ -260,7 +637,6 @@ fun PostsView(
 @Composable
 fun PostItem(
     postState: PostState,
-    isOnline: Boolean = true,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
@@ -270,18 +646,11 @@ fun PostItem(
   val animalName = postState.animalName
   val pagerState = rememberPagerState(pageCount = { if (post.location != null) 2 else 1 })
 
-  // -------- Optimistic Like State (instant UI) --------
-  var liked by remember(post.postId) { mutableStateOf(postState.isLiked) }
-  var likeCount by remember(post.postId) { mutableIntStateOf(postState.likeCount) }
-  var commentCount by remember(post.postId) { mutableIntStateOf(postState.commentsCount) }
+  val liked = postState.isLiked
+  val likeCount = postState.likeCount
+  val commentCount = postState.commentsCount
 
-  val onToggleLike: () -> Unit = {
-    if (isOnline) {
-      liked = !liked
-      likeCount = if (liked) likeCount + 1 else likeCount - 1
-    }
-    onPostLike(post.postId)
-  }
+  val onToggleLike: () -> Unit = { onPostLike(post.postId) }
 
   Card(
       shape = RoundedCornerShape(16.dp),
@@ -297,7 +666,13 @@ fun PostItem(
     )
 
     // Image
-    PostSlider(post = post, onPostClick = { onPostClick(post.postId) }, pagerState)
+    PostSlider(
+        post = post,
+        liked = liked,
+        onPostClick = { onPostClick(post.postId) },
+        onToggleLike = onToggleLike,
+        pagerState = pagerState,
+    )
 
     // Actions: likes & comments & location
     PostActions(
@@ -402,80 +777,98 @@ private fun PostHeader(
  * @param onPostClick The action when the user clicks on the post, to see its details.
  */
 @Composable
-private fun PostSlider(post: Post, onPostClick: () -> Unit, pagerState: PagerState) {
+private fun PostSlider(
+    post: Post,
+    liked: Boolean,
+    onPostClick: () -> Unit,
+    onToggleLike: () -> Unit,
+    pagerState: PagerState,
+) {
+  var imageHeight by
+      rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it.dp })) {
+        mutableStateOf<Dp?>(null)
+      }
+  val context = LocalContext.current
+  val density = LocalDensity.current
   HorizontalPager(
       state = pagerState,
-      modifier =
-          Modifier.fillMaxWidth()
-              .height(LocalWindowInfo.current.containerSize.height.dp / 6)
-              .testTag(HomeScreenTestTags.sliderTag(post.postId)),
+      modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.sliderTag(post.postId)),
   ) { page ->
     when (page) {
       0 -> {
-        AsyncImage(
-            model = post.pictureURL,
-            contentDescription = "Post picture",
+        ImageWithDoubleTapLike(
+            pictureURL = post.pictureURL,
+            likedByCurrentUser = liked,
             modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.imageTag(post.postId)).clickable {
-                  onPostClick()
+                Modifier.testTag(HomeScreenTestTags.imageTag(post.postId)).onGloballyPositioned {
+                    coordinates ->
+                  val heightPx = coordinates.size.height
+                  val h = with(density) { heightPx.toDp() }
+                  // Complex measurement: we capture the measured height of the image on first
+                  // layout
+                  // to reuse it when showing the map preview page so the pager keeps stable height.
+                  if (h > 0.dp) imageHeight = h
                 },
-            contentScale = ContentScale.Crop,
+            onTap = { onPostClick() },
+            onDoubleTap = onToggleLike,
         )
       }
       1 -> {
         val loc = post.location!!
-        val context = LocalContext.current
         val isDark =
             when (AppTheme.appearanceMode) {
               AppearanceMode.DARK -> true
               AppearanceMode.LIGHT -> false
               AppearanceMode.AUTOMATIC -> isSystemInDarkTheme()
             }
-        Box(
-            modifier =
-                Modifier.fillMaxSize().testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
-              StaticMiniMap(
-                  modifier = Modifier.matchParentSize(),
-                  pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                  styleUri = context.getString(R.string.map_style),
-                  styleImportId = context.getString(R.string.map_standard_import),
-                  isDark = isDark,
-                  fallbackZoom = 2.0,
-                  context = context,
-              )
-              if (loc.specificName.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(colorScheme.onBackground)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                ) {
-                  Icon(
-                      imageVector = Icons.Filled.Place,
-                      contentDescription = "Country Icon",
-                      tint = colorScheme.background,
-                      modifier = Modifier.size(16.dp),
-                  )
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Text(
-                      modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
-                      text = loc.specificName,
-                      style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                      color = colorScheme.background,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis,
-                  )
+        imageHeight?.let { height ->
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .height(height)
+                      .testTag(HomeScreenTestTags.mapPreviewTag(post.postId))) {
+                OfflineAwareMiniMap(
+                    modifier = Modifier.matchParentSize(),
+                    pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
+                    styleUri = context.getString(R.string.map_style),
+                    styleImportId = context.getString(R.string.map_standard_import),
+                    isDark = isDark,
+                    fallbackZoom = 2.0,
+                )
+                if (loc.specificName.isNotEmpty()) {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier =
+                          Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
+                              .clip(RoundedCornerShape(20.dp))
+                              .background(colorScheme.onBackground)
+                              .padding(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = "Country Icon",
+                        tint = colorScheme.background,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        modifier = Modifier.testTag(HomeScreenTestTags.mapLocationTag(post.postId)),
+                        text = loc.specificName,
+                        style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = colorScheme.background,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                  }
                 }
+                Box(
+                    modifier =
+                        Modifier.matchParentSize()
+                            .clickable { onPostClick() }
+                            .background(colorScheme.tertiary)
+                            .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
               }
-              Box(
-                  modifier =
-                      Modifier.matchParentSize()
-                          .clickable { onPostClick() }
-                          .background(colorScheme.tertiary)
-                          .testTag(HomeScreenTestTags.mapPreviewButtonTag(post.postId)))
-            }
+        }
       }
     }
   }
@@ -519,17 +912,13 @@ private fun PostActions(
   ) {
     // Likes
     Row(
-        modifier =
-            Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)).clickable {
-              onToggleLike()
-            },
+        modifier = Modifier.testTag(HomeScreenTestTags.likeButtonTag(post.postId)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(
-          imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-          contentDescription = "Likes",
-          modifier = Modifier.size(30.dp),
-          tint = if (liked) colorScheme.primary else colorScheme.onBackground,
+      AnimatedLikeButton(
+          likedByCurrentUser = liked,
+          onToggleLike = onToggleLike,
+          iconSize = 28.dp,
       )
       Spacer(Modifier.width(6.dp))
       Text(
@@ -571,7 +960,7 @@ private fun PostActions(
       Icon(
           imageVector = Icons.AutoMirrored.Outlined.Chat,
           contentDescription = "Comments",
-          modifier = Modifier.size(25.dp),
+          modifier = Modifier.size(28.dp),
           tint = colorScheme.onBackground,
       )
       Spacer(Modifier.width(6.dp))
@@ -594,4 +983,14 @@ private fun String.startsWithVowel(): Boolean {
       lower.startsWith("i") ||
       lower.startsWith("o") ||
       lower.startsWith("u")
+}
+
+/**
+ * Helper function that checks if the filter is an empty string, if it's the case the filter becomes
+ * null
+ *
+ * @param value the value of the filter
+ */
+private fun getNullIfEmpty(value: String?): String? {
+  return if (value.isNullOrEmpty()) null else value
 }

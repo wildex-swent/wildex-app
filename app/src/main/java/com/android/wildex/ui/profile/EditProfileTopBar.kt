@@ -20,6 +20,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.android.wildex.R
 
+/**
+ * Top bar for the Edit Profile screen.
+ *
+ * Shows an appropriate title depending on whether the profile is new and a back button.
+ *
+ * @param isNewUser True if creating a new profile, false when editing existing.
+ * @param onGoBack Called when the back button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileTopBar(isNewUser: Boolean, onGoBack: () -> Unit) {

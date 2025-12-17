@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.model.map.MapPin
 import com.android.wildex.model.map.PinDetails
 import com.android.wildex.model.map.clusterPinsForZoom
@@ -115,6 +116,9 @@ fun MapScreen(
     onProfile: (Id) -> Unit = {},
     isCurrentUser: Boolean = true,
 ) {
+  val connectivity = LocalConnectivityObserver.current
+  val isOnline by connectivity.isOnline.collectAsStateWithLifecycle()
+
   LaunchedEffect(Unit) { viewModel.loadUIState(userId) }
   Scaffold(bottomBar = bottomBar, modifier = Modifier.testTag(NavigationTestTags.MAP_SCREEN)) {
       inner ->
@@ -234,153 +238,162 @@ fun MapScreen(
     }
 
     LaunchedEffect(uiState.pins) { styleTab = uiState.activeTab }
-    val showLoading = uiState.isLoading || !isMapReady
+    val showLoading = uiState.isLoading || (!isMapReady && isOnline)
     val selected = uiState.selected
     val selectedIndex = uiState.selectedIndex
     val currentSelection: PinDetails? = selected.getOrNull(selectedIndex)
+    val showOfflinePlaceholder = !isOnline && !isMapReady
 
     Box(Modifier.fillMaxSize().padding(inner).testTag(MapContentTestTags.ROOT)) {
       // 1) map
-      MapCanvas(
-          modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_CANVAS),
-          mapViewRef = { mapView = it },
-          styleUri = styleUri,
-          styleImportId = standardImportId,
-          isDark = isDark,
-          showUserLocation = render.showUserLocation,
-          indicatorListener = indicatorListener,
-          centerCoordinates = uiState.centerCoordinates,
-      )
-
-      if (!LocalSkipWorkerThread.current && (isMapReady && mapView != null)) {
-        // 2) pins
-        PinsOverlay(
-            modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
-            mapView = mapView,
-            pins = pinsForDisplay,
-            currentTab = styleTab,
-            selectedId =
-                if (selected.size == 1) {
-                  when (val s = currentSelection) {
-                    is PinDetails.PostDetails -> s.post.postId
-                    is PinDetails.ReportDetails -> s.report.reportId
-                    else -> null
-                  }
-                } else {
-                  null
-                },
-            onPinClick = { id ->
-              val pin = pinsForDisplay.firstOrNull { it.id == id } ?: return@PinsOverlay
-              when (pin) {
-                is MapPin.ClusterPin -> viewModel.onClusterPinClicked(pin)
-                else -> viewModel.onPinSelected(id)
-              }
-            },
+      if (showOfflinePlaceholder) {
+        OfflineMapPlaceholder(
+            modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_CANVAS),
         )
-      }
-      // 3) tap to clear
-      MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
+      } else {
+        MapCanvas(
+            modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_CANVAS),
+            mapViewRef = { mapView = it },
+            styleUri = styleUri,
+            styleImportId = standardImportId,
+            isDark = isDark,
+            showUserLocation = render.showUserLocation,
+            indicatorListener = indicatorListener,
+            centerCoordinates = uiState.centerCoordinates,
+        )
+        if (!LocalSkipWorkerThread.current && (isMapReady && mapView != null)) {
+          // 2) pins
+          PinsOverlay(
+              modifier = Modifier.fillMaxSize().testTag(MapContentTestTags.MAP_PINS),
+              mapView = mapView,
+              pins = pinsForDisplay,
+              currentTab = styleTab,
+              selectedId =
+                  if (selected.size == 1) {
+                    when (val s = currentSelection) {
+                      is PinDetails.PostDetails -> s.post.postId
+                      is PinDetails.ReportDetails -> s.report.reportId
+                      else -> null
+                    }
+                  } else {
+                    null
+                  },
+              onPinClick = { id ->
+                val pin = pinsForDisplay.firstOrNull { it.id == id } ?: return@PinsOverlay
+                when (pin) {
+                  is MapPin.ClusterPin -> viewModel.onClusterPinClicked(pin)
+                  else -> viewModel.onPinSelected(id)
+                }
+              },
+          )
+        }
+        // 3) tap to clear
+        MapTapToClearSelection(mapView = mapView) { viewModel.clearSelection() }
 
-      // 4) map top: tabs + back button
-      Row(
-          modifier =
-              Modifier.align(Alignment.TopCenter)
-                  .fillMaxWidth()
-                  .padding(start = 16.dp, end = 16.dp),
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        val hasBackButton = !isCurrentUser
+        // 4) map top: tabs + back button
+        Row(
+            modifier =
+                Modifier.align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          val hasBackButton = !isCurrentUser
 
-        if (hasBackButton) {
-          BackButton(
-              modifier = Modifier.wrapContentWidth().testTag(MapContentTestTags.BACK_BUTTON),
-              onGoBack = onGoBack,
+          if (hasBackButton) {
+            BackButton(
+                modifier = Modifier.wrapContentWidth().testTag(MapContentTestTags.BACK_BUTTON),
+                onGoBack = onGoBack,
+            )
+          }
+
+          MapTabSwitcher(
+              modifier =
+                  Modifier.weight(if (hasBackButton) 0.8f else 1f)
+                      .testTag(MapContentTestTags.TAB_SWITCHER),
+              activeTab = uiState.activeTab,
+              availableTabs = uiState.availableTabs,
+              onTabSelected = { viewModel.onTabSelected(it, userId) },
+              isCurrentUser = isCurrentUser,
           )
         }
 
-        MapTabSwitcher(
+        // 5) map controls: refresh + recenter
+        Column(
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.End,
+        ) {
+          MapRefreshButton(
+              modifier = Modifier.testTag(MapContentTestTags.REFRESH),
+              isRefreshing = uiState.isRefreshing,
+              onRefresh = { viewModel.refreshUIState(userId) },
+          )
+
+          RecenterFab(
+              modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
+              isLocationGranted = isLocationGranted,
+              onRecenter = { viewModel.requestRecenter() },
+              onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
+          )
+        }
+
+        // 6) bottom card
+        SelectionBottomCard(
             modifier =
-                Modifier.weight(if (hasBackButton) 0.8f else 1f)
-                    .testTag(MapContentTestTags.TAB_SWITCHER),
+                Modifier.align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .fillMaxWidth()
+                    .testTag(MapContentTestTags.SELECTION_CARD),
+            selection = currentSelection,
             activeTab = uiState.activeTab,
-            availableTabs = uiState.availableTabs,
-            onTabSelected = { viewModel.onTabSelected(it, userId) },
+            onPost = onPost,
+            onReport = onReport,
+            onDismiss = { viewModel.clearSelection() },
+            onToggleLike = viewModel::toggleLike,
+            onProfile = onProfile,
             isCurrentUser = isCurrentUser,
-        )
-      }
-
-      // 5) map controls: refresh + recenter
-      Column(
-          modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-          verticalArrangement = Arrangement.spacedBy(12.dp),
-          horizontalAlignment = Alignment.End,
-      ) {
-        MapRefreshButton(
-            modifier = Modifier.testTag(MapContentTestTags.REFRESH),
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = { viewModel.refreshUIState(userId) },
+            groupSize = selected.size,
+            groupIndex = selectedIndex,
+            onNext = { viewModel.selectNext() },
+            onPrev = { viewModel.selectPrev() },
         )
 
-        RecenterFab(
-            modifier = Modifier.testTag(MapContentTestTags.FAB_RECENTER),
-            isLocationGranted = isLocationGranted,
-            onRecenter = { viewModel.requestRecenter() },
-            onAskLocation = { locationPermissions.launchMultiplePermissionRequest() },
-        )
-      }
+        // I know it's a weird placement mais the idea is to have the error overlay above the
+        // refresh
+        // button and to keep the map visible below
+        if (uiState.isError) {
+          LoadingFail(
+              modifier =
+                  Modifier.align(Alignment.Center)
+                      .background(colorScheme.surface.copy(alpha = 0.7f)))
+        }
 
-      // 6) bottom card
-      SelectionBottomCard(
-          modifier =
-              Modifier.align(Alignment.BottomEnd)
-                  .padding(12.dp)
-                  .fillMaxWidth()
-                  .testTag(MapContentTestTags.SELECTION_CARD),
-          selection = currentSelection,
-          activeTab = uiState.activeTab,
-          onPost = onPost,
-          onReport = onReport,
-          onDismiss = { viewModel.clearSelection() },
-          onToggleLike = viewModel::toggleLike,
-          onProfile = onProfile,
-          isCurrentUser = isCurrentUser,
-          groupSize = selected.size,
-          groupIndex = selectedIndex,
-          onNext = { viewModel.selectNext() },
-          onPrev = { viewModel.selectPrev() },
-      )
+        // 7) loading overlay
+        if (showLoading) {
+          LoadingScreen(
+              modifier =
+                  Modifier.align(Alignment.Center)
+                      .background(colorScheme.surface.copy(alpha = 0.7f)))
+        }
 
-      // I know it's a weird placement mais the idea is to have the error overlay above the refresh
-      // button and to keep the map visible below
-      if (uiState.isError) {
-        LoadingFail(
-            modifier =
-                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
-      }
-
-      // 7) loading overlay
-      if (showLoading) {
-        LoadingScreen(
-            modifier =
-                Modifier.align(Alignment.Center).background(colorScheme.surface.copy(alpha = 0.7f)))
-      }
-
-      // 8) camera recenter
-      LaunchedEffect(render.recenterNonce) {
-        if (render.recenterNonce != null) {
-          val target = lastPosition
-          val longitude = uiState.centerCoordinates.longitude
-          val latitude = uiState.centerCoordinates.latitude
-          val fallback = Point.fromLngLat(longitude, latitude)
-          val center = target ?: fallback
-          val zoom = if (target != null) 14.0 else 12.0
-          mapView!!
-              .mapboxMap
-              .flyTo(
-                  CameraOptions.Builder().center(center).zoom(zoom).build(),
-                  mapAnimationOptions { duration(800L) },
-              )
-          viewModel.consumeRecenter()
+        // 8) camera recenter
+        LaunchedEffect(render.recenterNonce) {
+          if (render.recenterNonce != null) {
+            val target = lastPosition
+            val longitude = uiState.centerCoordinates.longitude
+            val latitude = uiState.centerCoordinates.latitude
+            val fallback = Point.fromLngLat(longitude, latitude)
+            val center = target ?: fallback
+            val zoom = if (target != null) 14.0 else 12.0
+            mapView!!
+                .mapboxMap
+                .flyTo(
+                    CameraOptions.Builder().center(center).zoom(zoom).build(),
+                    mapAnimationOptions { duration(800L) },
+                )
+            viewModel.consumeRecenter()
+          }
         }
       }
     }

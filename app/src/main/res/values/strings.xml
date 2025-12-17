@@ -4,7 +4,16 @@
     <!-- Main Activity -->
 
     <!-- Home screen -->
+    <string name="no_posts">No posts were found…</string>
     <string name="app_name">Wildex</string>
+    <string name="filters_title">Filters</string>
+    <string name="author">Author</string>
+    <string name="location">Location</string>
+    <string name="animal">Animal</string>
+    <string name="onlyFriendsPosts">See only my friends posts</string>
+    <string name="onlyMyPosts">See only my posts</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
 
     <!-- Placeholder screen -->
 
@@ -22,6 +31,7 @@
     <string name="default_description">No bio yet.</string>
     <string name="view_achievements">View all achievements →</string>
     <string name="no_achievements">No achievements yet!</string>
+    <string name="no_achievements_offline">Out in the wild - back online to see</string>
 
     <!-- Edit Profile screen -->
     <string name="edit_profile_title">Edit Profile</string>
@@ -37,10 +47,10 @@
     <string name="settings">Settings</string>
     <string name="edit_profile">Edit profile</string>
     <string name="notifications">Notifications</string>
-    <string name="user_status">User status</string>
-    <string name="regular_status">Regular</string>
-    <string name="professional_status">Professional</string>
-    <string name="appearance">Appearance</string>
+    <string name="user_type">Status</string>
+    <string name="regular_type">Regular</string>
+    <string name="professional_type">Professional</string>
+    <string name="appearance">Theme</string>
     <string name="light_mode">Light</string>
     <string name="dark_mode">Dark</string>
     <string name="system_default">Auto</string>
@@ -48,6 +58,9 @@
     <string name="permission_required">Permission Required</string>
     <string name="enable_in_settings">Notification permission is required. Please enable it in Settings.</string>
     <string name="open_settings">Open Settings</string>
+    <string name="user_type_change_validation_title">Change status ?</string>
+    <string name="user_type_change_validation_text">If you change your status from professional to regular you will be unassigned from every report you have self-assigned</string>
+    <string name="user_type_change_validation_confirm">Confirm</string>
 
     <!-- Friend screen -->
     <string name="friends_tab_title">Friends</string>
@@ -71,9 +84,6 @@
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
     <string name="empty_other_collection">No animals in this collection.</string>
 
-    <!-- Home screen -->
-    <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
-
     <!-- Notification screen -->
     <string name="notifications_title">Notifications</string>
     <string name="notifications_no_notifications">No notifications yet.</string>
@@ -96,6 +106,9 @@
     <string name="map_my_posts">My posts</string>
     <string name="map_reports">Reports</string>
     <string name="cluster_group_position">%1$d / %2$d</string>
+    <string name="map_offline_placeholder_title">Nothing to display</string>
+    <string name="map_offline_placeholder_subtitle">You’re offline and the map never loaded.</string>
+    <string name="map_offline_placeholder_hint">  We promise we’re not hiding anything.</string>
 
     <!-- Achievements screen -->
     <string name="achievements">Achievements</string>
@@ -121,8 +134,6 @@
     <string name="confidence">Confidence</string>
     <string name="add_description">Add a description</string>
     <string name="description_placeholder">Share what you observed… behavior, habitat, weather conditions, or any interesting details!</string>
-    <string name="share_location">Share Location</string>
-    <string name="share_location_description">Help others discover nearby animals</string>
     <string name="cancel_button">Cancel &amp; Retry</string>
     <string name="confirm_button">✓ Confirm &amp; Post</string>
     <string name="footer">Your sighting will be shared with the wildlife community</string>
@@ -214,6 +225,10 @@
     <string name="offline_subtitle">Please check your internet connection.</string>
     <string name="offline_message">This is not a bug… it\'s a purr-formance issue :O</string>
     <string name="no_discoveries">No discoveries yet, start exploring!</string>
+    <string name="friends_offline_title">Friends not observed</string>
+    <string name="friends_offline_subtitle">Connection unavailable</string>
+    <string name="friends_offline_message">Reconnect to continue tracking social habitats.</string>
+
 
     <!-- Post details screen -->
     <string name="post_details_delete_post">Delete post</string>

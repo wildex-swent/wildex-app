@@ -1,6 +1,7 @@
 package com.android.wildex.model.animal
 
 import android.util.Log
+import com.android.wildex.model.cache.animal.IAnimalCache
 import com.android.wildex.model.utils.Id
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,23 +10,41 @@ import kotlinx.coroutines.tasks.await
 const val ANIMAL_COLLECTION_PATH = "animals"
 
 /** Firestore implementation of the [AnimalRepository]. */
-class AnimalRepositoryFirestore(private val db: FirebaseFirestore) : AnimalRepository {
+class AnimalRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val cache: IAnimalCache
+) : AnimalRepository {
 
   override suspend fun getAnimal(animalId: Id): Animal {
+    cache.getAnimal(animalId)?.let {
+      return it
+    }
+
     val doc = db.collection(ANIMAL_COLLECTION_PATH).document(animalId).get().await()
     require(doc.exists()) { "Animal with given Id $animalId not found" }
-    return convertToAnimal(doc)
-        ?: throw IllegalArgumentException("Animal with given Id $animalId not found")
+    val animal =
+        convertToAnimal(doc)
+            ?: throw IllegalArgumentException("Animal with given Id $animalId not found")
+
+    cache.saveAnimal(animal)
+    return animal
   }
 
   override suspend fun getAllAnimals(): List<Animal> {
+    cache.getAllAnimals()?.let {
+      return it
+    }
+
     val collection = db.collection(ANIMAL_COLLECTION_PATH).get().await()
     val docs = collection.documents
     if (docs.isEmpty()) {
       Log.w("AnimalRepositoryFirestore", "No animals found in the collection.")
       return emptyList()
     }
-    return docs.mapNotNull { convertToAnimal(it) }
+    val animals = docs.mapNotNull { convertToAnimal(it) }
+
+    cache.saveAnimals(animals)
+    return animals
   }
 
   override suspend fun addAnimal(animal: Animal) {
@@ -39,6 +58,11 @@ class AnimalRepositoryFirestore(private val db: FirebaseFirestore) : AnimalRepos
     }
 
     documentRef.set(animal).await()
+    cache.saveAnimal(animal)
+  }
+
+  override suspend fun refreshCache() {
+    cache.clearAll()
   }
 
   private fun convertToAnimal(doc: DocumentSnapshot): Animal? {

@@ -27,6 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the Post Details screen.
+ *
+ * Contains all information required to render a post details view.
+ */
 data class PostDetailsUIState(
     val postId: Id = "",
     val pictureURL: URL = "",
@@ -63,6 +68,17 @@ data class CommentWithAuthorUI(
     val date: String = "",
 )
 
+/**
+ * ViewModel that loads post details, handles likes/comments and deletion.
+ *
+ * @param postRepository Repository for post data.
+ * @param userRepository Repository for user data.
+ * @param commentRepository Repository for comments.
+ * @param animalRepository Repository for animal data.
+ * @param likeRepository Repository for likes.
+ * @param userAnimalsRepository Repository for user-animal relations.
+ * @param currentUserId Current authenticated user id.
+ */
 class PostDetailsScreenViewModel(
     private val postRepository: PostsRepository = RepositoryProvider.postRepository,
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
@@ -80,6 +96,7 @@ class PostDetailsScreenViewModel(
   /** In-flight guard to avoid double-tap spamming like/unlike. */
   @Volatile private var likeInFlight = false
 
+  /** Clears any visible error message. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
@@ -88,16 +105,25 @@ class PostDetailsScreenViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  /** Refresh post details (pull-to-refresh). */
   fun refreshPostDetails(postId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
     viewModelScope.launch { updatePostDetails(postId, calledFromRefresh = true) }
   }
 
+  /** Initial load of the post detail data. */
   fun loadPostDetails(postId: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updatePostDetails(postId) }
   }
 
+  /**
+   * Loads all necessary data for the post details and updates the UI state.
+   *
+   * Inline comments: this method performs multiple repository calls (post, author, comments,
+   * animal, likes) and composes a UI model. Errors in sub-steps are caught and produce partial
+   * fallbacks where possible; fatal errors set overall error state.
+   */
   private suspend fun updatePostDetails(postId: Id, calledFromRefresh: Boolean = false) {
     try {
       if (calledFromRefresh) {
@@ -163,6 +189,11 @@ class PostDetailsScreenViewModel(
     }
   }
 
+  /**
+   * Add like to post with optimistic UI and rollback on failure.
+   *
+   * Prevents concurrent operations with [likeInFlight].
+   */
   fun addLike() {
     if (likeInFlight || _uiState.value.likedByCurrentUser) return
     likeInFlight = true
@@ -191,6 +222,7 @@ class PostDetailsScreenViewModel(
     }
   }
 
+  /** Remove like from post with optimistic UI and rollback on failure. */
   fun removeLike() {
     if (likeInFlight || !_uiState.value.likedByCurrentUser) return
     likeInFlight = true
@@ -220,7 +252,12 @@ class PostDetailsScreenViewModel(
     }
   }
 
-  /** Optimistic comment add with rollback on failure. */
+  /**
+   * Optimistic comment add with rollback on failure.
+   *
+   * Inline comments: creates an optimistic UI entry, persists the comment, and updates the details
+   * on success. On failure it rolls back the optimistic change.
+   */
   fun addComment(text: String = "") {
     if (text.isBlank()) return
 
@@ -277,7 +314,7 @@ class PostDetailsScreenViewModel(
     }
   }
 
-  /** Optimistic comment remove with rollback on failure. */
+  /** Optimistic comment removal with rollback on failure. */
   fun removeComment(commentId: Id) {
     viewModelScope.launch {
       val postId = _uiState.value.postId
@@ -307,7 +344,7 @@ class PostDetailsScreenViewModel(
     }
   }
 
-  /** Deletes a post and associated items */
+  /** Deletes a post and associated items. */
   fun removePost(postId: Id) {
     viewModelScope.launch {
       try {
@@ -331,6 +368,7 @@ class PostDetailsScreenViewModel(
         )
   }
 
+  /** Formats a Firebase Timestamp into a displayable date string. */
   private fun formatDate(ts: Timestamp): String {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return dateFormat.format(ts.toDate())

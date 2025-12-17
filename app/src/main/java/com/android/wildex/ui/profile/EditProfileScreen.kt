@@ -60,9 +60,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.wildex.R
+import com.android.wildex.model.LocalConnectivityObserver
 import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
+import com.android.wildex.ui.utils.offline.OfflineScreen
 import java.util.Locale
 
 object EditProfileScreenTestTags {
@@ -78,6 +80,14 @@ object EditProfileScreenTestTags {
   const val ERROR_MESSAGE = "edit_profile_screen_error_message"
 }
 
+/**
+ * Screen composable for creating or editing a user profile.
+ *
+ * @param editScreenViewModel ViewModel that provides UI state and actions.
+ * @param onGoBack Callback invoked to navigate back.
+ * @param onSave Callback invoked after successful save (used for new user flow).
+ * @param isNewUser True when creating a new profile.
+ */
 @SuppressLint("LocalContextConfigurationRead")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +100,8 @@ fun EditProfileScreen(
   LaunchedEffect(Unit) { editScreenViewModel.loadUIState() }
   val uiState by editScreenViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val connectivityObserver = LocalConnectivityObserver.current
+  val isOnline by connectivityObserver.isOnline.collectAsState()
   val userLocale = context.resources.configuration.locales[0]
   val countryNames =
       remember(userLocale) {
@@ -120,24 +132,40 @@ fun EditProfileScreen(
       modifier = Modifier.fillMaxSize().testTag(NavigationTestTags.EDIT_PROFILE_SCREEN),
       topBar = { EditProfileTopBar(isNewUser, onGoBack) },
   ) { pd ->
-    when {
-      uiState.isError -> LoadingFail()
-      uiState.isLoading -> LoadingScreen()
-      else ->
-          EditView(
-              editScreenViewModel = editScreenViewModel,
-              onSave = onSave,
-              isNewUser = isNewUser,
-              pd = pd,
-              uiState = uiState,
-              countryNames = countryNames,
-              cs = cs,
-              pickImageLauncher = pickImageLauncher,
-          )
+    if (isOnline) {
+      when {
+        uiState.isError -> LoadingFail()
+        uiState.isLoading -> LoadingScreen()
+        else ->
+            EditView(
+                editScreenViewModel = editScreenViewModel,
+                onSave = onSave,
+                isNewUser = isNewUser,
+                pd = pd,
+                uiState = uiState,
+                countryNames = countryNames,
+                cs = cs,
+                pickImageLauncher = pickImageLauncher,
+            )
+      }
+    } else {
+      OfflineScreen(innerPadding = pd)
     }
   }
 }
 
+/**
+ * Main editable view with profile picture, inputs and save button.
+ *
+ * @param editScreenViewModel ViewModel that backs the view.
+ * @param onSave Callback invoked when save finishes.
+ * @param isNewUser True when creating a new profile.
+ * @param pd Padding values from parent.
+ * @param uiState Current UI state.
+ * @param countryNames List of display country names with flags.
+ * @param cs Current ColorScheme.
+ * @param pickImageLauncher Activity launcher used to pick an image.
+ */
 @Composable
 fun EditView(
     editScreenViewModel: EditProfileViewModel = viewModel(),
@@ -301,6 +329,15 @@ fun EditView(
   }
 }
 
+/**
+ * Country dropdown composable that allows selecting a country string.
+ *
+ * @param modifier Modifier to apply to the dropdown container.
+ * @param label Label to display for the field.
+ * @param selectedCountry Currently selected country string.
+ * @param countries List of formatted country strings (flag + name).
+ * @param onCountrySelected Callback when a country is chosen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CountryDropdown(
@@ -339,6 +376,7 @@ fun CountryDropdown(
             modifier = Modifier.testTag(EditProfileScreenTestTags.COUNTRY_ELEMENT + countryName),
             text = { Text(countryName) },
             onClick = {
+              // CountryName contains a flag prefix; find first letter and trim
               val startIndex = countryName.indexOfFirst { it.isLetter() }
               val cleaned =
                   if (startIndex >= 0) countryName.substring(startIndex).trim()
@@ -352,6 +390,7 @@ fun CountryDropdown(
   }
 }
 
+/** Convert ISO country code (e.g. "US") to a flag emoji. */
 fun String.toFlagEmoji(): String {
   val first = Character.codePointAt(this, 0) - 0x41 + 0x1F1E6
   val second = Character.codePointAt(this, 1) - 0x41 + 0x1F1E6

@@ -16,6 +16,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.android.wildex.R
 
+/**
+ * Top app bar used in the Notifications screen.
+ *
+ * Displays a centered title and a back navigation icon.
+ *
+ * @param onGoBack Callback invoked when the navigation (back) button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationTopBar(onGoBack: () -> Unit) {

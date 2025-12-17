@@ -63,6 +63,16 @@ object PostDetailsScreenTestTags {
   const val PULL_TO_REFRESH = "pullToRefresh"
 }
 
+/**
+ * Host composable for the Post Details screen.
+ *
+ * Coordinates loading state, top bar, bottom comment input and offline handling.
+ *
+ * @param postId The id of the post to show.
+ * @param postDetailsScreenViewModel ViewModel providing state and actions.
+ * @param onGoBack Callback to navigate back.
+ * @param onProfile Callback when a profile is selected.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetailsScreen(
@@ -95,14 +105,16 @@ fun PostDetailsScreen(
         )
       },
       bottomBar = {
-        // Pinned comment input – content scrolls behind it
-        CommentInput(
-            userId = uiState.currentUserId,
-            userProfilePictureURL = uiState.currentUserProfilePictureURL,
-            userUserType = uiState.currentUserUserType,
-            onProfile = onProfile,
-            postDetailsScreenViewModel = postDetailsScreenViewModel,
-        )
+        if (isOnline) {
+          // Pinned comment input – content scrolls behind it
+          CommentInput(
+              userId = uiState.currentUserId,
+              userProfilePictureURL = uiState.currentUserProfilePictureURL,
+              userUserType = uiState.currentUserUserType,
+              onProfile = onProfile,
+              postDetailsScreenViewModel = postDetailsScreenViewModel,
+          )
+        }
       },
   ) { innerPadding ->
     if (isOnline) {
@@ -122,6 +134,20 @@ fun PostDetailsScreen(
   }
 }
 
+/**
+ * Content area for the Post Details screen.
+ *
+ * Shows the post content, pull-to-refresh and deletion confirmation dialog if needed.
+ *
+ * @param innerPadding Padding values passed from parent Scaffold.
+ * @param uiState Current UI state to render.
+ * @param postDetailsScreenViewModel ViewModel with actions.
+ * @param postId Id of the currently displayed post.
+ * @param onProfile Callback when a profile is selected.
+ * @param onGoBack Callback to navigate back after deletion.
+ * @param showActionSheet Controls visibility of the action sheet.
+ * @param onDismissActionSheet Dismiss action for the action sheet.
+ */
 @Composable
 fun PostDetailsScreenContent(
     innerPadding: PaddingValues,
@@ -216,6 +242,15 @@ fun PostDetailsScreenContent(
 }
 
 // ---------- Bottom input (pinned) ----------
+/**
+ * Bottom pinned comment input composable used to create comments.
+ *
+ * @param userId Current user id displayed in the input.
+ * @param userProfilePictureURL Profile picture to show for the commenter.
+ * @param userUserType User type for the profile picture rendering.
+ * @param onProfile Callback when the profile image is tapped.
+ * @param postDetailsScreenViewModel ViewModel used to submit comments.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentInput(

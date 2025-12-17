@@ -70,6 +70,7 @@ abstract class NavigationTestUtils {
 
   @Before
   fun setup() {
+    RepositoryProvider.init(composeRule.activity)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")

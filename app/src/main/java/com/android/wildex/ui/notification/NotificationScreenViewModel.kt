@@ -18,6 +18,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the notification screen.
+ *
+ * Holds the list of notifications and simple loading / error flags.
+ */
 data class NotificationScreenUIState(
     val notifications: List<NotificationUIState> = emptyList(),
     val isLoading: Boolean = false,
@@ -26,6 +31,7 @@ data class NotificationScreenUIState(
     val isError: Boolean = false,
 )
 
+/** Presentation model for a single notification in the UI. */
 data class NotificationUIState(
     val notificationId: String,
     val notificationRoute: String,
@@ -36,6 +42,13 @@ data class NotificationUIState(
     val author: SimpleUser,
 )
 
+/**
+ * ViewModel that loads and manages notifications for the current user.
+ *
+ * @param notificationRepository Repository used to read and update notification data.
+ * @param userRepository Repository used to fetch author information.
+ * @param currentUserId Current authenticated user id.
+ */
 class NotificationScreenViewModel(
     private val notificationRepository: NotificationRepository =
         RepositoryProvider.notificationRepository,
@@ -48,11 +61,23 @@ class NotificationScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<NotificationScreenUIState> = _uiState.asStateFlow()
 
+  /**
+   * Loads the UI state (initial load).
+   *
+   * This sets loading flags and launches a coroutine that delegates to [updateUIState].
+   */
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState() }
   }
 
+  /**
+   * Suspend function that fetches notifications and updates the UI state.
+   *
+   * This performs repository calls and handles errors by updating the error-related state.
+   *
+   * @param calledFromRefresh If true, forces a repository cache refresh for user info first.
+   */
   private suspend fun updateUIState(calledFromRefresh: Boolean = false) {
     try {
       if (calledFromRefresh) {
@@ -72,6 +97,12 @@ class NotificationScreenViewModel(
     }
   }
 
+  /**
+   * Fetches and transforms repository notification models into UI models.
+   *
+   * Note: mapping includes fetching simple user info for each notification author; failures for
+   * individual notifications are ignored (skipped) so UI shows the rest.
+   */
   private suspend fun fetchNotifications(): List<NotificationUIState> {
     val notif =
         notificationRepository.getAllNotificationsForUser(currentUserId).sortedByDescending {
@@ -90,21 +121,29 @@ class NotificationScreenViewModel(
                 author = userRepository.getSimpleUser(it.authorId),
             )
           } catch (_: Exception) {
+            // ignore individual failures and omit that notification from the list
             null
           }
         }
     return notificationUIStates
   }
 
+  /** Triggered by pull-to-refresh: forces repositories to refresh and reloades UI state. */
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(calledFromRefresh = true) }
   }
 
+  /**
+   * Set an error message in UI state.
+   *
+   * @param msg Error message to display.
+   */
   private fun setErrorMsg(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
+  /** Clear any visible error message. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
@@ -114,6 +153,11 @@ class NotificationScreenViewModel(
     setErrorMsg("You are currently offline\nYou can not refresh for now :/")
   }
 
+  /**
+   * Marks a single notification as read and refreshes state.
+   *
+   * Inline comment: this updates repository and reloads the whole UI; errors set the error state.
+   */
   fun markAsRead(notificationId: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
@@ -135,6 +179,12 @@ class NotificationScreenViewModel(
     }
   }
 
+  /**
+   * Marks all user notifications as read.
+   *
+   * Inline comment: performs a repository operation then refreshes UI; error handling mirrors
+   * single-mark flow.
+   */
   fun markAllAsRead() {
     _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
@@ -156,6 +206,7 @@ class NotificationScreenViewModel(
     }
   }
 
+  /** Deletes a single notification for the user and refreshes UI. */
   fun clearNotification(notificationId: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
@@ -177,6 +228,7 @@ class NotificationScreenViewModel(
     }
   }
 
+  /** Deletes all notifications for the current user and refreshes UI. */
   fun clearAllNotifications() {
     _uiState.value = _uiState.value.copy(isLoading = true)
     viewModelScope.launch {
@@ -198,6 +250,12 @@ class NotificationScreenViewModel(
     }
   }
 
+  /**
+   * Compute a human-friendly relative time string from a Firebase Timestamp.
+   *
+   * Inline comment: uses ChronoUnit differences from largest to smallest and returns the first
+   * non-zero unit (years, months, weeks, days, hours, minutes, seconds).
+   */
   private fun getRelativeTime(timestamp: Timestamp): String {
     val zone = ZoneId.systemDefault()
     val then = LocalDateTime.ofInstant(timestamp.toInstant(), zone)

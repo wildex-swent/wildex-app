@@ -184,8 +184,8 @@ private fun PostPicture(
     ImageWithDoubleTapLike(
         pictureURL = pictureURL,
         likedByCurrentUser = likedByCurrentUser,
-        onLike = onLike,
-        modifier = Modifier.fillMaxWidth().testTag(PostDetailsContentTestTags.IMAGE_BOX))
+        onDoubleTap = onLike,
+        modifier = Modifier.testTag(PostDetailsContentTestTags.IMAGE_BOX))
     // top black gradient overlay
     Box(
         modifier =
@@ -326,14 +326,22 @@ fun LocationSpeciesLikeBar(
       }
     }
 
-    AnimatedLikeButton(
-        likedByCurrentUser = likedByCurrentUser,
-        likesCount = likesCount,
-        onToggleLike = { if (!likedByCurrentUser) onLike() else onUnlike() },
-        iconSize = iconSize,
-        textStyle = textStyle,
+    Column(
         modifier = Modifier.weight(itemWeight),
-    )
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      AnimatedLikeButton(
+          likedByCurrentUser = likedByCurrentUser,
+          onToggleLike = { if (!likedByCurrentUser) onLike() else onUnlike() },
+          iconSize = iconSize,
+      )
+      Spacer(Modifier.width(spacing))
+      Text(
+          text = likesCount.toString(),
+          style = textStyle,
+          color = colorScheme.onBackground,
+      )
+    }
   }
 }
 

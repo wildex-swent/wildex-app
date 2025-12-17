@@ -24,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -66,16 +67,16 @@ fun NavigationOptionsBottomSheet(
   val context = LocalContext.current
   val label = displayLabel ?: "%.5f, %.5f".format(latitude, longitude)
 
-  val onBackground = MaterialTheme.colorScheme.onBackground
+  val onBackground = colorScheme.onBackground
   val secondaryText = onBackground.copy(alpha = 0.7f)
-  val outline = MaterialTheme.colorScheme.outline
-  val primary = MaterialTheme.colorScheme.primary
+  val outline = colorScheme.outline
+  val primary = colorScheme.primary
 
   ModalBottomSheet(
       onDismissRequest = onDismissRequest,
       dragHandle = { BottomSheetDefaults.DragHandle() },
       modifier = Modifier.testTag(NavigationSheetTestTags.SHEET),
-      contentColor = MaterialTheme.colorScheme.background,
+      containerColor = colorScheme.background,
   ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
@@ -146,7 +147,7 @@ fun NavigationOptionsBottomSheet(
           Icon(
               imageVector = Icons.Filled.ContentCopy,
               contentDescription = null,
-              tint = onBackground,
+              tint = primary,
           )
           Text(context.getString(R.string.report_details_copy))
         }
@@ -173,7 +174,7 @@ fun NavigationOptionsBottomSheet(
           Icon(
               imageVector = Icons.Filled.Share,
               contentDescription = null,
-              tint = onBackground,
+              tint = primary,
           )
           Text(context.getString(R.string.report_details_share))
         }

@@ -29,6 +29,7 @@ data class FriendsScreenUIState(
     val errorMsg: String? = null,
 )
 
+/** Holds a friend request together with the associated user presentation. */
 data class RequestState(val user: SimpleUser, val request: FriendRequest)
 
 /**
@@ -77,6 +78,10 @@ class FriendScreenViewModel(
   /**
    * Updates the UI state of the Friend Screen by fetching all needed data from the repositories.
    *
+   * Inline comments: this method performs multiple repository reads and maps them into presentation
+   * models. It also launches a background task to compute suggestions — this coordination makes the
+   * method non-trivial.
+   *
    * @param userId the user whose friend list we want to fetch
    */
   private suspend fun updateUIState(userId: Id, calledFromRefresh: Boolean = false) {
@@ -85,12 +90,16 @@ class FriendScreenViewModel(
         userRepository.refreshCache()
       }
       val isCurrentUser = userId == currentUserId
+      // Fetch friends lists and requests (multiple repository calls)
       val userFriends = userFriendsRepository.getAllFriendsOfUser(userId)
       val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
       val currentUserSentRequests =
           friendRequestRepository.getAllFriendRequestsBySender(currentUserId)
       val currentUserReceivedRequests =
           friendRequestRepository.getAllFriendRequestsByReceiver(currentUserId)
+
+      // Map friend entries to FriendState, resolving each user and comparing to current user's
+      // lists.
       val friendsStates =
           userFriends.map {
             FriendState(
@@ -107,6 +116,8 @@ class FriendScreenViewModel(
                       else -> FriendStatus.NOT_FRIEND
                     })
           }
+
+      // Build request lists only when viewing the current user's screen.
       val receivedRequests =
           if (isCurrentUser) {
             currentUserReceivedRequests.map {
@@ -119,6 +130,7 @@ class FriendScreenViewModel(
               RequestState(userRepository.getSimpleUser(it.receiverId), it)
             }
           } else emptyList()
+
       _uiState.value =
           _uiState.value.copy(
               friends = friendsStates,
@@ -130,6 +142,8 @@ class FriendScreenViewModel(
               errorMsg = null,
               isError = false,
           )
+
+      // Suggestion computation runs in a coroutine to avoid blocking the UI update above.
       viewModelScope.launch {
         suggestions.value =
             if (isCurrentUser) userRecommender.getRecommendedUsers() else emptyList()
@@ -162,13 +176,11 @@ class FriendScreenViewModel(
   }
 
   /**
-   * Sends a friend request to the given user. If the screen is the current user's friend screen,
-   * sending a friend request means that a new request appears in the sent requests section, and the
-   * user is removed from the friend list in case the follow was initiated there (possible if the
-   * current user unfollows one of his friends but then resends a friend request). If the screen is
-   * another user's friend screen, sending a friend request means updating the friend states to
-   * notify that a friend request to the given user was initiated and allowing to cancel the friend
-   * request.
+   * Sends a friend request to the given user.
+   *
+   * Inline comments: performs optimistic UI update (adds sent request / updates friend list),
+   * persists the request, and on failure reverts the UI and restores suggestions. This sequence
+   * involves careful state snapshot and rollback logic.
    *
    * @param userId the user who the current user sends a friend request to
    */
@@ -183,10 +195,12 @@ class FriendScreenViewModel(
       var newFriends: List<FriendState>
 
       if (state.isCurrentUser) {
+        // Optimistically add to sentRequests and remove from friends if present.
         newSentRequests = sentRequests + listOf(requestState)
         newFriends = friends.filter { it.friend.userId != userId }
         suggestions.value = suggestions.value.filter { it.user.userId != userId }
       } else {
+        // When viewing another user's list, change their friend state to pending.
         newSentRequests = sentRequests
         newFriends =
             friends.map {
@@ -203,16 +217,16 @@ class FriendScreenViewModel(
               suggestions = suggestions.value.take(5))
 
       try {
+        // Persist the friend request
         friendRequestRepository.initializeFriendRequest(currentUserId, userId)
-        // to always display some suggestions to the current user, we get new ones when there are
-        // not enough left
+        // Replenish suggestions if there are too few after the optimistic change
         if (state.isCurrentUser && suggestions.value.size < 5) {
           suggestions.value = userRecommender.getRecommendedUsers()
         }
       } catch (e: Exception) {
+        // Rollback UI to previous snapshot on failure
         _uiState.value = state
         setErrorMsg("Failed to send request to user $userId : ${e.message}")
-        // if the request was done in the suggestions, we need to retrieve the suggestion
         if (state.isCurrentUser) suggestions.value = state.suggestions
       }
     }

@@ -123,6 +123,8 @@ class ProfileScreenViewModelTest {
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns listOf(a1, a2)
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns listOf(pNoLoc, pWithLoc)
+      coEvery { userAnimalsRepository.getAnimalsCountOfUser("uid-1") } returns 3
+      coEvery { userFriendsRepository.getFriendsCountOfUser("uid-1") } returns 4
       coEvery { userFriendsRepository.getAllFriendsOfUser("uid-1") } returns emptyList()
       coEvery { friendRequestRepository.getAllFriendRequestsBySender("uid-1") } returns emptyList()
       coEvery { friendRequestRepository.getAllFriendRequestsByReceiver("uid-1") } returns
@@ -155,6 +157,7 @@ class ProfileScreenViewModelTest {
               friendRequestRepository = friendRequestRepository,
               currentUserId = "someone-else",
           )
+      coEvery { userRepository.refreshCache() } just Runs
       coEvery { userRepository.getUser("uid-1") } returns u1
       coEvery { achievementsRepository.getAllAchievementsByUser("uid-1") } returns emptyList()
       coEvery { postsRepository.getAllPostsByGivenAuthor("uid-1") } returns emptyList()
@@ -476,7 +479,8 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(s.friendsCount + 1, s2.friendsCount)
       Assert.assertEquals(
           s,
-          s2.copy(friendStatus = FriendStatus.PENDING_RECEIVED, friendsCount = s2.friendsCount - 1))
+          s2.copy(friendStatus = FriendStatus.PENDING_RECEIVED, friendsCount = s2.friendsCount - 1),
+      )
     }
   }
 
@@ -572,7 +576,9 @@ class ProfileScreenViewModelTest {
       Assert.assertEquals(FriendStatus.NOT_FRIEND, s2.friendStatus)
       Assert.assertEquals(s.friendsCount - 1, s2.friendsCount)
       Assert.assertEquals(
-          s, s2.copy(friendStatus = FriendStatus.FRIEND, friendsCount = s2.friendsCount + 1))
+          s,
+          s2.copy(friendStatus = FriendStatus.FRIEND, friendsCount = s2.friendsCount + 1),
+      )
     }
   }
 

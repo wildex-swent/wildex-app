@@ -4,7 +4,16 @@
     <!-- Main Activity -->
 
     <!-- Home screen -->
+    <string name="no_posts">No posts were found…</string>
     <string name="app_name">Wildex</string>
+    <string name="filters_title">Filters</string>
+    <string name="author">Author</string>
+    <string name="location">Location</string>
+    <string name="animal">Animal</string>
+    <string name="onlyFriendsPosts">See only my friends posts</string>
+    <string name="onlyMyPosts">See only my posts</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
 
     <!-- Placeholder screen -->
 
@@ -74,9 +83,6 @@
     <!-- Collection screen -->
     <string name="empty_current_collection">No animals in your collection yet.\nStart exploring…</string>
     <string name="empty_other_collection">No animals in this collection.</string>
-
-    <!-- Home screen -->
-    <string name="no_nearby_posts">No nearby posts.\nStart posting…</string>
 
     <!-- Notification screen -->
     <string name="notifications_title">Notifications</string>

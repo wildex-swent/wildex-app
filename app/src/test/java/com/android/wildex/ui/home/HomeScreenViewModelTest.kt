@@ -149,18 +149,6 @@ class HomeScreenViewModelTest {
           likeCount = 1,
           commentsCount = 1)
 
-  private val user1 =
-      User(
-          userId = "author1",
-          username = "author_one",
-          name = "name",
-          surname = "surname",
-          bio = "bio",
-          profilePictureURL = "url1",
-          userType = UserType.REGULAR,
-          creationDate = Timestamp(0, 0),
-          country = "country")
-
   @Before
   fun setUp() {
     postsRepository = mockk()
@@ -221,6 +209,7 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
       viewModel.refreshUIState()
 
       assertTrue(viewModel.uiState.value.isRefreshing)
@@ -244,6 +233,7 @@ class HomeScreenViewModelTest {
                   likeCount = 1,
                   commentsCount = 1),
           )
+
       val updatedState = viewModel.uiState.value
       assertEquals(expectedStates, updatedState.postStates)
       assertEquals(u1, updatedState.currentUser)
@@ -260,6 +250,7 @@ class HomeScreenViewModelTest {
       coEvery { postsRepository.getAllPosts() } coAnswers { deferred.await() }
       coEvery { likeRepository.getLikeForPost("p1") } returns like1
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
       viewModel.loadUIState()
 
       assertTrue(viewModel.uiState.value.isLoading)
@@ -437,6 +428,7 @@ class HomeScreenViewModelTest {
     mainDispatcherRule.runTest {
       coEvery { postsRepository.getAllPosts() } returns listOf(p1)
       coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns emptyList()
 
       viewModel.refreshUIState()
       advanceUntilIdle()
@@ -490,25 +482,14 @@ class HomeScreenViewModelTest {
         onlyFriendsPosts = true,
         ofAnimal = "NewAnimalFilter",
         fromPlace = "NewPlaceFilter",
-        fromAuthor =
-            SimpleUser(
-                userId = "NewUserIdFilter",
-                username = "NewUsernameFilter",
-                profilePictureURL = "NewURLFilter",
-                userType = UserType.REGULAR))
+        fromAuthor = "NewUsernameFilter")
 
     val state = viewModel.uiState.value
 
     assertTrue(state.postsFilters.onlyFriendsPosts)
     assertEquals("NewAnimalFilter", state.postsFilters.ofAnimal)
     assertEquals("NewPlaceFilter", state.postsFilters.fromPlace)
-    assertEquals(
-        SimpleUser(
-            userId = "NewUserIdFilter",
-            username = "NewUsernameFilter",
-            profilePictureURL = "NewURLFilter",
-            userType = UserType.REGULAR),
-        state.postsFilters.fromAuthor)
+    assertEquals("NewUsernameFilter", state.postsFilters.fromAuthor)
   }
 
   @Test
@@ -523,16 +504,42 @@ class HomeScreenViewModelTest {
 
   @Test
   fun filterPostsByFriendsWorks() {
-    coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns listOf(user1)
+    mainDispatcherRule.runTest {
+      coEvery { postsRepository.getAllPosts() } returns listOf(p1)
+      coEvery { userRepository.getSimpleUser("uid-1") } returns u1
+      coEvery { userFriendsRepository.getAllFriendsOfUser(any()) } returns
+          listOf(
+              User(
+                  userId = "author1",
+                  username = "author_one",
+                  name = "name",
+                  surname = "surname",
+                  bio = "bio",
+                  profilePictureURL = "url1",
+                  userType = UserType.REGULAR,
+                  creationDate = Timestamp(0, 0),
+                  country = "country"))
 
-    viewModel.setPostsFilter(onlyFriendsPosts = true)
+      val postState =
+          PostState(
+              post = p1,
+              isLiked = true,
+              author = author1,
+              animalName = animal1.name,
+              likeCount = 1,
+              commentsCount = 1)
 
-    val postStates = listOf(postState1, postState2)
+      viewModel.loadUIState()
+      advanceUntilIdle()
+      viewModel.setPostsFilter(onlyFriendsPosts = true)
 
-    val actual = viewModel.filterPosts(postStates = postStates)
+      val postStates = listOf(postState)
 
-    assertTrue(actual.contains(postState1))
-    assertEquals(1, actual.size)
+      val actual = viewModel.filterPosts(postStates = postStates)
+
+      assertTrue(actual.contains(postState))
+      assertEquals(1, actual.size)
+    }
   }
 
   @Test
@@ -561,7 +568,7 @@ class HomeScreenViewModelTest {
 
   @Test
   fun filterPostsByAuthorWorks() {
-    viewModel.setPostsFilter(fromAuthor = postState1.author)
+    viewModel.setPostsFilter(fromAuthor = postState1.author.username)
 
     val postStates = listOf(postState1, postState2)
 

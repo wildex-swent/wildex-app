@@ -63,7 +63,7 @@ fun ImageWithDoubleTapLike(
         DoubleTapHeartOverlay(
             isVisible = isHeartOverlayVisible,
             onAnimationEnd = { isHeartOverlayVisible = false },
-            modifier = Modifier.fillMaxSize().align(Alignment.Center))
+            modifier = Modifier.align(Alignment.Center))
       }
 }
 

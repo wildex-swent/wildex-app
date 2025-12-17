@@ -19,6 +19,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.android.wildex.R
 
+/**
+ * Top bar for the Profile screen.
+ *
+ * Shows a centered title when viewing own profile and optionally a settings action.
+ *
+ * @param ownerProfile True when viewing the owner's profile (controls title & settings visibility).
+ * @param onGoBack Called when the back button is pressed.
+ * @param onSettings Called when the settings button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopBar(ownerProfile: Boolean = true, onGoBack: () -> Unit, onSettings: () -> Unit) {

@@ -17,6 +17,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the Edit Profile screen.
+ *
+ * Holds form fields, validation messages and upload / saving flags.
+ */
 data class EditProfileUIState(
     val name: String = "",
     val surname: String = "",
@@ -42,6 +47,12 @@ data class EditProfileUIState(
             username.isNotBlank()
 }
 
+/**
+ * ViewModel for editing the current user's profile.
+ *
+ * Responsible for loading existing user data, validating fields and saving updated profile
+ * information (including optional profile picture upload).
+ */
 class EditProfileViewModel(
     private val userRepository: UserRepository = RepositoryProvider.userRepository,
     private val storageRepository: StorageRepository = RepositoryProvider.storageRepository,
@@ -53,6 +64,7 @@ class EditProfileViewModel(
   private var usernameList: List<String> = emptyList()
   private var currentUserName: String = ""
 
+  /** Loads initial UI state and caches existing usernames for validation. */
   fun loadUIState() {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
     viewModelScope.launch {
@@ -62,6 +74,11 @@ class EditProfileViewModel(
     }
   }
 
+  /**
+   * Suspends to fetch the current user and populate the form fields.
+   *
+   * Handles repository errors and updates error state accordingly.
+   */
   private suspend fun updateUIState() {
     try {
       val user = userRepository.getUser(currentUserId)
@@ -85,6 +102,7 @@ class EditProfileViewModel(
     }
   }
 
+  /** Clears visible error. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
@@ -93,6 +111,14 @@ class EditProfileViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
+  /**
+   * Saves profile changes, optionally uploading a new profile image.
+   *
+   * Inline comments: this method may perform an upload to remote storage, build a new User object,
+   * and call the repository to update the user. Errors set the error state.
+   *
+   * @param onSave Callback invoked when save completes successfully.
+   */
   fun saveProfileChanges(onSave: () -> Unit) {
     if (!_uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
@@ -105,6 +131,7 @@ class EditProfileViewModel(
         val newURL =
             _uiState.value.pendingProfileImageUri?.let {
               try {
+                // Attempt profile picture upload; fallback to existing URL on failure
                 storageRepository.uploadUserProfilePicture(currentUserId, it)
               } catch (_: Exception) {
                 user.profilePictureURL
@@ -123,6 +150,7 @@ class EditProfileViewModel(
                 creationDate = user.creationDate,
                 country = _uiState.value.country,
             )
+        // Persist user changes
         userRepository.editUser(userId = currentUserId, newUser = newUser)
         // Reset the pending Uri after successful upload
         clearErrorMsg()
@@ -137,6 +165,7 @@ class EditProfileViewModel(
     }
   }
 
+  /** Update name with basic validation. */
   fun setName(name: String) {
     _uiState.value =
         _uiState.value.copy(
@@ -145,6 +174,7 @@ class EditProfileViewModel(
         )
   }
 
+  /** Update surname with basic validation. */
   fun setSurname(surname: String) {
     _uiState.value =
         _uiState.value.copy(
@@ -153,6 +183,7 @@ class EditProfileViewModel(
         )
   }
 
+  /** Update username with uniqueness and length validation. */
   fun setUsername(username: String) {
     _uiState.value =
         _uiState.value.copy(
@@ -167,18 +198,22 @@ class EditProfileViewModel(
                 })
   }
 
+  /** Update description field. */
   fun setDescription(description: String) {
     _uiState.value = _uiState.value.copy(description = description)
   }
 
+  /** Update country field. */
   fun setCountry(country: String) {
     _uiState.value = _uiState.value.copy(country = country)
   }
 
+  /** Set a newly selected profile image URI (pending upload). */
   fun setNewProfileImageUri(uri: Uri?) {
     _uiState.value = _uiState.value.copy(pendingProfileImageUri = uri)
   }
 
+  /** Clear the profileSaved flag after showing success. */
   fun clearProfileSaved() {
     _uiState.value = _uiState.value.copy(profileSaved = false)
   }

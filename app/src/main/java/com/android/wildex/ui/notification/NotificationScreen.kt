@@ -86,6 +86,16 @@ fun NotificationScreen(
     onProfileClick: (Id) -> Unit = {},
     onNotificationClick: (String) -> Unit = {},
 ) {
+  /**
+   * Main notifications screen composable.
+   *
+   * Shows loading/error/offline states and the list of notifications when online.
+   *
+   * @param onGoBack Navigate back callback.
+   * @param notificationScreenViewModel ViewModel that provides screen state.
+   * @param onProfileClick Called when a profile picture is clicked.
+   * @param onNotificationClick Called when a notification is tapped (provides route).
+   */
   val context = LocalContext.current
   val uiState by notificationScreenViewModel.uiState.collectAsState()
   val connectivityObserver = LocalConnectivityObserver.current
@@ -134,6 +144,17 @@ fun NotificationScreen(
   }
 }
 
+/**
+ * Renders the list of notifications with actions row and swipe-to-delete support.
+ *
+ * @param notifications List of notifications to display.
+ * @param onProfileClick Callback when profile image is clicked.
+ * @param onNotificationClick Callback when a notification is clicked (route).
+ * @param markAsRead Callback to mark a single notification as read.
+ * @param markAllAsRead Callback to mark all notifications as read.
+ * @param clearNotification Callback to delete a single notification.
+ * @param clearAllNotifications Callback to delete all notifications.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationView(
@@ -192,6 +213,17 @@ fun NotificationView(
   }
 }
 
+/**
+ * Renders a single notification row with author picture, title, description and timestamp.
+ *
+ * @param simpleUser The author information to display.
+ * @param notificationId Unique id of the notification.
+ * @param notificationTitle Title text.
+ * @param notificationDescription Description text.
+ * @param notificationRelativeTime Human readable time string.
+ * @param notificationReadState True if notification was already read.
+ * @param onProfileClick Callback when the author's profile picture is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationItem(
@@ -281,6 +313,7 @@ fun NotificationItem(
   }
 }
 
+/** Shown when the user has no notifications. */
 @Composable
 fun NoNotificationView() {
   Column(

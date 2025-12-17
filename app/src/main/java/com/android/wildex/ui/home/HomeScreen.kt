@@ -424,6 +424,9 @@ private fun PostSlider(
                     coordinates ->
                   val heightPx = coordinates.size.height
                   val h = with(density) { heightPx.toDp() }
+                  // Complex measurement: we capture the measured height of the image on first
+                  // layout
+                  // to reuse it when showing the map preview page so the pager keeps stable height.
                   if (h > 0.dp) imageHeight = h
                 },
             onTap = { onPostClick() },
@@ -501,6 +504,23 @@ private fun SlideState(slideIndex: Int, currentPage: Int) {
                   color =
                       colorScheme.onBackground.copy(
                           alpha = if (currentPage == slideIndex) 0.9f else 0.6f)))
+}
+
+/**
+ * Helper to detect whether a string begins with a vowel (english).
+ *
+ * Used to pick the indefinite article ("an" vs "a") in post header text.
+ *
+ * @return True if the string starts with an english vowel character.
+ * @receiver The string to test.
+ */
+private fun String.startsWithVowel(): Boolean {
+  val lower = this.lowercase()
+  return lower.startsWith("a") ||
+      lower.startsWith("e") ||
+      lower.startsWith("i") ||
+      lower.startsWith("o") ||
+      lower.startsWith("u")
 }
 
 /**
@@ -591,13 +611,4 @@ private fun PostActions(
       )
     }
   }
-}
-
-private fun String.startsWithVowel(): Boolean {
-  val lower = this.lowercase()
-  return lower.startsWith("a") ||
-      lower.startsWith("e") ||
-      lower.startsWith("i") ||
-      lower.startsWith("o") ||
-      lower.startsWith("u")
 }

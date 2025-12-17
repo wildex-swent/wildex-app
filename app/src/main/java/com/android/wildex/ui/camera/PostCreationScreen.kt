@@ -40,6 +40,21 @@ object PostCreationScreenTestTags {
   const val POST_CREATION_SCREEN_CONFIRM_BUTTON = "post_creation_screen_confirm_button"
 }
 
+/**
+ * UI used to finalize a post after detection: shows image, detection metadata, description and
+ * actions.
+ *
+ * @param description Current text description for the post.
+ * @param onDescriptionChange Callback invoked when description changes.
+ * @param photoUri Uri of the selected or captured photo.
+ * @param detectionResponse Detection metadata describing the identified animal.
+ * @param onConfirm Callback invoked to confirm and publish the post.
+ * @param onCancel Callback invoked to cancel post creation.
+ * @param onPickLocation Callback to start location picking flow.
+ * @param location Optional selected Location for the post.
+ * @param modifier Modifier applied to the root container.
+ * @param onClear Callback invoked to clear the selected location.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCreationScreen(

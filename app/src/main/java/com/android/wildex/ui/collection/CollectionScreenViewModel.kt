@@ -26,6 +26,12 @@ private val defaultUser: SimpleUser =
         userType = UserType.REGULAR,
     )
 
+/**
+ * UI state for the Collection screen.
+ *
+ * Contains the displayed user, whether the viewed collection belongs to the current user, the list
+ * of animal states and loading / error flags.
+ */
 data class CollectionUIState(
     val user: SimpleUser = defaultUser,
     val isUserOwner: Boolean = true,
@@ -36,6 +42,14 @@ data class CollectionUIState(
     val isRefreshing: Boolean = false,
 )
 
+/**
+ * Represents a single animal presentation state in the collection list.
+ *
+ * @property animalId The unique id of the animal.
+ * @property pictureURL URL to the animal picture.
+ * @property name The display name of the animal.
+ * @property isUnlocked True if the user has unlocked this animal.
+ */
 data class AnimalState(
     val animalId: Id,
     val pictureURL: URL,
@@ -57,6 +71,18 @@ class CollectionScreenViewModel(
   /** Public immutable state exposed to the UI layer. */
   val uiState: StateFlow<CollectionUIState> = _uiState.asStateFlow()
 
+  /**
+   * Internal suspend function that loads and updates the UI state.
+   *
+   * This function fetches user info, all animals, and the animals of the given user. It will
+   * optionally refresh underlying repositories when called from a refresh request.
+   *
+   * Note: this method performs multiple repository calls and mapping operations (can fail), and
+   * thus contains error handling to update the UI state accordingly.
+   *
+   * @param userUid The user id whose collection should be displayed.
+   * @param calledFromRefresh If true, force a cache refresh on involved repositories first.
+   */
   private suspend fun updateUIState(userUid: String, calledFromRefresh: Boolean = false) {
     try {
       if (calledFromRefresh) {
@@ -93,16 +119,33 @@ class CollectionScreenViewModel(
     }
   }
 
+  /**
+   * Begins loading the UI state for the collection of [userUid].
+   *
+   * This updates loading flags and launches a coroutine to perform the actual loading.
+   *
+   * @param userUid The user id to load the collection for.
+   */
   fun loadUIState(userUid: Id) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(userUid) }
   }
 
+  /**
+   * Refreshes the collection UI state and forces repository caches to update.
+   *
+   * @param userId The user id to refresh the collection for.
+   */
   fun refreshUIState(userId: Id) {
     _uiState.value = _uiState.value.copy(isRefreshing = true, errorMsg = null, isError = false)
     viewModelScope.launch { updateUIState(userId, calledFromRefresh = true) }
   }
 
+  /**
+   * Called when the user triggers a refresh while offline.
+   *
+   * Updates the UI with an appropriate offline error message.
+   */
   fun refreshOffline() {
     setErrorMsg("You are currently offline\nYou can not refresh for now :/")
   }

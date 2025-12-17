@@ -155,6 +155,9 @@ You can view the UI design of Wildex on [Figma.](https://www.figma.com/design/1J
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Top contributors:
+![Contributors](https://contrib.rocks/image?repo=wildex-swent/wildex-app)
+
 <!-- ATTRIBUTION -->
 ## Attribution
 

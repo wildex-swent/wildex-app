@@ -130,8 +130,8 @@ class NotificationScreenViewModel(
       try {
         notificationRepository.markNotificationAsRead(notificationId)
       } catch (e: Exception) {
-        setErrorMsg("Error marking notification as read : ${e.localizedMessage}")
         _uiState.value = state
+        setErrorMsg("Error marking notification as read : ${e.localizedMessage}")
       }
     }
   }
@@ -145,8 +145,8 @@ class NotificationScreenViewModel(
       try {
         notificationRepository.markAllNotificationsForUserAsRead(currentUserId)
       } catch (e: Exception) {
-        setErrorMsg("Error marking all notifications as read : ${e.localizedMessage}")
         _uiState.value = state
+        setErrorMsg("Error marking all notifications as read : ${e.localizedMessage}")
       }
     }
   }
@@ -160,8 +160,8 @@ class NotificationScreenViewModel(
       try {
         notificationRepository.deleteNotification(notificationId)
       } catch (e: Exception) {
-        setErrorMsg("Error clearing notification : ${e.localizedMessage}")
         _uiState.value = state
+        setErrorMsg("Error clearing notification : ${e.localizedMessage}")
       }
     }
   }
@@ -173,8 +173,8 @@ class NotificationScreenViewModel(
       try {
         notificationRepository.deleteAllNotificationsForUser(currentUserId)
       } catch (e: Exception) {
-        setErrorMsg("Error clearing all notifications : ${e.localizedMessage}")
         _uiState.value = state
+        setErrorMsg("Error clearing all notifications : ${e.localizedMessage}")
       }
     }
   }

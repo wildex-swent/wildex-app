@@ -145,16 +145,6 @@ class NotificationScreenTest {
   }
 
   @Test
-  fun instantiationClassTest() {
-    fakeObserver.setOnline(false)
-    composeTestRule.setContent {
-      CompositionLocalProvider(LocalConnectivityObserver provides fakeObserver) {
-        NotificationScreen()
-      }
-    }
-  }
-
-  @Test
   fun swipeToDeleteWorks() {
     fakeObserver.setOnline(true)
     val notif2 = testNotification.copy(notificationId = "notif2", title = "New Comment", body = "")

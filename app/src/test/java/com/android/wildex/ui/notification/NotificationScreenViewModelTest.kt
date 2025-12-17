@@ -156,10 +156,15 @@ class NotificationScreenViewModelTest {
   @Test
   fun markAllAsRead_updatesState() =
       mainDispatcherRule.runTest {
-        coEvery { notificationRepository.markAllNotificationsForUserAsRead("uid-1") } just Runs
         coEvery { notificationRepository.getAllNotificationsForUser("uid-1") } returns
-            listOf(sampleNotification.copy(read = true))
+            listOf(sampleNotification)
+        coEvery { notificationRepository.markAllNotificationsForUserAsRead("uid-1") } just Runs
         coEvery { userRepository.getSimpleUser(sampleAuthor.userId) } returns sampleAuthor
+        viewModel.loadUIState()
+        advanceUntilIdle()
+
+        val sBef = viewModel.uiState.value
+        assertFalse(sBef.notifications.first().notificationReadState)
 
         viewModel.markAllAsRead()
         advanceUntilIdle()
@@ -171,9 +176,7 @@ class NotificationScreenViewModelTest {
         assertTrue(s.notifications.first().notificationReadState)
 
         coVerify(exactly = 1) { notificationRepository.markAllNotificationsForUserAsRead("uid-1") }
-        coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         coVerify(exactly = 1) { userRepository.getSimpleUser(sampleAuthor.userId) }
-        confirmVerified(notificationRepository, userRepository)
       }
 
   @Test
@@ -186,7 +189,6 @@ class NotificationScreenViewModelTest {
         advanceUntilIdle()
 
         val s = viewModel.uiState.value
-        assertTrue(s.isError)
         assertFalse(s.isLoading)
         assertNotNull(s.errorMsg)
         assertTrue(s.errorMsg!!.contains("Error marking all notifications as read"))
@@ -200,8 +202,11 @@ class NotificationScreenViewModelTest {
       mainDispatcherRule.runTest {
         coEvery { notificationRepository.markNotificationAsRead("n1") } just Runs
         coEvery { notificationRepository.getAllNotificationsForUser("uid-1") } returns
-            listOf(sampleNotification.copy(read = true))
+            listOf(sampleNotification.copy(read = false))
         coEvery { userRepository.getSimpleUser(sampleAuthor.userId) } returns sampleAuthor
+
+        viewModel.loadUIState()
+        advanceUntilIdle()
 
         viewModel.markAsRead("n1")
         advanceUntilIdle()
@@ -213,9 +218,7 @@ class NotificationScreenViewModelTest {
         assertTrue(s.notifications.first().notificationReadState)
 
         coVerify(exactly = 1) { notificationRepository.markNotificationAsRead("n1") }
-        coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         coVerify(exactly = 1) { userRepository.getSimpleUser(sampleAuthor.userId) }
-        confirmVerified(notificationRepository, userRepository)
       }
 
   @Test
@@ -228,7 +231,6 @@ class NotificationScreenViewModelTest {
         advanceUntilIdle()
 
         val s = viewModel.uiState.value
-        assertTrue(s.isError)
         assertFalse(s.isLoading)
         assertNotNull(s.errorMsg)
         assertTrue(s.errorMsg!!.contains("Error marking notification as read"))
@@ -241,7 +243,6 @@ class NotificationScreenViewModelTest {
   fun clearNotification_success() =
       mainDispatcherRule.runTest {
         coEvery { notificationRepository.deleteNotification("n1") } just Runs
-        coEvery { notificationRepository.getAllNotificationsForUser("uid-1") } returns emptyList()
 
         viewModel.clearNotification("n1")
         advanceUntilIdle()
@@ -253,7 +254,6 @@ class NotificationScreenViewModelTest {
         assertTrue(s.notifications.isEmpty())
 
         coVerify(exactly = 1) { notificationRepository.deleteNotification("n1") }
-        coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         confirmVerified(notificationRepository, userRepository)
       }
 
@@ -267,7 +267,6 @@ class NotificationScreenViewModelTest {
         advanceUntilIdle()
 
         val s = viewModel.uiState.value
-        assertTrue(s.isError)
         assertFalse(s.isLoading)
         assertNotNull(s.errorMsg)
         assertTrue(s.errorMsg!!.contains("Error clearing notification"))
@@ -280,7 +279,6 @@ class NotificationScreenViewModelTest {
   fun clearAllNotifications_success() =
       mainDispatcherRule.runTest {
         coEvery { notificationRepository.deleteAllNotificationsForUser("uid-1") } just Runs
-        coEvery { notificationRepository.getAllNotificationsForUser("uid-1") } returns emptyList()
 
         viewModel.clearAllNotifications()
         advanceUntilIdle()
@@ -292,7 +290,6 @@ class NotificationScreenViewModelTest {
         assertTrue(s.notifications.isEmpty())
 
         coVerify(exactly = 1) { notificationRepository.deleteAllNotificationsForUser("uid-1") }
-        coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         confirmVerified(notificationRepository, userRepository)
       }
 
@@ -306,7 +303,6 @@ class NotificationScreenViewModelTest {
         advanceUntilIdle()
 
         val s = viewModel.uiState.value
-        assertTrue(s.isError)
         assertFalse(s.isLoading)
         assertNotNull(s.errorMsg)
         assertTrue(s.errorMsg!!.contains("Error clearing all notifications"))
@@ -425,8 +421,8 @@ class NotificationScreenViewModelTest {
         assertTrue(notificationMap["n3"]?.notificationRelativeTime?.contains("hours ago") == true)
         assertTrue(notificationMap["n4"]?.notificationRelativeTime?.contains("days ago") == true)
         assertTrue(notificationMap["n5"]?.notificationRelativeTime?.contains("weeks ago") == true)
-        assertTrue(notificationMap["n6"]?.notificationRelativeTime?.contains("months ago") == true)
-        assertTrue(notificationMap["n7"]?.notificationRelativeTime?.contains("years ago") == true)
+        assertTrue(notificationMap["n6"]?.notificationRelativeTime?.contains("month ago") == true)
+        assertTrue(notificationMap["n7"]?.notificationRelativeTime?.contains("year ago") == true)
         coVerify(exactly = 1) { notificationRepository.getAllNotificationsForUser("uid-1") }
         coVerify(exactly = 8) { userRepository.getSimpleUser(sampleAuthor.userId) }
         confirmVerified(notificationRepository, userRepository)

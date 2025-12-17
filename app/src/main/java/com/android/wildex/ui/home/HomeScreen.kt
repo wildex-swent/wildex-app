@@ -242,7 +242,7 @@ fun HomeScreen(
                     listState = listState,
                     postStates = filteredPostStates,
                     onProfilePictureClick = onProfilePictureClick,
-                    onPostLike = homeScreenViewModel::toggleLike,
+                    onPostLike = { homeScreenViewModel.toggleLike(it, isOnline) },
                     onPostClick = onPostClick,
                 )
           }

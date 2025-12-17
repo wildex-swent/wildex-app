@@ -1,5 +1,6 @@
 package com.android.wildex.ui.social
 
+import android.content.Context
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,9 +11,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.action.ViewActions.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.wildex.model.LocalConnectivityObserver
+import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.friendRequest.FriendRequestRepository
 import com.android.wildex.model.social.FileSearchDataStorage
 import com.android.wildex.model.social.PostsRepository
@@ -115,6 +118,10 @@ class FriendScreenTest {
 
   @Before
   fun setup() = runBlocking {
+      RepositoryProvider.init(
+          ApplicationProvider.getApplicationContext()
+      )
+
     userRepository.addUser(currentUser)
     userRepository.addUser(user1)
     userRepository.addUser(user2)

@@ -795,7 +795,6 @@ private fun PostSlider(
       rememberSaveable(stateSaver = Saver<Dp?, Float>(save = { it?.value }, restore = { it.dp })) {
         mutableStateOf<Dp?>(null)
       }
-  val context = LocalContext.current
   val density = LocalDensity.current
   HorizontalPager(
       state = pagerState,

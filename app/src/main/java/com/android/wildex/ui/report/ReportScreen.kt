@@ -413,7 +413,6 @@ private fun ReportSlider(
         )
       }
       1 -> {
-        val context = LocalContext.current
         val isDark =
             when (AppTheme.appearanceMode) {
               AppearanceMode.DARK -> true

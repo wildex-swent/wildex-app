@@ -118,7 +118,16 @@ class UserRecommender(
 
     // compute candidates friend counts and max friends for popularity score
     val candidatesFriendsCount =
-        candidates.associate { it.userId to userFriendsRepository.getFriendsCountOfUser(it.userId) }
+        candidates.associate {
+          it.userId to
+              // Check if userFriends has been properly initialized, can fail for incomplete
+              // onboarding
+              try {
+                userFriendsRepository.getFriendsCountOfUser(it.userId)
+              } catch (_: IllegalArgumentException) {
+                0
+              }
+        }
     val maxFriends = candidatesFriendsCount.values.maxOrNull()
 
     // compute mean location for current user and candidates for local activity score
@@ -201,7 +210,13 @@ class UserRecommender(
     val userToMutualFriendsCount = mutableMapOf<Id, Int>()
     val currentUserFriends = userFriendsRepository.getAllFriendsOfUser(currentUserId)
     for (friendId in currentUserFriends) {
-      val friendsOfFriend = userFriendsRepository.getAllFriendsOfUser(friendId.userId)
+      val friendsOfFriend =
+          // Check if userFriends has been properly initialized, can fail for incomplete onboarding
+          try {
+            userFriendsRepository.getAllFriendsOfUser(friendId.userId)
+          } catch (_: IllegalArgumentException) {
+            emptyList()
+          }
       for (potentialCandidateId in friendsOfFriend) {
         if (potentialCandidateId.userId != currentUserId &&
             !currentUserFriends.contains(potentialCandidateId)) {

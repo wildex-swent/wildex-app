@@ -378,8 +378,7 @@ private fun NavGraphBuilder.reportComposable(
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
         onCurrentProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
         onReportClick = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
-        onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
-    )
+        onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) })
   }
 }
 

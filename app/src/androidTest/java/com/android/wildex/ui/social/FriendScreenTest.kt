@@ -1,6 +1,5 @@
 package com.android.wildex.ui.social
 
-import android.content.Context
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
@@ -118,9 +117,7 @@ class FriendScreenTest {
 
   @Before
   fun setup() = runBlocking {
-      RepositoryProvider.init(
-          ApplicationProvider.getApplicationContext()
-      )
+    RepositoryProvider.init(ApplicationProvider.getApplicationContext())
 
     userRepository.addUser(currentUser)
     userRepository.addUser(user1)

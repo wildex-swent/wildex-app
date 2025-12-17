@@ -72,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -81,6 +82,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.wildex.AppTheme
@@ -790,6 +792,11 @@ private fun PostSlider(
       }
   val context = LocalContext.current
   val density = LocalDensity.current
+
+  val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+  val minHeight = screenHeight * 0.2f
+  val maxHeight = screenHeight * 0.6f
+
   HorizontalPager(
       state = pagerState,
       modifier = Modifier.fillMaxWidth().testTag(HomeScreenTestTags.sliderTag(post.postId)),
@@ -800,15 +807,22 @@ private fun PostSlider(
             pictureURL = post.pictureURL,
             likedByCurrentUser = liked,
             modifier =
-                Modifier.testTag(HomeScreenTestTags.imageTag(post.postId)).onGloballyPositioned {
-                    coordinates ->
-                  val heightPx = coordinates.size.height
-                  val h = with(density) { heightPx.toDp() }
-                  // Complex measurement: we capture the measured height of the image on first
-                  // layout
-                  // to reuse it when showing the map preview page so the pager keeps stable height.
-                  if (h > 0.dp) imageHeight = h
-                },
+                Modifier.testTag(HomeScreenTestTags.imageTag(post.postId))
+                    .let { mod ->
+                      // Apply the constrained height if we have it
+                      imageHeight?.let { mod.height(it) } ?: mod
+                    }
+                    .onGloballyPositioned { coordinates ->
+                      val heightPx = coordinates.size.height
+                      val h = with(density) { heightPx.toDp() }
+                      // Constrain the height between min and max values
+                      if (h > 0.dp) {
+                        val clampedHeight = h.coerceIn(minHeight, maxHeight)
+                        if (imageHeight != clampedHeight) {
+                          imageHeight = clampedHeight
+                        }
+                      }
+                    },
             onTap = { onPostClick() },
             onDoubleTap = onToggleLike,
         )

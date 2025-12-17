@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -205,7 +207,7 @@ fun HomeScreen(
       topBar = {
         TopLevelTopBar(
             user,
-            context.getString(R.string.app_name),
+            stringResource(R.string.app_name),
             onNotificationClick,
             onCurrentProfilePictureClick,
         )
@@ -214,6 +216,7 @@ fun HomeScreen(
       modifier = Modifier.testTag(NavigationTestTags.HOME_SCREEN),
   ) { pd ->
     val pullState = rememberPullToRefreshState()
+    val listState = rememberLazyListState()
 
     PullToRefreshBox(
         state = pullState,
@@ -234,6 +237,7 @@ fun HomeScreen(
             filteredPostStates.isEmpty() -> NoPostsView()
             else ->
                 PostsView(
+                    listState = listState,
                     postStates = filteredPostStates,
                     onProfilePictureClick = onProfilePictureClick,
                     onPostLike = homeScreenViewModel::toggleLike,
@@ -588,7 +592,7 @@ fun NoPostsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = LocalContext.current.getString(R.string.no_posts),
+        text = stringResource(R.string.no_posts),
         color = colorScheme.onBackground,
         style = typography.titleLarge,
         maxLines = 2,
@@ -606,13 +610,16 @@ fun NoPostsView() {
  */
 @Composable
 fun PostsView(
+    listState: LazyListState,
     postStates: List<PostState>,
     onProfilePictureClick: (userId: Id) -> Unit = {},
     onPostLike: (Id) -> Unit,
     onPostClick: (Id) -> Unit,
 ) {
+
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(HomeScreenTestTags.POSTS_LIST),
+      state = listState,
       verticalArrangement = Arrangement.spacedBy(2.dp),
       contentPadding = PaddingValues(vertical = 2.dp),
   ) {
@@ -830,8 +837,8 @@ private fun PostSlider(
                 OfflineAwareMiniMap(
                     modifier = Modifier.matchParentSize(),
                     pins = listOf(Point.fromLngLat(loc.longitude, loc.latitude)),
-                    styleUri = context.getString(R.string.map_style),
-                    styleImportId = context.getString(R.string.map_standard_import),
+                    styleUri = stringResource(R.string.map_style),
+                    styleImportId = stringResource(R.string.map_standard_import),
                     isDark = isDark,
                     fallbackZoom = 2.0,
                 )

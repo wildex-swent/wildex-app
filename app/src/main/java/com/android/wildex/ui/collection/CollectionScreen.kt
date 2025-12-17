@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -28,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -110,14 +114,17 @@ fun CollectionScreen(
         if (uiState.isUserOwner)
             TopLevelTopBar(
                 currentUser = uiState.user,
-                title = context.getString(R.string.collection),
+                title = stringResource(R.string.collection),
                 onNotificationClick = onNotificationClick,
                 onProfilePictureClick = onProfilePictureClick,
             )
         else OtherUserCollectionTopBar(onGoBack = onGoBack)
       },
   ) { innerPadding ->
+    val pullState = rememberPullToRefreshState()
+    val listState = rememberLazyListState()
     PullToRefreshBox(
+        state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = {
           if (isOnline) collectionScreenViewModel.refreshUIState(userUid)
@@ -129,7 +136,11 @@ fun CollectionScreen(
         uiState.isError -> LoadingFail()
         uiState.isLoading -> LoadingScreen()
         uiState.animals.isEmpty() -> NoAnimalsView(uiState.isUserOwner)
-        else -> AnimalsView(animalsStates = uiState.animals, onAnimalClick = onAnimalClick)
+        else ->
+            AnimalsView(
+                animalsStates = uiState.animals,
+                onAnimalClick = onAnimalClick,
+                listState = listState)
       }
     }
   }
@@ -167,34 +178,40 @@ fun OtherUserCollectionTopBar(onGoBack: () -> Unit) {
  * @param onAnimalClick Callback invoked when an animal is selected.
  */
 @Composable
-fun AnimalsView(animalsStates: List<AnimalState>, onAnimalClick: (Id) -> Unit) {
+fun AnimalsView(
+    animalsStates: List<AnimalState>,
+    onAnimalClick: (Id) -> Unit,
+    listState: LazyListState
+) {
   val screenHeight = LocalWindowInfo.current.containerSize.height.dp
-  LazyColumn(modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST)) {
-    val nbRows = ceil(animalsStates.size / 2.0).toInt()
-    val rowHeight = (screenHeight) / 12
-    items(nbRows) { index ->
-      val rowStartIndex = index * 2
-      Row(
-          horizontalArrangement = Arrangement.spacedBy(20.dp),
-          modifier =
-              Modifier.height(rowHeight)
-                  .fillMaxWidth()
-                  .padding(horizontal = 20.dp, vertical = 10.dp),
-      ) {
-        AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
-        // Check if there is another animal to display when we are at the last row
-        if (rowStartIndex + 1 <= animalsStates.size - 1) {
-          AnimalView(
-              animalsStates[rowStartIndex + 1],
-              onAnimalClick,
-              modifier = Modifier.weight(1f),
-          )
-        } else {
-          Spacer(modifier = Modifier.weight(1f))
+  LazyColumn(
+      modifier = Modifier.fillMaxSize().testTag(CollectionScreenTestTags.ANIMAL_LIST),
+      state = listState) {
+        val nbRows = ceil(animalsStates.size / 2.0).toInt()
+        val rowHeight = (screenHeight) / 12
+        items(nbRows) { index ->
+          val rowStartIndex = index * 2
+          Row(
+              horizontalArrangement = Arrangement.spacedBy(20.dp),
+              modifier =
+                  Modifier.height(rowHeight)
+                      .fillMaxWidth()
+                      .padding(horizontal = 20.dp, vertical = 10.dp),
+          ) {
+            AnimalView(animalsStates[rowStartIndex], onAnimalClick, modifier = Modifier.weight(1f))
+            // Check if there is another animal to display when we are at the last row
+            if (rowStartIndex + 1 <= animalsStates.size - 1) {
+              AnimalView(
+                  animalsStates[rowStartIndex + 1],
+                  onAnimalClick,
+                  modifier = Modifier.weight(1f),
+              )
+            } else {
+              Spacer(modifier = Modifier.weight(1f))
+            }
+          }
         }
       }
-    }
-  }
 }
 
 /**
@@ -273,7 +290,7 @@ fun NoAnimalsView(isUserOwner: Boolean) {
       )
       Text(
           text =
-              LocalContext.current.getString(
+              stringResource(
                   if (isUserOwner) R.string.empty_current_collection
                   else R.string.empty_other_collection),
           color = colorScheme.onBackground,

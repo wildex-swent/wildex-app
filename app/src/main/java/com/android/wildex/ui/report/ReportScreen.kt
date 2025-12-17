@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -152,6 +154,7 @@ fun ReportScreen(
       },
   ) { innerPadding ->
     val pullState = rememberPullToRefreshState()
+    val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
       PullToRefreshBox(
@@ -173,7 +176,7 @@ fun ReportScreen(
                 userId = uiState.currentUser.userId,
                 onProfileClick = onProfileClick,
                 onReportClick = onReportClick,
-            )
+                listState = listState)
           }
         }
       }
@@ -204,9 +207,11 @@ private fun ReportsView(
     userId: Id = "",
     onProfileClick: (Id) -> Unit = {},
     onReportClick: (Id) -> Unit = {},
+    listState: LazyListState
 ) {
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(ReportScreenTestTags.REPORT_LIST),
+      state = listState,
       verticalArrangement = Arrangement.spacedBy(2.dp),
       contentPadding = PaddingValues(top = 2.dp, bottom = 80.dp),
   ) {
@@ -277,10 +282,10 @@ private fun ReportItem(
         // Author
         Text(
             text =
-                LocalContext.current.getString(R.string.report_author) +
+                stringResource(R.string.report_author) +
                     " " +
                     if (author.userId == userId) {
-                      LocalContext.current.getString(R.string.report_author_current)
+                      stringResource(R.string.report_author_current)
                     } else {
                       author.username
                     },
@@ -305,9 +310,9 @@ private fun ReportItem(
         Text(
             text =
                 if (reportState.assigned) {
-                  LocalContext.current.getString(R.string.report_assigned)
+                  stringResource(R.string.report_assigned)
                 } else {
-                  LocalContext.current.getString(R.string.report_open)
+                  stringResource(R.string.report_open)
                 },
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
             style = typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -427,8 +432,8 @@ private fun ReportSlider(
                               reportState.location.longitude,
                               reportState.location.latitude,
                           )),
-                  styleUri = context.getString(R.string.map_style),
-                  styleImportId = context.getString(R.string.map_standard_import),
+                  styleUri = stringResource(R.string.map_style),
+                  styleImportId = stringResource(R.string.map_standard_import),
                   isDark = isDark,
                   fallbackZoom = 4.0,
               )
@@ -500,7 +505,7 @@ private fun NoReportsView() {
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = LocalContext.current.getString(R.string.no_reports),
+        text = stringResource(R.string.no_reports),
         color = colorScheme.onBackground,
         style = typography.titleLarge,
         maxLines = 2,

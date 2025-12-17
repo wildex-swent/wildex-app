@@ -353,9 +353,7 @@ private fun NavGraphBuilder.reportComposable(
         onProfileClick = { navigationActions.navigateTo(Screen.Profile(it)) },
         onCurrentProfileClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
         onReportClick = { navigationActions.navigateTo(Screen.ReportDetails(it)) },
-        onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) },
-        onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
-    )
+        onSubmitReportClick = { navigationActions.navigateTo(Screen.SubmitReport) })
   }
 }
 
@@ -385,7 +383,6 @@ private fun NavGraphBuilder.collectionComposable(
           onAnimalClick = { navigationActions.navigateTo(Screen.AnimalInformation(it)) },
           onGoBack = { navigationActions.goBack() },
           onProfilePictureClick = { navigationActions.navigateTo(Screen.Profile(currentUserId!!)) },
-          onNotificationClick = { navigationActions.navigateTo(Screen.Notifications) },
           bottomBar = {
             if (isCurrentUser) BottomNavigation(Tab.Collection, navigationActions, currentUserId!!)
           })

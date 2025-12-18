@@ -82,6 +82,7 @@ import com.android.wildex.ui.navigation.TopLevelTopBar
 import com.android.wildex.ui.profile.OfflineAwareMiniMap
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 import com.mapbox.geojson.Point
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -165,6 +166,7 @@ fun ReportScreen(
             else reportScreenViewModel.refreshOffline()
           },
           modifier = Modifier.testTag(ReportScreenTestTags.PULL_TO_REFRESH),
+          indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
       ) {
         when {
           uiState.isError -> LoadingFail()

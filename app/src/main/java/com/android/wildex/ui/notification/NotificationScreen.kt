@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,6 +50,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.OfflineScreen
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object NotificationScreenTestTags {
   const val NO_NOTIFICATION_TEXT = "no_notification_text"
@@ -112,13 +114,17 @@ fun NotificationScreen(
       modifier = Modifier.fillMaxSize(),
       topBar = { NotificationTopBar(onGoBack = onGoBack) },
   ) { pd ->
+    val pullState = rememberPullToRefreshState()
+
     PullToRefreshBox(
+        state = pullState,
         isRefreshing = uiState.isRefreshing,
         onRefresh = {
           if (isOnline) notificationScreenViewModel.refreshUIState()
           else notificationScreenViewModel.refreshOffline()
         },
         modifier = Modifier.padding(pd).testTag(NotificationScreenTestTags.PULL_TO_REFRESH),
+        indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
     ) {
       if (isOnline) {
         when {

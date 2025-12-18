@@ -79,6 +79,7 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.social.FriendStatus
 import com.android.wildex.ui.utils.badges.ProfessionalBadge
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object ProfileScreenTestTags {
   const val GO_BACK = "ProfileScreenGoBack"
@@ -177,6 +178,7 @@ fun ProfileScreen(
           if (isOnline) profileScreenViewModel.refreshUIState(userUid)
           else profileScreenViewModel.refreshOffline()
         },
+        indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
     ) {
       when {
         uiState.isError -> LoadingFail()

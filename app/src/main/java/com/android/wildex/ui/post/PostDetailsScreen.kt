@@ -50,6 +50,7 @@ import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags.testTagForProfilePicture
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.OfflineScreen
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object PostDetailsScreenTestTags {
   fun testTagForProfilePicture(profileId: String, role: String = ""): String {
@@ -177,6 +178,7 @@ fun PostDetailsScreenContent(
       isRefreshing = uiState.isRefreshing,
       modifier = Modifier.padding(innerPadding).testTag(PostDetailsScreenTestTags.PULL_TO_REFRESH),
       onRefresh = { postDetailsScreenViewModel.refreshPostDetails(postId) },
+      indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
   ) {
     when {
       uiState.isError -> LoadingFail()

@@ -39,7 +39,7 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
     val result = repository.detectAnimal(context, mockUri)
 
     assertEquals(1, result.size)
-    assertEquals("lion", result[0].animalType)
+    assertEquals("Lion", result[0].animalType)
     assertTrue(result[0].confidence > 0.9f)
     assertEquals("mammalia", result[0].taxonomy.animalClass)
     assertEquals("carnivora", result[0].taxonomy.order)
@@ -66,8 +66,8 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
 
     assertEquals(2, result.size)
     assertTrue(result.all { it.confidence >= 0.7f })
-    assertEquals("lion", result[0].animalType)
-    assertEquals("prairie dog", result[1].animalType)
+    assertEquals("Lion", result[0].animalType)
+    assertEquals("Prairie dog", result[1].animalType)
   }
 
   @Test
@@ -89,9 +89,9 @@ class AnimalDetectionTest : AnimalInfoRepositoryTest() {
       assertNotNull(detection.animalType)
       assertTrue(detection.confidence >= 0.7f)
     }
-    assertEquals("lion", result[0].animalType)
-    assertEquals("wolf", result[1].animalType)
-    assertEquals("elephant", result[2].animalType)
+    assertEquals("Lion", result[0].animalType)
+    assertEquals("Wolf", result[1].animalType)
+    assertEquals("Elephant", result[2].animalType)
   }
 
   @Test(expected = IOException::class)

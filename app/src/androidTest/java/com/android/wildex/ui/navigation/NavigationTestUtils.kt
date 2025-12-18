@@ -82,6 +82,9 @@ abstract class NavigationTestUtils {
 
   @Before
   fun setup() {
+    FirebaseEmulator.auth.signOut()
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
     RepositoryProvider.init(composeRule.activity)
     MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
     val fakeGoogleIdToken =
@@ -177,17 +180,6 @@ abstract class NavigationTestUtils {
           description = "This is my report",
           authorId = user0.userId,
           assigneeId = user1.userId,
-      )
-
-  open val post1 =
-      Post(
-          postId = "1",
-          authorId = user1.userId,
-          pictureURL = "https://cdn-icons-png.flaticon.com/512/4823/4823463.png",
-          location = null,
-          description = "This my post",
-          date = Timestamp.now(),
-          animalId = "0",
       )
 
   open val animal0 =
@@ -306,12 +298,6 @@ abstract class NavigationTestUtils {
     checkNodeWithTagGetsDisplayed(NavigationTestTags.FRIEND_SCREEN)
     assertEquals(Screen.Social.PATH, navController.currentDestination?.route)
     assertEquals(userId, navController.currentBackStackEntry?.arguments?.getString("userUid"))
-  }
-
-  // LOCATION PICKER SCREEN
-  fun ComposeTestRule.checkLocationPickerScreenIsDisplayed() {
-    checkNodeWithTagGetsDisplayed(NavigationTestTags.LOCATION_PICKER_SCREEN)
-    assertEquals(Screen.LocationPicker.route, navController.currentDestination?.route)
   }
 
   // NOTIFICATION SCREEN
@@ -533,15 +519,18 @@ abstract class NavigationTestUtils {
     performClickOnTag(FriendScreenTestTags.testTagForProfilePicture(userId))
   }
 
-  private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
-    waitUntil(DEFAULT_TIMEOUT) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
+  fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
+    waitUntil(DEFAULT_TIMEOUT) {
+      onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
+    val node = onNodeWithTag(tag, useUnmergedTree = true)
+    try {
+      node.performScrollTo()
+    } catch (_: AssertionError) {}
+    waitUntil(DEFAULT_TIMEOUT) { node.isDisplayed() }
   }
 
-  private fun ComposeTestRule.performClickOnTag(
-      tag: String,
-      useUnmergedTree: Boolean = true,
-      timeout: Long = DEFAULT_TIMEOUT,
-  ) {
+  fun ComposeTestRule.performClickOnTag(tag: String, useUnmergedTree: Boolean = true) {
     waitUntil(DEFAULT_TIMEOUT) {
       onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
     }
@@ -549,7 +538,7 @@ abstract class NavigationTestUtils {
     try {
       node.performScrollTo()
     } catch (_: AssertionError) {}
-    waitUntil(timeout) { node.isDisplayed() }
+    waitUntil(DEFAULT_TIMEOUT) { node.isDisplayed() }
     node.performClick()
   }
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.Composable
@@ -20,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -53,22 +54,24 @@ fun ImageWithDoubleTapLike(
                 onDoubleTap = {
                   if (!likedByCurrentUser) onDoubleTap()
                   isHeartOverlayVisible = true
-                })
+                },
+            )
           }) {
         AsyncImage(
             model = pictureURL,
             contentDescription = "Post picture",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
-            error = ColorPainter(colorScheme.surface.copy(.7f)),
-            placeholder = ColorPainter(colorScheme.surface.copy(.7f)),
-            fallback = ColorPainter(colorScheme.surface.copy(.7f)),
+            error = rememberVectorPainter(Icons.Default.WifiOff),
+            placeholder = rememberVectorPainter(Icons.Default.WifiOff),
+            fallback = rememberVectorPainter(Icons.Default.WifiOff),
         )
 
         DoubleTapHeartOverlay(
             isVisible = isHeartOverlayVisible,
             onAnimationEnd = { isHeartOverlayVisible = false },
-            modifier = Modifier.align(Alignment.Center))
+            modifier = Modifier.align(Alignment.Center),
+        )
       }
 }
 
@@ -83,7 +86,7 @@ fun ImageWithDoubleTapLike(
 fun DoubleTapHeartOverlay(
     isVisible: Boolean,
     onAnimationEnd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
   if (!isVisible) return
 
@@ -107,5 +110,6 @@ fun DoubleTapHeartOverlay(
             scaleX = scale.value
             scaleY = scale.value
             this.alpha = alpha.value
-          })
+          },
+  )
 }

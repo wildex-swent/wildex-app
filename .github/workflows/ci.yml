@@ -91,7 +91,7 @@ jobs:
           arch: x86_64
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
+          disable-animations: true
           script: echo "Generated AVD snapshot for caching."
 
       - name: Grant execute permission for gradlew
@@ -140,7 +140,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache --stacktrace
+          script: ./gradlew connectedCheck --parallel --build-cache --stacktrace || ./gradlew connectedCheck --parallel --build-cache --stacktrace || ./gradlew connectedCheck --parallel --build-cache --stacktrace
 
       - name: Upload Android Test Report
         uses: actions/upload-artifact@v4

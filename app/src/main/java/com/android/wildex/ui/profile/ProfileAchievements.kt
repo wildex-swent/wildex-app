@@ -57,6 +57,7 @@ import coil.compose.AsyncImage
 import com.android.wildex.R
 import com.android.wildex.model.achievement.Achievement
 import com.android.wildex.model.utils.Id
+import com.android.wildex.ui.achievement.AchievementsScreenTestTags
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -206,18 +207,20 @@ fun ProfileAchievements(
 
           Button(
               onClick = { onAchievements(id) },
-              modifier = Modifier.align(Alignment.Start),
+              modifier =
+                  Modifier.align(Alignment.Start).testTag(ProfileScreenTestTags.ACHIEVEMENTS_CTA),
               colors =
                   ButtonDefaults.buttonColors(
                       containerColor = cs.onBackground,
                       contentColor = cs.background,
                   ),
-              enabled = isOnline) {
-                Text(
-                    text = LocalContext.current.getString(R.string.view_achievements),
-                    style = typography.titleSmall,
-                )
-              }
+              enabled = isOnline,
+          ) {
+            Text(
+                text = LocalContext.current.getString(R.string.view_achievements),
+                style = typography.titleSmall,
+            )
+          }
         }
   }
 }
@@ -225,7 +228,16 @@ fun ProfileAchievements(
 @Composable
 private fun AchievementChip(a: Achievement) {
   val cs = colorScheme
-  Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(92.dp)) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier =
+          Modifier.width(92.dp)
+              .testTag(
+                  AchievementsScreenTestTags.getTagForAchievement(
+                      achievementId = a.achievementId,
+                      true,
+                  )),
+  ) {
     ElevatedCard(shape = RoundedCornerShape(12.dp)) {
       Box(
           modifier = Modifier.size(72.dp).background(cs.background),

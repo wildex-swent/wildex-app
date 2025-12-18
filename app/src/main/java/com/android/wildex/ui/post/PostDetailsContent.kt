@@ -60,13 +60,16 @@ object PostDetailsContentTestTags {
   const val DELETE_COMMENT_BUTTON = "delete_comment_button"
   const val COMMENT_BODY = "post_details_comment_body"
   const val COMMENT_TOGGLE = "post_details_comment_toggle"
+  const val LIKES = "post_details_likes"
+  const val LOCATION = "post_details_location"
+  const val SPECIES = "post_details_species"
 }
 
 @Composable
 fun PostDetailsContent(
     uiState: PostDetailsUIState,
     postDetailsScreenViewModel: PostDetailsScreenViewModel,
-    onProfile: (Id) -> Unit
+    onProfile: (Id) -> Unit,
 ) {
   Box(Modifier.fillMaxSize()) {
     LazyColumn(
@@ -129,7 +132,8 @@ fun PostDetailsContent(
             commentUI = commentUI,
             onProfile = onProfile,
             onDelete = { postDetailsScreenViewModel.removeComment(commentUI.commentId) },
-            canDelete = (uiState.currentUserId == commentUI.authorId))
+            canDelete = (uiState.currentUserId == commentUI.authorId),
+        )
       }
 
       // Spacer so the last comment clears the bottom input
@@ -185,7 +189,8 @@ private fun PostPicture(
         pictureURL = pictureURL,
         likedByCurrentUser = likedByCurrentUser,
         onDoubleTap = onLike,
-        modifier = Modifier.testTag(PostDetailsContentTestTags.IMAGE_BOX))
+        modifier = Modifier.testTag(PostDetailsContentTestTags.IMAGE_BOX),
+    )
     // top black gradient overlay
     Box(
         modifier =
@@ -285,7 +290,7 @@ fun LocationSpeciesLikeBar(
     if (location.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
-          modifier = Modifier.weight(itemWeight),
+          modifier = Modifier.weight(itemWeight).testTag(PostDetailsContentTestTags.LOCATION),
       ) {
         Icon(
             imageVector = Icons.Filled.LocationOn,
@@ -307,7 +312,7 @@ fun LocationSpeciesLikeBar(
     if (species.isNotBlank()) {
       Column(
           horizontalAlignment = Alignment.CenterHorizontally,
-          modifier = Modifier.weight(itemWeight),
+          modifier = Modifier.weight(itemWeight).testTag(PostDetailsContentTestTags.SPECIES),
       ) {
         Icon(
             imageVector = Icons.Filled.Pets,
@@ -327,7 +332,7 @@ fun LocationSpeciesLikeBar(
     }
 
     Column(
-        modifier = Modifier.weight(itemWeight),
+        modifier = Modifier.weight(itemWeight).testTag(PostDetailsContentTestTags.LIKES),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       AnimatedLikeButton(
@@ -387,7 +392,8 @@ fun Comment(
               text = commentUI.authorUserName,
               style = typography.labelLarge,
               color = colorScheme.onBackground,
-              modifier = Modifier.weight(1f))
+              modifier = Modifier.weight(1f),
+          )
           Spacer(modifier = Modifier.width(8.dp))
           Text(
               text = commentUI.date,
@@ -409,22 +415,24 @@ fun Comment(
         expanded = showMenu,
         onDismissRequest = { showMenu = false },
         containerColor = colorScheme.background,
-        modifier = Modifier.testTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON)) {
-          if (canDelete) {
-            DropdownMenuItem(
-                text = {
-                  Text(
-                      text = context.getString(R.string.post_details_delete_comment),
-                      style = typography.bodyMedium,
-                      color = colorScheme.error,
-                  )
-                },
-                onClick = {
-                  onDelete()
-                  showMenu = false
-                })
-          }
-        }
+        modifier = Modifier.testTag(PostDetailsContentTestTags.DELETE_COMMENT_BUTTON),
+    ) {
+      if (canDelete) {
+        DropdownMenuItem(
+            text = {
+              Text(
+                  text = context.getString(R.string.post_details_delete_comment),
+                  style = typography.bodyMedium,
+                  color = colorScheme.error,
+              )
+            },
+            onClick = {
+              onDelete()
+              showMenu = false
+            },
+        )
+      }
+    }
   }
 }
 

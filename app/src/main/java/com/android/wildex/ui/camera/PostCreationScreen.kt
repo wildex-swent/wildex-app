@@ -128,7 +128,7 @@ fun PostCreationScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
             ) {
-              Column {
+              Column(modifier = Modifier.weight(1f)) {
                 // Animal Name
                 Text(
                     text = animalName,
@@ -158,7 +158,9 @@ fun PostCreationScreen(
               Column(
                   horizontalAlignment = Alignment.End,
                   modifier =
-                      Modifier.testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_CONFIDENCE),
+                      Modifier.widthIn(min = 70.dp)
+                          .wrapContentWidth()
+                          .testTag(PostCreationScreenTestTags.POST_CREATION_SCREEN_CONFIDENCE),
               ) {
                 Text(
                     text = stringResource(R.string.confidence),

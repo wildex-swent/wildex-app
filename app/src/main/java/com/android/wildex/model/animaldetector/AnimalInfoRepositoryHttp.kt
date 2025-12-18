@@ -197,7 +197,7 @@ class AnimalInfoRepositoryHttp(client: OkHttpClient) : AnimalInfoRepository {
         if (animalType == "blank" || animalType == "vehicle" || animalType == "human")
             return@mapNotNull null
         AnimalDetectResponse(
-            animalType = animalType,
+            animalType = animalType.replaceFirstChar { it.titlecase() },
             confidence = score,
             taxonomy = taxonomy,
         )

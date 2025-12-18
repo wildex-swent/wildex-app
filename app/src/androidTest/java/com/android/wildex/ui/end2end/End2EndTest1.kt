@@ -177,15 +177,15 @@ class End2EndTest1 : NavigationTestUtils() {
     checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
 
     waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_NAME)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_USERNAME)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_DESCRIPTION)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.MAP)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.MAP_CTA)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.COLLECTION)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.FRIENDS)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.ACHIEVEMENTS)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_NAME)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_USERNAME)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_DESCRIPTION)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.MAP)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.MAP_CTA)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.COLLECTION)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.FRIENDS)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.ACHIEVEMENTS)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
     onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
   }
 
@@ -196,17 +196,17 @@ class End2EndTest1 : NavigationTestUtils() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsDisplayed()
     onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
     postIds.forEach {
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.imageTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.authorPictureTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.commentTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.likeButtonTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.sliderTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.locationTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.sliderStateTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.imageTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.authorPictureTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.commentTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.likeButtonTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.sliderTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.locationTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.sliderStateTag(it))
       onNodeWithTag(HomeScreenTestTags.sliderTag(it)).performScrollToIndex(1)
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapPreviewTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapPreviewButtonTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapLocationTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.mapPreviewTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.mapPreviewButtonTag(it))
+      checkNodeWithTagGetsDisplayed(HomeScreenTestTags.mapLocationTag(it))
       onNodeWithTag(HomeScreenTestTags.sliderTag(it)).performScrollToIndex(0)
     }
   }
@@ -221,9 +221,6 @@ class End2EndTest1 : NavigationTestUtils() {
         PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"))
   }
 
-  private fun ComposeTestRule.checkNodeWithTagScrollAndDisplay(tag: String) {
-    onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-  }
 
   private fun ComposeTestRule.createUserProfile() {
     performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)

@@ -40,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,8 +74,6 @@ object EditProfileScreenTestTags {
  *
  * @param editScreenViewModel ViewModel that provides UI state and actions.
  * @param onGoBack Callback invoked to navigate back.
- * @param onSave Callback invoked after successful save (used for new user flow).
- * @param isNewUser True when creating a new profile.
  */
 @SuppressLint("LocalContextConfigurationRead")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,8 +123,6 @@ fun EditProfileScreen(
  * Main editable view with profile picture, inputs and save button.
  *
  * @param editScreenViewModel ViewModel that backs the view.
- * @param onSave Callback invoked when save finishes.
- * @param isNewUser True when creating a new profile.
  * @param pd Padding values from parent.
  * @param uiState Current UI state.
  * @param pickImageLauncher Activity launcher used to pick an image.

@@ -520,7 +520,14 @@ abstract class NavigationTestUtils {
   }
 
   fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
-    waitUntil(DEFAULT_TIMEOUT) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
+    waitUntil(DEFAULT_TIMEOUT) {
+      onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
+    }
+    val node = onNodeWithTag(tag, useUnmergedTree = true)
+    try {
+      node.performScrollTo()
+    } catch (_: AssertionError) {}
+    waitUntil(DEFAULT_TIMEOUT) { node.isDisplayed() }
   }
 
   fun ComposeTestRule.performClickOnTag(tag: String, useUnmergedTree: Boolean = true) {

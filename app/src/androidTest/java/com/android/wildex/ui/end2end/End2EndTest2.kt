@@ -155,20 +155,16 @@ class End2EndTest2 : NavigationTestUtils() {
     checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
 
     waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_NAME)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_USERNAME)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_DESCRIPTION)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.MAP)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.MAP_CTA)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.COLLECTION)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.FRIENDS)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.ACHIEVEMENTS)
-    checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_NAME)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_USERNAME)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.PROFILE_DESCRIPTION)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.MAP)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.MAP_CTA)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.COLLECTION)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.FRIENDS)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.ACHIEVEMENTS)
+    checkNodeWithTagGetsDisplayed(ProfileScreenTestTags.ACHIEVEMENTS_CTA)
     onNodeWithTag(ProfileScreenTestTags.SETTINGS).assertIsDisplayed()
-  }
-
-  private fun ComposeTestRule.checkNodeWithTagScrollAndDisplay(tag: String) {
-    onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
   }
 
   private fun ComposeTestRule.switchAndCheckProfileSettings() {
@@ -239,16 +235,5 @@ class End2EndTest2 : NavigationTestUtils() {
         .assertIsDisplayed()
     onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX, useUnmergedTree = true).performClick()
     checkFullCameraPermissionScreenIsDisplayed()
-  }
-
-  private fun ComposeTestRule.createUserProfile() {
-    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
-    checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)
-    onNodeWithTag(NamingScreenTestTags.NAME_FIELD).performTextInput("John")
-    onNodeWithTag(NamingScreenTestTags.SURNAME_FIELD).performTextInput("Cena")
-    onNodeWithTag(NamingScreenTestTags.USERNAME_FIELD).performTextInput("john_cena67")
-    performClickOnTag(NamingScreenTestTags.NEXT_BUTTON)
-    performClickOnTag(OptionalInfoScreenTestTags.NEXT_BUTTON)
-    performClickOnTag(UserTypeScreenTestTags.COMPLETE_BUTTON)
   }
 }

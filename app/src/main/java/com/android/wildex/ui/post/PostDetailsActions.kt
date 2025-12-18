@@ -58,9 +58,7 @@ fun PostDetailsActions(
 ) {
 
   val locationUri =
-      postLocation?.let {
-        "geo:${it.latitude},${it.longitude}?q=${it.latitude},${it.longitude}(${it.name})".toUri()
-      }
+      postLocation?.let { "google.navigation:q=${it.latitude},${it.longitude}&mode=d".toUri() }
   val context = LocalContext.current
   val clipboard = LocalClipboard.current
   val currentScope = rememberCoroutineScope()

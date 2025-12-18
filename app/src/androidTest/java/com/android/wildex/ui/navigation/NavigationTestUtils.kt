@@ -137,7 +137,7 @@ abstract class NavigationTestUtils {
           surname = "World",
           bio = "This is my bio",
           profilePictureURL = "",
-          userType = UserType.PROFESSIONAL,
+          userType = UserType.REGULAR,
           creationDate = Timestamp.now(),
           country = "Italy",
           onBoardingStage = OnBoardingStage.COMPLETE,
@@ -542,6 +542,7 @@ abstract class NavigationTestUtils {
       useUnmergedTree: Boolean = true,
       timeout: Long = DEFAULT_TIMEOUT,
   ) {
+    composeRule.waitForIdle()
     waitUntil(DEFAULT_TIMEOUT) {
       onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed()
     }

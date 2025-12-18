@@ -3,7 +3,6 @@ package com.android.wildex.ui.end2end
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsToggleable
-import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -22,10 +21,8 @@ import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
 import com.android.wildex.ui.authentication.SignInScreenTestTags
 import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
-import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils
-import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.ui.report.ReportScreenTestTags
 import com.android.wildex.ui.report.SubmitReportFormScreenTestTags
@@ -34,19 +31,26 @@ import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import kotlinx.coroutines.runBlocking
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore("Succeeding locally but failing on CI")
 class End2EndTest2 : NavigationTestUtils() {
 
   @Test
   fun userFlow() {
-    /* User authenticates, creates his profile, checks his profile, checks his settings,
-    switches appearance to Dark mode and status to professional,
-    goes back to Profile and then to Home Screen, check the camera tab,
-    checks the report tab, sees all reports, tries to submit a form,
-    backs out and goes back to report tab, check his profile, goes to settings and logs out.*/
+    /*
+     * User authenticates,
+     * checks his profile,
+     * checks his settings,
+     * switches appearance to Dark mode and status to professional,
+     * goes back to Profile and then to Home Screen,
+     * check the camera tab,
+     * checks the report tab,
+     * sees all reports,
+     * tries to submit a form,
+     * backs out and goes back to report tab,
+     * check his profile,
+     * goes to settings and logs out.
+     * */
     val user0 =
         User(
             userId = "author0",
@@ -78,7 +82,7 @@ class End2EndTest2 : NavigationTestUtils() {
             reportId = "report0",
             authorId = "author0",
             imageURL = "",
-            location = Location(10.0, 10.0, "location0"),
+            location = Location(10.0, 10.0, "location0", "address0", "country0"),
             description = "description0",
             assigneeId = null,
             date = Timestamp.now(),
@@ -88,14 +92,13 @@ class End2EndTest2 : NavigationTestUtils() {
             reportId = "report1",
             authorId = "author1",
             imageURL = "",
-            location = Location(20.0, 20.0, "location1"),
+            location = Location(20.0, 20.0, "location1", "address1", "country1"),
             description = "description1",
             assigneeId = null,
             date = Timestamp.now(),
         )
 
     runBlocking {
-      FirebaseEmulator.auth.signOut()
       initUser(user0)
       initUser(user1)
       RepositoryProvider.reportRepository.addReport(report0)
@@ -103,35 +106,15 @@ class End2EndTest2 : NavigationTestUtils() {
     }
 
     composeRule.waitForIdle()
-    composeRule.checkAuthScreenIsDisplayed()
-    composeRule.createUserProfile()
-    composeRule.waitForIdle()
-    composeRule.checkEditProfileScreenIsDisplayed()
-    val nameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
-    val surnameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_SURNAME)
-    val usernameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
-    val saveNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE)
-    composeRule.waitUntil(DEFAULT_TIMEOUT) {
-      nameNode.isDisplayed() ||
-          surnameNode.isDisplayed() ||
-          usernameNode.isDisplayed() ||
-          saveNode.isDisplayed()
-    }
-    nameNode.performScrollTo().performClick().performTextInput("Name1")
-    surnameNode.performScrollTo().performClick().performTextInput("Surname1")
-    usernameNode.performScrollTo().performClick().performTextInput("Username1")
-    saveNode.performScrollTo().performClick()
-    composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
 
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.navigateToMyProfileScreenFromHome()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.waitForIdle()
     composeRule.checkMyProfileScreenIsDisplayed()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.navigateToSettingsScreenFromProfile()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.waitForIdle()
     composeRule.switchAndCheckProfileSettings()
 
@@ -147,7 +130,7 @@ class End2EndTest2 : NavigationTestUtils() {
 
     composeRule.navigateToReportScreenFromBottomBar()
     composeRule.waitForIdle()
-    composeRule.waitUntilAfterLoadingScreen()
+    composeRule.checkReportScreenIsDisplayed()
     composeRule.checkFullReportScreenIsDisplayed(listOf(report0, report1))
 
     composeRule.navigateToSubmitReportScreenFromReport()
@@ -158,15 +141,14 @@ class End2EndTest2 : NavigationTestUtils() {
     composeRule.waitForIdle()
 
     composeRule.checkReportScreenIsDisplayed()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.navigateToMyProfileScreenFromReport()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.waitForIdle()
 
     composeRule.checkMyProfileScreenIsDisplayed()
-    composeRule.waitUntilAfterLoadingScreen()
+
     composeRule.navigateToSettingsScreenFromProfile()
-    composeRule.waitUntilAfterLoadingScreen()
 
     composeRule.waitForIdle()
     composeRule.navigateFromSettingsScreenToAuthScreen_LogOut()
@@ -179,6 +161,8 @@ class End2EndTest2 : NavigationTestUtils() {
     RepositoryProvider.userSettingsRepository.initializeUserSettings(user.userId)
     RepositoryProvider.userAchievementsRepository.initializeUserAchievements(user.userId)
     RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
+    RepositoryProvider.userFriendsRepository.initializeUserFriends(user.userId)
+    RepositoryProvider.userTokensRepository.initializeUserTokens(user.userId)
   }
 
   private fun ComposeTestRule.checkMyProfileScreenIsDisplayed() {
@@ -201,10 +185,6 @@ class End2EndTest2 : NavigationTestUtils() {
     onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
   }
 
-  private fun ComposeTestRule.waitUntilAfterLoadingScreen() {
-    waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
-  }
-
   private fun ComposeTestRule.switchAndCheckProfileSettings() {
     onNodeWithTag(SettingsScreenTestTags.AUTOMATIC_MODE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
@@ -220,17 +200,12 @@ class End2EndTest2 : NavigationTestUtils() {
         .assertIsDisplayed()
         .assertIsToggleable()
 
-    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
+    onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertIsSelected()
+    performClickOnTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON)
     onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
-        .performClick()
-    waitUntil {
-      onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
-          .isDisplayed()
-    }
-    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsSelected()
   }
 
@@ -249,6 +224,7 @@ class End2EndTest2 : NavigationTestUtils() {
         .performClick()
     onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
+    onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON, useUnmergedTree = true).performClick()
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE, useUnmergedTree = true).assertIsDisplayed()
     onNodeWithTag(ReportScreenTestTags.REPORT_LIST, useUnmergedTree = true).assertIsDisplayed()
     reports.forEach {

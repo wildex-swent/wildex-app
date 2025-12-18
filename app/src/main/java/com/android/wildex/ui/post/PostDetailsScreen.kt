@@ -273,51 +273,50 @@ fun CommentInput(
                   color = colorScheme.onBackground.copy(alpha = 0.06f),
                   shape = RoundedCornerShape(0.dp),
               )
-              .padding(horizontal = 12.dp, vertical = 8.dp)
-  ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      ClickableProfilePicture(
-          modifier =
-              Modifier.size(44.dp)
-                  .testTag(testTagForProfilePicture(profileId = userId, role = "comment_input")),
-          profileId = userId,
-          profilePictureURL = userProfilePictureURL,
-          profileUserType = userUserType,
-          onProfile = onProfile,
-      )
+              .padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          ClickableProfilePicture(
+              modifier =
+                  Modifier.size(44.dp)
+                      .testTag(
+                          testTagForProfilePicture(profileId = userId, role = "comment_input")),
+              profileId = userId,
+              profilePictureURL = userProfilePictureURL,
+              profileUserType = userUserType,
+              onProfile = onProfile,
+          )
 
-      Spacer(modifier = Modifier.width(8.dp))
+          Spacer(modifier = Modifier.width(8.dp))
 
-      var text by remember { mutableStateOf("") }
+          var text by remember { mutableStateOf("") }
 
-      OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
-          placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
-          modifier = Modifier.weight(1f),
-          shape = RoundedCornerShape(32.dp),
-          singleLine = true,
-          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-          trailingIcon = {
-            IconButton(
-                onClick = {
-                  if (text.isNotBlank()) {
-                    postDetailsScreenViewModel.addComment(text)
-                    text = ""
-                  }
-                }
-            ) {
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Send,
-                  contentDescription = "Send comment",
-                  tint = colorScheme.primary,
-              )
-            }
-          },
-      )
-    }
-  }
+          OutlinedTextField(
+              value = text,
+              onValueChange = { text = it },
+              placeholder = { Text(text = "Add a comment …", style = typography.bodyMedium) },
+              modifier = Modifier.weight(1f),
+              shape = RoundedCornerShape(32.dp),
+              singleLine = true,
+              keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+              trailingIcon = {
+                IconButton(
+                    onClick = {
+                      if (text.isNotBlank()) {
+                        postDetailsScreenViewModel.addComment(text)
+                        text = ""
+                      }
+                    }) {
+                      Icon(
+                          imageVector = Icons.AutoMirrored.Filled.Send,
+                          contentDescription = "Send comment",
+                          tint = colorScheme.primary,
+                      )
+                    }
+              },
+          )
+        }
+      }
 }

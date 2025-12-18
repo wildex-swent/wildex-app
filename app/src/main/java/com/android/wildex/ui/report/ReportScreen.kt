@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -412,6 +414,9 @@ private fun ReportSlider(
                     .testTag(ReportScreenTestTags.testTagForReport(reportState.reportId, "image"))
                     .clickable { onReportClick() },
             contentScale = ContentScale.Crop,
+            fallback = rememberVectorPainter(Icons.Default.WifiOff),
+            error = rememberVectorPainter(Icons.Default.WifiOff),
+            placeholder = rememberVectorPainter(Icons.Default.WifiOff),
         )
       }
       1 -> {

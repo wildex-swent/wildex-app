@@ -533,11 +533,11 @@ abstract class NavigationTestUtils {
     performClickOnTag(FriendScreenTestTags.testTagForProfilePicture(userId))
   }
 
-  private fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
+  fun ComposeTestRule.checkNodeWithTagGetsDisplayed(tag: String) {
     waitUntil(DEFAULT_TIMEOUT) { onNodeWithTag(tag, useUnmergedTree = true).isDisplayed() }
   }
 
-  private fun ComposeTestRule.performClickOnTag(
+  fun ComposeTestRule.performClickOnTag(
       tag: String,
       useUnmergedTree: Boolean = true,
       timeout: Long = DEFAULT_TIMEOUT,

@@ -4,7 +4,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,67 +11,71 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.authentication.NamingScreenTestTags
+import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
+import com.android.wildex.ui.authentication.SignInScreenTestTags
+import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
-import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils
+import com.android.wildex.ui.post.PostDetailsContentTestTags
 import com.android.wildex.ui.post.PostDetailsScreenTestTags
-import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class End2EndTest1 : NavigationTestUtils() {
-
+  /* User authenticates, creates his profile, checks his profile, goes to post1 and likes it, goes to post2 and comments on it*/
   @Test
-  fun userFlow() {
-    /* User authenticates, creates his profile, checks his profile, goes to post1 and likes it, goes to post2 and comments on it*/
+  fun userFlow() = runTest {
     val user0 =
         User(
-            "author0",
-            "name0",
-            "surname0",
-            "username0",
-            "regular user 0",
-            "",
-            UserType.REGULAR,
-            Timestamp.now(),
-            "country 0",
-            0,
+            userId = "author0",
+            username = "name0",
+            name = "surname0",
+            surname = "username0",
+            bio = "regular user 0",
+            profilePictureURL = "",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "country 0",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         )
     val user1 =
         User(
-            "author1",
-            "name1",
-            "surname1",
-            "username1",
-            "regular user 1",
-            "",
-            UserType.REGULAR,
-            Timestamp.now(),
-            "country 1",
-            0,
+            userId = "author1",
+            username = "name1",
+            name = "surname1",
+            surname = "username1",
+            bio = "regular user 1",
+            profilePictureURL = "",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "country 1",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         )
     val post0 =
         Post(
             postId = "post0",
             authorId = "author0",
             pictureURL = "",
-            location = Location(10.0, 10.0, "location0"),
+            location = Location(10.0, 10.0, "location0", "address0", "country0"),
             description = "description0",
             date = Timestamp.now(),
-            likesCount = 0,
-            commentsCount = 0,
             animalId = "animal0",
         )
     val post1 =
@@ -80,11 +83,9 @@ class End2EndTest1 : NavigationTestUtils() {
             postId = "post1",
             authorId = "author1",
             pictureURL = "",
-            location = Location(10.0, 10.0, "location1"),
+            location = Location(10.0, 10.0, "location1", "address1", "country1"),
             description = "description1",
             date = Timestamp.now(),
-            likesCount = 0,
-            commentsCount = 0,
             animalId = "animal1",
         )
     val animal0 =
@@ -114,49 +115,31 @@ class End2EndTest1 : NavigationTestUtils() {
     }
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateFromAuth()
-    composeRule.waitForIdle()
-    composeRule.checkEditProfileScreenIsDisplayed(isNewUser = true)
-    val nameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
-    val surnameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_SURNAME)
-    val usernameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
-    val saveNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.SAVE)
-    composeRule.waitUntil(DEFAULT_TIMEOUT) {
-      nameNode.isDisplayed() ||
-          surnameNode.isDisplayed() ||
-          usernameNode.isDisplayed() ||
-          saveNode.isDisplayed()
-    }
-    nameNode.performScrollTo().performClick().performTextInput("Name1")
-    surnameNode.performScrollTo().performClick().performTextInput("Surname1")
-    usernameNode.performScrollTo().performClick().performTextInput("Username1")
-    saveNode.performScrollTo().performClick()
+    composeRule.createUserProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.navigateToMyProfileScreenFromHome()
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
     composeRule.checkMyProfileScreenIsDisplayed()
     composeRule.navigateBackFromProfile()
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.checkFullHomeScreenIsDisplayedFor(listOf(post0.postId, post1.postId))
     composeRule.navigateToPostDetailsScreenFromHome(post0.postId)
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
-    composeRule.checkFullPostDetailsIsDisplayedFor(post0, animal0)
-    composeRule.likePostAndCheckLikes(post0.likesCount)
+    composeRule.checkPostDetailsScreenIsDisplayed(post0.postId)
+    composeRule.checkFullPostDetailsIsDisplayedFor(post0)
+
+    composeRule.likePostAndCheckLikes(
+        RepositoryProvider.likeRepository.getLikesForPost(post0.postId).size)
     composeRule.waitForIdle()
     composeRule.navigateBackFromPostDetails()
     composeRule.waitForIdle()
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.navigateToPostDetailsScreenFromHome(post1.postId)
-    composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
-    composeRule.checkFullPostDetailsIsDisplayedFor(post1, animal1)
-    composeRule.commentPostAndCheckComments(post1.commentsCount)
+    composeRule.checkFullPostDetailsIsDisplayedFor(post1)
+    composeRule.commentPostAndCheckComments(
+        RepositoryProvider.commentRepository.getAllCommentsByPost(post1.postId).size)
     composeRule.waitForIdle()
     composeRule.navigateBackFromPostDetails()
   }
@@ -209,38 +192,48 @@ class End2EndTest1 : NavigationTestUtils() {
 
   private fun ComposeTestRule.checkFullHomeScreenIsDisplayedFor(postIds: List<Id>) {
     checkHomeScreenIsDisplayed()
-    onNodeWithTag(HomeScreenTestTags.NOTIFICATION_BELL).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.NOTIFICATION_BELL).assertIsDisplayed()
     onNodeWithTag(HomeScreenTestTags.POSTS_LIST).assertIsDisplayed()
-    onNodeWithTag(HomeScreenTestTags.TITLE).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_PROFILE_PICTURE).assertIsDisplayed()
     postIds.forEach {
       checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.imageTag(it))
       checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.authorPictureTag(it))
       checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.commentTag(it))
       checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.likeButtonTag(it))
-      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.likeTag(it))
+      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.sliderTag(it))
       checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.locationTag(it))
+      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.sliderStateTag(it))
+      onNodeWithTag(HomeScreenTestTags.sliderTag(it)).performScrollToIndex(1)
+      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapPreviewTag(it))
+      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapPreviewButtonTag(it))
+      checkNodeWithTagScrollAndDisplay(HomeScreenTestTags.mapLocationTag(it))
+      onNodeWithTag(HomeScreenTestTags.sliderTag(it)).performScrollToIndex(0)
     }
   }
 
-  private fun ComposeTestRule.checkFullPostDetailsIsDisplayedFor(post: Post, animal: Animal) {
-    onNodeWithText(post.location!!.name, useUnmergedTree = true)
-        .performScrollTo()
-        .assertIsDisplayed()
-    onNodeWithText(animal.species, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-    onNodeWithText("${post.likesCount}", useUnmergedTree = true)
-        .performScrollTo()
-        .assertIsDisplayed()
-    onNodeWithText(post.description, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-    onNodeWithTag(PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"), true)
-        .performScrollTo()
-        .assertIsDisplayed()
+  private fun ComposeTestRule.checkFullPostDetailsIsDisplayedFor(post: Post) {
+    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.LIKES)
+    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.IMAGE_BOX)
+    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.DESCRIPTION_TEXT)
+    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.LOCATION)
+    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.SPECIES)
+    checkNodeWithTagGetsDisplayed(
+        PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"))
   }
 
   private fun ComposeTestRule.checkNodeWithTagScrollAndDisplay(tag: String) {
     onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
   }
 
-  private fun ComposeTestRule.waitUntilAfterLoadingScreen() {
-    waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
+  private fun ComposeTestRule.createUserProfile() {
+    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
+    checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)
+    onNodeWithTag(NamingScreenTestTags.NAME_FIELD).performTextInput("John")
+    onNodeWithTag(NamingScreenTestTags.SURNAME_FIELD).performTextInput("Cena")
+    onNodeWithTag(NamingScreenTestTags.USERNAME_FIELD).performTextInput("john_cena67")
+    performClickOnTag(NamingScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(OptionalInfoScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(UserTypeScreenTestTags.COMPLETE_BUTTON)
   }
 }

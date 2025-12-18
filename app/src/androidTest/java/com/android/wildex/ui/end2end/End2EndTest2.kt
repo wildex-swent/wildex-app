@@ -12,12 +12,18 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.report.Report
+import com.android.wildex.model.user.OnBoardingStage
 import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
+import com.android.wildex.ui.authentication.NamingScreenTestTags
+import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
+import com.android.wildex.ui.authentication.SignInScreenTestTags
+import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
 import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
+import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils
 import com.android.wildex.ui.profile.EditProfileScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
@@ -27,7 +33,6 @@ import com.android.wildex.ui.settings.SettingsScreenTestTags
 import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.runBlocking
 import org.junit.Ignore
 import org.junit.Test
@@ -44,29 +49,29 @@ class End2EndTest2 : NavigationTestUtils() {
     backs out and goes back to report tab, check his profile, goes to settings and logs out.*/
     val user0 =
         User(
-            "author0",
-            "name0",
-            "surname0",
-            "username0",
-            "regular user 0",
-            "",
-            UserType.REGULAR,
-            Timestamp.now(),
-            "country 0",
-            0,
+            userId = "author0",
+            username = "name0",
+            name = "surname0",
+            surname = "username0",
+            bio = "regular user 0",
+            profilePictureURL = "",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "country 0",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         )
     val user1 =
         User(
-            "author1",
-            "name1",
-            "surname1",
-            "username1",
-            "regular user 1",
-            "",
-            UserType.REGULAR,
-            Timestamp.now(),
-            "country 1",
-            0,
+            userId = "author1",
+            username = "name1",
+            name = "surname1",
+            surname = "username1",
+            bio = "regular user 1",
+            profilePictureURL = "",
+            userType = UserType.REGULAR,
+            creationDate = Timestamp.now(),
+            country = "country 1",
+            onBoardingStage = OnBoardingStage.COMPLETE,
         )
     val report0 =
         Report(
@@ -99,9 +104,9 @@ class End2EndTest2 : NavigationTestUtils() {
 
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
-    composeRule.navigateFromAuth()
+    composeRule.createUserProfile()
     composeRule.waitForIdle()
-    composeRule.checkEditProfileScreenIsDisplayed(isNewUser = true)
+    composeRule.checkEditProfileScreenIsDisplayed()
     val nameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_NAME)
     val surnameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_SURNAME)
     val usernameNode = composeRule.onNodeWithTag(EditProfileScreenTestTags.INPUT_USERNAME)
@@ -154,7 +159,7 @@ class End2EndTest2 : NavigationTestUtils() {
 
     composeRule.checkReportScreenIsDisplayed()
     composeRule.waitUntilAfterLoadingScreen()
-    composeRule.navigateToMyProfileScreenFromReport(Firebase.auth.uid!!)
+    composeRule.navigateToMyProfileScreenFromReport()
     composeRule.waitUntilAfterLoadingScreen()
     composeRule.waitForIdle()
 
@@ -164,7 +169,7 @@ class End2EndTest2 : NavigationTestUtils() {
     composeRule.waitUntilAfterLoadingScreen()
 
     composeRule.waitForIdle()
-    composeRule.navigateFromSettingsScreen_LogOut()
+    composeRule.navigateFromSettingsScreenToAuthScreen_LogOut()
     composeRule.waitForIdle()
     composeRule.checkAuthScreenIsDisplayed()
   }
@@ -215,17 +220,17 @@ class End2EndTest2 : NavigationTestUtils() {
         .assertIsDisplayed()
         .assertIsToggleable()
 
-    onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_STATUS_BUTTON, useUnmergedTree = true)
+    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertIsSelected()
-    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
     waitUntil {
-      onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+      onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
           .isDisplayed()
     }
-    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_STATUS_BUTTON, useUnmergedTree = true)
+    onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsSelected()
   }
 
@@ -239,8 +244,12 @@ class End2EndTest2 : NavigationTestUtils() {
   }
 
   private fun ComposeTestRule.checkFullReportScreenIsDisplayed(reports: List<Report>) {
-    onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT, useUnmergedTree = true).assertIsDisplayed()
-    onNodeWithTag(ReportScreenTestTags.SCREEN_TITLE, useUnmergedTree = true).assertIsDisplayed()
+    onNodeWithTag(ReportScreenTestTags.MORE_ACTIONS_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
+    onNodeWithTag(ReportScreenTestTags.SUBMIT_REPORT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE, useUnmergedTree = true).assertIsDisplayed()
     onNodeWithTag(ReportScreenTestTags.REPORT_LIST, useUnmergedTree = true).assertIsDisplayed()
     reports.forEach {
       onNodeWithTag(
@@ -271,5 +280,16 @@ class End2EndTest2 : NavigationTestUtils() {
         .assertIsDisplayed()
     onNodeWithTag(SubmitReportFormScreenTestTags.IMAGE_BOX, useUnmergedTree = true).performClick()
     checkFullCameraPermissionScreenIsDisplayed()
+  }
+
+  private fun ComposeTestRule.createUserProfile() {
+    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
+    checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)
+    onNodeWithTag(NamingScreenTestTags.NAME_FIELD).performTextInput("John")
+    onNodeWithTag(NamingScreenTestTags.SURNAME_FIELD).performTextInput("Cena")
+    onNodeWithTag(NamingScreenTestTags.USERNAME_FIELD).performTextInput("john_cena67")
+    performClickOnTag(NamingScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(OptionalInfoScreenTestTags.NEXT_BUTTON)
+    performClickOnTag(UserTypeScreenTestTags.COMPLETE_BUTTON)
   }
 }

@@ -69,6 +69,7 @@ import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.expand.ExpandableTextCore
 import com.android.wildex.ui.utils.offline.OfflineScreen
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object ReportDetailsScreenTestTags {
   const val SCREEN = "report_details_screen"
@@ -238,6 +239,7 @@ fun ReportDetailsScreenContent(
       onRefresh = {
         if (!showCompletionDialog) reportDetailsViewModel.refreshReportDetails(reportId)
       },
+      indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
   ) {
     when {
       uiState.isError -> LoadingFail()

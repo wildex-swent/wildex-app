@@ -65,6 +65,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.offline.FriendsOfflineScreen
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 
 object FriendScreenTestTags {
   const val GO_BACK_BUTTON = "friend_screen_go_back_button"
@@ -145,6 +146,7 @@ fun FriendScreen(
           if (isOnline) friendScreenViewModel.refreshUIState(userId)
           else friendScreenViewModel.refreshOffline()
         },
+        indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
     ) {
       if (isOnline) {
         when {

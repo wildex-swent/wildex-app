@@ -106,6 +106,7 @@ import com.android.wildex.ui.social.UserIndex
 import com.android.wildex.ui.utils.ClickableProfilePicture
 import com.android.wildex.ui.utils.buttons.AnimatedLikeButton
 import com.android.wildex.ui.utils.images.ImageWithDoubleTapLike
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 import com.mapbox.geojson.Point
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -228,6 +229,7 @@ fun HomeScreen(
           if (isOnline) homeScreenViewModel.refreshUIState()
           else homeScreenViewModel.refreshOffline()
         },
+        indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
     ) {
       when {
         uiState.isError -> LoadingFail()

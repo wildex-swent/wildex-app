@@ -55,6 +55,7 @@ import com.android.wildex.ui.LoadingFail
 import com.android.wildex.ui.LoadingScreen
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.TopLevelTopBar
+import com.android.wildex.ui.utils.refresh.WildexPullToRefreshIndicator
 import kotlin.math.ceil
 
 /** Test tag constants used for UI testing of CollectionScreen components. */
@@ -131,6 +132,7 @@ fun CollectionScreen(
           else collectionScreenViewModel.refreshOffline()
         },
         modifier = Modifier.padding(innerPadding).testTag(CollectionScreenTestTags.PULL_TO_REFRESH),
+        indicator = { WildexPullToRefreshIndicator(pullState, uiState.isRefreshing) },
     ) {
       when {
         uiState.isError -> LoadingFail()

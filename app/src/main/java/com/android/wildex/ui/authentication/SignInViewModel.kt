@@ -239,9 +239,14 @@ class SignInViewModel(
     val data = _uiState.value.onBoardingData
     val pictureUri = data.profilePicture
     val profilePictureUrl =
-        if (!pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https"))
-            storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
-        else data.profilePicture.toString()
+        try {
+          if (!pictureUri.scheme.isNullOrBlank() && !pictureUri.scheme.equals("https"))
+              storageRepository.uploadUserProfilePicture(data.userId, pictureUri)
+          else data.profilePicture.toString()
+        } catch (e: Exception) {
+          data.profilePicture.toString()
+        }
+
     val user =
         User(
             userId = data.userId,

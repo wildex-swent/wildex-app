@@ -105,7 +105,7 @@ class EditProfileViewModelTest {
 
   @Test
   fun saveProfileChanges_invalid_setsError_andNoRepoCalls() {
-    viewModel.saveProfileChanges {}
+    viewModel.saveProfileChanges()
 
     Assert.assertEquals("At least one field is not valid", viewModel.uiState.value.errorMsg)
     coVerify(exactly = 0) { userRepository.getUser(any()) }
@@ -128,7 +128,7 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges {}
+        viewModel.saveProfileChanges()
 
         advanceUntilIdle()
 
@@ -155,7 +155,7 @@ class EditProfileViewModelTest {
             Exception("Boom")
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges {}
+        viewModel.saveProfileChanges()
 
         advanceUntilIdle()
 
@@ -208,7 +208,7 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "pic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges {}
+        viewModel.saveProfileChanges()
 
         advanceUntilIdle()
 
@@ -238,7 +238,7 @@ class EditProfileViewModelTest {
         coEvery { storageRepository.uploadUserProfilePicture("uid-1", any()) } returns "newPic"
         coEvery { userRepository.editUser(any(), any()) } returns Unit
 
-        viewModel.saveProfileChanges {}
+        viewModel.saveProfileChanges()
 
         advanceUntilIdle()
 

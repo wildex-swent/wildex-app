@@ -31,12 +31,7 @@ sealed class Screen(
     }
   }
 
-  data class EditProfile(val isNewUser: Boolean) :
-      Screen(route = "edit_profile/${isNewUser}", name = "Edit Profile") {
-    companion object {
-      const val PATH = "edit_profile/{isNewUser}"
-    }
-  }
+  object EditProfile : Screen(route = "edit_profile", name = "Edit Profile")
 
   data class Map(val userUid: Id) :
       Screen(route = "map/${userUid}", name = "Map", isTopLevelDestination = true) {
@@ -48,7 +43,7 @@ sealed class Screen(
   object Camera : Screen(route = "camera", name = "Camera", isTopLevelDestination = true)
 
   data class Collection(val userUid: Id) :
-      Screen(route = "collection/${userUid}", name = "Collection") {
+      Screen(route = "collection/${userUid}", name = "Collection", isTopLevelDestination = true) {
     companion object {
       const val PATH = "collection/{userUid}"
     }
@@ -93,7 +88,7 @@ sealed class Screen(
         "home" -> Home
         "post_details" -> PostDetails(pathParts[1])
         "profile" -> Profile(pathParts[1])
-        "edit_profile" -> EditProfile(pathParts[1].toBoolean())
+        "edit_profile" -> EditProfile
         "map" -> Map(pathParts[1])
         "camera" -> Camera
         "collection" -> Collection(pathParts[1])

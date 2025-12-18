@@ -221,7 +221,6 @@ class End2EndTest1 : NavigationTestUtils() {
         PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"))
   }
 
-
   private fun ComposeTestRule.createUserProfile() {
     performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
     checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)

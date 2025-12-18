@@ -7,8 +7,6 @@ import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.report.Report
 import com.android.wildex.model.user.OnBoardingStage
@@ -16,10 +14,6 @@ import com.android.wildex.model.user.User
 import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.ui.authentication.NamingScreenTestTags
-import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
-import com.android.wildex.ui.authentication.SignInScreenTestTags
-import com.android.wildex.ui.authentication.UserTypeScreenTestTags
 import com.android.wildex.ui.camera.CameraPermissionScreenTestTags
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils

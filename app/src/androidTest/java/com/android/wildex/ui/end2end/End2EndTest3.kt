@@ -1,10 +1,10 @@
 package com.android.wildex.ui.end2end
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import com.android.wildex.model.RepositoryProvider
 import com.android.wildex.model.achievement.Achievements
@@ -18,6 +18,7 @@ import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
 import com.android.wildex.ui.achievement.AchievementsScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
+import com.android.wildex.ui.navigation.DEFAULT_TIMEOUT
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils
 import com.android.wildex.ui.profile.ProfileScreenTestTags
@@ -124,6 +125,15 @@ class End2EndTest3 : NavigationTestUtils() {
     composeRule.waitForIdle()
     composeRule.checkMyProfileScreenIsDisplayed()
     advanceUntilIdle()
+    composeRule.waitUntil(DEFAULT_TIMEOUT) {
+      composeRule
+          .onNodeWithTag(
+              AchievementsScreenTestTags.getTagForAchievement(
+                  Achievements.firstLike.achievementId,
+                  isUnlocked = true,
+              ))
+          .isDisplayed()
+    }
     composeRule.navigateToAchievementsScreenFromProfile()
     composeRule.waitForIdle()
     composeRule.checkAchievementsScreenIsDisplayed(userId)
@@ -179,13 +189,12 @@ class End2EndTest3 : NavigationTestUtils() {
     checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.BACK_BUTTON)
     checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENT_GRID)
     checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENTS_PROGRESS_CARD)
-    if (initial) checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER)
+    if (initial) {
+      checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER)
+      onNodeWithTag(AchievementsScreenTestTags.ACHIEVEMENT_GRID)
+          .performScrollToIndex(Achievements.ALL.indexOf(Achievements.firstLike))
+    }
     checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.TOP_APP_BAR)
-    checkNodeWithTagGetsDisplayed(
-        AchievementsScreenTestTags.getTagForAchievement(
-            Achievements.firstLike.achievementId,
-            !initial,
-        ))
     performClickOnTag(
         AchievementsScreenTestTags.getTagForAchievement(
             Achievements.firstLike.achievementId,

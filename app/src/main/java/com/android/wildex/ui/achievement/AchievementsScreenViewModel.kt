@@ -7,6 +7,7 @@ import com.android.wildex.model.achievement.UserAchievementsRepository
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.ProgressInfo
 import com.android.wildex.model.utils.URL
+import com.android.wildex.usecase.achievement.UpdateUserAchievementsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -74,69 +75,74 @@ class AchievementsScreenViewModel(
    */
   fun loadUIState(userId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null, isError = false)
-    viewModelScope.launch {
-      try {
-        // 1) Repo calls off-main, in parallel
-        val (allAchievements, unlockedAchievements) =
-            withContext(ioDispatcher) {
-              val allDeferred = async { userAchievementsRepository.getAllAchievements() }
-              val unlockedDeferred = async {
-                userAchievementsRepository.getAllAchievementsByUser(userId)
-              }
-              allDeferred.await() to unlockedDeferred.await()
+    viewModelScope.launch { updateUIState(userId) }
+    viewModelScope.launch(ioDispatcher) {
+      runCatching { UpdateUserAchievementsUseCase()(userId) }.onSuccess { updateUIState(userId) }
+    }
+  }
+
+  private suspend fun updateUIState(userId: String) {
+    try {
+      // 1) Repo calls off-main, in parallel
+      val (allAchievements, unlockedAchievements) =
+          withContext(ioDispatcher) {
+            val allDeferred = async { userAchievementsRepository.getAllAchievements() }
+            val unlockedDeferred = async {
+              userAchievementsRepository.getAllAchievementsByUser(userId)
             }
+            allDeferred.await() to unlockedDeferred.await()
+          }
 
-        // 2) Compute locked + build UI models off-main
-        val unlockedIds = unlockedAchievements.asSequence().map { it.achievementId }.toHashSet()
-        val lockedAchievements =
-            allAchievements.asSequence().filter { it.achievementId !in unlockedIds }.toList()
+      // 2) Compute locked + build UI models off-main
+      val unlockedIds = unlockedAchievements.asSequence().map { it.achievementId }.toHashSet()
+      val lockedAchievements =
+          allAchievements.asSequence().filter { it.achievementId !in unlockedIds }.toList()
 
-        val (unlockedUI, lockedUI) =
-            withContext(computeDispatcher) {
-              coroutineScope {
-                val unlockedUIDeferred =
-                    unlockedAchievements.map { ach ->
-                      async {
-                        AchievementUIState(
-                            id = ach.achievementId,
-                            name = ach.name,
-                            description = ach.description,
-                            pictureURL = ach.pictureURL,
-                            progress = ach.progress(userId),
-                        )
-                      }
+      val (unlockedUI, lockedUI) =
+          withContext(computeDispatcher) {
+            coroutineScope {
+              val unlockedUIDeferred =
+                  unlockedAchievements.map { ach ->
+                    async {
+                      AchievementUIState(
+                          id = ach.achievementId,
+                          name = ach.name,
+                          description = ach.description,
+                          pictureURL = ach.pictureURL,
+                          progress = ach.progress(userId),
+                      )
                     }
+                  }
 
-                val lockedUIDeferred =
-                    lockedAchievements.map { ach ->
-                      async {
-                        AchievementUIState(
-                            id = ach.achievementId,
-                            name = ach.name,
-                            description = ach.description,
-                            pictureURL = ach.pictureURL,
-                            progress = ach.progress(userId),
-                        )
-                      }
+              val lockedUIDeferred =
+                  lockedAchievements.map { ach ->
+                    async {
+                      AchievementUIState(
+                          id = ach.achievementId,
+                          name = ach.name,
+                          description = ach.description,
+                          pictureURL = ach.pictureURL,
+                          progress = ach.progress(userId),
+                      )
                     }
+                  }
 
-                unlockedUIDeferred.awaitAll() to lockedUIDeferred.awaitAll()
-              }
+              unlockedUIDeferred.awaitAll() to lockedUIDeferred.awaitAll()
             }
+          }
 
-        _uiState.value =
-            _uiState.value.copy(
-                unlocked = unlockedUI,
-                locked = lockedUI,
-                overallProgress = Pair(unlockedUI.size, allAchievements.size),
-                isLoading = false,
-                isError = false,
-                errorMsg = null,
-            )
-      } catch (e: Exception) {
-        setErrorMsg(e.localizedMessage ?: "Failed to load achievements.")
-        _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
-      }
+      _uiState.value =
+          _uiState.value.copy(
+              unlocked = unlockedUI,
+              locked = lockedUI,
+              overallProgress = Pair(unlockedUI.size, allAchievements.size),
+              isLoading = false,
+              isError = false,
+              errorMsg = null,
+          )
+    } catch (e: Exception) {
+      setErrorMsg(e.localizedMessage ?: "Failed to load achievements.")
+      _uiState.value = _uiState.value.copy(isLoading = false, isError = true)
     }
   }
 

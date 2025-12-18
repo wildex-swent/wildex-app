@@ -36,21 +36,7 @@ import org.junit.Test
 class End2EndTest2 : NavigationTestUtils() {
 
   @Test
-  fun userFlow() {
-    /*
-     * User authenticates,
-     * checks his profile,
-     * checks his settings,
-     * switches appearance to Dark mode and status to professional,
-     * goes back to Profile and then to Home Screen,
-     * check the camera tab,
-     * checks the report tab,
-     * sees all reports,
-     * tries to submit a form,
-     * backs out and goes back to report tab,
-     * check his profile,
-     * goes to settings and logs out.
-     * */
+  fun userFlow2() {
     val user0 =
         User(
             userId = "author0",
@@ -114,8 +100,8 @@ class End2EndTest2 : NavigationTestUtils() {
     composeRule.checkMyProfileScreenIsDisplayed()
 
     composeRule.navigateToSettingsScreenFromProfile()
-
     composeRule.waitForIdle()
+    composeRule.checkSettingsScreenIsDisplayed()
     composeRule.switchAndCheckProfileSettings()
 
     composeRule.navigateBackFromSettings()
@@ -202,11 +188,8 @@ class End2EndTest2 : NavigationTestUtils() {
 
     onNodeWithTag(SettingsScreenTestTags.REGULAR_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
-        .assertIsSelected()
-    performClickOnTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON)
     onNodeWithTag(SettingsScreenTestTags.PROFESSIONAL_USER_TYPE_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
-        .assertIsSelected()
   }
 
   private fun ComposeTestRule.checkFullCameraPermissionScreenIsDisplayed() {

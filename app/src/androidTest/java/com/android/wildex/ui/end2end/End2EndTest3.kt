@@ -1,19 +1,13 @@
 package com.android.wildex.ui.end2end
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
-import androidx.compose.ui.test.performTextInput
 import com.android.wildex.model.RepositoryProvider
+import com.android.wildex.model.achievement.Achievements
 import com.android.wildex.model.animal.Animal
 import com.android.wildex.model.social.Post
 import com.android.wildex.model.user.OnBoardingStage
@@ -22,25 +16,22 @@ import com.android.wildex.model.user.UserType
 import com.android.wildex.model.utils.Id
 import com.android.wildex.model.utils.Location
 import com.android.wildex.ui.LoadingScreenTestTags
-import com.android.wildex.ui.authentication.NamingScreenTestTags
-import com.android.wildex.ui.authentication.OptionalInfoScreenTestTags
-import com.android.wildex.ui.authentication.SignInScreenTestTags
-import com.android.wildex.ui.authentication.UserTypeScreenTestTags
+import com.android.wildex.ui.achievement.AchievementsScreenTestTags
 import com.android.wildex.ui.home.HomeScreenTestTags
 import com.android.wildex.ui.navigation.NavigationTestTags
 import com.android.wildex.ui.navigation.NavigationTestUtils
-import com.android.wildex.ui.post.PostDetailsContentTestTags
-import com.android.wildex.ui.post.PostDetailsScreenTestTags
 import com.android.wildex.ui.profile.ProfileScreenTestTags
-import com.android.wildex.utils.FirebaseEmulator
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-class End2EndTest1 : NavigationTestUtils() {
+class End2EndTest3 : NavigationTestUtils() {
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun userFlow1() = runTest {
+  fun userFlow3() = runTest {
     val user0 =
         User(
             userId = "author0",
@@ -104,7 +95,6 @@ class End2EndTest1 : NavigationTestUtils() {
             species = "species1",
         )
     runBlocking {
-      FirebaseEmulator.auth.signOut()
       initUser(user0)
       initUser(user1)
       RepositoryProvider.animalRepository.addAnimal(animal0)
@@ -113,34 +103,31 @@ class End2EndTest1 : NavigationTestUtils() {
       RepositoryProvider.postRepository.addPost(post1)
     }
     composeRule.waitForIdle()
-    composeRule.checkAuthScreenIsDisplayed()
-    composeRule.createUserProfile()
-    composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.navigateToMyProfileScreenFromHome()
+    composeRule.waitForIdle()
+    composeRule.checkMyProfileScreenIsDisplayed()
+    composeRule.navigateToAchievementsScreenFromProfile()
+    composeRule.waitForIdle()
+    composeRule.checkAchievementsScreenIsDisplayed(userId)
+    composeRule.checkFullAchievementScreenIsDisplayed(true)
+    composeRule.navigateBackFromAchievements()
     composeRule.waitForIdle()
     composeRule.checkMyProfileScreenIsDisplayed()
     composeRule.navigateBackFromProfile()
     composeRule.waitForIdle()
     composeRule.checkHomeScreenIsDisplayed()
     composeRule.checkFullHomeScreenIsDisplayedFor(listOf(post0.postId, post1.postId))
-    composeRule.navigateToPostDetailsScreenFromHome(post0.postId)
+    composeRule.performClickOnTag(HomeScreenTestTags.likeButtonTag(post0.postId))
+    composeRule.performClickOnTag(HomeScreenTestTags.likeButtonTag(post1.postId))
+    composeRule.navigateToMyProfileScreenFromHome()
     composeRule.waitForIdle()
-    composeRule.checkPostDetailsScreenIsDisplayed(post0.postId)
-    composeRule.checkFullPostDetailsIsDisplayedFor(post0)
-
-    composeRule.likePostAndCheckLikes(
-        RepositoryProvider.likeRepository.getLikesForPost(post0.postId).size)
+    composeRule.checkMyProfileScreenIsDisplayed()
+    advanceUntilIdle()
+    composeRule.navigateToAchievementsScreenFromProfile()
     composeRule.waitForIdle()
-    composeRule.navigateBackFromPostDetails()
-    composeRule.waitForIdle()
-    composeRule.navigateToPostDetailsScreenFromHome(post1.postId)
-    composeRule.waitForIdle()
-    composeRule.checkFullPostDetailsIsDisplayedFor(post1)
-    composeRule.commentPostAndCheckComments(
-        RepositoryProvider.commentRepository.getAllCommentsByPost(post1.postId).size)
-    composeRule.waitForIdle()
-    composeRule.navigateBackFromPostDetails()
+    composeRule.checkAchievementsScreenIsDisplayed(userId)
+    composeRule.checkFullAchievementScreenIsDisplayed(false)
   }
 
   private suspend fun initUser(user: User) {
@@ -150,31 +137,8 @@ class End2EndTest1 : NavigationTestUtils() {
     RepositoryProvider.userAnimalsRepository.initializeUserAnimals(user.userId)
   }
 
-  private fun ComposeTestRule.likePostAndCheckLikes(likesCount: Int) {
-    onNodeWithText(likesCount.toString()).performScrollTo().assertIsDisplayed()
-    onNode(hasContentDescription("Like status")).performScrollTo().performClick()
-    onNodeWithText((likesCount + 1).toString()).performScrollTo().assertIsDisplayed()
-  }
-
-  private fun ComposeTestRule.commentPostAndCheckComments(commentsCount: Int) {
-    if (commentsCount == 1) {
-      onNodeWithText("1 Comment").performScrollTo().assertIsDisplayed()
-    } else {
-      onNodeWithText("$commentsCount Comments").performScrollTo().assertIsDisplayed()
-    }
-    onNode(hasText("Add a comment …") and hasSetTextAction()).performTextInput("New comment")
-    onNode(hasContentDescription("Send comment")).performClick()
-    onNodeWithText("New comment").performScrollTo().assertIsDisplayed()
-    if (commentsCount + 1 == 1) {
-      onNodeWithText("1 Comment").performScrollTo().assertIsDisplayed()
-    } else {
-      onNodeWithText("${commentsCount + 1} Comments").performScrollTo().assertIsDisplayed()
-    }
-    onNode(hasText("Add a comment …") and hasSetTextAction()).performImeAction()
-  }
-
   private fun ComposeTestRule.checkMyProfileScreenIsDisplayed() {
-    checkProfileScreenIsDisplayed(FirebaseEmulator.auth.uid!!)
+    checkProfileScreenIsDisplayed(userId)
 
     waitUntil { onNodeWithTag(LoadingScreenTestTags.LOADING_SCREEN).isNotDisplayed() }
     checkNodeWithTagScrollAndDisplay(ProfileScreenTestTags.PROFILE_NAME)
@@ -211,28 +175,33 @@ class End2EndTest1 : NavigationTestUtils() {
     }
   }
 
-  private fun ComposeTestRule.checkFullPostDetailsIsDisplayedFor(post: Post) {
-    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.LIKES)
-    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.IMAGE_BOX)
-    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.DESCRIPTION_TEXT)
-    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.LOCATION)
-    checkNodeWithTagGetsDisplayed(PostDetailsContentTestTags.SPECIES)
-    checkNodeWithTagGetsDisplayed(
-        PostDetailsScreenTestTags.testTagForProfilePicture(post.authorId, "author"))
-  }
-
   private fun ComposeTestRule.checkNodeWithTagScrollAndDisplay(tag: String) {
     onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
   }
 
-  private fun ComposeTestRule.createUserProfile() {
-    performClickOnTag(SignInScreenTestTags.LOGIN_BUTTON)
-    checkNodeWithTagGetsDisplayed(NamingScreenTestTags.NAMING_SCREEN)
-    onNodeWithTag(NamingScreenTestTags.NAME_FIELD).performTextInput("John")
-    onNodeWithTag(NamingScreenTestTags.SURNAME_FIELD).performTextInput("Cena")
-    onNodeWithTag(NamingScreenTestTags.USERNAME_FIELD).performTextInput("john_cena67")
-    performClickOnTag(NamingScreenTestTags.NEXT_BUTTON)
-    performClickOnTag(OptionalInfoScreenTestTags.NEXT_BUTTON)
-    performClickOnTag(UserTypeScreenTestTags.COMPLETE_BUTTON)
+  private fun ComposeTestRule.checkFullAchievementScreenIsDisplayed(initial: Boolean) {
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.TITLE)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.BACK_BUTTON)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENT_GRID)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENTS_PROGRESS_CARD)
+    if (initial) checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.ACHIEVEMENTS_PLACEHOLDER)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.TOP_APP_BAR)
+    checkNodeWithTagGetsDisplayed(
+        AchievementsScreenTestTags.getTagForAchievement(
+            Achievements.firstLike.achievementId,
+            !initial,
+        ))
+    performClickOnTag(
+        AchievementsScreenTestTags.getTagForAchievement(
+            Achievements.firstLike.achievementId,
+            !initial,
+        ))
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_DIALOG)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_NAME)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_PROGRESS)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_DESCRIPTION)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_IMAGE)
+    checkNodeWithTagGetsDisplayed(AchievementsScreenTestTags.DETAILS_STATUS)
+    performClickOnTag(AchievementsScreenTestTags.DETAILS_CLOSE_BUTTON)
   }
 }
